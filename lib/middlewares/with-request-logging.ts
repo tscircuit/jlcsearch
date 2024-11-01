@@ -1,4 +1,4 @@
-import { Middleware } from "winterspec/middleware"
+import type { Middleware } from "winterspec/middleware"
 import kleur from "kleur"
 
 // ENABLE COLORS ALWAYS
