@@ -14,6 +14,7 @@
     "typescript": "^5.0.0"
   },
   "scripts": {
+    "start": "bun run scripts/start-server.ts",
     "generate:db-types": "bunx kysely-codegen --out-file ./lib/db/generated/kysely.ts --singular --dialect bun-sqlite --url ./db.sqlite3",
     "setup": "bun run setup:download-cache-fragments && bun run setup:extract-db && bun run setup:replace-db-file",
     "setup:download-cache-fragments": "bun scripts/download-cache-fragments.ts",

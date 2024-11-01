@@ -40,7 +40,7 @@ button {
             <div>
               <div className="border-b border-gray-300 py-1 flex justify-between items-center">
                 <div>
-                  <span className="px-1 pr-2">admin panel</span>
+                  <span className="px-1 pr-2">JLCPCB Parts Engine</span>
                   {pathComponents.map((component, index) => {
                     return (
                       <span key={index}>
@@ -53,25 +53,6 @@ button {
                       </span>
                     )
                   })}
-                </div>
-                <div className="mr-2 flex items-center">
-                  <div
-                    // biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
-                    dangerouslySetInnerHTML={{
-                      __html: `
-                  <select
-                    id="timezone-select"
-                    class="text-xs"
-                    value="${timezone}"
-                    onchange="document.cookie = 'timezone=' + this.value + ';path=/'; location.reload();"
-                  >
-                    <option ${timezone === "UTC" ? "selected" : ""} value="UTC">UTC</option>
-                    <option ${timezone === "America/Los_Angeles" ? "selected" : ""} value="America/Los_Angeles">Pacific</option>
-                    <option ${timezone === "Asia/Kolkata" ? "selected" : ""} value="Asia/Kolkata">IST</option>
-                  </select>
-                  `,
-                    }}
-                  />
                 </div>
               </div>
               <div className="flex flex-col text-xs p-1">{component}</div>
