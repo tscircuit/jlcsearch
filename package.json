@@ -1,11 +1,18 @@
 {
   "name": "jlcpcb-parts-engine",
   "module": "index.ts",
-  "type": "module",
   "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
     "@types/bun": "latest"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
-  }
+  },
+  "scripts": {
+    "setup": "bun run setup:download-cache-fragments && bun run setup:extract-db && bun run setup:replace-db-file",
+    "setup:download-cache-fragments": "bun scripts/download-cache-fragments.ts",
+    "setup:extract-db": "7zz x .buildtmp/cache.zip",
+    "setup:replace-db-file": "rm -f ./db.sqlite3 && mv ./cache.sqlite3 ./db.sqlite3"
+  },
+  "type": "module"
 }

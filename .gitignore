@@ -177,3 +177,4 @@ dist
 .vscode
 .aider*
 db.sqlite3
+.buildtmp
