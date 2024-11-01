@@ -1,7 +1,6 @@
 import { renderToString } from "react-dom/server"
-import { Middleware } from "winterspec"
-import { ReactNode } from "react"
-import { timeAgo } from "lib/admin/time-ago"
+import type { Middleware } from "winterspec"
+import type { ReactNode } from "react"
 
 export const withCtxReact: Middleware<
   {},
@@ -56,9 +55,6 @@ button {
                   })}
                 </div>
                 <div className="mr-2 flex items-center">
-                  <div className="text-xs text-gray-500 mr-1">
-                    {timeAgo(new Date(), timezone)}
-                  </div>
                   <div
                     // biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
                     dangerouslySetInnerHTML={{
