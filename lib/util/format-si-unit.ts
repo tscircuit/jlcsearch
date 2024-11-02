@@ -20,7 +20,7 @@ export function formatSiUnit(value?: number | null): string {
   const scaled = value / prefix.value
 
   // Format number to at most 3 significant digits
-  const formatted = scaled.toPrecision(3).replace(/\.?0+$/, "")
+  const formatted = scaled.toPrecision(3).replace(/\.0+$/, "")
 
   return `${formatted}${prefix.symbol}`
 }

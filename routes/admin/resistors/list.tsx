@@ -15,7 +15,9 @@ export default withWinterSpec({
       .transform((val) => {
         if (!val) return undefined
         const valWithUnit = `${val}Ω`
+        console.log({ valWithUnit })
         const parsed = parseAndConvertSiUnit(valWithUnit)
+        console.log({ valWithUnit, parsed })
         return parsed.value
       }),
   }),
