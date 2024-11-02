@@ -10,6 +10,16 @@ async function createTable(
   db: KyselyDatabaseInstance,
   spec: DerivedTableSpec<any>,
 ) {
+  // Check if table exists and drop it
+  const tableExists = await sql`
+    SELECT name FROM sqlite_master 
+    WHERE type='table' AND name=${spec.tableName}
+  `.execute(db)
+
+  if (tableExists.rows.length > 0) {
+    await db.schema.dropTable(spec.tableName).execute()
+  }
+
   let tableCreator = db.schema.createTable(spec.tableName)
   for (const col of [
     { name: "lcsc", type: "integer", primaryKey: true },
@@ -31,28 +41,24 @@ async function createTable(
   await tableCreator.execute()
 
   // Get candidate components
-  const components = await spec.listCandidateComponents(db)
+  const components = await spec.listCandidateComponents(db).limit(100).execute()
+  console.log(components)
 
   // Map components to table format
-  const mappedComponents = spec.mapToTable(components).filter(Boolean)
+  const mappedComponents = spec.mapToTable(components as any).filter(Boolean)
+
+  console.log(mappedComponents)
 
   // Insert components
   for (const component of mappedComponents) {
-    const attributesJson = JSON.stringify(component.attributes)
-    await sql`
-      INSERT OR REPLACE INTO ${sql.raw(spec.tableName)}
-      (lcsc, mfr, description, stock, in_stock, attributes, ${sql.raw(
-        spec.extraColumns.map((col) => col.name).join(", "),
-      )})
-      VALUES
-      (${component.lcsc}, ${component.mfr}, ${component.description}, 
-       ${component.stock}, ${component.in_stock}, ${attributesJson},
-       ${sql.raw(
-         spec.extraColumns
-           .map((col) => `${component[col.name as keyof typeof component]}`)
-           .join(", "),
-       )})
-    `.execute(db)
+    const attrStringified = JSON.stringify(component.attributes)
+    await db
+      .insertInto(spec.tableName as any)
+      .values({
+        ...component,
+        attributes: attrStringified,
+      })
+      .execute()
   }
 }
 

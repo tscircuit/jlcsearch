@@ -1,3 +1,4 @@
+import type { SelectQueryBuilder } from "kysely"
 import type { Component, Generated } from "../generated/kysely"
 import type { KyselyDatabaseInstance } from "../kysely-types"
 
@@ -19,6 +20,8 @@ export interface DerivedTableSpec<
     name: keyof Resource
     type: string
   }>
-  listCandidateComponents: (db: KyselyDatabaseInstance) => Promise<any[]>
+  listCandidateComponents: (
+    db: KyselyDatabaseInstance,
+  ) => SelectQueryBuilder<any, any, any>
   mapToTable: (components: UnwrapGenerated<Component>[]) => (Resource | null)[]
 }

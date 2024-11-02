@@ -20,14 +20,12 @@ export const resistorTableSpec: DerivedTableSpec<Resistor> = {
     { name: "resistance", type: "real" },
     { name: "tolerance_fraction", type: "real" },
   ],
-  listCandidateComponents: async (db) => {
-    return await db
+  listCandidateComponents: (db) =>
+    db
       .selectFrom("components")
       .innerJoin("categories", "components.category_id", "categories.id")
       .selectAll()
-      .where("categories.category", "=", "Resistors")
-      .execute()
-  },
+      .where("categories.category", "=", "Resistors"),
   mapToTable: (components) => {
     return components.map((c): Resistor | null => {
       if (!c.extra) return null
