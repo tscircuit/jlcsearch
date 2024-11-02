@@ -9,7 +9,15 @@ export default withWinterSpec({
   methods: ["GET"],
   queryParams: z.object({
     package: z.string().optional(),
-    resistance: z.string().optional(),
+    resistance: z
+      .string()
+      .optional()
+      .transform((val) => {
+        if (!val) return undefined
+        const valWithUnit = `${val}Ω`
+        const parsed = parseAndConvertSiUnit(valWithUnit)
+        return parsed.value
+      }),
   }),
   jsonResponse: z.any(),
 } as const)(async (req, ctx) => {
@@ -23,10 +31,7 @@ export default withWinterSpec({
 
   // Apply exact resistance filter
   if (req.query.resistance) {
-    const ohms = parseAndConvertSiUnit(req.query.resistance).value
-    if (ohms) {
-      query = query.where("resistance", "=", ohms)
-    }
+    query = query.where("resistance", "=", req.query.resistance)
   }
 
   // Get unique packages for dropdown
@@ -65,7 +70,7 @@ export default withWinterSpec({
             type="text"
             name="resistance"
             placeholder="e.g. 10kΩ"
-            defaultValue={req.query.resistance}
+            defaultValue={formatSiUnit(req.query.resistance)}
           />
         </div>
 
