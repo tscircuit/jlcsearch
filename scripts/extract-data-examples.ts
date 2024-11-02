@@ -3,15 +3,65 @@ import { existsSync } from "node:fs"
 import { getDbClient } from "lib/db/get-db-client"
 import Path from "node:path"
 
+const EXCLUDED_CATEGORIES: string[] = [
+  "_",
+  "buildingmaterialsbuildinghardware",
+  "cleaningdaily_necessities",
+  "consumable_items",
+  "consumables",
+  "development_boards__tools",
+  "educational_kits",
+  "electronic_toolsinstrumentsconsumables",
+  "global_sourcing_parts",
+  "handlingpackingstorage",
+  "hardware_fastenersseals",
+  "hardwarefastenerssealing",
+  "hardwares__others",
+  "hardwares__sealings__machinings",
+  "hardwaressoldersaccessoriesbatteries",
+  "industrial_control_electrical",
+  "industrial_reagentslubricationrust_prevention",
+  "instrumentationmeter",
+  "instruments",
+  "instrumentstools",
+  "labor_protection_supplies",
+  "laboratory_supplies",
+  "lathes_and_accessories",
+  "measuring_tools",
+  "office_supplies",
+  "old_batch",
+  "other",
+  "others",
+  "pneumatichydraulicpipe_valvepump",
+  "securityfirefighting",
+  "solders__accessories__batteries",
+  "test",
+  "tool",
+  "tools_consumables",
+  "wirecabledatacable",
+]
+
+function toSnakeCase(str: string): string {
+  return str
+    .toLowerCase()
+    .replace(/\s+/g, "_")
+    .replace(/[^a-z0-9_]/g, "")
+}
+
 async function main() {
   const db = getDbClient()
   const outputDir = "./docs/generated"
-  const outputPath = Path.join(outputDir, "component-overview.md")
 
   // Ensure output directory exists
   if (!existsSync(outputDir)) {
     await mkdir(outputDir, { recursive: true })
   }
+
+  // Create index file content
+  let indexMarkdown = "# Component Overview\n\n"
+  indexMarkdown +=
+    "This document provides examples of components available in each category.\n\n"
+  indexMarkdown += "## Categories\n\n"
 
   // Get all categories and subcategories
   const categories = await db
@@ -31,10 +81,6 @@ async function main() {
     {} as Record<string, Set<string>>,
   )
 
-  let markdown = "# Component Overview\n\n"
-  markdown +=
-    "This document provides examples of components available in each category.\n\n"
-
   // For each category and subcategory, get top 3 components by stock
   const totalCategories = Object.keys(categoryGroups).length
   let categoryCount = 0
@@ -44,7 +90,16 @@ async function main() {
     console.log(
       `Processing category ${categoryCount}/${totalCategories}: ${category}`,
     )
-    markdown += `## ${category}\n\n`
+
+    const snakeCaseCategory = toSnakeCase(category)
+
+    if (EXCLUDED_CATEGORIES.includes(snakeCaseCategory)) {
+      continue
+    }
+
+    const categoryFileName = `${snakeCaseCategory}.md`
+    indexMarkdown += `- [${category}](./${categoryFileName})\n`
+    let categoryMarkdown = `# ${category}\n\n`
 
     const subcategoryArray = Array.from(subcategories)
     let subcategoryCount = 0
@@ -52,7 +107,7 @@ async function main() {
     for (const subcategory of subcategoryArray) {
       subcategoryCount++
       console.log(
-        `[${categoryCount}/${totalCategories}]  Subcategory ${subcategoryCount}/${subcategoryArray.length}: ${subcategory}`,
+        `${category}[${categoryCount}/${totalCategories}] ${subcategory}[${subcategoryCount}/${subcategoryArray.length}: ${subcategory}]`,
       )
       const components = await db
         .selectFrom("components")
@@ -99,24 +154,32 @@ async function main() {
       })
 
       if (components.length > 0) {
-        markdown += `### ${subcategory}\n\n`
+        categoryMarkdown += `### ${subcategory}\n\n`
         // Create a table where each row is a key of the table and each
         // column is an example value from the components
         const firstCols = Object.keys({
           ...simplifiedComponents[0],
           ...simplifiedComponents[1],
         })
-        markdown += `| Key | Ex1 | Ex2 |\n`
-        markdown += `| --- | --- | --- |\n`
+        categoryMarkdown += `| Key | Ex1 | Ex2 |\n`
+        categoryMarkdown += `| --- | --- | --- |\n`
         for (const col of firstCols) {
-          markdown += `| ${col} | ${simplifiedComponents?.[0]?.[col]} | ${simplifiedComponents?.[1]?.[col] ?? ""} |\n`
+          categoryMarkdown += `| ${col} | ${simplifiedComponents?.[0]?.[col]} | ${simplifiedComponents?.[1]?.[col] ?? ""} |\n`
         }
+        categoryMarkdown += "\n"
       }
     }
+
+    // Write category file
+    const categoryPath = Path.join(outputDir, categoryFileName)
+    await writeFile(categoryPath, categoryMarkdown)
+    console.log(`Generated category documentation at ${categoryPath}`)
   }
 
-  await writeFile(outputPath, markdown)
-  console.log(`Generated documentation at ${outputPath}`)
+  // Write index file
+  const indexPath = Path.join("./docs/generated", "component-overview.md")
+  await writeFile(indexPath, indexMarkdown)
+  console.log(`Generated index at ${indexPath}`)
 
   await db.destroy()
 }
