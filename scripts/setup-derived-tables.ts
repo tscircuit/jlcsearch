@@ -6,6 +6,14 @@ import type { KyselyDatabaseInstance } from "lib/db/kysely-types"
 
 const DERIVED_TABLES: DerivedTableSpec<any>[] = [resistorTableSpec]
 
+function jsonParseOrNull(strObject: string) {
+  try {
+    return JSON.parse(strObject)
+  } catch (e) {
+    return null
+  }
+}
+
 async function createTable(
   db: KyselyDatabaseInstance,
   spec: DerivedTableSpec<any>,
@@ -44,11 +52,19 @@ async function createTable(
   const components = await spec.listCandidateComponents(db).limit(100).execute()
 
   // Map components to table format
-  const mappedComponents = spec.mapToTable(components as any).filter(Boolean)
+  const mappedComponents = spec.mapToTable(components as any).map((c, i) =>
+    c === null
+      ? null
+      : {
+          ...c,
+          attributes: jsonParseOrNull(components[i].extra)?.attributes,
+        },
+  )
 
   // Insert components
   for (const component of mappedComponents) {
-    const attrStringified = JSON.stringify(component.attributes)
+    if (component === null) continue
+    const attrStringified = JSON.stringify(component.attributes ?? {})
     await db
       .insertInto(spec.tableName as any)
       .values({
