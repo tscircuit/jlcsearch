@@ -69,11 +69,43 @@ async function main() {
         component.price = JSON.parse(component.price ?? "[]")
       }
 
+      const simplifiedComponents = components.map((component) => {
+        const table: any = {}
+        const extra: any = component.extra ?? {}
+        const price: any = component.price ?? []
+
+        table.lcsc = component.lcsc
+        table.stock = component.stock
+        table.mfr = component.mfr
+        table.package = component.package
+        table.joints = component.joints
+        table.description = component.description
+        table.min_q_price = price?.[0]?.price
+        table.extra_title = extra?.title ?? ""
+        table["extra.number"] = extra?.number ?? ""
+        table["extra.package"] = extra?.package ?? ""
+        if (extra?.attributes) {
+          for (const [key, value] of Object.entries(extra.attributes)) {
+            table[`extra.attributes["${key}"]`] = value ?? ""
+          }
+        }
+
+        return table
+      })
+
       if (components.length > 0) {
         markdown += `### ${subcategory}\n\n`
-        markdown += "```json\n"
-        markdown += JSON.stringify(components, null, 2)
-        markdown += "\n```\n\n"
+        // Create a table where each row is a key of the table and each
+        // column is an example value from the components
+        const firstCols = Object.keys({
+          ...simplifiedComponents[0],
+          ...simplifiedComponents[1],
+        })
+        markdown += `| Key | Ex1 | Ex2 |\n`
+        markdown += `| --- | --- | --- |\n`
+        for (const col of firstCols) {
+          markdown += `| ${col} | ${simplifiedComponents?.[0]?.[col]} | ${simplifiedComponents?.[1]?.[col]} |\n`
+        }
       }
     }
   }
