@@ -31,7 +31,8 @@
       },
       "complexity": {
         "noForEach": "info",
-        "noBannedTypes": "off"
+        "noBannedTypes": "off",
+        "useLiteralKeys": "off"
       },
       "style": {
         "noUnusedTemplateLiteral": "off",
