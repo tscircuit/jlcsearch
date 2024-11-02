@@ -7,7 +7,11 @@ import { BunSqliteDialect } from "kysely-bun-sqlite"
 export const getDbClient = () => {
   return new Kysely<DB>({
     dialect: new BunSqliteDialect({
-      database: new Database(Path.join(import.meta.dir, "../../db.sqlite3")),
+      database: getBunDatabaseClient(),
     }),
   })
+}
+
+export const getBunDatabaseClient = () => {
+  return new Database(Path.join(import.meta.dir, "../../db.sqlite3"))
 }

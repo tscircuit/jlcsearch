@@ -2,9 +2,10 @@ import { Table } from "lib/admin/Table"
 import { withWinterSpec } from "lib/with-winter-spec"
 import { z } from "zod"
 import { componentStockIndex } from "lib/db/optimizations/component-stock-index"
+import { removeStaleComponents } from "lib/db/optimizations/remove-stale-components"
 import type { DbOptimizationSpec } from "lib/db/optimizations/types"
 
-const OPTIMIZATIONS: DbOptimizationSpec[] = [componentStockIndex]
+const OPTIMIZATIONS: DbOptimizationSpec[] = [componentStockIndex, removeStaleComponents]
 
 export default withWinterSpec({
   auth: "none",
