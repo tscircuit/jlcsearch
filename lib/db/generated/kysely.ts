@@ -9,6 +9,26 @@ export type Generated<T> = T extends ColumnType<infer S, infer I, infer U>
   ? ColumnType<S, I | undefined, U>
   : ColumnType<T, T | undefined, T>;
 
+export interface Capacitor {
+  attributes: string | null;
+  capacitance_farads: number | null;
+  capacitor_type: string | null;
+  description: string | null;
+  esr_ohms: number | null;
+  in_stock: number | null;
+  is_polarized: number | null;
+  is_surface_mount: number | null;
+  lcsc: number | null;
+  lifetime_hours: number | null;
+  mfr: string | null;
+  package: string | null;
+  ripple_current_amps: number | null;
+  stock: number | null;
+  temperature_coefficient: string | null;
+  tolerance_fraction: number | null;
+  voltage_rating: number | null;
+}
+
 export interface Category {
   category: string;
   id: number;
@@ -32,12 +52,30 @@ export interface Component {
   preferred: Generated<number>;
   price: string;
   stock: number;
-  in_stock: Generated<boolean>;
 }
 
 export interface Manufacturer {
   id: number;
   name: string;
+}
+
+export interface Resistor {
+  attributes: string | null;
+  description: string | null;
+  in_stock: number | null;
+  is_multi_resistor_chip: number | null;
+  is_potentiometer: number | null;
+  is_surface_mount: number | null;
+  lcsc: number | null;
+  max_overload_voltage: number | null;
+  mfr: string | null;
+  number_of_pins: number | null;
+  number_of_resistors: number | null;
+  package: string | null;
+  power_watts: number | null;
+  resistance: number | null;
+  stock: number | null;
+  tolerance_fraction: number | null;
 }
 
 export interface VComponent {
@@ -60,8 +98,10 @@ export interface VComponent {
 }
 
 export interface DB {
+  capacitor: Capacitor;
   categories: Category;
   components: Component;
   manufacturers: Manufacturer;
+  resistor: Resistor;
   v_components: VComponent;
 }
