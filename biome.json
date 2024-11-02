@@ -34,6 +34,9 @@
         "noBannedTypes": "off",
         "useLiteralKeys": "off"
       },
+      "a11y": {
+        "noLabelWithoutControl": "off"
+      },
       "style": {
         "noUnusedTemplateLiteral": "off",
         "noUselessElse": "off",

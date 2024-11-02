@@ -12,6 +12,7 @@ export const withCtxReact: Middleware<
     return new Response(
       renderToString(
         <html lang="en">
+          <meta charSet="utf-8" />
           <script src="https://cdn.tailwindcss.com" />
           <style
             type="text/tailwindcss"

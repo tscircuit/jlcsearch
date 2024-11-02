@@ -1,5 +1,5 @@
 import { sql } from "kysely"
-import { getDbClient } from "lib/db/get-db-client"
+import { getBunDatabaseClient, getDbClient } from "lib/db/get-db-client"
 import { resistorTableSpec } from "lib/db/derivedtables/resistor"
 import { capacitorTableSpec } from "lib/db/derivedtables/capacitor"
 import type { DerivedTableSpec } from "lib/db/derivedtables/types"
