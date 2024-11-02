@@ -13,26 +13,25 @@ const removeResourcePrefixes = (resource: string) => {
 }
 
 const Cell = ({
+  row,
   columnKey,
   cellValue,
   timezone,
 }: {
+  row: any
   columnKey: string
   cellValue: any
   timezone: string
 }) => {
   if (!cellValue) return <></>
   if (React.isValidElement(cellValue)) return cellValue
-  // if (columnKey.endsWith("_id")) {
-  //   const resource = columnKey.slice(0, -3)
-  //   return (
-  //     <a
-  //       href={`/admin/${removeResourcePrefixes(pluralize(resource))}/get?${removeResourcePrefixes(columnKey)}=${cellValue}`}
-  //     >
-  //       {cellValue?.split("-")?.[0]}
-  //     </a>
-  //   )
-  // }
+  if (columnKey === "lcsc") {
+    return (
+      <a href={`https://jlcpcb.com/partdetail/${row.mfr}/C${cellValue}`}>
+        {cellValue}
+      </a>
+    )
+  }
   if (columnKey.endsWith("_at")) {
     return <span className="tabular-nums">{timeAgo(cellValue, timezone)}</span>
   }
@@ -62,7 +61,12 @@ export const Table = ({
             <tr key={index}>
               <td className="border border-gray-300 p-1">{key}</td>
               <td className="border border-gray-300 p-1">
-                <Cell columnKey={key} cellValue={value} timezone={timezone!} />
+                <Cell
+                  row={obj}
+                  columnKey={key}
+                  cellValue={value}
+                  timezone={timezone!}
+                />
               </td>
             </tr>
           ))}
@@ -92,6 +96,7 @@ export const Table = ({
             {keys.map((key) => (
               <td key={key} className="border border-gray-300 p-1">
                 <Cell
+                  row={row}
                   columnKey={key}
                   cellValue={row[key]}
                   timezone={timezone!}

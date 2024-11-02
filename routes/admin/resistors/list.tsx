@@ -14,10 +14,7 @@ export default withWinterSpec({
   jsonResponse: z.any(),
 } as const)(async (req, ctx) => {
   // Start with base query
-  let query = ctx.db
-    .selectFrom("resistor")
-    .selectAll()
-    .orderBy("stock", "desc")
+  let query = ctx.db.selectFrom("resistor").selectAll().orderBy("stock", "desc")
 
   // Apply package filter
   if (req.query.package) {
@@ -77,13 +74,17 @@ export default withWinterSpec({
 
       <Table
         rows={resistors.map((r) => ({
-          lcsc: <span className="tabular-nums">{r.lcsc}</span>,
+          lcsc: r.lcsc,
           mfr: r.mfr,
           package: r.package,
-          resistance: <span className="tabular-nums">{formatSiUnit(r.resistance)}Ω</span>,
-          tolerance: <span className="tabular-nums">
-            {r.tolerance_fraction ? `±${r.tolerance_fraction * 100}%` : ""}
-          </span>,
+          resistance: (
+            <span className="tabular-nums">{formatSiUnit(r.resistance)}Ω</span>
+          ),
+          tolerance: (
+            <span className="tabular-nums">
+              {r.tolerance_fraction ? `±${r.tolerance_fraction * 100}%` : ""}
+            </span>
+          ),
           power: <span className="tabular-nums">{r.power_watts}W</span>,
           stock: <span className="tabular-nums">{r.stock}</span>,
         }))}
