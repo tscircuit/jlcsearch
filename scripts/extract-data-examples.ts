@@ -56,24 +56,18 @@ async function main() {
       )
       const components = await db
         .selectFrom("components")
-        .select([
-          "lcsc",
-          "mfr",
-          "package",
-          "description",
-          "stock",
-          "price",
-          "extra",
-          "datasheet",
-          "price",
-          "extra",
-        ])
+        .selectAll()
         .innerJoin("categories", "categories.id", "components.category_id")
         .where("categories.subcategory", "=", subcategory)
-        .where("in_stock", "=", true)
-        .orderBy("stock", "desc")
+        // .where("in_stock", "=", true)
+        // .orderBy("stock", "desc")
         .limit(2)
         .execute()
+
+      for (const component of components) {
+        component.extra = JSON.parse(component.extra ?? "{}")
+        component.price = JSON.parse(component.price ?? "[]")
+      }
 
       if (components.length > 0) {
         markdown += `### ${subcategory}\n\n`
