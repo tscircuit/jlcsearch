@@ -201,6 +201,11 @@ export const parseAndConvertSiUnit = <
       } as any,
     }
   }
+
+  if ((v as string).startsWith("±")) {
+    return parseAndConvertSiUnit<string>(v.slice(1)) as any
+  }
+
   const unit_reversed = v
     .split("")
     .reverse()

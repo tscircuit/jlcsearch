@@ -42,12 +42,9 @@ async function createTable(
 
   // Get candidate components
   const components = await spec.listCandidateComponents(db).limit(100).execute()
-  console.log(components)
 
   // Map components to table format
   const mappedComponents = spec.mapToTable(components as any).filter(Boolean)
-
-  console.log(mappedComponents)
 
   // Insert components
   for (const component of mappedComponents) {
