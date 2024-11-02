@@ -17,8 +17,8 @@ interface Resistor {
 export const resistorTableSpec: DerivedTableSpec<Resistor> = {
   tableName: "resistor",
   extraColumns: [
-    { name: "resistance", type: "float" },
-    { name: "tolerance_fraction", type: "float" },
+    { name: "resistance", type: "real" },
+    { name: "tolerance_fraction", type: "real" },
   ],
   listCandidateComponents: async (db) => {
     return await db

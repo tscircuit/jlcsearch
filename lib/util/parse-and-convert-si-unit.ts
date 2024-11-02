@@ -80,6 +80,12 @@ const unitMappings: Record<
       rad: 180 / Math.PI,
     },
   },
+  tolerance: {
+    baseUnit: "±" as any,
+    variants: {
+      "%": 0.01,
+    },
+  },
   ms: {
     baseUnit: "ms",
     variants: {
@@ -199,7 +205,7 @@ export const parseAndConvertSiUnit = <
     .split("")
     .reverse()
     .join("")
-    .match(/[a-zA-Z]+/)?.[0]
+    .match(/[^\d\s]+/)?.[0]
   if (!unit_reversed) {
     throw new Error(`Could not determine unit: "${v}"`)
   }
