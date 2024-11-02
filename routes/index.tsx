@@ -10,6 +10,7 @@ export default withWinterSpec({
     <div>
       <a href="/admin/categories/list">Categories</a>
       <a href="/admin/components/list">Components</a>
+      <a href="/admin/system/create-indexes">Create Indexes</a>
     </div>,
   )
 })
