@@ -23,16 +23,16 @@ const Cell = ({
 }) => {
   if (!cellValue) return <></>
   if (React.isValidElement(cellValue)) return cellValue
-  if (columnKey.endsWith("_id")) {
-    const resource = columnKey.slice(0, -3)
-    return (
-      <a
-        href={`/admin/${removeResourcePrefixes(pluralize(resource))}/get?${removeResourcePrefixes(columnKey)}=${cellValue}`}
-      >
-        {cellValue?.split("-")?.[0]}
-      </a>
-    )
-  }
+  // if (columnKey.endsWith("_id")) {
+  //   const resource = columnKey.slice(0, -3)
+  //   return (
+  //     <a
+  //       href={`/admin/${removeResourcePrefixes(pluralize(resource))}/get?${removeResourcePrefixes(columnKey)}=${cellValue}`}
+  //     >
+  //       {cellValue?.split("-")?.[0]}
+  //     </a>
+  //   )
+  // }
   if (columnKey.endsWith("_at")) {
     return <span className="tabular-nums">{timeAgo(cellValue, timezone)}</span>
   }
