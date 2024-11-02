@@ -32,6 +32,7 @@ export interface Component {
   preferred: Generated<number>;
   price: string;
   stock: number;
+  in_stock: Generated<boolean>;
 }
 
 export interface Manufacturer {

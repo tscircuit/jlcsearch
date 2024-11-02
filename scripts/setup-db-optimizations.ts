@@ -1,8 +1,12 @@
 import { getDbClient } from "lib/db/get-db-client"
 import { componentStockIndex } from "lib/db/optimizations/component-stock-index"
+import { componentInStockColumn } from "lib/db/optimizations/component-in-stock-column"
 import type { DbOptimizationSpec } from "lib/db/optimizations/types"
 
-const OPTIMIZATIONS: DbOptimizationSpec[] = [componentStockIndex]
+const OPTIMIZATIONS: DbOptimizationSpec[] = [
+  componentStockIndex,
+  componentInStockColumn,
+]
 
 async function main() {
   const db = getDbClient()
