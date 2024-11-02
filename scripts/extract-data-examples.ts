@@ -55,7 +55,7 @@ async function main() {
         `[${categoryCount}/${totalCategories}]  Subcategory ${subcategoryCount}/${subcategoryArray.length}: ${subcategory}`,
       )
       const components = await db
-        .selectFrom("v_components")
+        .selectFrom("components")
         .select([
           "lcsc",
           "mfr",
@@ -68,10 +68,11 @@ async function main() {
           "price",
           "extra",
         ])
-        .where("subcategory", "=", subcategory)
-        .where("stock", ">", 0)
+        .innerJoin("categories", "categories.id", "components.category_id")
+        .where("categories.subcategory", "=", subcategory)
+        .where("in_stock", "=", true)
         .orderBy("stock", "desc")
-        .limit(3)
+        .limit(2)
         .execute()
 
       if (components.length > 0) {
