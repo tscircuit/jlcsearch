@@ -52,30 +52,44 @@ async function createTable(
 
   await tableCreator.execute()
 
-  // Get candidate components
-  const components = await spec.listCandidateComponents(db).limit(100).execute()
-
-  // Map components to table format
-  const mappedComponents = spec.mapToTable(components as any).map((c, i) =>
-    c === null
-      ? null
-      : {
-          ...c,
-          attributes: jsonParseOrNull(components[i].extra)?.attributes,
-        },
-  )
-
-  // Insert components
-  for (const component of mappedComponents) {
-    if (component === null) continue
-    const attrStringified = JSON.stringify(component.attributes ?? {})
-    await db
-      .insertInto(spec.tableName as any)
-      .values({
-        ...component,
-        attributes: attrStringified,
-      })
+  const BATCH_SIZE = 1000
+  let offset = 0
+  
+  while (true) {
+    // Get batch of components
+    const components = await spec
+      .listCandidateComponents(db)
+      .offset(offset)
+      .limit(BATCH_SIZE)
       .execute()
+
+    if (components.length === 0) break
+
+    // Map components to table format
+    const mappedComponents = spec.mapToTable(components as any).map((c, i) =>
+      c === null
+        ? null
+        : {
+            ...c,
+            attributes: jsonParseOrNull(components[i].extra)?.attributes,
+          },
+    )
+
+    // Insert components
+    for (const component of mappedComponents) {
+      if (component === null) continue
+      const attrStringified = JSON.stringify(component.attributes ?? {})
+      await db
+        .insertInto(spec.tableName as any)
+        .values({
+          ...component,
+          attributes: attrStringified,
+        })
+        .execute()
+    }
+
+    offset += components.length
+    console.log(`Processed ${offset} components for ${spec.tableName}`)
   }
 }
 
