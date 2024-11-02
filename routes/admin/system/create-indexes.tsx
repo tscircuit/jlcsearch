@@ -3,9 +3,14 @@ import { withWinterSpec } from "lib/with-winter-spec"
 import { z } from "zod"
 import { componentStockIndex } from "lib/db/optimizations/component-stock-index"
 import { removeStaleComponents } from "lib/db/optimizations/remove-stale-components"
+import { componentInStockCategoryIndex } from "lib/db/optimizations/component-in-stock-category-index"
 import type { DbOptimizationSpec } from "lib/db/optimizations/types"
 
-const OPTIMIZATIONS: DbOptimizationSpec[] = [componentStockIndex, removeStaleComponents]
+const OPTIMIZATIONS: DbOptimizationSpec[] = [
+  componentStockIndex,
+  removeStaleComponents,
+  componentInStockCategoryIndex
+]
 
 export default withWinterSpec({
   auth: "none",

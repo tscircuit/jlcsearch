@@ -3,6 +3,7 @@ import { componentStockIndex } from "lib/db/optimizations/component-stock-index"
 import { componentInStockColumn } from "lib/db/optimizations/component-in-stock-column"
 import { removeStaleComponents } from "lib/db/optimizations/remove-stale-components"
 import { componentCategoryIndex } from "lib/db/optimizations/component-category-index"
+import { componentInStockCategoryIndex } from "lib/db/optimizations/component-in-stock-category-index"
 import type { DbOptimizationSpec } from "lib/db/optimizations/types"
 import { sql } from "kysely"
 
@@ -11,6 +12,7 @@ const OPTIMIZATIONS: DbOptimizationSpec[] = [
   componentInStockColumn,
   removeStaleComponents,
   componentCategoryIndex,
+  componentInStockCategoryIndex,
 ]
 
 async function main() {

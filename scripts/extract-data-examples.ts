@@ -59,10 +59,14 @@ async function main() {
         .selectAll()
         .innerJoin("categories", "categories.id", "components.category_id")
         .where("categories.subcategory", "=", subcategory)
-        // .where("in_stock", "=", true)
-        // .orderBy("stock", "desc")
+        .where("in_stock", "=", true)
+        .orderBy("stock", "desc")
         .limit(2)
         .execute()
+
+      if (components.length < 2) {
+        continue
+      }
 
       for (const component of components) {
         component.extra = JSON.parse(component.extra ?? "{}")
@@ -86,7 +90,8 @@ async function main() {
         table["extra.package"] = extra?.package ?? ""
         if (extra?.attributes) {
           for (const [key, value] of Object.entries(extra.attributes)) {
-            table[`extra.attributes["${key}"]`] = value ?? ""
+            table[`extra.attributes["${key}"]`] =
+              value === "undefined" ? "" : (value ?? "")
           }
         }
 
@@ -104,7 +109,7 @@ async function main() {
         markdown += `| Key | Ex1 | Ex2 |\n`
         markdown += `| --- | --- | --- |\n`
         for (const col of firstCols) {
-          markdown += `| ${col} | ${simplifiedComponents?.[0]?.[col]} | ${simplifiedComponents?.[1]?.[col]} |\n`
+          markdown += `| ${col} | ${simplifiedComponents?.[0]?.[col]} | ${simplifiedComponents?.[1]?.[col] ?? ""} |\n`
         }
       }
     }
