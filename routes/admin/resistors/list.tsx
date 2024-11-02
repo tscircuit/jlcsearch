@@ -2,37 +2,33 @@ import { Table } from "lib/admin/Table"
 import { withWinterSpec } from "lib/with-winter-spec"
 import { z } from "zod"
 import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
+import { formatSiUnit } from "lib/util/format-si-unit"
 
 export default withWinterSpec({
   auth: "none",
   methods: ["GET"],
   queryParams: z.object({
     package: z.string().optional(),
-    min_resistance: z.string().optional(),
-    max_resistance: z.string().optional(),
+    resistance: z.string().optional(),
   }),
   jsonResponse: z.any(),
 } as const)(async (req, ctx) => {
   // Start with base query
-  let query = ctx.db.selectFrom("resistor").selectAll()
+  let query = ctx.db
+    .selectFrom("resistor")
+    .selectAll()
+    .orderBy("stock", "desc")
 
   // Apply package filter
   if (req.query.package) {
     query = query.where("package", "=", req.query.package)
   }
 
-  // Apply resistance range filters
-  if (req.query.min_resistance) {
-    const minOhms = parseAndConvertSiUnit(req.query.min_resistance).value
-    if (minOhms) {
-      query = query.where("resistance", ">=", minOhms)
-    }
-  }
-
-  if (req.query.max_resistance) {
-    const maxOhms = parseAndConvertSiUnit(req.query.max_resistance).value
-    if (maxOhms) {
-      query = query.where("resistance", "<=", maxOhms)
+  // Apply exact resistance filter
+  if (req.query.resistance) {
+    const ohms = parseAndConvertSiUnit(req.query.resistance).value
+    if (ohms) {
+      query = query.where("resistance", "=", ohms)
     }
   }
 
@@ -67,22 +63,12 @@ export default withWinterSpec({
         </div>
 
         <div>
-          <label>Min Resistance:</label>
+          <label>Resistance:</label>
           <input
             type="text"
-            name="min_resistance"
-            placeholder="e.g. 1kΩ"
-            defaultValue={req.query.min_resistance}
-          />
-        </div>
-
-        <div>
-          <label>Max Resistance:</label>
-          <input
-            type="text"
-            name="max_resistance"
+            name="resistance"
             placeholder="e.g. 10kΩ"
-            defaultValue={req.query.max_resistance}
+            defaultValue={req.query.resistance}
           />
         </div>
 
@@ -91,15 +77,15 @@ export default withWinterSpec({
 
       <Table
         rows={resistors.map((r) => ({
-          lcsc: r.lcsc,
+          lcsc: <span className="tabular-nums">{r.lcsc}</span>,
           mfr: r.mfr,
           package: r.package,
-          resistance: `${r.resistance}Ω`,
-          tolerance: r.tolerance_fraction
-            ? `±${r.tolerance_fraction * 100}%`
-            : "",
-          power: `${r.power_watts}W`,
-          stock: r.stock,
+          resistance: <span className="tabular-nums">{formatSiUnit(r.resistance)}Ω</span>,
+          tolerance: <span className="tabular-nums">
+            {r.tolerance_fraction ? `±${r.tolerance_fraction * 100}%` : ""}
+          </span>,
+          power: <span className="tabular-nums">{r.power_watts}W</span>,
+          stock: <span className="tabular-nums">{r.stock}</span>,
         }))}
       />
     </div>,
