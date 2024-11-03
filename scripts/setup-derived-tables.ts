@@ -2,12 +2,18 @@ import { sql } from "kysely"
 import { getBunDatabaseClient, getDbClient } from "lib/db/get-db-client"
 import { resistorTableSpec } from "lib/db/derivedtables/resistor"
 import { capacitorTableSpec } from "lib/db/derivedtables/capacitor"
+import { ledTableSpec } from "lib/db/derivedtables/led"
 import type { DerivedTableSpec } from "lib/db/derivedtables/types"
 import type { KyselyDatabaseInstance } from "lib/db/kysely-types"
+
+const resetArg = process.argv.indexOf("--reset")
+const resetTable = resetArg !== -1 ? process.argv[resetArg + 1] : null
+const resetAll = resetArg !== -1 && !resetTable
 
 const DERIVED_TABLES: DerivedTableSpec<any>[] = [
   resistorTableSpec,
   capacitorTableSpec,
+  ledTableSpec,
 ]
 
 function jsonParseOrNull(strObject: string) {
@@ -22,13 +28,17 @@ async function createTable(
   db: KyselyDatabaseInstance,
   spec: DerivedTableSpec<any>,
 ) {
-  // Check if table exists and drop it
+  // Check if table exists
   const tableExists = await sql`
     SELECT name FROM sqlite_master 
     WHERE type='table' AND name=${spec.tableName}
   `.execute(db)
 
   if (tableExists.rows.length > 0) {
+    if (!resetAll && resetTable !== spec.tableName) {
+      console.log(`Table ${spec.tableName} already exists, skipping (use --reset ${spec.tableName} to recreate this table, or --reset with no parameter to recreate all)`)
+      return
+    }
     await db.schema.dropTable(spec.tableName).execute()
   }
 
