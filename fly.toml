@@ -1,0 +1,23 @@
+# fly.toml app configuration file generated for jlcsearch on 2024-11-03T15:35:53-08:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'jlcsearch'
+primary_region = 'sjc'
+
+[build]
+
+[http_service]
+  internal_port = 3065
+  force_https = false
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 0
+  max_machines_running = 1
+  processes = ['app']
+
+[[vm]]
+  memory = '512mb'
+  cpu_kind = 'shared'
+  cpus = 1
