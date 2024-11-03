@@ -16,6 +16,7 @@ export default withWinterSpec({
       <a href="/admin/components/list">Components</a>
       <a href="/admin/resistors/list">Resistors</a>
       <a href="/admin/capacitors/list">Capacitors</a>
+      <a href="/admin/leds/list">LEDs</a>
       <a href="/admin/system/create-indexes">Create Indexes</a>
     </div>,
   )

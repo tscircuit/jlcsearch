@@ -54,6 +54,28 @@ export interface Component {
   stock: number;
 }
 
+export interface Led {
+  attributes: string | null;
+  color: string | null;
+  description: string | null;
+  forward_current: number | null;
+  forward_voltage: number | null;
+  in_stock: number | null;
+  is_rgb: number | null;
+  lcsc: number | null;
+  lens_color: string | null;
+  luminous_intensity_mcd: number | null;
+  mfr: string | null;
+  mounting_style: string | null;
+  operating_temp_max: number | null;
+  operating_temp_min: number | null;
+  package: string | null;
+  power_dissipation_mw: number | null;
+  stock: number | null;
+  viewing_angle_deg: number | null;
+  wavelength_nm: number | null;
+}
+
 export interface Manufacturer {
   id: number;
   name: string;
@@ -101,6 +123,7 @@ export interface DB {
   capacitor: Capacitor;
   categories: Category;
   components: Component;
+  led: Led;
   manufacturers: Manufacturer;
   resistor: Resistor;
   v_components: VComponent;
