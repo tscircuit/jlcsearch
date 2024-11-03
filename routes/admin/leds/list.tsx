@@ -12,7 +12,11 @@ export default withWinterSpec({
   jsonResponse: z.any(),
 } as const)(async (req, ctx) => {
   // Start with base query
-  let query = ctx.db.selectFrom("led").selectAll().orderBy("stock", "desc")
+  let query = ctx.db
+    .selectFrom("led")
+    .selectAll()
+    .limit(100)
+    .orderBy("stock", "desc")
 
   // Apply package filter
   if (req.query.package) {
@@ -90,7 +94,9 @@ export default withWinterSpec({
           wavelength: led.wavelength_nm ? `${led.wavelength_nm}nm` : "",
           forward_voltage: led.forward_voltage ? `${led.forward_voltage}V` : "",
           forward_current: led.forward_current ? `${led.forward_current}A` : "",
-          luminous_intensity: led.luminous_intensity_mcd ? `${led.luminous_intensity_mcd}mcd` : "",
+          luminous_intensity: led.luminous_intensity_mcd
+            ? `${led.luminous_intensity_mcd}mcd`
+            : "",
           stock: <span className="tabular-nums">{led.stock}</span>,
         }))}
       />

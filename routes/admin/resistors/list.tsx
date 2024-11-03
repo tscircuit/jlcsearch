@@ -24,7 +24,11 @@ export default withWinterSpec({
   jsonResponse: z.any(),
 } as const)(async (req, ctx) => {
   // Start with base query
-  let query = ctx.db.selectFrom("resistor").selectAll().orderBy("stock", "desc")
+  let query = ctx.db
+    .selectFrom("resistor")
+    .selectAll()
+    .limit(100)
+    .orderBy("stock", "desc")
 
   // Apply package filter
   if (req.query.package) {

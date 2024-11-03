@@ -26,6 +26,7 @@ export default withWinterSpec({
   let query = ctx.db
     .selectFrom("capacitor")
     .selectAll()
+    .limit(100)
     .orderBy("stock", "desc")
 
   // Apply package filter
