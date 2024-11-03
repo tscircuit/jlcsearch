@@ -8,9 +8,9 @@ import type { DbOptimizationSpec } from "lib/db/optimizations/types"
 import { sql } from "kysely"
 
 const OPTIMIZATIONS: DbOptimizationSpec[] = [
+  removeStaleComponents,
   componentStockIndex,
   componentInStockColumn,
-  removeStaleComponents,
   componentCategoryIndex,
   componentInStockCategoryIndex,
 ]
