@@ -41,7 +41,9 @@ button {
             <div>
               <div className="border-b border-gray-300 py-1 flex justify-between items-center">
                 <div>
-                  <span className="px-1 pr-2">JLCPCB Parts Engine</span>
+                  <span className="px-1 pr-2">
+                    JLCPCB In-Stock Parts Engine (Unofficial)
+                  </span>
                   {pathComponents.map((component, index) => {
                     return (
                       <span key={index}>
