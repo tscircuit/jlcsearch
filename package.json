@@ -17,10 +17,12 @@
   "scripts": {
     "start": "bun run --hot scripts/start-server.ts",
     "generate:db-types": "bunx kysely-codegen --out-file ./lib/db/generated/kysely.ts --singular --dialect bun-sqlite --url ./db.sqlite3",
-    "setup": "bun run setup:download-cache-fragments && bun run setup:extract-db && bun run setup:replace-db-file",
+    "setup": "bun run setup:download-cache-fragments && bun run setup:extract-db && bun run setup:replace-db-file && bun run setup:optimize-db && bun run setup:derived-tables",
     "setup:download-cache-fragments": "bun scripts/download-cache-fragments.ts",
     "setup:extract-db": "7zz x .buildtmp/cache.zip",
-    "setup:replace-db-file": "rm -f ./db.sqlite3 && mv ./cache.sqlite3 ./db.sqlite3"
+    "setup:replace-db-file": "rm -f ./db.sqlite3 && mv ./cache.sqlite3 ./db.sqlite3",
+    "setup:optimize-db": "bun run scripts/setup-optimize-db.ts",
+    "setup:derived-tables": "bun run scripts/setup-derived-tables.ts"
   },
   "type": "module",
   "dependencies": {

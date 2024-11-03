@@ -61,6 +61,7 @@ const unitMappings: Record<
       pF: 1e-12,
       nF: 1e-9,
       µF: 1e-6,
+      uF: 1e-6,
       mF: 1e-3,
       F: 1,
     },
@@ -118,7 +119,7 @@ function getBaseTscircuitUnit(unit: string): UnitInfo {
   for (const [baseUnit, info] of Object.entries(unitMappings)) {
     if (unit in info.variants) {
       return {
-        baseUnit: info.baseUnit,
+        baseUnit: baseUnit as BaseTscircuitUnit,
         conversionFactor: info.variants[unit]!,
       }
     }

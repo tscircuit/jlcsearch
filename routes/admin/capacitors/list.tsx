@@ -14,15 +14,19 @@ export default withWinterSpec({
       .optional()
       .transform((val) => {
         if (!val) return undefined
-        const valWithUnit = `${val}F`
+        const valWithUnit = val.endsWith("F") ? val : `${val}F`
         const parsed = parseAndConvertSiUnit(valWithUnit)
+        console.log({ val, valWithUnit, parsed })
         return parsed.value
       }),
   }),
   jsonResponse: z.any(),
 } as const)(async (req, ctx) => {
   // Start with base query
-  let query = ctx.db.selectFrom("capacitor").selectAll().orderBy("stock", "desc")
+  let query = ctx.db
+    .selectFrom("capacitor")
+    .selectAll()
+    .orderBy("stock", "desc")
 
   // Apply package filter
   if (req.query.package) {
@@ -92,6 +96,6 @@ export default withWinterSpec({
           stock: <span className="tabular-nums">{c.stock}</span>,
         }))}
       />
-    </div>
+    </div>,
   )
 })
