@@ -33,14 +33,12 @@ export default withWinterSpec({
       <Table
         rows={categories.map((c) => ({
           category: (
-            <a href={`/admin/categories/list?category_name=${c.category}`}>
+            <a href={`/categories/list?category_name=${c.category}`}>
               {c.category}
             </a>
           ),
           subcategory: (
-            <a
-              href={`/admin/components/list?subcategory_name=${c.subcategory}`}
-            >
+            <a href={`/components/list?subcategory_name=${c.subcategory}`}>
               {c.subcategory}
             </a>
           ),
