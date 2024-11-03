@@ -180,3 +180,4 @@ db.sqlite3
 .buildtmp
 .winterspec
 db.backup.sqlite3
+.bin
