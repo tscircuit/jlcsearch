@@ -12,11 +12,7 @@ export default withWinterSpec({
 
   return ctx.react(
     <div>
-      <a href="/categories/list">Categories</a>
-      <a href="/components/list">Components</a>
-      <a href="/resistors/list">Resistors</a>
-      <a href="/capacitors/list">Capacitors</a>
-      <a href="/leds/list">LEDs</a>
+      <a href="/admin/system/create-indexes">Categories</a>
     </div>,
   )
 })

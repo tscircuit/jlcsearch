@@ -55,9 +55,7 @@ export default withWinterSpec({
               <input type="hidden" name="optimization_name" value={opt.name} />
               <button
                 type="submit"
-                className="bg-green-500               
- hover:bg-green-700 text-white font-bold py-1 px-2     
- rounded text-xs"
+                className="bg-green-500 hover:bg-green-700 text-white font-bold px-1 rounded text-xs"
               >
                 Add Optimization
               </button>

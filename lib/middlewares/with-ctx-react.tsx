@@ -44,15 +44,26 @@ button {
                   <span className="px-1 pr-2">
                     JLCPCB In-Stock Parts Engine (Unofficial)
                   </span>
+                  <span className="">
+                    <a href="/">home</a>
+                  </span>
                   {pathComponents.map((component, index) => {
                     return (
                       <span key={index}>
                         <span className="px-0.5 text-gray-500">/</span>
-                        <a
-                          href={`/${pathComponents.slice(0, index + 1).join("/")}`}
-                        >
-                          {component}
-                        </a>
+                        {index !== pathComponents.length - 1 ? (
+                          <span className="px-0.5 text-gray-500">
+                            {component}
+                          </span>
+                        ) : (
+                          <a
+                            href={`/${pathComponents
+                              .slice(0, index + 1)
+                              .join("/")}`}
+                          >
+                            {component}
+                          </a>
+                        )}
                       </span>
                     )
                   })}
