@@ -27,7 +27,7 @@ export default withWinterSpec({
   let query = ctx.db
     .selectFrom("resistor")
     .selectAll()
-    .limit(50)
+    .limit(100)
     .orderBy("stock", "desc")
 
   // Apply package filter

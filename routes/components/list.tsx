@@ -1,5 +1,5 @@
 import { sql } from "kysely"
-import { Table } from "lib/admin/Table"
+import { Table } from "lib/ui/Table"
 import { withWinterSpec } from "lib/with-winter-spec"
 import { z } from "zod"
 

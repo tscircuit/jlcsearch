@@ -9,15 +9,14 @@ export default withWinterSpec({
   methods: ["GET"],
   queryParams: z.object({
     package: z.string().optional(),
-    resistance: z
+    capacitance: z
       .string()
       .optional()
       .transform((val) => {
         if (!val) return undefined
-        const valWithUnit = `${val}Ω`
-        console.log({ valWithUnit })
+        const valWithUnit = val.endsWith("F") ? val : `${val}F`
         const parsed = parseAndConvertSiUnit(valWithUnit)
-        console.log({ valWithUnit, parsed })
+        console.log({ val, valWithUnit, parsed })
         return parsed.value
       }),
   }),
@@ -25,9 +24,9 @@ export default withWinterSpec({
 } as const)(async (req, ctx) => {
   // Start with base query
   let query = ctx.db
-    .selectFrom("resistor")
+    .selectFrom("capacitor")
     .selectAll()
-    .limit(50)
+    .limit(100)
     .orderBy("stock", "desc")
 
   // Apply package filter
@@ -35,23 +34,23 @@ export default withWinterSpec({
     query = query.where("package", "=", req.query.package)
   }
 
-  // Apply exact resistance filter
-  if (req.query.resistance) {
-    query = query.where("resistance", "=", req.query.resistance)
+  // Apply exact capacitance filter
+  if (req.query.capacitance) {
+    query = query.where("capacitance_farads", "=", req.query.capacitance)
   }
 
   // Get unique packages for dropdown
   const packages = await ctx.db
-    .selectFrom("resistor")
+    .selectFrom("capacitor")
     .select("package")
     .distinct()
     .execute()
 
-  const resistors = await query.execute()
+  const capacitors = await query.execute()
 
   return ctx.react(
     <div>
-      <h2>Resistors</h2>
+      <h2>Capacitors</h2>
 
       <form method="GET" className="flex flex-row gap-4">
         <div>
@@ -71,12 +70,12 @@ export default withWinterSpec({
         </div>
 
         <div>
-          <label>Resistance:</label>
+          <label>Capacitance:</label>
           <input
             type="text"
-            name="resistance"
-            placeholder="e.g. 10kΩ"
-            defaultValue={formatSiUnit(req.query.resistance)}
+            name="capacitance"
+            placeholder="e.g. 10µF"
+            defaultValue={formatSiUnit(req.query.capacitance)}
           />
         </div>
 
@@ -84,20 +83,18 @@ export default withWinterSpec({
       </form>
 
       <Table
-        rows={resistors.map((r) => ({
-          lcsc: r.lcsc,
-          mfr: r.mfr,
-          package: r.package,
-          resistance: (
-            <span className="tabular-nums">{formatSiUnit(r.resistance)}Ω</span>
-          ),
-          tolerance: (
+        rows={capacitors.map((c) => ({
+          lcsc: c.lcsc,
+          mfr: c.mfr,
+          package: c.package,
+          capacitance: (
             <span className="tabular-nums">
-              {r.tolerance_fraction ? `±${r.tolerance_fraction * 100}%` : ""}
+              {formatSiUnit(c.capacitance_farads)}F
             </span>
           ),
-          power: <span className="tabular-nums">{r.power_watts}W</span>,
-          stock: <span className="tabular-nums">{r.stock}</span>,
+          voltage: <span className="tabular-nums">{c.voltage_rating}V</span>,
+          type: c.capacitor_type,
+          stock: <span className="tabular-nums">{c.stock}</span>,
         }))}
       />
     </div>,

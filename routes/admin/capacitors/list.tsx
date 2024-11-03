@@ -1,4 +1,4 @@
-import { Table } from "lib/admin/Table"
+import { Table } from "lib/ui/Table"
 import { withWinterSpec } from "lib/with-winter-spec"
 import { z } from "zod"
 import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
@@ -26,7 +26,7 @@ export default withWinterSpec({
   let query = ctx.db
     .selectFrom("capacitor")
     .selectAll()
-    .limit(100)
+    .limit(50)
     .orderBy("stock", "desc")
 
   // Apply package filter

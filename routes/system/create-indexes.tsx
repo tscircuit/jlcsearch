@@ -1,4 +1,4 @@
-import { Table } from "lib/admin/Table"
+import { Table } from "lib/ui/Table"
 import { withWinterSpec } from "lib/with-winter-spec"
 import { z } from "zod"
 import { componentStockIndex } from "lib/db/optimizations/component-stock-index"
@@ -9,7 +9,7 @@ import type { DbOptimizationSpec } from "lib/db/optimizations/types"
 const OPTIMIZATIONS: DbOptimizationSpec[] = [
   componentStockIndex,
   removeStaleComponents,
-  componentInStockCategoryIndex
+  componentInStockCategoryIndex,
 ]
 
 export default withWinterSpec({
