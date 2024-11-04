@@ -34,7 +34,7 @@ export default withWinterSpec({
   }
 
   // Apply exact resistance filter
-  if (req.query.resistance) {
+  if (req.query.resistance !== undefined) {
     query = query.where("resistance", "=", req.query.resistance)
   }
 

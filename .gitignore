@@ -181,3 +181,4 @@ db.sqlite3
 .winterspec
 db.backup.sqlite3
 .bin
+.fly.toml.swp
