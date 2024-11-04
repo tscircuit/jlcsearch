@@ -3,6 +3,7 @@ import { getBunDatabaseClient, getDbClient } from "lib/db/get-db-client"
 import { resistorTableSpec } from "lib/db/derivedtables/resistor"
 import { capacitorTableSpec } from "lib/db/derivedtables/capacitor"
 import { ledTableSpec } from "lib/db/derivedtables/led"
+import { headerTableSpec } from "lib/db/derivedtables/header"
 import type { DerivedTableSpec } from "lib/db/derivedtables/types"
 import type { KyselyDatabaseInstance } from "lib/db/kysely-types"
 
@@ -14,6 +15,7 @@ const DERIVED_TABLES: DerivedTableSpec<any>[] = [
   resistorTableSpec,
   capacitorTableSpec,
   ledTableSpec,
+  headerTableSpec,
 ]
 
 function jsonParseOrNull(strObject: string) {

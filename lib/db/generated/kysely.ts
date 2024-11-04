@@ -54,6 +54,33 @@ export interface Component {
   stock: number;
 }
 
+export interface Header {
+  attributes: string | null;
+  contact_material: string | null;
+  contact_plating: string | null;
+  current_rating_amp: number | null;
+  description: string | null;
+  gender: string | null;
+  in_stock: number | null;
+  insulation_height_mm: number | null;
+  is_right_angle: number | null;
+  is_shrouded: number | null;
+  lcsc: number | null;
+  mfr: string | null;
+  mounting_style: string | null;
+  num_pins: number | null;
+  num_pins_per_row: number | null;
+  num_rows: number | null;
+  operating_temperature_max: number | null;
+  operating_temperature_min: number | null;
+  package: string | null;
+  pin_length_mm: number | null;
+  pitch_mm: number | null;
+  row_spacing_mm: number | null;
+  stock: number | null;
+  voltage_rating_volt: number | null;
+}
+
 export interface Led {
   attributes: string | null;
   color: string | null;
@@ -123,6 +150,7 @@ export interface DB {
   capacitor: Capacitor;
   categories: Category;
   components: Component;
+  header: Header;
   led: Led;
   manufacturers: Manufacturer;
   resistor: Resistor;
