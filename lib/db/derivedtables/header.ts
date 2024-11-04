@@ -176,19 +176,20 @@ export const headerTableSpec: DerivedTableSpec<Header> = {
       }
 
       // Determine mounting style and angle
-      const mountingStyle = attrs["Mounting Style"] || attrs["Mounting Type"] || null
+      const mountingStyle =
+        attrs["Mounting Style"] || attrs["Mounting Type"] || null
       const isRightAngle = Boolean(
         mountingStyle?.toLowerCase().includes("right") ||
-        mountingStyle?.toLowerCase().includes("angle") ||
-        desc.includes("right angle") ||
-        desc.includes("bend")
+          mountingStyle?.toLowerCase().includes("angle") ||
+          desc.includes("right angle") ||
+          desc.includes("bend"),
       )
 
       // Determine if shrouded
       const isShrouded = Boolean(
         mountingStyle?.toLowerCase().includes("shroud") ||
-        desc.includes("shroud") ||
-        desc.includes("box header")
+          desc.includes("shroud") ||
+          desc.includes("box header"),
       )
 
       return {

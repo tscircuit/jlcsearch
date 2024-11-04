@@ -4,6 +4,7 @@ import { withErrorResponse } from "lib/middlewares/with-error-response"
 import { withCtxReact } from "./middlewares/with-ctx-react"
 import { createWithWinterSpec } from "winterspec"
 import { withRequestLogging } from "./middlewares/with-request-logging"
+import { withCacheHeaders } from "./middlewares/with-cache-headers"
 
 export const withWinterSpec = createWithWinterSpec({
   authMiddleware: {},
@@ -14,10 +15,11 @@ export const withWinterSpec = createWithWinterSpec({
     withCtxReact,
     withDb,
     withRequestLogging,
+    withCacheHeaders,
   ],
 
-  apiName: "tscircuit JLC Parts Engine",
-  productionServerUrl: "https://partsengine.tscircuit.com",
+  apiName: "tscircuit JLC Search",
+  productionServerUrl: "https://jlcsearch.tscircuit.com",
   addOkStatus: true,
 
   shouldValidateGetRequestBody: true,

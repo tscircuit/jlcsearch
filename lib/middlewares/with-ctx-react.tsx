@@ -32,13 +32,22 @@ form {
   @apply inline-flex flex-col gap-2 border border-gray-300 rounded p-2 m-2 text-xs
 }
 button {
-  @apply bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
+  @apply bg-blue-500 hover:bg-blue-700 text-white font-bold py-0.5 px-3 rounded
+}
+.wrapper {
+  @apply min-h-screen flex flex-col
+}
+.content {
+  @apply flex-grow
+}
+.footer {
+  @apply text-center py-2 text-xs text-gray-600 border-t border-gray-300 mt-4
 }
 `,
             }}
           />
           <body>
-            <div>
+            <div className="wrapper">
               <div className="border-b border-gray-300 py-1 flex justify-between items-center">
                 <div>
                   <span className="px-1 pr-2">
@@ -68,8 +77,22 @@ button {
                     )
                   })}
                 </div>
+                <div>
+                  <a href="https://tscircuit.com">tscircuit</a>
+                </div>
               </div>
-              <div className="flex flex-col text-xs p-1">{component}</div>
+              <div className="flex flex-col text-xs p-1 content">
+                {component}
+              </div>
+              <footer className="footer text-xs">
+                © {new Date().getFullYear()} tscircuit. All rights reserved. By
+                using this site, you agree to the
+                <a href="https://tscircuit.com/legal/terms-of-service.html">
+                  terms of service
+                </a>
+                . This site is not affiliated with JLCPCB, we are customers
+                helping other customers.
+              </footer>
             </div>
           </body>
         </html>,
