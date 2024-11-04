@@ -104,10 +104,9 @@ export const ledTableSpec: DerivedTableSpec<Led> = {
       const power = rawPower
         ? (parseAndConvertSiUnit(rawPower).value as number)
         : null
-
       // Parse temperature range
-      let tempMin = null,
-        tempMax = null
+      let tempMin = null
+      let tempMax = null
       const rawTemp = attrs["Operating Temperature"]
       if (rawTemp) {
         const match = rawTemp.match(/([-\d]+)℃~\+([-\d]+)℃/)
@@ -117,12 +116,30 @@ export const ledTableSpec: DerivedTableSpec<Led> = {
         }
       }
 
+      // Normalize color
+      const normalizeColor = (color: string | null): string | null => {
+        if (!color) return null
+        // First split and clean the values
+        const colors = color
+          .toLowerCase()
+          .trim()
+          .replace(/general/g, "")
+          .split(/[\/,\s]+/)
+          .filter((s) => s && s !== "-" && s !== ",")
+          .map((s) => s.trim())
+          .map((s) => s.replace("yellow-green", "greenish_yellow"))
+
+        // Then deduplicate and sort
+        return Array.from(new Set(colors)).sort().join("-")
+      }
+
       // Determine color
-      let color = attrs["Emitted Color"]
+      let color = normalizeColor(attrs["Emitted Color"])
       if (!color) {
-        if (desc.includes("ultraviolet") || desc.includes("uv")) color = "UV"
-        else if (desc.includes("infrared") || desc.includes("ir")) color = "IR"
+        if (desc.includes("ultraviolet") || desc.includes("uv")) color = "uv"
+        else if (desc.includes("infrared") || desc.includes("ir")) color = "ir"
         else {
+          const colors = []
           for (const c of [
             "red",
             "green",
@@ -133,10 +150,10 @@ export const ledTableSpec: DerivedTableSpec<Led> = {
             "purple",
           ]) {
             if (desc.includes(c)) {
-              color = c
-              break
+              colors.push(c)
             }
           }
+          color = normalizeColor(colors.join(","))
         }
       }
 
@@ -159,7 +176,7 @@ export const ledTableSpec: DerivedTableSpec<Led> = {
         power_dissipation_mw: power,
         operating_temp_min: tempMin,
         operating_temp_max: tempMax,
-        lens_color: attrs["Lens Color"] || null,
+        lens_color: normalizeColor(attrs["Lens Color"]),
         mounting_style: attrs["Mounting Sytle"] || null,
         is_rgb: isRgb,
         attributes: attrs,
