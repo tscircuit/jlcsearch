@@ -16,7 +16,11 @@ interface Adc {
   num_channels: number | null
   supply_voltage_min: number | null
   supply_voltage_max: number | null
-  interface_type: string | null
+  has_spi: boolean
+  has_i2c: boolean
+  has_parallel_interface: boolean
+  has_serial_interface: boolean
+  has_uart: boolean
   is_differential: boolean
   operating_temp_min: number | null
   operating_temp_max: number | null
@@ -31,7 +35,11 @@ export const adcTableSpec: DerivedTableSpec<Adc> = {
     { name: "num_channels", type: "integer" },
     { name: "supply_voltage_min", type: "real" },
     { name: "supply_voltage_max", type: "real" },
-    { name: "interface_type", type: "text" },
+    { name: "has_spi", type: "boolean" },
+    { name: "has_i2c", type: "boolean" },
+    { name: "has_parallel_interface", type: "boolean" },
+    { name: "has_serial_interface", type: "boolean" },
+    { name: "has_uart", type: "boolean" },
     { name: "is_differential", type: "boolean" },
     { name: "operating_temp_min", type: "real" },
     { name: "operating_temp_max", type: "real" },
@@ -114,7 +122,11 @@ export const adcTableSpec: DerivedTableSpec<Adc> = {
         num_channels: numChannels,
         supply_voltage_min: voltageMin,
         supply_voltage_max: voltageMax,
-        interface_type: attrs["Interface"] || null,
+        has_spi: (attrs["Interface"] || "").toLowerCase().includes("spi"),
+        has_i2c: (attrs["Interface"] || "").toLowerCase().includes("i2c"),
+        has_parallel_interface: (attrs["Interface"] || "").toLowerCase().includes("parallel"),
+        has_serial_interface: (attrs["Interface"] || "").toLowerCase().includes("serial"),
+        has_uart: (attrs["Interface"] || "").toLowerCase().includes("uart"),
         is_differential: attrs["differential input"] === "Yes",
         operating_temp_min: tempMin,
         operating_temp_max: tempMax,

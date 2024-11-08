@@ -9,7 +9,7 @@ export default withWinterSpec({
   queryParams: z.object({
     package: z.string().optional(),
     resolution: z.coerce.number().optional(),
-    interface: z.string().optional(),
+    interface: z.enum(['spi', 'i2c', 'parallel', 'serial', 'uart']).optional(),
     is_differential: z.boolean().optional(),
   }),
   jsonResponse: z.any(),
@@ -31,7 +31,23 @@ export default withWinterSpec({
   }
 
   if (req.query.interface) {
-    query = query.where("interface_type", "=", req.query.interface)
+    switch (req.query.interface) {
+      case 'spi':
+        query = query.where("has_spi", "=", true)
+        break
+      case 'i2c':
+        query = query.where("has_i2c", "=", true)
+        break
+      case 'parallel':
+        query = query.where("has_parallel_interface", "=", true)
+        break
+      case 'serial':
+        query = query.where("has_serial_interface", "=", true)
+        break
+      case 'uart':
+        query = query.where("has_uart", "=", true)
+        break
+    }
   }
 
   if (req.query.is_differential !== undefined) {
@@ -55,14 +71,6 @@ export default withWinterSpec({
     .where("resolution_bits", "is not", null)
     .execute()
 
-  // Get unique interfaces for dropdown
-  const interfaces = await ctx.db
-    .selectFrom("adc")
-    .select("interface_type")
-    .distinct()
-    .orderBy("interface_type")
-    .where("interface_type", "is not", null)
-    .execute()
 
   const adcs = await query.execute()
 
@@ -107,15 +115,11 @@ export default withWinterSpec({
           <label>Interface:</label>
           <select name="interface">
             <option value="">All</option>
-            {interfaces.map((i) => (
-              <option
-                key={i.interface_type}
-                value={i.interface_type ?? ""}
-                selected={i.interface_type === req.query.interface}
-              >
-                {i.interface_type}
-              </option>
-            ))}
+            <option value="spi" selected={req.query.interface === 'spi'}>SPI</option>
+            <option value="i2c" selected={req.query.interface === 'i2c'}>I2C</option>
+            <option value="parallel" selected={req.query.interface === 'parallel'}>Parallel</option>
+            <option value="serial" selected={req.query.interface === 'serial'}>Serial</option>
+            <option value="uart" selected={req.query.interface === 'uart'}>UART</option>
           </select>
         </div>
 
@@ -153,7 +157,13 @@ export default withWinterSpec({
             </span>
           ) : "",
           channels: adc.num_channels,
-          interface: adc.interface_type,
+          interface: [
+            adc.has_spi && "SPI",
+            adc.has_i2c && "I2C",
+            adc.has_parallel_interface && "Parallel",
+            adc.has_serial_interface && "Serial",
+            adc.has_uart && "UART"
+          ].filter(Boolean).join(", "),
           differential: adc.is_differential ? "Yes" : "No",
           voltage: adc.supply_voltage_min && adc.supply_voltage_max ? (
             <span className="tabular-nums">
