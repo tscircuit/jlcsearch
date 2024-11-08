@@ -2,6 +2,7 @@ import { Table } from "lib/ui/Table"
 import { withWinterSpec } from "lib/with-winter-spec"
 import { z } from "zod"
 import { formatSiUnit } from "lib/util/format-si-unit"
+import { formatPrice } from "lib/util/format-price"
 
 export default withWinterSpec({
   auth: "none",
@@ -9,7 +10,9 @@ export default withWinterSpec({
   queryParams: z.object({
     package: z.string().optional(),
     resolution: z.coerce.number().optional(),
-    interface: z.enum(['spi', 'i2c', 'parallel', 'serial', 'uart', '']).optional(),
+    interface: z
+      .enum(["spi", "i2c", "parallel", "serial", "uart", ""])
+      .optional(),
     is_differential: z.boolean().optional(),
     channels: z.coerce.number().optional(),
   }),
@@ -33,19 +36,19 @@ export default withWinterSpec({
 
   if (req.query.interface) {
     switch (req.query.interface) {
-      case 'spi':
+      case "spi":
         query = query.where("has_spi", "=", true)
         break
-      case 'i2c':
+      case "i2c":
         query = query.where("has_i2c", "=", true)
         break
-      case 'parallel':
+      case "parallel":
         query = query.where("has_parallel_interface", "=", true)
         break
-      case 'serial':
+      case "serial":
         query = query.where("has_serial_interface", "=", true)
         break
-      case 'uart':
+      case "uart":
         query = query.where("has_uart", "=", true)
         break
     }
@@ -84,7 +87,6 @@ export default withWinterSpec({
     .orderBy("num_channels")
     .where("num_channels", "is not", null)
     .execute()
-
 
   const adcs = await query.execute()
 
@@ -129,11 +131,24 @@ export default withWinterSpec({
           <label>Interface:</label>
           <select name="interface">
             <option value="">All</option>
-            <option value="spi" selected={req.query.interface === 'spi'}>SPI</option>
-            <option value="i2c" selected={req.query.interface === 'i2c'}>I2C</option>
-            <option value="parallel" selected={req.query.interface === 'parallel'}>Parallel</option>
-            <option value="serial" selected={req.query.interface === 'serial'}>Serial</option>
-            <option value="uart" selected={req.query.interface === 'uart'}>UART</option>
+            <option value="spi" selected={req.query.interface === "spi"}>
+              SPI
+            </option>
+            <option value="i2c" selected={req.query.interface === "i2c"}>
+              I2C
+            </option>
+            <option
+              value="parallel"
+              selected={req.query.interface === "parallel"}
+            >
+              Parallel
+            </option>
+            <option value="serial" selected={req.query.interface === "serial"}>
+              Serial
+            </option>
+            <option value="uart" selected={req.query.interface === "uart"}>
+              UART
+            </option>
           </select>
         </div>
 
@@ -141,10 +156,7 @@ export default withWinterSpec({
           <label>Differential:</label>
           <select name="is_differential">
             <option value="">All</option>
-            <option
-              value="true"
-              selected={req.query.is_differential === true}
-            >
+            <option value="true" selected={req.query.is_differential === true}>
               Yes
             </option>
             <option
@@ -185,22 +197,32 @@ export default withWinterSpec({
             <span className="tabular-nums">
               {formatSiUnit(adc.sampling_rate_hz)}Hz
             </span>
-          ) : "",
+          ) : (
+            ""
+          ),
           channels: adc.num_channels,
           interface: [
             adc.has_spi && "SPI",
             adc.has_i2c && "I2C",
             adc.has_parallel_interface && "Parallel",
             adc.has_serial_interface && "Serial",
-            adc.has_uart && "UART"
-          ].filter(Boolean).join(", "),
+            adc.has_uart && "UART",
+          ]
+            .filter(Boolean)
+            .join(", "),
           differential: adc.is_differential ? "Yes" : "No",
-          voltage: adc.supply_voltage_min && adc.supply_voltage_max ? (
-            <span className="tabular-nums">
-              {adc.supply_voltage_min}V - {adc.supply_voltage_max}V
-            </span>
-          ) : "",
+          voltage:
+            adc.supply_voltage_min && adc.supply_voltage_max ? (
+              <span className="tabular-nums">
+                {adc.supply_voltage_min}V - {adc.supply_voltage_max}V
+              </span>
+            ) : (
+              ""
+            ),
           stock: <span className="tabular-nums">{adc.stock}</span>,
+          price: (
+            <span className="tabular-nums">{formatPrice(adc.price1)}</span>
+          ),
         }))}
       />
     </div>,

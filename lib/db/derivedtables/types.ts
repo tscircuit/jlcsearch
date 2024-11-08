@@ -12,7 +12,7 @@ export interface DerivedTableSpec<
     mfr: string
     description: string
     stock: number
-    price1: number
+    price1: number | null
     in_stock: boolean
   },
 > {

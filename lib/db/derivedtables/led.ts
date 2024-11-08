@@ -1,5 +1,6 @@
 import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
 import type { DerivedTableSpec } from "./types"
+import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 
 interface Led {
   lcsc: number
@@ -165,7 +166,7 @@ export const ledTableSpec: DerivedTableSpec<Led> = {
         lcsc: c.lcsc,
         mfr: c.mfr,
         description: c.description,
-        price1: Number(c.price),
+        price1: extractMinQPrice(c.price),
         stock: c.stock,
         in_stock: c.stock > 0,
         package: c.package || "",

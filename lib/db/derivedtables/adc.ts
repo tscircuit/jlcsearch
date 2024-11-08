@@ -1,12 +1,13 @@
 import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
 import type { DerivedTableSpec } from "./types"
+import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 
 interface Adc {
   lcsc: number
   mfr: string
   description: string
   stock: number
-  price1: number
+  price1: number | null
   in_stock: boolean
   attributes: Record<string, string>
 
@@ -52,7 +53,6 @@ export const adcTableSpec: DerivedTableSpec<Adc> = {
       .selectAll()
       .where((eb) =>
         eb.or([
-          eb("categories.subcategory", "=", "Analog Switches / Multiplexers"),
           eb(
             "categories.subcategory",
             "=",
@@ -116,7 +116,7 @@ export const adcTableSpec: DerivedTableSpec<Adc> = {
         mfr: c.mfr,
         description: c.description,
         stock: c.stock,
-        price1: c.price,
+        price1: extractMinQPrice(c.price),
         in_stock: c.stock > 0,
         package: c.package || "",
         resolution_bits: resolution,

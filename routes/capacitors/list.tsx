@@ -3,6 +3,7 @@ import { withWinterSpec } from "lib/with-winter-spec"
 import { z } from "zod"
 import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
 import { formatSiUnit } from "lib/util/format-si-unit"
+import { formatPrice } from "lib/util/format-price"
 
 export default withWinterSpec({
   auth: "none",
@@ -95,6 +96,7 @@ export default withWinterSpec({
           voltage: <span className="tabular-nums">{c.voltage_rating}V</span>,
           type: c.capacitor_type,
           stock: <span className="tabular-nums">{c.stock}</span>,
+          price: <span className="tabular-nums">{formatPrice(c.price1)}</span>,
         }))}
       />
     </div>,

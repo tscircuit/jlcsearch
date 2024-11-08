@@ -1,5 +1,6 @@
 import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
 import type { DerivedTableSpec } from "./types"
+import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 
 interface Capacitor {
   lcsc: number
@@ -115,7 +116,7 @@ export const capacitorTableSpec: DerivedTableSpec<Capacitor> = {
         mfr: c.mfr,
         description: c.description,
         stock: c.stock,
-        price1: Number(c.price),
+        price1: extractMinQPrice(c.price),
         in_stock: c.stock > 0,
         capacitance_farads: capacitance,
         tolerance_fraction: tolerance,

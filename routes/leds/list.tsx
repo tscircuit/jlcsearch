@@ -1,6 +1,7 @@
 import { Table } from "lib/ui/Table"
 import { withWinterSpec } from "lib/with-winter-spec"
 import { z } from "zod"
+import { formatPrice } from "lib/util/format-price"
 
 export default withWinterSpec({
   auth: "none",
@@ -98,6 +99,7 @@ export default withWinterSpec({
             ? `${led.luminous_intensity_mcd}mcd`
             : "",
           stock: <span className="tabular-nums">{led.stock}</span>,
+          price: <span className="tabular-nums">{formatPrice(led.price1)}</span>,
         }))}
       />
     </div>,

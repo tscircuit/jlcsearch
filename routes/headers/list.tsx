@@ -1,6 +1,7 @@
 import { Table } from "lib/ui/Table"
 import { withWinterSpec } from "lib/with-winter-spec"
 import { z } from "zod"
+import { formatPrice } from "lib/util/format-price"
 
 export default withWinterSpec({
   auth: "none",
@@ -147,6 +148,7 @@ export default withWinterSpec({
             <span className="tabular-nums">{h.current_rating_amp}A</span>
           ),
           stock: <span className="tabular-nums">{h.stock}</span>,
+          price: <span className="tabular-nums">{formatPrice(h.price1)}</span>,
         }))}
       />
     </div>,
