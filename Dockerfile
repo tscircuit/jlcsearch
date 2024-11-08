@@ -29,6 +29,8 @@ COPY . .
 
 RUN bun setup
 
+RUN rm -rf .buildtmp
+
 
 # Final stage for app image
 FROM base
