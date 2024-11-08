@@ -9,6 +9,30 @@ export type Generated<T> = T extends ColumnType<infer S, infer I, infer U>
   ? ColumnType<S, I | undefined, U>
   : ColumnType<T, T | undefined, T>;
 
+export interface Adc {
+  attributes: string | null;
+  description: string | null;
+  has_i2c: number | null;
+  has_parallel_interface: number | null;
+  has_serial_interface: number | null;
+  has_spi: number | null;
+  has_uart: number | null;
+  in_stock: number | null;
+  is_differential: number | null;
+  lcsc: number | null;
+  mfr: string | null;
+  num_channels: number | null;
+  operating_temp_max: number | null;
+  operating_temp_min: number | null;
+  package: string | null;
+  price1: number | null;
+  resolution_bits: number | null;
+  sampling_rate_hz: number | null;
+  stock: number | null;
+  supply_voltage_max: number | null;
+  supply_voltage_min: number | null;
+}
+
 export interface Capacitor {
   attributes: string | null;
   capacitance_farads: number | null;
@@ -22,6 +46,7 @@ export interface Capacitor {
   lifetime_hours: number | null;
   mfr: string | null;
   package: string | null;
+  price1: number | null;
   ripple_current_amps: number | null;
   stock: number | null;
   temperature_coefficient: string | null;
@@ -76,6 +101,7 @@ export interface Header {
   package: string | null;
   pin_length_mm: number | null;
   pitch_mm: number | null;
+  price1: number | null;
   row_spacing_mm: number | null;
   stock: number | null;
   voltage_rating_volt: number | null;
@@ -98,6 +124,7 @@ export interface Led {
   operating_temp_min: number | null;
   package: string | null;
   power_dissipation_mw: number | null;
+  price1: number | null;
   stock: number | null;
   viewing_angle_deg: number | null;
   wavelength_nm: number | null;
@@ -122,6 +149,7 @@ export interface Resistor {
   number_of_resistors: number | null;
   package: string | null;
   power_watts: number | null;
+  price1: number | null;
   resistance: number | null;
   stock: number | null;
   tolerance_fraction: number | null;
@@ -147,6 +175,7 @@ export interface VComponent {
 }
 
 export interface DB {
+  adc: Adc;
   capacitor: Capacitor;
   categories: Category;
   components: Component;

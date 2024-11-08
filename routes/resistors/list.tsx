@@ -3,6 +3,7 @@ import { withWinterSpec } from "lib/with-winter-spec"
 import { z } from "zod"
 import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
 import { formatSiUnit } from "lib/util/format-si-unit"
+import { formatPrice } from "lib/util/format-price"
 
 export default withWinterSpec({
   auth: "none",
@@ -96,6 +97,7 @@ export default withWinterSpec({
           ),
           power: <span className="tabular-nums">{r.power_watts}W</span>,
           stock: <span className="tabular-nums">{r.stock}</span>,
+          price: <span className="tabular-nums">{formatPrice(r.price1)}</span>,
         }))}
       />
     </div>,

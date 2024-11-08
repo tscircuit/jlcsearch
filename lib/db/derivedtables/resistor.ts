@@ -6,6 +6,7 @@ interface Resistor {
   mfr: string
   description: string
   stock: number
+  price1: number
   in_stock: boolean
   attributes: Record<string, string>
 
@@ -15,7 +16,7 @@ interface Resistor {
   power_watts: number
   package: string
   max_overload_voltage: number | null
-  number_of_resistors: number | null 
+  number_of_resistors: number | null
   number_of_pins: number | null
   is_potentiometer: boolean
   is_surface_mount: boolean
@@ -56,19 +57,25 @@ export const resistorTableSpec: DerivedTableSpec<Resistor> = {
       const power_watts = parseAndConvertSiUnit(rawPower).value as number
 
       // Extract additional fields
-      const maxVoltage = parseAndConvertSiUnit(extra?.attributes?.["Overload Voltage (Max)"]).value as number
-      const numResistors = parseInt(extra?.attributes?.["Number of Resistors"]) || null
+      const maxVoltage = parseAndConvertSiUnit(
+        extra?.attributes?.["Overload Voltage (Max)"],
+      ).value as number
+      const numResistors =
+        parseInt(extra?.attributes?.["Number of Resistors"]) || null
       const numPins = parseInt(extra?.attributes?.["Number of Pins"]) || null
-      const isPotentiometer = c.description.toLowerCase().includes("potentiometer")
-      const isSurfaceMount = c.package?.toLowerCase().includes("smd") || 
-                            !c.package?.toLowerCase().includes("plugin")
+      const isPotentiometer = c.description
+        .toLowerCase()
+        .includes("potentiometer")
+      const isSurfaceMount =
+        c.package?.toLowerCase().includes("smd") ||
+        !c.package?.toLowerCase().includes("plugin")
 
       // Determine if this is a multi-resistor chip
       const isMultiResistorChip = Boolean(
-        numResistors && numResistors > 1 ||
-        c.description.toLowerCase().includes("array") ||
-        c.description.toLowerCase().includes("network") ||
-        c.package?.toLowerCase().includes("x")
+        (numResistors && numResistors > 1) ||
+          c.description.toLowerCase().includes("array") ||
+          c.description.toLowerCase().includes("network") ||
+          c.package?.toLowerCase().includes("x"),
       )
 
       return {
@@ -76,7 +83,8 @@ export const resistorTableSpec: DerivedTableSpec<Resistor> = {
         mfr: c.mfr,
         description: c.description,
         stock: c.stock,
-        in_stock: c.in_stock,
+        price1: Number(c.price),
+        in_stock: c.stock > 0,
         resistance: resistance,
         tolerance_fraction: tolerance,
         power_watts,

@@ -6,6 +6,7 @@ interface Adc {
   mfr: string
   description: string
   stock: number
+  price1: number
   in_stock: boolean
   attributes: Record<string, string>
 
@@ -115,6 +116,7 @@ export const adcTableSpec: DerivedTableSpec<Adc> = {
         mfr: c.mfr,
         description: c.description,
         stock: c.stock,
+        price1: c.price,
         in_stock: c.stock > 0,
         package: c.package || "",
         resolution_bits: resolution,
@@ -124,8 +126,12 @@ export const adcTableSpec: DerivedTableSpec<Adc> = {
         supply_voltage_max: voltageMax,
         has_spi: (attrs["Interface"] || "").toLowerCase().includes("spi"),
         has_i2c: (attrs["Interface"] || "").toLowerCase().includes("i2c"),
-        has_parallel_interface: (attrs["Interface"] || "").toLowerCase().includes("parallel"),
-        has_serial_interface: (attrs["Interface"] || "").toLowerCase().includes("serial"),
+        has_parallel_interface: (attrs["Interface"] || "")
+          .toLowerCase()
+          .includes("parallel"),
+        has_serial_interface: (attrs["Interface"] || "")
+          .toLowerCase()
+          .includes("serial"),
         has_uart: (attrs["Interface"] || "").toLowerCase().includes("uart"),
         is_differential: attrs["differential input"] === "Yes",
         operating_temp_min: tempMin,

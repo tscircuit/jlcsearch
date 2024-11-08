@@ -6,6 +6,7 @@ interface Led {
   mfr: string
   description: string
   stock: number
+  price1: number
   in_stock: boolean
   attributes: Record<string, string>
 
@@ -164,6 +165,7 @@ export const ledTableSpec: DerivedTableSpec<Led> = {
         lcsc: c.lcsc,
         mfr: c.mfr,
         description: c.description,
+        price1: Number(c.price),
         stock: c.stock,
         in_stock: c.stock > 0,
         package: c.package || "",

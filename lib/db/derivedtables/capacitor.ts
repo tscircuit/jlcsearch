@@ -7,6 +7,7 @@ interface Capacitor {
   description: string
   stock: number
   in_stock: boolean
+  price1: any
   attributes: Record<string, string>
 
   // Extra columns
@@ -52,10 +53,11 @@ export const capacitorTableSpec: DerivedTableSpec<Capacitor> = {
 
       const rawCapacitance = extra?.attributes?.["Capacitance"]
       const rawTolerance = extra?.attributes?.["Tolerance"]
-      const rawVoltage = extra?.attributes?.["Rated Voltage"] || 
-                        extra?.attributes?.["Voltage Rated"] ||
-                        extra?.attributes?.["Voltage(AC)"]
-      
+      const rawVoltage =
+        extra?.attributes?.["Rated Voltage"] ||
+        extra?.attributes?.["Voltage Rated"] ||
+        extra?.attributes?.["Voltage(AC)"]
+
       // Parse main specifications
       const capacitance = parseAndConvertSiUnit(rawCapacitance).value as number
       const tolerance = parseAndConvertSiUnit(rawTolerance).value as number
@@ -63,16 +65,19 @@ export const capacitorTableSpec: DerivedTableSpec<Capacitor> = {
 
       // Parse additional specifications
       const tempCoef = extra?.attributes?.["Temperature Coefficient"]
-      const lifetime = parseInt(extra?.attributes?.["Lifetime @ Temp"]?.split("hrs")?.[0]) || null
-      
+      const lifetime =
+        parseInt(extra?.attributes?.["Lifetime @ Temp"]?.split("hrs")?.[0]) ||
+        null
+
       // Parse ESR and ripple current if available
       let esr = null
-      const rawEsr = extra?.attributes?.["Equivalent Series Resistance(ESR)"] ||
-                    extra?.attributes?.["ESR"]
+      const rawEsr =
+        extra?.attributes?.["Equivalent Series Resistance(ESR)"] ||
+        extra?.attributes?.["ESR"]
       if (rawEsr) {
         const match = rawEsr.match(/(\d+(?:\.\d+)?)(m?)Ω/)
         if (match) {
-          esr = parseFloat(match[1]) * (match[2] === 'm' ? 0.001 : 1)
+          esr = parseFloat(match[1]) * (match[2] === "m" ? 0.001 : 1)
         }
       }
 
@@ -85,12 +90,14 @@ export const capacitorTableSpec: DerivedTableSpec<Capacitor> = {
 
       // Determine capacitor characteristics
       const desc = c.description.toLowerCase()
-      const isPolarized = desc.includes("electrolytic") || 
-                         desc.includes("tantalum") ||
-                         desc.includes("polymer")
-      
-      const isSurfaceMount = c.package?.toLowerCase().includes("smd") || 
-                            !c.package?.toLowerCase().includes("plugin")
+      const isPolarized =
+        desc.includes("electrolytic") ||
+        desc.includes("tantalum") ||
+        desc.includes("polymer")
+
+      const isSurfaceMount =
+        c.package?.toLowerCase().includes("smd") ||
+        !c.package?.toLowerCase().includes("plugin")
 
       // Determine capacitor type
       let capacitorType = "unknown"
@@ -100,14 +107,16 @@ export const capacitorTableSpec: DerivedTableSpec<Capacitor> = {
       else if (desc.includes("film")) capacitorType = "film"
       else if (desc.includes("polymer")) capacitorType = "polymer"
       else if (desc.includes("mica")) capacitorType = "mica"
-      else if (desc.includes("variable") || desc.includes("trimmer")) capacitorType = "variable"
+      else if (desc.includes("variable") || desc.includes("trimmer"))
+        capacitorType = "variable"
 
       return {
         lcsc: c.lcsc,
         mfr: c.mfr,
         description: c.description,
         stock: c.stock,
-        in_stock: c.in_stock,
+        price1: Number(c.price),
+        in_stock: c.stock > 0,
         capacitance_farads: capacitance,
         tolerance_fraction: tolerance,
         voltage_rating: voltage,

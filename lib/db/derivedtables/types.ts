@@ -12,6 +12,7 @@ export interface DerivedTableSpec<
     mfr: string
     description: string
     stock: number
+    price1: number
     in_stock: boolean
   },
 > {

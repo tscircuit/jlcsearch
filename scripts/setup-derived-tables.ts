@@ -40,7 +40,9 @@ async function createTable(
 
   if (tableExists.rows.length > 0) {
     if (!resetAll && resetTable !== spec.tableName) {
-      console.log(`Table ${spec.tableName} already exists, skipping (use --reset ${spec.tableName} to recreate this table, or --reset with no parameter to recreate all)`)
+      console.log(
+        `Table ${spec.tableName} already exists, skipping (use --reset ${spec.tableName} to recreate this table, or --reset with no parameter to recreate all)`,
+      )
       return
     }
     await db.schema.dropTable(spec.tableName).execute()
@@ -52,6 +54,7 @@ async function createTable(
     { name: "mfr", type: "text" },
     { name: "description", type: "text" },
     { name: "stock", type: "integer" },
+    { name: "price1", type: "real" },
     { name: "in_stock", type: "boolean" },
   ].concat(spec.extraColumns as any, [{ name: "attributes", type: "text" }])) {
     tableCreator = tableCreator.addColumn(
@@ -68,7 +71,7 @@ async function createTable(
 
   const BATCH_SIZE = 1000
   let offset = 0
-  
+
   while (true) {
     // Get batch of components
     const components = await spec
