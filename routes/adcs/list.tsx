@@ -9,8 +9,9 @@ export default withWinterSpec({
   queryParams: z.object({
     package: z.string().optional(),
     resolution: z.coerce.number().optional(),
-    interface: z.enum(['spi', 'i2c', 'parallel', 'serial', 'uart']).optional(),
+    interface: z.enum(['spi', 'i2c', 'parallel', 'serial', 'uart', '']).optional(),
     is_differential: z.boolean().optional(),
+    channels: z.coerce.number().optional(),
   }),
   jsonResponse: z.any(),
 } as const)(async (req, ctx) => {
@@ -54,6 +55,10 @@ export default withWinterSpec({
     query = query.where("is_differential", "=", req.query.is_differential)
   }
 
+  if (req.query.channels) {
+    query = query.where("num_channels", "=", req.query.channels)
+  }
+
   // Get unique packages for dropdown
   const packages = await ctx.db
     .selectFrom("adc")
@@ -69,6 +74,15 @@ export default withWinterSpec({
     .distinct()
     .orderBy("resolution_bits")
     .where("resolution_bits", "is not", null)
+    .execute()
+
+  // Get unique channel counts for dropdown
+  const channels = await ctx.db
+    .selectFrom("adc")
+    .select("num_channels")
+    .distinct()
+    .orderBy("num_channels")
+    .where("num_channels", "is not", null)
     .execute()
 
 
@@ -139,6 +153,22 @@ export default withWinterSpec({
             >
               No
             </option>
+          </select>
+        </div>
+
+        <div>
+          <label>Channels:</label>
+          <select name="channels">
+            <option value="">All</option>
+            {channels.map((c) => (
+              <option
+                key={c.num_channels}
+                value={c.num_channels ?? ""}
+                selected={c.num_channels === req.query.channels}
+              >
+                {c.num_channels}
+              </option>
+            ))}
           </select>
         </div>
 
