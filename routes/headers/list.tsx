@@ -128,7 +128,7 @@ export default withWinterSpec({
             {pinCounts.map((p) => (
               <option
                 key={p.num_pins}
-                value={p.num_pins}
+                value={p.num_pins?.toString() ?? ""}
                 selected={p.num_pins === params.num_pins}
               >
                 {p.num_pins}

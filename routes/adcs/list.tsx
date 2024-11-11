@@ -37,25 +37,29 @@ export default withWinterSpec({
   if (req.query.interface) {
     switch (req.query.interface) {
       case "spi":
-        query = query.where("has_spi", "=", true)
+        query = query.where("has_spi", "=", 1)
         break
       case "i2c":
-        query = query.where("has_i2c", "=", true)
+        query = query.where("has_i2c", "=", 1)
         break
       case "parallel":
-        query = query.where("has_parallel_interface", "=", true)
+        query = query.where("has_parallel_interface", "=", 1)
         break
       case "serial":
-        query = query.where("has_serial_interface", "=", true)
+        query = query.where("has_serial_interface", "=", 1)
         break
       case "uart":
-        query = query.where("has_uart", "=", true)
+        query = query.where("has_uart", "=", 1)
         break
     }
   }
 
   if (req.query.is_differential !== undefined) {
-    query = query.where("is_differential", "=", req.query.is_differential)
+    query = query.where(
+      "is_differential",
+      "=",
+      req.query.is_differential ? 1 : 0,
+    )
   }
 
   if (req.query.channels) {

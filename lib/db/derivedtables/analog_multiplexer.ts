@@ -104,7 +104,7 @@ export const analogMultiplexerTableSpec: DerivedTableSpec<AnalogMultiplexer> = {
       let leakageCurrent = null
       const rawLeakage = attrs["Leakage Current"]
       if (rawLeakage) {
-        const parsed = parseAndConvertSiUnit(rawLeakage).value
+        const parsed = parseAndConvertSiUnit(rawLeakage).value as number
         if (parsed) leakageCurrent = parsed * 1e9 // Convert to nanoamps
       }
 

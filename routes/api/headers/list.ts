@@ -47,7 +47,7 @@ export default withWinterSpec({
   }
 
   if (params.is_right_angle !== undefined) {
-    query = query.where("is_right_angle", "=", params.is_right_angle)
+    query = query.where("is_right_angle", "=", params.is_right_angle ? 1 : 0)
   }
 
   if (params.gender) {
@@ -55,17 +55,16 @@ export default withWinterSpec({
   }
 
   const headers = await query.execute()
-
   return ctx.json({
     headers: headers
       .map((h) => ({
         lcsc: h.lcsc ?? 0,
         mfr: h.mfr ?? "",
         package: h.package ?? "",
+        is_right_angle: h.is_right_angle ? true : undefined,
         pitch_mm: h.pitch_mm ?? undefined,
         num_pins: h.num_pins ?? undefined,
         gender: h.gender ?? undefined,
-        is_right_angle: h.is_right_angle ?? undefined,
         voltage_rating: h.voltage_rating_volt ?? undefined,
         current_rating: h.current_rating_amp ?? undefined,
         stock: h.stock ?? undefined,

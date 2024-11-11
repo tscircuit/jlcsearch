@@ -1,5 +1,6 @@
 import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
 import type { DerivedTableSpec } from "./types"
+import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 
 interface Header {
   lcsc: number
@@ -8,6 +9,7 @@ interface Header {
   stock: number
   in_stock: boolean
   attributes: Record<string, string>
+  price1: number
 
   // Extra columns
   package: string
@@ -198,6 +200,7 @@ export const headerTableSpec: DerivedTableSpec<Header> = {
         description: c.description,
         stock: c.stock,
         in_stock: c.stock > 0,
+        price1: extractMinQPrice(c.price)!,
         package: c.package || "",
         pitch_mm: pitch,
         num_rows: numRows,

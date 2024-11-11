@@ -1,5 +1,5 @@
 import { sql } from "kysely"
-import { DbOptimizationSpec } from "./types"
+import type { DbOptimizationSpec } from "./types"
 import type { KyselyDatabaseInstance } from "../kysely-types"
 
 export const componentInStockColumn: DbOptimizationSpec = {

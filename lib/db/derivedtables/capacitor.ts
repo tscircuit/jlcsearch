@@ -125,7 +125,7 @@ export const capacitorTableSpec: DerivedTableSpec<Capacitor> = {
         temperature_coefficient: tempCoef,
         lifetime_hours: lifetime,
         esr_ohms: esr,
-        ripple_current_amps: rippleCurrent,
+        ripple_current_amps: rippleCurrent as number,
         is_polarized: isPolarized,
         is_surface_mount: isSurfaceMount,
         capacitor_type: capacitorType,

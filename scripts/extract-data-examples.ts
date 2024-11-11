@@ -114,7 +114,8 @@ async function main() {
         .selectAll()
         .innerJoin("categories", "categories.id", "components.category_id")
         .where("categories.subcategory", "=", subcategory)
-        .where("in_stock", "=", true)
+        // @ts-expect-error i have no idea why this is happening
+        .where("components.in_stock", "=", 1)
         .orderBy("stock", "desc")
         .limit(2)
         .execute()

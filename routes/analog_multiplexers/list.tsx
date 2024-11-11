@@ -35,13 +35,13 @@ export default withWinterSpec({
   if (req.query.interface) {
     switch (req.query.interface) {
       case "spi":
-        query = query.where("has_spi", "=", true)
+        query = query.where("has_spi", "=", 1)
         break
       case "i2c":
-        query = query.where("has_i2c", "=", true)
+        query = query.where("has_i2c", "=", 1)
         break
       case "parallel":
-        query = query.where("has_parallel_interface", "=", true)
+        query = query.where("has_parallel_interface", "=", 1)
         break
     }
   }
@@ -155,13 +155,14 @@ export default withWinterSpec({
           package: m.package,
           channels: m.num_channels,
           on_resistance: m.on_resistance_ohms ? `${m.on_resistance_ohms}Ω` : "",
-          voltage: m.supply_voltage_min && m.supply_voltage_max ? (
-            <span className="tabular-nums">
-              {m.supply_voltage_min}V - {m.supply_voltage_max}V
-            </span>
-          ) : (
-            ""
-          ),
+          voltage:
+            m.supply_voltage_min && m.supply_voltage_max ? (
+              <span className="tabular-nums">
+                {m.supply_voltage_min}V - {m.supply_voltage_max}V
+              </span>
+            ) : (
+              ""
+            ),
           interface: [
             m.has_spi && "SPI",
             m.has_i2c && "I2C",

@@ -1,3 +1,4 @@
+import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
 import { withWinterSpec } from "lib/with-winter-spec"
 import { z } from "zod"
 
@@ -13,7 +14,7 @@ export default withWinterSpec({
         if (!val) return undefined
         const valWithUnit = val.endsWith("F") ? val : `${val}F`
         const parsed = parseAndConvertSiUnit(valWithUnit)
-        return parsed.value
+        return parsed.value as number
       }),
   }),
   jsonResponse: z.object({

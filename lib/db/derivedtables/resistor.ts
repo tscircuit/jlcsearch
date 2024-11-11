@@ -84,7 +84,7 @@ export const resistorTableSpec: DerivedTableSpec<Resistor> = {
         mfr: c.mfr,
         description: c.description,
         stock: c.stock,
-        price1: extractMinQPrice(c.price),
+        price1: extractMinQPrice(c.price)!,
         in_stock: c.stock > 0,
         resistance: resistance,
         tolerance_fraction: tolerance,
