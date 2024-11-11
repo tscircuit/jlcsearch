@@ -36,20 +36,20 @@ export default withWinterSpec({
   if (req.query.interface) {
     switch (req.query.interface) {
       case "spi":
-        query = query.where("has_spi", "=", true)
+        query = query.where("has_spi", "=", 1)
         break
       case "i2c":
-        query = query.where("has_i2c", "=", true)
+        query = query.where("has_i2c", "=", 1)
         break
       case "smbus":
-        query = query.where("has_smbus", "=", true)
+        query = query.where("has_smbus", "=", 1)
         break
     }
   }
 
   // Apply interrupt filter
   if (req.query.has_interrupt !== undefined) {
-    query = query.where("has_interrupt", "=", req.query.has_interrupt)
+    query = query.where("has_interrupt", "=", req.query.has_interrupt ? 1 : 0)
   }
 
   // Get unique packages for dropdown
@@ -146,13 +146,14 @@ export default withWinterSpec({
           mfr: e.mfr,
           package: e.package,
           gpios: e.num_gpios,
-          voltage: e.supply_voltage_min && e.supply_voltage_max ? (
-            <span className="tabular-nums">
-              {e.supply_voltage_min}V - {e.supply_voltage_max}V
-            </span>
-          ) : (
-            ""
-          ),
+          voltage:
+            e.supply_voltage_min && e.supply_voltage_max ? (
+              <span className="tabular-nums">
+                {e.supply_voltage_min}V - {e.supply_voltage_max}V
+              </span>
+            ) : (
+              ""
+            ),
           interface: [
             e.has_i2c && "I²C",
             e.has_spi && "SPI",

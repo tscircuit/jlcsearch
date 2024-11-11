@@ -5,7 +5,7 @@ import { formatPrice } from "lib/util/format-price"
 
 export default withWinterSpec({
   auth: "none",
-  methods: ["GET"],
+  methods: ["GET", "POST"],
   commonParams: z.object({
     json: z.boolean().optional(),
     pitch: z.string().optional(),

@@ -5,7 +5,7 @@ import { formatPrice } from "lib/util/format-price"
 
 export default withWinterSpec({
   auth: "none",
-  methods: ["GET"],
+  methods: ["GET", "POST"],
   commonParams: z.object({
     json: z.boolean().optional(),
     package: z.string().optional(),
@@ -98,7 +98,7 @@ export default withWinterSpec({
               <option
                 key={p.package}
                 value={p.package ?? ""}
-                selected={p.package === req.query.package}
+                selected={p.package === params.package}
               >
                 {p.package}
               </option>
@@ -114,7 +114,7 @@ export default withWinterSpec({
               <option
                 key={c.color}
                 value={c.color ?? ""}
-                selected={c.color === req.query.color}
+                selected={c.color === params.color}
               >
                 {c.color}
               </option>
@@ -138,7 +138,9 @@ export default withWinterSpec({
             ? `${led.luminous_intensity_mcd}mcd`
             : "",
           stock: <span className="tabular-nums">{led.stock}</span>,
-          price: <span className="tabular-nums">{formatPrice(led.price1)}</span>,
+          price: (
+            <span className="tabular-nums">{formatPrice(led.price1)}</span>
+          ),
         }))}
       />
     </div>,
