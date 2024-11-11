@@ -7,6 +7,7 @@ import { headerTableSpec } from "lib/db/derivedtables/header"
 import { adcTableSpec } from "lib/db/derivedtables/adc"
 import { analogMultiplexerTableSpec } from "lib/db/derivedtables/analog_multiplexer"
 import { ioExpanderTableSpec } from "lib/db/derivedtables/io_expander"
+import { diodeTableSpec } from "lib/db/derivedtables/diode"
 import type { DerivedTableSpec } from "lib/db/derivedtables/types"
 import type { KyselyDatabaseInstance } from "lib/db/kysely-types"
 
@@ -22,6 +23,7 @@ const DERIVED_TABLES: DerivedTableSpec<any>[] = [
   adcTableSpec,
   analogMultiplexerTableSpec,
   ioExpanderTableSpec,
+  diodeTableSpec,
 ]
 
 function jsonParseOrNull(strObject: string) {

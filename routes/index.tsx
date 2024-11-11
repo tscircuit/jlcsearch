@@ -20,6 +20,7 @@ export default withWinterSpec({
       <a href="/adcs/list">ADCs</a>
       <a href="/analog_multiplexers/list">Analog Muxes</a>
       <a href="/io_expanders/list">I/O Expanders</a>
+      <a href="/diodes/list">Diodes</a>
     </div>,
   )
 })
