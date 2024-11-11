@@ -8,7 +8,10 @@ export default withWinterSpec({
   methods: ["GET"],
   commonParams: z.object({
     json: z.boolean().optional(),
-    package: z.string().optional(),
+    package: z
+      .string()
+      .transform((val) => (val === "All" ? undefined : val))
+      .optional(),
     diode_type: z
       .enum([
         "general_purpose",
@@ -18,8 +21,10 @@ export default withWinterSpec({
         "switching",
         "fast_recovery",
         "bridge_rectifier",
+        "All",
         "",
       ])
+      .transform((val) => (val === "All" ? undefined : val))
       .optional(),
   }),
   jsonResponse: z.string().or(
@@ -111,6 +116,7 @@ export default withWinterSpec({
             placeholder="All"
           />
           <datalist id="package-options">
+            <option key="all" value="All" />
             {packages.map((p) => (
               <option key={p.package} value={p.package ?? ""} />
             ))}
