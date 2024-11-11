@@ -7,8 +7,9 @@ import { formatPrice } from "lib/util/format-price"
 
 export default withWinterSpec({
   auth: "none",
-  methods: ["GET"],
-  queryParams: z.object({
+  methods: ["GET", "POST"],
+  commonParams: z.object({
+    json: z.boolean().optional(),
     package: z.string().optional(),
     resistance: z
       .string()
@@ -20,7 +21,22 @@ export default withWinterSpec({
         return parsed.value
       }),
   }),
-  jsonResponse: z.any(),
+  jsonResponse: z.string().or(
+    z.object({
+      resistors: z.array(
+        z.object({
+          lcsc: z.number().int(),
+          mfr: z.string(),
+          package: z.string(),
+          resistance: z.number(),
+          tolerance_fraction: z.number().optional(),
+          power_watts: z.number().optional(),
+          stock: z.number().optional(),
+          price1: z.number().optional(),
+        }),
+      ),
+    }),
+  ),
 } as const)(async (req, ctx) => {
   // Start with base query
   let query = ctx.db
@@ -29,14 +45,16 @@ export default withWinterSpec({
     .limit(100)
     .orderBy("stock", "desc")
 
+  const params = req.commonParams
+
   // Apply package filter
-  if (req.query.package) {
-    query = query.where("package", "=", req.query.package)
+  if (params.package) {
+    query = query.where("package", "=", params.package)
   }
 
   // Apply exact resistance filter
-  if (req.query.resistance !== undefined) {
-    query = query.where("resistance", "=", req.query.resistance)
+  if (params.resistance !== undefined) {
+    query = query.where("resistance", "=", params.resistance)
   }
 
   // Get unique packages for dropdown
@@ -47,6 +65,22 @@ export default withWinterSpec({
     .execute()
 
   const resistors = await query.execute()
+  if (ctx.isApiRequest) {
+    return ctx.json({
+      resistors: resistors
+        .map((r) => ({
+          lcsc: r.lcsc ?? 0,
+          mfr: r.mfr ?? "",
+          package: r.package ?? "",
+          resistance: r.resistance ?? 0,
+          tolerance_fraction: r.tolerance_fraction ?? undefined,
+          power_watts: r.power_watts ?? undefined,
+          stock: r.stock ?? undefined,
+          price1: r.price1 ?? undefined,
+        }))
+        .filter((r) => r.lcsc !== 0 && r.package !== ""),
+    })
+  }
 
   return ctx.react(
     <div>
@@ -61,7 +95,7 @@ export default withWinterSpec({
               <option
                 key={p.package}
                 value={p.package ?? ""}
-                selected={p.package === req.query.package}
+                selected={p.package === params.package}
               >
                 {p.package}
               </option>
@@ -75,7 +109,7 @@ export default withWinterSpec({
             type="text"
             name="resistance"
             placeholder="e.g. 10kΩ"
-            defaultValue={formatSiUnit(req.query.resistance)}
+            defaultValue={formatSiUnit(params.resistance)}
           />
         </div>
 
