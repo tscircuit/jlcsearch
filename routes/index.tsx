@@ -11,7 +11,7 @@ export default withWinterSpec({
   }
 
   return ctx.react(
-    <div className="flex gap-4 *:text-lg *:border *:rounded *:p-2 *:border-gray-300 *:w-32 *:text-sm *:text-center">
+    <div className="flex flex-wrap gap-4 *:text-lg *:border *:rounded *:p-2 *:border-gray-300 *:w-32 *:text-sm *:text-center">
       <a href="/categories/list">Categories</a>
       <a href="/resistors/list">Resistors</a>
       <a href="/capacitors/list">Capacitors</a>

@@ -6,12 +6,32 @@ import { formatPrice } from "lib/util/format-price"
 export default withWinterSpec({
   auth: "none",
   methods: ["GET"],
-  queryParams: z.object({
+  commonParams: z.object({
+    json: z.boolean().optional(),
     package: z.string().optional(),
     color: z.string().optional(),
   }),
-  jsonResponse: z.any(),
+  jsonResponse: z.string().or(
+    z.object({
+      leds: z.array(
+        z.object({
+          lcsc: z.number().int(),
+          mfr: z.string(),
+          package: z.string(),
+          color: z.string().optional(),
+          wavelength_nm: z.number().optional(),
+          forward_voltage: z.number().optional(),
+          forward_current: z.number().optional(),
+          luminous_intensity_mcd: z.number().optional(),
+          stock: z.number().optional(),
+          price1: z.number().optional(),
+        }),
+      ),
+    }),
+  ),
 } as const)(async (req, ctx) => {
+  const params = req.commonParams
+
   // Start with base query
   let query = ctx.db
     .selectFrom("led")
@@ -20,13 +40,13 @@ export default withWinterSpec({
     .orderBy("stock", "desc")
 
   // Apply package filter
-  if (req.query.package) {
-    query = query.where("package", "=", req.query.package)
+  if (params.package) {
+    query = query.where("package", "=", params.package)
   }
 
   // Apply color filter
-  if (req.query.color) {
-    query = query.where("color", "=", req.query.color)
+  if (params.color) {
+    query = query.where("color", "=", params.color)
   }
 
   // Get unique packages for dropdown
@@ -45,6 +65,25 @@ export default withWinterSpec({
     .execute()
 
   const leds = await query.execute()
+
+  if (ctx.isApiRequest) {
+    return ctx.json({
+      leds: leds
+        .map((led) => ({
+          lcsc: led.lcsc ?? 0,
+          mfr: led.mfr ?? "",
+          package: led.package ?? "",
+          color: led.color ?? undefined,
+          wavelength_nm: led.wavelength_nm ?? undefined,
+          forward_voltage: led.forward_voltage ?? undefined,
+          forward_current: led.forward_current ?? undefined,
+          luminous_intensity_mcd: led.luminous_intensity_mcd ?? undefined,
+          stock: led.stock ?? undefined,
+          price1: led.price1 ?? undefined,
+        }))
+        .filter((led) => led.lcsc !== 0 && led.package !== ""),
+    })
+  }
 
   return ctx.react(
     <div>
