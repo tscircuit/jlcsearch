@@ -33,6 +33,30 @@ export interface Adc {
   supply_voltage_min: number | null;
 }
 
+export interface AnalogMultiplexer {
+  attributes: string | null;
+  channel_type: string | null;
+  description: string | null;
+  has_enable: number | null;
+  has_i2c: number | null;
+  has_parallel_interface: number | null;
+  has_spi: number | null;
+  in_stock: number | null;
+  lcsc: number | null;
+  leakage_current_na: number | null;
+  mfr: string | null;
+  num_bits: number | null;
+  num_channels: number | null;
+  on_resistance_ohms: number | null;
+  operating_temp_max: number | null;
+  operating_temp_min: number | null;
+  package: string | null;
+  price1: number | null;
+  stock: number | null;
+  supply_voltage_max: number | null;
+  supply_voltage_min: number | null;
+}
+
 export interface Capacitor {
   attributes: string | null;
   capacitance_farads: number | null;
@@ -79,6 +103,30 @@ export interface Component {
   stock: number;
 }
 
+export interface Diode {
+  attributes: string | null;
+  configuration: string | null;
+  description: string | null;
+  diode_type: string | null;
+  forward_current: number | null;
+  forward_voltage: number | null;
+  in_stock: number | null;
+  is_schottky: number | null;
+  is_tvs: number | null;
+  is_zener: number | null;
+  lcsc: number | null;
+  mfr: string | null;
+  operating_temp_max: number | null;
+  operating_temp_min: number | null;
+  package: string | null;
+  power_dissipation_watts: number | null;
+  price1: number | null;
+  recovery_time_ns: number | null;
+  reverse_leakage_current: number | null;
+  reverse_voltage: number | null;
+  stock: number | null;
+}
+
 export interface Header {
   attributes: string | null;
   contact_material: string | null;
@@ -105,6 +153,30 @@ export interface Header {
   row_spacing_mm: number | null;
   stock: number | null;
   voltage_rating_volt: number | null;
+}
+
+export interface IoExpander {
+  attributes: string | null;
+  clock_frequency_hz: number | null;
+  description: string | null;
+  has_i2c: number | null;
+  has_interrupt: number | null;
+  has_smbus: number | null;
+  has_spi: number | null;
+  in_stock: number | null;
+  lcsc: number | null;
+  mfr: string | null;
+  num_gpios: number | null;
+  operating_temp_max: number | null;
+  operating_temp_min: number | null;
+  output_type: string | null;
+  package: string | null;
+  price1: number | null;
+  sink_current_ma: number | null;
+  source_current_ma: number | null;
+  stock: number | null;
+  supply_voltage_max: number | null;
+  supply_voltage_min: number | null;
 }
 
 export interface Led {
@@ -176,10 +248,13 @@ export interface VComponent {
 
 export interface DB {
   adc: Adc;
+  analog_multiplexer: AnalogMultiplexer;
   capacitor: Capacitor;
   categories: Category;
   components: Component;
+  diode: Diode;
   header: Header;
+  io_expander: IoExpander;
   led: Led;
   manufacturers: Manufacturer;
   resistor: Resistor;

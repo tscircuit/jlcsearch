@@ -9,16 +9,18 @@ export default withWinterSpec({
   commonParams: z.object({
     json: z.boolean().optional(),
     package: z.string().optional(),
-    diode_type: z.enum([
-      "general_purpose",
-      "schottky_barrier",
-      "zener",
-      "tvs",
-      "switching",
-      "fast_recovery", 
-      "bridge_rectifier",
-      "",
-    ]).optional(),
+    diode_type: z
+      .enum([
+        "general_purpose",
+        "schottky_barrier",
+        "zener",
+        "tvs",
+        "switching",
+        "fast_recovery",
+        "bridge_rectifier",
+        "",
+      ])
+      .optional(),
   }),
   jsonResponse: z.string().or(
     z.object({
@@ -95,13 +97,6 @@ export default withWinterSpec({
     })
   }
 
-  const formatDiodeType = (type: string) => {
-    return type
-      .split("_")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ")
-  }
-
   return ctx.react(
     <div>
       <h2>Diodes</h2>
@@ -109,18 +104,17 @@ export default withWinterSpec({
       <form method="GET" className="flex flex-row gap-4">
         <div>
           <label>Package:</label>
-          <select name="package">
-            <option value="">All</option>
+          <input
+            list="package-options"
+            name="package"
+            defaultValue={params.package ?? ""}
+            placeholder="All"
+          />
+          <datalist id="package-options">
             {packages.map((p) => (
-              <option
-                key={p.package}
-                value={p.package ?? ""}
-                selected={p.package === params.package}
-              >
-                {p.package}
-              </option>
+              <option key={p.package} value={p.package ?? ""} />
             ))}
-          </select>
+          </datalist>
         </div>
 
         <div>
@@ -133,7 +127,7 @@ export default withWinterSpec({
                 value={t.diode_type ?? ""}
                 selected={t.diode_type === params.diode_type}
               >
-                {formatDiodeType(t.diode_type ?? "")}
+                {t.diode_type}
               </option>
             ))}
           </select>
@@ -147,12 +141,14 @@ export default withWinterSpec({
           lcsc: d.lcsc,
           mfr: d.mfr,
           package: d.package,
-          type: formatDiodeType(d.diode_type),
+          type: d.diode_type,
           forward_voltage: d.forward_voltage ? `${d.forward_voltage}V` : "",
           reverse_voltage: d.reverse_voltage ? `${d.reverse_voltage}V` : "",
           forward_current: d.forward_current ? `${d.forward_current}A` : "",
           recovery_time: d.recovery_time_ns ? `${d.recovery_time_ns}ns` : "",
-          power: d.power_dissipation_watts ? `${d.power_dissipation_watts}W` : "",
+          power: d.power_dissipation_watts
+            ? `${d.power_dissipation_watts}W`
+            : "",
           stock: <span className="tabular-nums">{d.stock}</span>,
           price: <span className="tabular-nums">{formatPrice(d.price1)}</span>,
         }))}

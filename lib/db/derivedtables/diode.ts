@@ -58,7 +58,11 @@ export const diodeTableSpec: DerivedTableSpec<Diode> = {
           eb("categories.subcategory", "=", "Zener Diodes"),
           eb("categories.subcategory", "=", "TVS"),
           eb("categories.subcategory", "=", "Switching Diode"),
-          eb("categories.subcategory", "=", "Fast Recovery / High Efficiency Diodes"),
+          eb(
+            "categories.subcategory",
+            "=",
+            "Fast Recovery / High Efficiency Diodes",
+          ),
           eb("categories.subcategory", "=", "Bridge Rectifiers"),
         ]),
       ),
@@ -73,7 +77,8 @@ export const diodeTableSpec: DerivedTableSpec<Diode> = {
 
       // Parse forward voltage
       let forwardVoltage = null
-      const rawForwardV = attrs["Forward Voltage (Vf@If)"] || attrs["Forward Voltage (Vf)"]
+      const rawForwardV =
+        attrs["Forward Voltage (Vf@If)"] || attrs["Forward Voltage (Vf)"]
       if (rawForwardV) {
         const match = rawForwardV.match(/([\d.]+)V/)
         if (match) forwardVoltage = parseFloat(match[1])
@@ -97,7 +102,9 @@ export const diodeTableSpec: DerivedTableSpec<Diode> = {
 
       // Parse reverse leakage current
       let leakageCurrent = null
-      const rawLeakage = attrs["Reverse Leakage Current"] || attrs["Reverse Leakage Current (Ir)"]
+      const rawLeakage =
+        attrs["Reverse Leakage Current"] ||
+        attrs["Reverse Leakage Current (Ir)"]
       if (rawLeakage) {
         const parsed = parseAndConvertSiUnit(rawLeakage.split("@")[0]).value
         if (parsed) leakageCurrent = parsed as number
@@ -134,7 +141,8 @@ export const diodeTableSpec: DerivedTableSpec<Diode> = {
       // Determine diode type and characteristics
       const isSchottky = desc.includes("schottky")
       const isZener = desc.includes("zener")
-      const isTvs = desc.includes("tvs") || desc.includes("transient voltage suppressor")
+      const isTvs =
+        desc.includes("tvs") || desc.includes("transient voltage suppressor")
 
       let diodeType = "general_purpose"
       if (isSchottky) diodeType = "schottky_barrier"
