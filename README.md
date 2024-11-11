@@ -1,12 +1,6 @@
-# jlcpcb-parts-engine
+# jlcsearch (in-stock jlcpcb search engine)
 
-This is an engine (API + Admin Backend) for searching JLCPCB parts, the main
-goal is to automatically select components to be placed when a tscircuit user
-doesn't specify what part they'd like. For example:
+[Search for Parts](https://jlcsearch.tscircuit.com)
 
-```tsx
-<resistor resistance="1k" footprint="0605" />
-```
-
-This resistor doesn't give a part number, so we should automatically determine
-the part number for the user based on what stock is available.
+This is an in-stock parts search engine for JLCPCB parts. It also
+features an easy-to-use API
