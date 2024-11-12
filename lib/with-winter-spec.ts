@@ -6,6 +6,7 @@ import { createWithWinterSpec } from "winterspec"
 import { withRequestLogging } from "./middlewares/with-request-logging"
 import { withCacheHeaders } from "./middlewares/with-cache-headers"
 import { withIsApiRequest } from "./middlewares/with-is-api-request"
+import { withCors } from "./middlewares/with-cors"
 
 export const withWinterSpec = createWithWinterSpec({
   authMiddleware: {},
@@ -18,6 +19,7 @@ export const withWinterSpec = createWithWinterSpec({
     withRequestLogging,
     withCacheHeaders,
     withIsApiRequest,
+    withCors,
   ],
 
   apiName: "tscircuit JLC Search",
