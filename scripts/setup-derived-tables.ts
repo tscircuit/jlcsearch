@@ -10,6 +10,7 @@ import { ioExpanderTableSpec } from "lib/db/derivedtables/io_expander"
 import { diodeTableSpec } from "lib/db/derivedtables/diode"
 import { dacTableSpec } from "lib/db/derivedtables/dac"
 import { wifiModuleTableSpec } from "lib/db/derivedtables/wifi_module"
+import { microcontrollerTableSpec } from "lib/db/derivedtables/microcontroller"
 import type { DerivedTableSpec } from "lib/db/derivedtables/types"
 import type { KyselyDatabaseInstance } from "lib/db/kysely-types"
 
@@ -28,6 +29,7 @@ const DERIVED_TABLES: DerivedTableSpec<any>[] = [
   diodeTableSpec,
   dacTableSpec,
   wifiModuleTableSpec,
+  microcontrollerTableSpec,
 ]
 
 function jsonParseOrNull(strObject: string) {

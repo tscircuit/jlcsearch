@@ -23,6 +23,7 @@ export default withWinterSpec({
       <a href="/diodes/list">Diodes</a>
       <a href="/dacs/list">DACs</a>
       <a href="/wifi_modules/list">WiFi Modules</a>
+      <a href="/microcontrollers/list">Microcontrollers</a>
     </div>,
   )
 })
