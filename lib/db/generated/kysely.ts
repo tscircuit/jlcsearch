@@ -269,6 +269,33 @@ export interface VComponent {
   subcategory: string | null;
 }
 
+export interface WifiModule {
+  antenna_type: string | null;
+  attributes: string | null;
+  core_processor: string | null;
+  description: string | null;
+  frequency_ghz: number | null;
+  has_adc: number | null;
+  has_gpio: number | null;
+  has_i2c: number | null;
+  has_pwm: number | null;
+  has_spi: number | null;
+  has_uart: number | null;
+  in_stock: number | null;
+  lcsc: number | null;
+  mfr: string | null;
+  operating_temp_max: number | null;
+  operating_temp_min: number | null;
+  operating_voltage: number | null;
+  output_power_dbm: number | null;
+  package: string | null;
+  price1: number | null;
+  rx_current_ma: number | null;
+  sensitivity_dbm: number | null;
+  stock: number | null;
+  tx_current_ma: number | null;
+}
+
 export interface DB {
   adc: Adc;
   analog_multiplexer: AnalogMultiplexer;
@@ -283,4 +310,5 @@ export interface DB {
   manufacturers: Manufacturer;
   resistor: Resistor;
   v_components: VComponent;
+  wifi_module: WifiModule;
 }
