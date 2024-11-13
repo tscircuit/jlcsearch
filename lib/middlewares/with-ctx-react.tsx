@@ -90,7 +90,7 @@ button {
                 <a href="https://tscircuit.com/legal/terms-of-service.html">
                   terms of service
                 </a>
-                . This site is not affiliated with JLCPCB, we are customers
+                . This site is from tscircuit not JLCPCB, we are customers
                 helping other customers.
               </footer>
             </div>
