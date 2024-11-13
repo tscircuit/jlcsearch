@@ -103,6 +103,29 @@ export interface Component {
   stock: number;
 }
 
+export interface Dac {
+  attributes: string | null;
+  description: string | null;
+  has_i2c: number | null;
+  has_parallel_interface: number | null;
+  has_spi: number | null;
+  in_stock: number | null;
+  lcsc: number | null;
+  mfr: string | null;
+  nonlinearity_lsb: number | null;
+  num_channels: number | null;
+  operating_temp_max: number | null;
+  operating_temp_min: number | null;
+  output_type: string | null;
+  package: string | null;
+  price1: number | null;
+  resolution_bits: number | null;
+  settling_time_us: number | null;
+  stock: number | null;
+  supply_voltage_max: number | null;
+  supply_voltage_min: number | null;
+}
+
 export interface Diode {
   attributes: string | null;
   configuration: string | null;
@@ -252,6 +275,7 @@ export interface DB {
   capacitor: Capacitor;
   categories: Category;
   components: Component;
+  dac: Dac;
   diode: Diode;
   header: Header;
   io_expander: IoExpander;
