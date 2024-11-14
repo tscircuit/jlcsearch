@@ -11,6 +11,7 @@ import { diodeTableSpec } from "lib/db/derivedtables/diode"
 import { dacTableSpec } from "lib/db/derivedtables/dac"
 import { wifiModuleTableSpec } from "lib/db/derivedtables/wifi_module"
 import { microcontrollerTableSpec } from "lib/db/derivedtables/microcontroller"
+import { voltageRegulatorTableSpec } from "lib/db/derivedtables/voltage_regulator"
 import type { DerivedTableSpec } from "lib/db/derivedtables/types"
 import type { KyselyDatabaseInstance } from "lib/db/kysely-types"
 
@@ -30,6 +31,7 @@ const DERIVED_TABLES: DerivedTableSpec<any>[] = [
   dacTableSpec,
   wifiModuleTableSpec,
   microcontrollerTableSpec,
+  voltageRegulatorTableSpec,
 ]
 
 function jsonParseOrNull(strObject: string) {
