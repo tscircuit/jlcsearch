@@ -17,7 +17,7 @@ primary_region = 'sjc'
   max_machines_running = 1
   processes = ['app']
 
-  [http_service.healthcheck]
+  [[http_service.checks]]
     path = "/health"
     interval = "15s"
     timeout = "2s"
