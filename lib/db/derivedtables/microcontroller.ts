@@ -75,7 +75,11 @@ export const microcontrollerTableSpec: DerivedTableSpec<Microcontroller> = {
       .selectAll()
       .where((eb) =>
         eb.or([
-          eb("categories.subcategory", "=", "Microcontroller Units (MCUs/MPUs/SOCs)"),
+          eb(
+            "categories.subcategory",
+            "=",
+            "Microcontroller Units (MCUs/MPUs/SOCs)",
+          ),
           eb("categories.subcategory", "=", "MICROCHIP"),
           eb("categories.subcategory", "=", "ST Microelectronics"),
           eb("categories.subcategory", "=", "NXP MCU"),
@@ -128,7 +132,8 @@ export const microcontrollerTableSpec: DerivedTableSpec<Microcontroller> = {
       // Parse voltage range
       let voltageMin = null
       let voltageMax = null
-      const rawVoltage = attrs["Operating Voltage Range"] || attrs["Supply Voltage"]
+      const rawVoltage =
+        attrs["Operating Voltage Range"] || attrs["Supply Voltage"]
       if (rawVoltage) {
         const match = rawVoltage.match(/([\d.]+)V~([\d.]+)V/)
         if (match) {
@@ -152,56 +157,56 @@ export const microcontrollerTableSpec: DerivedTableSpec<Microcontroller> = {
       // Parse peripheral features
       const peripheral = (attrs["Peripheral/Function"] || "").toLowerCase()
       const hasUart = Boolean(
-        peripheral.includes("uart") || 
-        attrs["UART/USART"]?.includes("1") ||
-        desc.includes("uart")
+        peripheral.includes("uart") ||
+          attrs["UART/USART"]?.includes("1") ||
+          desc.includes("uart"),
       )
       const hasI2c = Boolean(
-        peripheral.includes("i2c") || 
-        attrs["I2C"]?.includes("1") ||
-        desc.includes("i2c")
+        peripheral.includes("i2c") ||
+          attrs["I2C"]?.includes("1") ||
+          desc.includes("i2c"),
       )
       const hasSpi = Boolean(
-        peripheral.includes("spi") || 
-        attrs["SPI"]?.includes("1") ||
-        desc.includes("spi")
+        peripheral.includes("spi") ||
+          attrs["SPI"]?.includes("1") ||
+          desc.includes("spi"),
       )
       const hasCan = Boolean(
-        peripheral.includes("can") || 
-        attrs["CAN"]?.includes("1") ||
-        desc.includes("can")
+        peripheral.includes("can") ||
+          attrs["CAN"]?.includes("1") ||
+          desc.includes("can"),
       )
       const hasUsb = Boolean(
-        peripheral.includes("usb") || 
-        attrs["Universal Serial Bus"] === "Yes" ||
-        desc.includes("usb")
+        peripheral.includes("usb") ||
+          attrs["Universal Serial Bus"] === "Yes" ||
+          desc.includes("usb"),
       )
       const hasAdc = Boolean(attrs["ADC (Bit)"] || desc.includes("adc"))
       const hasDac = Boolean(attrs["DAC (Bit)"] || desc.includes("dac"))
       const hasPwm = Boolean(
-        peripheral.includes("pwm") || 
-        attrs["PWM (Bit)"] ||
-        desc.includes("pwm")
+        peripheral.includes("pwm") ||
+          attrs["PWM (Bit)"] ||
+          desc.includes("pwm"),
       )
       const hasDma = Boolean(
-        peripheral.includes("dma") || 
-        attrs["Direct Memory Access"] === "Yes" ||
-        desc.includes("dma")
+        peripheral.includes("dma") ||
+          attrs["Direct Memory Access"] === "Yes" ||
+          desc.includes("dma"),
       )
       const hasRtc = Boolean(
-        peripheral.includes("rtc") || 
-        attrs["Real-Time Clock"] === "Yes" ||
-        desc.includes("rtc")
+        peripheral.includes("rtc") ||
+          attrs["Real-Time Clock"] === "Yes" ||
+          desc.includes("rtc"),
       )
       const hasComparator = Boolean(
-        peripheral.includes("comparator") || 
-        attrs["Internal Comparator"] === "Yes" ||
-        desc.includes("comparator")
+        peripheral.includes("comparator") ||
+          attrs["Internal Comparator"] === "Yes" ||
+          desc.includes("comparator"),
       )
       const hasWatchdog = Boolean(
-        peripheral.includes("wdt") || 
-        attrs["Watchdog"] === "Yes" ||
-        desc.includes("watchdog")
+        peripheral.includes("wdt") ||
+          attrs["Watchdog"] === "Yes" ||
+          desc.includes("watchdog"),
       )
 
       // Parse ADC/DAC resolution

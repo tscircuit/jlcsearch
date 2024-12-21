@@ -52,9 +52,7 @@ export const ioExpanderTableSpec: DerivedTableSpec<IoExpander> = {
       .innerJoin("categories", "components.category_id", "categories.id")
       .selectAll()
       .where((eb) =>
-        eb.or([
-          eb("categories.subcategory", "=", "I/O Expanders"),
-        ]),
+        eb.or([eb("categories.subcategory", "=", "I/O Expanders")]),
       ),
   mapToTable: (components) => {
     return components.map((c): IoExpander | null => {
@@ -110,27 +108,28 @@ export const ioExpanderTableSpec: DerivedTableSpec<IoExpander> = {
       const rawSink = attrs["Output Sink Current"]
       if (rawSink) {
         const parsed = parseAndConvertSiUnit(rawSink).value
-        if (parsed) sinkCurrent = parsed as number * 1000 // Convert to mA
+        if (parsed) sinkCurrent = (parsed as number) * 1000 // Convert to mA
       }
 
       let sourceCurrent = null
       const rawSource = attrs["Output Source current"]
       if (rawSource) {
         const parsed = parseAndConvertSiUnit(rawSource).value
-        if (parsed) sourceCurrent = parsed as number * 1000 // Convert to mA
+        if (parsed) sourceCurrent = (parsed as number) * 1000 // Convert to mA
       }
 
       // Determine interfaces
       const interfaceType = (attrs["Interface"] || "").toLowerCase()
-      const hasI2c = interfaceType.includes("i²c") || interfaceType.includes("i2c")
+      const hasI2c =
+        interfaceType.includes("i²c") || interfaceType.includes("i2c")
       const hasSpi = interfaceType.includes("spi")
       const hasSmbus = interfaceType.includes("smbus")
 
       // Determine if it has interrupt output
       const hasInterrupt = Boolean(
         attrs["Interrupt Output"]?.toLowerCase().includes("with") ||
-        desc.includes("interrupt") ||
-        desc.includes("irq")
+          desc.includes("interrupt") ||
+          desc.includes("irq"),
       )
 
       // Get output type

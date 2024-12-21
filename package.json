@@ -23,7 +23,9 @@
     "setup:extract-db": ".bin/7zz x .buildtmp/cache.zip",
     "setup:replace-db-file": "rm -f ./db.sqlite3 && mv ./cache.sqlite3 ./db.sqlite3",
     "setup:optimize-db": "bun run scripts/setup-db-optimizations.ts",
-    "setup:derived-tables": "bun run scripts/setup-derived-tables.ts"
+    "setup:derived-tables": "bun run scripts/setup-derived-tables.ts",
+    "format": "biome format --write .",
+    "format:check": "biome format ."
   },
   "type": "module",
   "dependencies": {
