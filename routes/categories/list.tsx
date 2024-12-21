@@ -18,12 +18,30 @@ export default withWinterSpec({
       (c: { category: string }) => c.category === req.query.category_name,
     )
   } else {
-    categories = [
-      ...categories.reduce((acc: Set<string>, c: { category: string }) => {
-        acc.add(c.category)
-        return acc
-      }, new Set()),
-    ].map((c: string) => ({ category: c }))
+    // Group categories and their subcategories
+    const categoryMap = categories.reduce((acc: Map<string, Set<string>>, c) => {
+      if (!acc.has(c.category)) {
+        acc.set(c.category, new Set())
+      }
+      if (c.subcategory) {
+        acc.get(c.category)!.add(c.subcategory)
+      }
+      return acc
+    }, new Map())
+
+    categories = Array.from(categoryMap.entries()).map(([category, subcategories]) => ({
+      category,
+      subcategory: Array.from(subcategories)[0] || undefined
+    }))
+  }
+
+  if (ctx.isApiRequest) {
+    return ctx.json({
+      categories: categories.map(c => ({
+        category: c.category,
+        subcategory: c.subcategory
+      }))
+    })
   }
 
   return ctx.react(

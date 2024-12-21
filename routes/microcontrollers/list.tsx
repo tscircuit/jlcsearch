@@ -83,6 +83,29 @@ export default withWinterSpec({
 
   const mcus = await query.execute()
 
+  if (ctx.isApiRequest) {
+    return ctx.json({
+      microcontrollers: mcus.map(m => ({
+        lcsc: m.lcsc,
+        mfr: m.mfr,
+        package: m.package,
+        cpu_core: m.cpu_core,
+        cpu_speed_hz: m.cpu_speed_hz,
+        flash_size_bytes: m.flash_size_bytes,
+        ram_size_bytes: m.ram_size_bytes,
+        eeprom_size_bytes: m.eeprom_size_bytes,
+        gpio_count: m.gpio_count,
+        has_uart: m.has_uart === 1,
+        has_i2c: m.has_i2c === 1,
+        has_spi: m.has_spi === 1,
+        has_can: m.has_can === 1,
+        has_usb: m.has_usb === 1,
+        stock: m.stock,
+        price1: m.price1
+      }))
+    })
+  }
+
   return ctx.react(
     <div>
       <h2>Microcontrollers</h2>

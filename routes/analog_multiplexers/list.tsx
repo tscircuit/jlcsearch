@@ -70,6 +70,26 @@ export default withWinterSpec({
 
   const multiplexers = await query.execute()
 
+  if (ctx.isApiRequest) {
+    return ctx.json({
+      multiplexers: multiplexers.map(m => ({
+        lcsc: m.lcsc,
+        mfr: m.mfr,
+        package: m.package,
+        num_channels: m.num_channels,
+        on_resistance_ohms: m.on_resistance_ohms,
+        supply_voltage_min: m.supply_voltage_min,
+        supply_voltage_max: m.supply_voltage_max,
+        has_spi: m.has_spi === 1,
+        has_i2c: m.has_i2c === 1,
+        has_parallel_interface: m.has_parallel_interface === 1,
+        channel_type: m.channel_type,
+        stock: m.stock,
+        price1: m.price1
+      }))
+    })
+  }
+
   return ctx.react(
     <div>
       <h2>Analog Multiplexers</h2>
