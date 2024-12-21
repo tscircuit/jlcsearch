@@ -162,20 +162,20 @@ export const voltageRegulatorTableSpec: DerivedTableSpec<VoltageRegulator> = {
       const rawNoise = attrs["Output Noise"]
       if (rawNoise) {
         const parsed = parseAndConvertSiUnit(rawNoise).value
-        if (parsed) outputNoise = parsed as number * 1e6 // Convert to μVrms
+        if (parsed) outputNoise = (parsed as number) * 1e6 // Convert to μVrms
       }
 
       // Determine regulator characteristics
       const isLdo = Boolean(
         desc.includes("ldo") ||
-        desc.includes("low drop") ||
-        desc.includes("low-drop") ||
-        (dropoutVoltage && dropoutVoltage < 0.7)
+          desc.includes("low drop") ||
+          desc.includes("low-drop") ||
+          (dropoutVoltage && dropoutVoltage < 0.7),
       )
 
       const isPositive = Boolean(
         attrs["Output Polarity"]?.toLowerCase().includes("positive") ||
-        !desc.includes("negative")
+          !desc.includes("negative"),
       )
 
       // Get topology

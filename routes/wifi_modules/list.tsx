@@ -11,7 +11,9 @@ export default withWinterSpec({
     package: z.string().optional(),
     core_processor: z.string().optional(),
     antenna_type: z.string().optional(),
-    interface: z.enum(["uart", "spi", "i2c", "gpio", "adc", "pwm", ""]).optional(),
+    interface: z
+      .enum(["uart", "spi", "i2c", "gpio", "adc", "pwm", ""])
+      .optional(),
   }),
   jsonResponse: z.any(),
 } as const)(async (req, ctx) => {

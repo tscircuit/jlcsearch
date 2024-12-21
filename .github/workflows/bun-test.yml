@@ -1,0 +1,36 @@
+# Created using @tscircuit/plop (npm install -g @tscircuit/plop)
+name: Bun Test
+
+on:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+      
+      - name: Install dependencies
+        run: bun install
+
+      - name: Cache setup artifacts
+        id: cache-setup
+        uses: actions/cache@v3
+        with:
+          path: ./db.sqlite3
+          key: db-sqlite3-${{ hashFiles('scripts/setup-*.ts') }}
+
+      - name: Run setup if cache miss
+        if: steps.cache-setup.outputs.cache-hit != 'true'
+        run: bun run setup
+
+      - name: Run tests
+        run: bun test

@@ -77,7 +77,12 @@ button {
                     )
                   })}
                 </div>
-                <div>
+                <div className="flex flex-row gap-2">
+                  {req.url.includes("/list") && (
+                    <a href={`${req.url.replace("/list", "/list.json")}`}>
+                      json
+                    </a>
+                  )}
                   <a href="https://tscircuit.com">tscircuit</a>
                 </div>
               </div>

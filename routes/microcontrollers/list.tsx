@@ -166,7 +166,7 @@ export default withWinterSpec({
       </form>
 
       <Table
-        rows={mcus.map((m) => ({
+        rows={mcus.map((m: any) => ({
           lcsc: m.lcsc,
           mfr: m.mfr,
           package: m.package,

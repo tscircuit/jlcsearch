@@ -58,9 +58,7 @@ export const wifiModuleTableSpec: DerivedTableSpec<WifiModule> = {
       .innerJoin("categories", "components.category_id", "categories.id")
       .selectAll()
       .where((eb) =>
-        eb.or([
-          eb("categories.subcategory", "=", "WiFi Modules"),
-        ]),
+        eb.or([eb("categories.subcategory", "=", "WiFi Modules")]),
       ),
   mapToTable: (components) => {
     return components.map((c): WifiModule | null => {

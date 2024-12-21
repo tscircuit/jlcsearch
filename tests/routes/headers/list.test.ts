@@ -6,8 +6,8 @@ test("GET /headers/list with json param returns header data", async () => {
 
   const res = await axios.get("/headers/list", {
     params: {
-      json: true
-    }
+      json: true,
+    },
   })
 
   expect(res.data).toHaveProperty("headers")
@@ -31,8 +31,8 @@ test("GET /headers/list with filters returns filtered data", async () => {
   const res = await axios.get("/headers/list", {
     params: {
       json: true,
-      gender: "male"
-    }
+      gender: "male",
+    },
   })
 
   expect(res.data).toHaveProperty("headers")

@@ -23,10 +23,7 @@ export default withWinterSpec({
           pitch_mm: z.number().optional(),
           num_pins: z.number().optional(),
           gender: z.string().optional(),
-          is_right_angle: z
-            .number()
-            .transform((val) => val !== 0)
-            .optional(),
+          is_right_angle: z.coerce.boolean().optional(),
           voltage_rating: z.number().optional(),
           current_rating: z.number().optional(),
           stock: z.number().optional(),
@@ -90,7 +87,7 @@ export default withWinterSpec({
           pitch_mm: h.pitch_mm ?? undefined,
           num_pins: h.num_pins ?? undefined,
           gender: h.gender ?? undefined,
-          is_right_angle: h.is_right_angle ?? undefined,
+          is_right_angle: Boolean(h.is_right_angle ?? undefined),
           voltage_rating: h.voltage_rating_volt ?? undefined,
           current_rating: h.current_rating_amp ?? undefined,
           stock: h.stock ?? undefined,

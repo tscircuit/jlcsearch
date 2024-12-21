@@ -132,13 +132,14 @@ export default withWinterSpec({
           ]
             .filter(Boolean)
             .join(", "),
-          output: r.output_voltage_min === r.output_voltage_max ? (
-            <span className="tabular-nums">{r.output_voltage_min}V</span>
-          ) : (
-            <span className="tabular-nums">
-              {r.output_voltage_min}V - {r.output_voltage_max}V
-            </span>
-          ),
+          output:
+            r.output_voltage_min === r.output_voltage_max ? (
+              <span className="tabular-nums">{r.output_voltage_min}V</span>
+            ) : (
+              <span className="tabular-nums">
+                {r.output_voltage_min}V - {r.output_voltage_max}V
+              </span>
+            ),
           current: r.output_current_max ? (
             <span className="tabular-nums">{r.output_current_max}A</span>
           ) : (
@@ -149,13 +150,14 @@ export default withWinterSpec({
           ) : (
             ""
           ),
-          input: r.input_voltage_min && r.input_voltage_max ? (
-            <span className="tabular-nums">
-              {r.input_voltage_min}V - {r.input_voltage_max}V
-            </span>
-          ) : (
-            ""
-          ),
+          input:
+            r.input_voltage_min && r.input_voltage_max ? (
+              <span className="tabular-nums">
+                {r.input_voltage_min}V - {r.input_voltage_max}V
+              </span>
+            ) : (
+              ""
+            ),
           quiescent: r.quiescent_current ? (
             <span className="tabular-nums">{r.quiescent_current}A</span>
           ) : (

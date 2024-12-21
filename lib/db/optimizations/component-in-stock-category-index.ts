@@ -4,7 +4,8 @@ import type { KyselyDatabaseInstance } from "../kysely-types"
 
 export const componentInStockCategoryIndex: DbOptimizationSpec = {
   name: "idx_components_in_stock_category",
-  description: "Compound index on components.in_stock and category_id for faster filtered queries",
+  description:
+    "Compound index on components.in_stock and category_id for faster filtered queries",
 
   async checkIfAdded(db: KyselyDatabaseInstance) {
     const result = await sql`

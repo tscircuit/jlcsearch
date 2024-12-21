@@ -51,7 +51,11 @@ export const dacTableSpec: DerivedTableSpec<Dac> = {
       .selectAll()
       .where((eb) =>
         eb.or([
-          eb("categories.subcategory", "=", "Digital To Analog Converters (DACs)"),
+          eb(
+            "categories.subcategory",
+            "=",
+            "Digital To Analog Converters (DACs)",
+          ),
         ]),
       ),
   mapToTable: (components) => {
@@ -116,7 +120,8 @@ export const dacTableSpec: DerivedTableSpec<Dac> = {
 
       // Determine interfaces
       const interfaceType = (attrs["Interface"] || "").toLowerCase()
-      const hasI2c = interfaceType.includes("i²c") || interfaceType.includes("i2c")
+      const hasI2c =
+        interfaceType.includes("i²c") || interfaceType.includes("i2c")
       const hasSpi = interfaceType.includes("spi")
       const hasParallel = interfaceType.includes("parallel")
 
