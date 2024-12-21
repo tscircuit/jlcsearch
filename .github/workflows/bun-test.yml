@@ -17,6 +17,9 @@ jobs:
         uses: oven-sh/setup-bun@v1
         with:
           bun-version: latest
+      
+      - name: Install dependencies
+        run: bun install
 
       - name: Cache setup artifacts
         id: cache-setup
@@ -28,10 +31,6 @@ jobs:
       - name: Run setup if cache miss
         if: steps.cache-setup.outputs.cache-hit != 'true'
         run: bun run setup
-
-
-      - name: Install dependencies
-        run: bun install
 
       - name: Run tests
         run: bun test
