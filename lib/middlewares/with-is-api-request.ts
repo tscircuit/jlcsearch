@@ -3,7 +3,7 @@ import type { Middleware } from "winterspec"
 export const withIsApiRequest: Middleware<{}, { isApiRequest: boolean }> = (
   req,
   ctx,
-  next
+  next,
 ) => {
   ctx.isApiRequest =
     req.url.includes("json=") ||
