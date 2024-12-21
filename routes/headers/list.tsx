@@ -90,7 +90,7 @@ export default withWinterSpec({
           pitch_mm: h.pitch_mm ?? undefined,
           num_pins: h.num_pins ?? undefined,
           gender: h.gender ?? undefined,
-          is_right_angle: h.is_right_angle ?? undefined,
+          is_right_angle: Boolean(h.is_right_angle ?? undefined),
           voltage_rating: h.voltage_rating_volt ?? undefined,
           current_rating: h.current_rating_amp ?? undefined,
           stock: h.stock ?? undefined,
