@@ -19,20 +19,23 @@ export default withWinterSpec({
     )
   } else {
     // Group categories and their subcategories
-    const categoryMap = categories.reduce((acc: Map<string, Set<string>>, c) => {
-      if (!acc.has(c.category)) {
-        acc.set(c.category, new Set())
-      }
-      if (c.subcategory) {
-        acc.get(c.category)!.add(c.subcategory)
-      }
-      return acc
-    }, new Map())
+    const categoryMap = categories.reduce(
+      (acc: Map<string, Set<string>>, c) => {
+        if (!acc.has(c.category)) {
+          acc.set(c.category, new Set<string>())
+        }
+        if (c.subcategory) {
+          acc.get(c.category)!.add(c.subcategory)
+        }
+        return acc
+      },
+      new Map<string, Set<string>>(),
+    )
 
     categories = Array.from(categoryMap.entries()).map(
       ([category, subcategories]) => ({
         category,
-        subcategory: Array.from(subcategories)[0] || undefined,
+        subcategory: Array.from(subcategories)[0] as string | undefined,
       }),
     )
   }

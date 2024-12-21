@@ -72,7 +72,7 @@ export default withWinterSpec({
 
   if (ctx.isApiRequest) {
     return ctx.json({
-      multiplexers: multiplexers.map(m => ({
+      multiplexers: multiplexers.map((m) => ({
         lcsc: m.lcsc,
         mfr: m.mfr,
         package: m.package,
@@ -85,8 +85,8 @@ export default withWinterSpec({
         has_parallel_interface: m.has_parallel_interface === 1,
         channel_type: m.channel_type,
         stock: m.stock,
-        price1: m.price1
-      }))
+        price1: m.price1,
+      })),
     })
   }
 
