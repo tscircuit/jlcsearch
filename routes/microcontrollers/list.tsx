@@ -85,7 +85,7 @@ export default withWinterSpec({
 
   if (ctx.isApiRequest) {
     return ctx.json({
-      microcontrollers: mcus.map(m => ({
+      microcontrollers: mcus.map((m) => ({
         lcsc: m.lcsc,
         mfr: m.mfr,
         package: m.package,
@@ -101,8 +101,8 @@ export default withWinterSpec({
         has_can: m.has_can === 1,
         has_usb: m.has_usb === 1,
         stock: m.stock,
-        price1: m.price1
-      }))
+        price1: m.price1,
+      })),
     })
   }
 

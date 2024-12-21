@@ -58,7 +58,7 @@ export default withWinterSpec({
 
   if (ctx.isApiRequest) {
     return ctx.json({
-      regulators: regulators.map(r => ({
+      regulators: regulators.map((r) => ({
         lcsc: r.lcsc,
         mfr: r.mfr,
         package: r.package,
@@ -73,8 +73,8 @@ export default withWinterSpec({
         input_voltage_max: r.input_voltage_max,
         quiescent_current: r.quiescent_current,
         stock: r.stock,
-        price1: r.price1
-      }))
+        price1: r.price1,
+      })),
     })
   }
 

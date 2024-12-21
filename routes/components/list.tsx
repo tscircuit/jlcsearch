@@ -55,7 +55,7 @@ export default withWinterSpec({
 
   if (ctx.isApiRequest) {
     return ctx.json({
-      components: req.query.full ? fullComponents : components
+      components: req.query.full ? fullComponents : components,
     })
   }
 

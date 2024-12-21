@@ -29,18 +29,20 @@ export default withWinterSpec({
       return acc
     }, new Map())
 
-    categories = Array.from(categoryMap.entries()).map(([category, subcategories]) => ({
-      category,
-      subcategory: Array.from(subcategories)[0] || undefined
-    }))
+    categories = Array.from(categoryMap.entries()).map(
+      ([category, subcategories]) => ({
+        category,
+        subcategory: Array.from(subcategories)[0] || undefined,
+      }),
+    )
   }
 
   if (ctx.isApiRequest) {
     return ctx.json({
-      categories: categories.map(c => ({
+      categories: categories.map((c) => ({
         category: c.category,
-        subcategory: c.subcategory
-      }))
+        subcategory: c.subcategory,
+      })),
     })
   }
 
