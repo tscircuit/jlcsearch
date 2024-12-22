@@ -1,5 +1,5 @@
 export const parseIntOrNull = (
-  value: string | number | null
+  value: string | number | null,
 ): number | null => {
   if (value === null) return null
   const parsed = Number(value)
