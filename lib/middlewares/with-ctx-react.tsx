@@ -77,7 +77,14 @@ button {
                     )
                   })}
                 </div>
-                <div className="flex flex-row gap-2">
+                <div className="flex flex-row items-center gap-2">
+                  <a href="https://github.com/tscircuit/jlcsearch">
+                    <img
+                      src="https://img.shields.io/github/stars/tscircuit/jlcsearch?style=social"
+                      alt="GitHub stars"
+                      className="inline-block"
+                    />
+                  </a>
                   {req.url.includes("/list") && (
                     <a href={`${req.url.replace("/list", "/list.json")}`}>
                       json
