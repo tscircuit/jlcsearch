@@ -38,6 +38,7 @@
         "noLabelWithoutControl": "off"
       },
       "style": {
+        "useImportType": "off",
         "noUnusedTemplateLiteral": "off",
         "noUselessElse": "off",
         "noNonNullAssertion": "off",
