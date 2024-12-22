@@ -11,24 +11,24 @@ import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 
 interface LedDriver {
   // Required fields from DerivedTableSpec
-  lcsc: number;
-  mfr: string;
-  description: string;
-  stock: number;
-  price1: number | null;
-  in_stock: boolean;
+  lcsc: number
+  mfr: string
+  description: string
+  stock: number
+  price1: number | null
+  in_stock: boolean
   // Optional LED driver specific fields
-  package?: string;
-  supply_voltage_min?: number;
-  supply_voltage_max?: number;
-  output_current_max?: number;
-  channel_count?: number;
-  dimming_method?: string;
-  efficiency_percent?: number;
-  operating_temp_min?: number;
-  operating_temp_max?: number;
-  protection_features?: string;
-  mounting_style?: string;
+  package?: string
+  supply_voltage_min?: number
+  supply_voltage_max?: number
+  output_current_max?: number
+  channel_count?: number
+  dimming_method?: string
+  efficiency_percent?: number
+  operating_temp_min?: number
+  operating_temp_max?: number
+  protection_features?: string
+  mounting_style?: string
 }
 
 export const ledDriverTableSpec: DerivedTableSpec<LedDriver> = {
@@ -44,26 +44,26 @@ export const ledDriverTableSpec: DerivedTableSpec<LedDriver> = {
     { name: "operating_temp_min", type: "real" },
     { name: "operating_temp_max", type: "real" },
     { name: "protection_features", type: "text" },
-    { name: "mounting_style", type: "text" }
+    { name: "mounting_style", type: "text" },
   ],
   listCandidateComponents(db: KyselyDatabaseInstance) {
     return db
       .selectFrom("components")
       .innerJoin("categories", "components.category_id", "categories.id")
       .selectAll()
-      .where((eb) => 
+      .where((eb) =>
         eb.or([
           eb("categories.subcategory", "=", "LED Drivers"),
           eb("description", "like", "%LED Driver%"),
-          eb("description", "like", "%LED Controller%")
-        ])
+          eb("description", "like", "%LED Controller%"),
+        ]),
       )
   },
   mapToTable(components: UnwrapGenerated<Component>[]): (LedDriver | null)[] {
     return components.map((c) => {
       try {
         const attrs = c.extra ? JSON.parse(c.extra)?.attributes || {} : {}
-      
+
         // Helper to parse voltage/current values that might be in various formats
         const parseValue = (val: string | undefined): number | undefined => {
           if (!val) return undefined
@@ -82,17 +82,25 @@ export const ledDriverTableSpec: DerivedTableSpec<LedDriver> = {
           supply_voltage_min: parseValue(attrs["Input Voltage"]?.split("~")[0]),
           supply_voltage_max: parseValue(attrs["Input Voltage"]?.split("~")[1]),
           output_current_max: parseValue(attrs["Output Current"]),
-          channel_count: attrs["Number of Outputs"] ? parseInt(attrs["Number of Outputs"]) : undefined,
+          channel_count: attrs["Number of Outputs"]
+            ? parseInt(attrs["Number of Outputs"])
+            : undefined,
           dimming_method: attrs["Dimming Method"],
-          efficiency_percent: attrs["Efficiency"] ? parseFloat(attrs["Efficiency"]) : undefined,
-          operating_temp_min: parseValue(attrs["Operating Temperature"]?.split("~")[0]),
-          operating_temp_max: parseValue(attrs["Operating Temperature"]?.split("~")[1]),
+          efficiency_percent: attrs["Efficiency"]
+            ? parseFloat(attrs["Efficiency"])
+            : undefined,
+          operating_temp_min: parseValue(
+            attrs["Operating Temperature"]?.split("~")[0],
+          ),
+          operating_temp_max: parseValue(
+            attrs["Operating Temperature"]?.split("~")[1],
+          ),
           protection_features: attrs["Protection Features"],
-          mounting_style: attrs["Mounting Style"]
+          mounting_style: attrs["Mounting Style"],
         }
       } catch (e) {
         return null
       }
     })
-  }
+  },
 }

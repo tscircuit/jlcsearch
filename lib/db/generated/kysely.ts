@@ -3,85 +3,85 @@
  * Please do not edit it manually.
  */
 
-import type { ColumnType } from "kysely";
+import type { ColumnType } from "kysely"
 
 export type Generated<T> = T extends ColumnType<infer S, infer I, infer U>
   ? ColumnType<S, I | undefined, U>
-  : ColumnType<T, T | undefined, T>;
+  : ColumnType<T, T | undefined, T>
 
 export interface Category {
-  category: string;
-  id: number;
-  subcategory: string;
+  category: string
+  id: number
+  subcategory: string
 }
 
 export interface Component {
-  basic: number;
-  category_id: number;
-  datasheet: string;
-  description: string;
-  extra: string | null;
-  flag: Generated<number>;
-  joints: number;
-  last_on_stock: Generated<number>;
-  last_update: number;
-  lcsc: number;
-  manufacturer_id: number;
-  mfr: string;
-  package: string;
-  preferred: Generated<number>;
-  price: string;
-  stock: number;
+  basic: number
+  category_id: number
+  datasheet: string
+  description: string
+  extra: string | null
+  flag: Generated<number>
+  joints: number
+  last_on_stock: Generated<number>
+  last_update: number
+  lcsc: number
+  manufacturer_id: number
+  mfr: string
+  package: string
+  preferred: Generated<number>
+  price: string
+  stock: number
 }
 
 export interface Manufacturer {
-  id: number;
-  name: string;
+  id: number
+  name: string
 }
 
 export interface Resistor {
-  attributes: string | null;
-  description: string | null;
-  in_stock: number | null;
-  is_multi_resistor_chip: number | null;
-  is_potentiometer: number | null;
-  is_surface_mount: number | null;
-  lcsc: number | null;
-  max_overload_voltage: number | null;
-  mfr: string | null;
-  number_of_pins: number | null;
-  number_of_resistors: number | null;
-  package: string | null;
-  power_watts: number | null;
-  price1: number | null;
-  resistance: number | null;
-  stock: number | null;
-  tolerance_fraction: number | null;
+  attributes: string | null
+  description: string | null
+  in_stock: number | null
+  is_multi_resistor_chip: number | null
+  is_potentiometer: number | null
+  is_surface_mount: number | null
+  lcsc: number | null
+  max_overload_voltage: number | null
+  mfr: string | null
+  number_of_pins: number | null
+  number_of_resistors: number | null
+  package: string | null
+  power_watts: number | null
+  price1: number | null
+  resistance: number | null
+  stock: number | null
+  tolerance_fraction: number | null
 }
 
 export interface VComponent {
-  basic: number | null;
-  category: string | null;
-  category_id: number | null;
-  datasheet: string | null;
-  description: string | null;
-  extra: string | null;
-  joints: number | null;
-  last_on_stock: number | null;
-  lcsc: number | null;
-  manufacturer: string | null;
-  mfr: string | null;
-  package: string | null;
-  preferred: number | null;
-  price: string | null;
-  stock: number | null;
-  subcategory: string | null;
+  basic: number | null
+  category: string | null
+  category_id: number | null
+  datasheet: string | null
+  description: string | null
+  extra: string | null
+  joints: number | null
+  last_on_stock: number | null
+  lcsc: number | null
+  manufacturer: string | null
+  mfr: string | null
+  package: string | null
+  preferred: number | null
+  price: string | null
+  stock: number | null
+  subcategory: string | null
 }
 
 export interface DB {
-  categories: Category;
-  components: Component;
-  manufacturers: Manufacturer;
-  resistor: Resistor;
-  v_components: VComponent;
+  categories: Category
+  components: Component
+  manufacturers: Manufacturer
+  resistor: Resistor
+  v_components: VComponent
 }
