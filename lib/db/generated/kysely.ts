@@ -225,6 +225,27 @@ export interface Led {
   wavelength_nm: number | null
 }
 
+export interface LedDriver {
+  attributes: string | null
+  channel_count: number | null
+  description: string | null
+  dimming_method: string | null
+  efficiency_percent: number | null
+  in_stock: number | null
+  lcsc: number | null
+  mfr: string | null
+  mounting_style: string | null
+  operating_temp_max: number | null
+  operating_temp_min: number | null
+  output_current_max: number | null
+  package: string | null
+  price1: number | null
+  protection_features: string | null
+  stock: number | null
+  supply_voltage_max: number | null
+  supply_voltage_min: number | null
+}
+
 export interface Manufacturer {
   id: number
   name: string
@@ -368,6 +389,7 @@ export interface DB {
   header: Header
   io_expander: IoExpander
   led: Led
+  led_driver: LedDriver
   manufacturers: Manufacturer
   microcontroller: Microcontroller
   resistor: Resistor
