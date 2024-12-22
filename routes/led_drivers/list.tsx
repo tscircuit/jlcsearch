@@ -36,33 +36,15 @@ export default withWinterSpec({
           channel_count: z.number().nullable(),
           dimming_method: z.string().nullable(),
           efficiency_percent: z.number().nullable(),
-        })
+        }),
       ),
-    })
+    }),
   ),
 } as const)(async (req, ctx) => {
   const params = req.commonParams
-  let query = (ctx.db as KyselyDatabaseInstance)
+  let query = ctx.db
     .selectFrom("led_driver")
-    .select([
-      "lcsc",
-      "mfr",
-      "description",
-      "stock",
-      "price1",
-      "in_stock",
-      "package",
-      "supply_voltage_min",
-      "supply_voltage_max",
-      "output_current_max",
-      "channel_count",
-      "dimming_method",
-      "efficiency_percent",
-      "operating_temp_min",
-      "operating_temp_max",
-      "protection_features",
-      "mounting_style"
-    ])
+    .selectAll()
     .orderBy("stock", "desc")
     .limit(100)
 
