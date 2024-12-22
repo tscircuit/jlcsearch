@@ -56,7 +56,7 @@ export const ledDriverTableSpec: DerivedTableSpec<LedDriver> = {
           eb("categories.subcategory", "=", "LED Drivers"),
           eb("description", "like", "%LED Driver%"),
           eb("description", "like", "%LED Controller%"),
-        ]),
+        ])
       )
   },
   mapToTable(components: UnwrapGenerated<Component>[]): (LedDriver | null)[] {
@@ -76,7 +76,7 @@ export const ledDriverTableSpec: DerivedTableSpec<LedDriver> = {
           mfr: String(c.mfr || ""),
           description: String(c.description || ""),
           stock: Number(c.stock || 0),
-          price1: c.price === null ? null : Number(c.price),
+          price1: extractMinQPrice(c.price),
           in_stock: Boolean((c.stock || 0) > 0),
           package: String(c.package || ""),
           supply_voltage_min: parseValue(attrs["Input Voltage"]?.split("~")[0]),
@@ -90,10 +90,10 @@ export const ledDriverTableSpec: DerivedTableSpec<LedDriver> = {
             ? parseFloat(attrs["Efficiency"])
             : undefined,
           operating_temp_min: parseValue(
-            attrs["Operating Temperature"]?.split("~")[0],
+            attrs["Operating Temperature"]?.split("~")[0]
           ),
           operating_temp_max: parseValue(
-            attrs["Operating Temperature"]?.split("~")[1],
+            attrs["Operating Temperature"]?.split("~")[1]
           ),
           protection_features: attrs["Protection Features"],
           mounting_style: attrs["Mounting Style"],
