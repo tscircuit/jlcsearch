@@ -8,6 +8,7 @@ type UnwrapGenerated<T> = {
 }
 import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
+import { parseIntOrNull } from "lib/util/parse-int-or-null"
 
 interface LedDriver {
   // Required fields from DerivedTableSpec
@@ -82,18 +83,19 @@ export const ledDriverTableSpec: DerivedTableSpec<LedDriver> = {
           supply_voltage_min: parseValue(attrs["Input Voltage"]?.split("~")[0]),
           supply_voltage_max: parseValue(attrs["Input Voltage"]?.split("~")[1]),
           output_current_max: parseValue(attrs["Output Current"]),
-          channel_count: attrs["Number of Outputs"]
-            ? parseInt(attrs["Number of Outputs"])
-            : undefined,
-          dimming_method: attrs["Dimming Method"],
+          channel_count:
+            parseIntOrNull(attrs["Channels"]) ??
+            parseIntOrNull(attrs["Number of Outputs"]) ??
+            undefined,
+          dimming_method: attrs["Dimming"] ?? attrs["Dimming Method"],
           efficiency_percent: attrs["Efficiency"]
             ? parseFloat(attrs["Efficiency"])
             : undefined,
           operating_temp_min: parseValue(
-            attrs["Operating Temperature"]?.split("~")[0]
+            attrs["Operating temperature"]?.split("~")[0]
           ),
           operating_temp_max: parseValue(
-            attrs["Operating Temperature"]?.split("~")[1]
+            attrs["Operating temperature"]?.split("~")[1]
           ),
           protection_features: attrs["Protection Features"],
           mounting_style: attrs["Mounting Style"],
