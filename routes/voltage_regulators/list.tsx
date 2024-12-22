@@ -56,6 +56,28 @@ export default withWinterSpec({
 
   const regulators = await query.execute()
 
+  if (ctx.isApiRequest) {
+    return ctx.json({
+      regulators: regulators.map((r) => ({
+        lcsc: r.lcsc,
+        mfr: r.mfr,
+        package: r.package,
+        output_type: r.output_type,
+        is_low_dropout: r.is_low_dropout === 1,
+        is_positive: r.is_positive === 1,
+        output_voltage_min: r.output_voltage_min,
+        output_voltage_max: r.output_voltage_max,
+        output_current_max: r.output_current_max,
+        dropout_voltage: r.dropout_voltage,
+        input_voltage_min: r.input_voltage_min,
+        input_voltage_max: r.input_voltage_max,
+        quiescent_current: r.quiescent_current,
+        stock: r.stock,
+        price1: r.price1,
+      })),
+    })
+  }
+
   return ctx.react(
     <div>
       <h2>Voltage Regulators</h2>

@@ -53,6 +53,12 @@ export default withWinterSpec({
     price: extractSmallQuantityPrice(c.price),
   }))
 
+  if (ctx.isApiRequest) {
+    return ctx.json({
+      components: req.query.full ? fullComponents : components,
+    })
+  }
+
   return ctx.react(
     <div>
       <h2>Components</h2>
