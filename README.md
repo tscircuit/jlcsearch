@@ -14,7 +14,7 @@ You can go on any page and click "json" in the top right corner to automatically
 ```bash
 curl https://jlcsearch.tscircuit.com/resistors/list.json?package=&resistance=1k
 
-#{
+# {
 #  "resistors": [
 #    {
 #      "lcsc": 21190,
