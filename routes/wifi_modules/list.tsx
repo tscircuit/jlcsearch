@@ -89,6 +89,25 @@ export default withWinterSpec({
 
   const modules = await query.execute()
 
+  // Return JSON response if requested
+  if (ctx.isApiRequest) {
+    return new Response(JSON.stringify({ 
+      data: modules,
+      metadata: {
+        total: modules.length,
+        filters: {
+          package: req.query.package,
+          core_processor: req.query.core_processor,
+          antenna_type: req.query.antenna_type,
+          interface: req.query.interface
+        }
+      }
+    }), {
+      headers: { "Content-Type": "application/json" },
+      status: 200,
+    })
+  }
+
   return ctx.react(
     <div>
       <h2>WiFi Modules</h2>
