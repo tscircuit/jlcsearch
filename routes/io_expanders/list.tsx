@@ -3,8 +3,9 @@ import { withWinterSpec } from "lib/with-winter-spec"
 import { z } from "zod"
 import { formatPrice } from "lib/util/format-price"
 import { formatSiUnit } from "lib/util/format-si-unit"
+import { withIsApiRequest } from "lib/middlewares/with-is-api-request"
 
-export default withWinterSpec({
+const spec = {
   auth: "none",
   methods: ["GET"],
   queryParams: z.object({
@@ -14,7 +15,9 @@ export default withWinterSpec({
     has_interrupt: z.boolean().optional(),
   }),
   jsonResponse: z.any(),
-} as const)(async (req, ctx) => {
+} as const
+
+const route = async (req: any, ctx: any) => {
   // Start with base query
   let query = ctx.db
     .selectFrom("io_expander")
@@ -71,6 +74,14 @@ export default withWinterSpec({
 
   const expanders = await query.execute()
 
+  if (ctx.isApiRequest) {
+    return {
+      expanders,
+      packages,
+      gpioCounts
+    }
+  }
+
   return ctx.react(
     <div>
       <h2>I/O Expanders</h2>
@@ -80,7 +91,7 @@ export default withWinterSpec({
           <label>Package:</label>
           <select name="package">
             <option value="">All</option>
-            {packages.map((p) => (
+            {packages.map((p: { package: string | null }) => (
               <option
                 key={p.package}
                 value={p.package ?? ""}
@@ -96,7 +107,7 @@ export default withWinterSpec({
           <label>Number of GPIOs:</label>
           <select name="num_gpios">
             <option value="">All</option>
-            {gpioCounts.map((g) => (
+            {gpioCounts.map((g: { num_gpios: number | null }) => (
               <option
                 key={g.num_gpios}
                 value={g.num_gpios ?? ""}
@@ -141,7 +152,7 @@ export default withWinterSpec({
       </form>
 
       <Table
-        rows={expanders.map((e) => ({
+        rows={expanders.map((e: any) => ({
           lcsc: e.lcsc,
           mfr: e.mfr,
           package: e.package,
@@ -179,4 +190,7 @@ export default withWinterSpec({
       />
     </div>,
   )
-})
+}
+
+const routeWithApi = withIsApiRequest(route)
+export default withWinterSpec(spec)(routeWithApi)
