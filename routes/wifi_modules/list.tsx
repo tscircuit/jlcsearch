@@ -91,6 +91,35 @@ export default withWinterSpec({
 
   const modules = await query.execute()
 
+  // Return JSON response if requested
+  if (ctx.isApiRequest) {
+    return ctx.json({
+      wifi_modules: modules
+        .map((m) => ({
+          lcsc: m.lcsc ?? 0,
+          mfr: m.mfr ?? "",
+          package: m.package ?? "",
+          core_processor: m.core_processor ?? undefined,
+          antenna_type: m.antenna_type ?? undefined,
+          operating_voltage: m.operating_voltage ?? undefined,
+          frequency_ghz: m.frequency_ghz ?? undefined,
+          sensitivity_dbm: m.sensitivity_dbm ?? undefined,
+          output_power_dbm: m.output_power_dbm ?? undefined,
+          tx_current_ma: m.tx_current_ma ?? undefined,
+          rx_current_ma: m.rx_current_ma ?? undefined,
+          has_uart: m.has_uart ?? undefined,
+          has_spi: m.has_spi ?? undefined,
+          has_i2c: m.has_i2c ?? undefined,
+          has_gpio: m.has_gpio ?? undefined,
+          has_adc: m.has_adc ?? undefined,
+          has_pwm: m.has_pwm ?? undefined,
+          stock: m.stock ?? undefined,
+          price1: m.price1 ?? undefined,
+        }))
+        .filter((m) => m.lcsc !== 0 && m.package !== ""),
+    })
+  }
+
   return ctx.react(
     <div>
       <h2>WiFi Modules</h2>
