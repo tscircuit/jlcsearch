@@ -112,9 +112,9 @@ export default withWinterSpec({
           has_adc: m.has_adc ?? undefined,
           has_pwm: m.has_pwm ?? undefined,
           stock: m.stock ?? undefined,
-          price1: m.price1 ?? undefined
+          price1: m.price1 ?? undefined,
         }))
-        .filter((m) => m.lcsc !== 0 && m.package !== "")
+        .filter((m) => m.lcsc !== 0 && m.package !== ""),
     })
   }
 
