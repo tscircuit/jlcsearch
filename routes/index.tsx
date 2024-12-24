@@ -38,6 +38,7 @@ export default withWinterSpec({
         <a href="/microcontrollers/list">Microcontrollers</a>
         <a href="/voltage_regulators/list">Voltage Regulators</a>
         <a href="/led_drivers/list">LED Drivers</a>
+        <a href="/mosfets/list">Mosfets</a>
       </div>
     </div>,
   )
