@@ -1,9 +1,9 @@
-import { withWinterSpec } from "lib/with-winter-spec";
-import { z } from "zod";
-import type { DB } from "lib/db/generated/kysely";
-import { Kysely } from "kysely";
-import { formatPrice } from "lib/util/format-price";
-import { Table } from "lib/ui/Table";
+import { withWinterSpec } from "lib/with-winter-spec"
+import { z } from "zod"
+import type { DB } from "lib/db/generated/kysely"
+import { Kysely } from "kysely"
+import { formatPrice } from "lib/util/format-price"
+import { Table } from "lib/ui/Table"
 
 type KyselyDatabaseInstance = Kysely<DB>
 
@@ -45,45 +45,69 @@ export default withWinterSpec({
     }),
   ),
 } as const)(async (req, ctx) => {
-  const params = req.commonParams;
+  const params = req.commonParams
   let query = ctx.db
     .selectFrom("mosfet")
     .selectAll()
     .orderBy("stock", "desc")
-    .limit(100);
+    .limit(100)
 
   if (params.package) {
-    query = query.where("package", "=", params.package);
+    query = query.where("package", "=", params.package)
   }
   if (params.drain_source_voltage_min !== undefined) {
-    query = query.where("drain_source_voltage", ">=", params.drain_source_voltage_min);
+    query = query.where(
+      "drain_source_voltage",
+      ">=",
+      params.drain_source_voltage_min,
+    )
   }
   if (params.drain_source_voltage_max !== undefined) {
-    query = query.where("drain_source_voltage", "<=", params.drain_source_voltage_max);
+    query = query.where(
+      "drain_source_voltage",
+      "<=",
+      params.drain_source_voltage_max,
+    )
   }
   if (params.continuous_drain_current_min !== undefined) {
-    query = query.where("continuous_drain_current", ">=", params.continuous_drain_current_min);
+    query = query.where(
+      "continuous_drain_current",
+      ">=",
+      params.continuous_drain_current_min,
+    )
   }
   if (params.continuous_drain_current_max !== undefined) {
-    query = query.where("continuous_drain_current", "<=", params.continuous_drain_current_max);
+    query = query.where(
+      "continuous_drain_current",
+      "<=",
+      params.continuous_drain_current_max,
+    )
   }
   if (params.gate_threshold_voltage_min !== undefined) {
-    query = query.where("gate_threshold_voltage", ">=", params.gate_threshold_voltage_min);
+    query = query.where(
+      "gate_threshold_voltage",
+      ">=",
+      params.gate_threshold_voltage_min,
+    )
   }
   if (params.gate_threshold_voltage_max !== undefined) {
-    query = query.where("gate_threshold_voltage", "<=", params.gate_threshold_voltage_max);
+    query = query.where(
+      "gate_threshold_voltage",
+      "<=",
+      params.gate_threshold_voltage_max,
+    )
   }
   if (params.power_dissipation_min !== undefined) {
-    query = query.where("power_dissipation", ">=", params.power_dissipation_min);
+    query = query.where("power_dissipation", ">=", params.power_dissipation_min)
   }
   if (params.power_dissipation_max !== undefined) {
-    query = query.where("power_dissipation", "<=", params.power_dissipation_max);
+    query = query.where("power_dissipation", "<=", params.power_dissipation_max)
   }
   if (params.mounting_style) {
-    query = query.where("mounting_style", "=", params.mounting_style);
+    query = query.where("mounting_style", "=", params.mounting_style)
   }
 
-  const results = await query.execute();
+  const results = await query.execute()
 
   if (ctx.isApiRequest) {
     return ctx.json({
@@ -102,7 +126,7 @@ export default withWinterSpec({
         operating_temp_min: mosfet.operating_temp_min,
         operating_temp_max: mosfet.operating_temp_max,
       })),
-    });
+    })
   }
 
   // Get unique packages for dropdown
@@ -111,7 +135,7 @@ export default withWinterSpec({
     .select("package")
     .distinct()
     .orderBy("package")
-    .execute();
+    .execute()
 
   return ctx.react(
     <div>
@@ -224,9 +248,7 @@ export default withWinterSpec({
           package: m.package,
           description: m.description,
           voltage: m.drain_source_voltage && (
-            <span className="tabular-nums">
-              {m.drain_source_voltage}V
-            </span>
+            <span className="tabular-nums">{m.drain_source_voltage}V</span>
           ),
           current: m.continuous_drain_current && (
             <span className="tabular-nums">{m.continuous_drain_current}A</span>
@@ -241,6 +263,6 @@ export default withWinterSpec({
           price: <span className="tabular-nums">{formatPrice(m.price1)}</span>,
         }))}
       />
-    </div>
-  );
-});
+    </div>,
+  )
+})

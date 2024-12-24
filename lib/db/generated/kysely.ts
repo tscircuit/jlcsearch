@@ -286,6 +286,24 @@ export interface Microcontroller {
   supply_voltage_min: number | null
 }
 
+export interface Mosfet {
+  attributes: string | null
+  continuous_drain_current: number | null
+  description: string | null
+  drain_source_voltage: number | null
+  gate_threshold_voltage: number | null
+  in_stock: number | null
+  lcsc: number | null
+  mfr: string | null
+  mounting_style: string | null
+  operating_temp_max: number | null
+  operating_temp_min: number | null
+  package: string | null
+  power_dissipation: number | null
+  price1: number | null
+  stock: number | null
+}
+
 export interface Resistor {
   attributes: string | null
   description: string | null
@@ -392,6 +410,7 @@ export interface DB {
   led_driver: LedDriver
   manufacturers: Manufacturer
   microcontroller: Microcontroller
+  mosfet: Mosfet
   resistor: Resistor
   v_components: VComponent
   voltage_regulator: VoltageRegulator
