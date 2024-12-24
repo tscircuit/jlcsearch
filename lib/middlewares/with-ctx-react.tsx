@@ -78,6 +78,21 @@ button {
                   })}
                 </div>
                 <div className="flex flex-row items-center gap-2">
+                  <form
+                    action="/components/list"
+                    method="GET"
+                    className="flex flex-row border-none py-0 my-0"
+                  >
+                    <input
+                      type="text"
+                      name="search"
+                      placeholder="Search Description, MFR, or LCSC"
+                      className="border m-0 mr-2"
+                    />
+                    <button type="submit" className="border px-3 py-1 m-0">
+                      Search
+                    </button>
+                  </form>
                   <a href="https://github.com/tscircuit/jlcsearch">
                     <img
                       src="https://img.shields.io/github/stars/tscircuit/jlcsearch?style=social"
