@@ -3,6 +3,11 @@ import { Table } from "lib/ui/Table"
 import { ExpressionBuilder } from "kysely"
 import { withWinterSpec } from "lib/with-winter-spec"
 import { z } from "zod"
+import type { DB } from "lib/db/generated/kysely"
+import { Kysely } from "kysely"
+import { formatPrice } from "lib/util/format-price"
+
+type KyselyDatabaseInstance = Kysely<DB>
 
 const extractSmallQuantityPrice = (price: string | null) => {
   try {
@@ -16,13 +21,13 @@ const extractSmallQuantityPrice = (price: string | null) => {
 export default withWinterSpec({
   auth: "none",
   methods: ["GET"],
-  queryParams: z.object({
-    subcategory_name: z.string().optional(),
-    full: z.boolean().optional(),
-    search: z.string().optional(),
+  commonParams: z.object({
+    json: z.boolean().optional(),
+    package: z.string().optional(),
   }),
   jsonResponse: z.any(),
 } as const)(async (req, ctx) => {
+  const params = req.commonParams
   const limit = 100
 
   // Hardcoding the search value to "LEDs(Built-in IC)"
@@ -53,6 +58,10 @@ export default withWinterSpec({
         ),
     )
 
+  if (params.package) {
+    query = query.where("package", "=", params.package)
+  }
+
   const fullComponents = await query.execute()
 
   const components = fullComponents.map((c) => ({
@@ -66,17 +75,52 @@ export default withWinterSpec({
 
   if (ctx.isApiRequest) {
     return ctx.json({
-      components: req.query.full ? fullComponents : components,
+      leds_with_ic: params.json ? fullComponents : components,
     })
   }
 
+  // Get unique packages for dropdown
+  const packages = await ctx.db
+    .selectFrom("v_components")
+    .select("package")
+    .distinct()
+    .orderBy("package")
+    .execute()
+
   return ctx.react(
     <div>
-      <h2>Components</h2>
-      {req.query.subcategory_name && (
-        <div>Filtering by subcategory: {req.query.subcategory_name}</div>
-      )}
-      <Table rows={req.query.full ? fullComponents : components} />
+      <h2>LEDs with Built-in IC</h2>
+
+      <form method="GET" className="flex flex-row gap-4">
+        <div>
+          <label>Package:</label>
+          <select name="package">
+            <option value="">All</option>
+            {packages.map((p) => (
+              <option
+                key={p.package}
+                value={p.package ?? ""}
+                selected={p.package === params.package}
+              >
+                {p.package}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <button type="submit">Filter</button>
+      </form>
+
+      <Table
+        rows={components.map((c) => ({
+          lcsc: c.lcsc,
+          mfr: c.mfr,
+          package: c.package,
+          description: c.description,
+          stock: <span className="tabular-nums">{c.stock}</span>,
+          price: <span className="tabular-nums">{formatPrice(c.price)}</span>,
+        }))}
+      />
     </div>,
   )
 })
