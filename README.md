@@ -1,4 +1,4 @@
-# jlcsearch (in-stock jlcpcb search engine)
+# jlcsearch (in-stock jlcpcb search engine and API)
 
 [Search for Parts](https://jlcsearch.tscircuit.com) ⋅ [tscircuit](https://github.com/tscircuit/tscircuit) ⋅ [discord](https://tscircuit.com/join)
 
