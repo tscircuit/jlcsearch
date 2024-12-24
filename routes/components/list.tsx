@@ -41,12 +41,14 @@ export default withWinterSpec({
 
   if (req.query.search) {
     const searchTerm = `%${req.query.search}%`
-    query = query.where((eb) => eb.or([
-      sql<boolean>`LOWER(COALESCE(description, '')) LIKE ${sql.raw(`LOWER(${searchTerm})`)}`,
-      sql<boolean>`LOWER(COALESCE(mfr, '')) LIKE ${sql.raw(`LOWER(${searchTerm})`)}`,
-      sql<boolean>`LOWER(COALESCE(package, '')) LIKE ${sql.raw(`LOWER(${searchTerm})`)}`,
-      sql<boolean>`COALESCE(CAST(lcsc AS TEXT), '') LIKE ${searchTerm}`
-    ]))
+    query = query.where((eb) => {
+      return eb.or([
+        eb('description', 'like', searchTerm),
+        eb('mfr', 'like', searchTerm),
+        eb('package', 'like', searchTerm),
+        eb(sql`CAST(lcsc AS TEXT)`, 'like', searchTerm)
+      ])
+    })
   }
 
   if (req.query.subcategory_name) {
