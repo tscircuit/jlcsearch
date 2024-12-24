@@ -47,15 +47,15 @@ export default withWinterSpec({
   if (req.query.search) {
     const search = req.query.search // TypeScript now knows this is defined within this block
     const searchPattern = `%${search}%`
-    query = query.where((eb) => 
+    query = query.where((eb) =>
       eb("description", "like", searchPattern)
         .or("mfr", "like", searchPattern)
         // For lcsc, we'll search it as a number if it's numeric, otherwise skip it
         .or(
-          search.match(/^\d+$/) 
+          search.match(/^\d+$/)
             ? eb("lcsc", "=", parseInt(search))
-            : eb("description", "like", searchPattern) // Fallback to description if not numeric
-        )
+            : eb("description", "like", searchPattern), // Fallback to description if not numeric
+        ),
     )
   }
 
