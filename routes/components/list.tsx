@@ -18,6 +18,7 @@ export default withWinterSpec({
   queryParams: z.object({
     subcategory_name: z.string().optional(),
     full: z.boolean().optional(),
+    search: z.string().optional(),
   }),
   jsonResponse: z.any(),
 } as const)(async (req, ctx) => {
@@ -37,6 +38,16 @@ export default withWinterSpec({
     .limit(limit)
     .orderBy("stock", "desc")
     .where("stock", ">", 0)
+
+  if (req.query.search) {
+    const searchTerm = `%${req.query.search}%`
+    query = query.where((eb) => eb.or([
+      sql<boolean>`LOWER(COALESCE(description, '')) LIKE ${sql.raw(`LOWER(${searchTerm})`)}`,
+      sql<boolean>`LOWER(COALESCE(mfr, '')) LIKE ${sql.raw(`LOWER(${searchTerm})`)}`,
+      sql<boolean>`LOWER(COALESCE(package, '')) LIKE ${sql.raw(`LOWER(${searchTerm})`)}`,
+      sql<boolean>`COALESCE(CAST(lcsc AS TEXT), '') LIKE ${searchTerm}`
+    ]))
+  }
 
   if (req.query.subcategory_name) {
     query = query.where("subcategory", "=", req.query.subcategory_name)
