@@ -1,5 +1,6 @@
 import { sql } from "kysely"
 import { Table } from "lib/ui/Table"
+import { ExpressionBuilder } from "kysely"
 import { withWinterSpec } from "lib/with-winter-spec"
 import { z } from "zod"
 
@@ -18,6 +19,7 @@ export default withWinterSpec({
   queryParams: z.object({
     subcategory_name: z.string().optional(),
     full: z.boolean().optional(),
+    search: z.string().optional(),
   }),
   jsonResponse: z.any(),
 } as const)(async (req, ctx) => {
@@ -40,6 +42,21 @@ export default withWinterSpec({
 
   if (req.query.subcategory_name) {
     query = query.where("subcategory", "=", req.query.subcategory_name)
+  }
+
+  if (req.query.search) {
+    const search = req.query.search // TypeScript now knows this is defined within this block
+    const searchPattern = `%${search}%`
+    query = query.where((eb) => 
+      eb("description", "like", searchPattern)
+        .or("mfr", "like", searchPattern)
+        // For lcsc, we'll search it as a number if it's numeric, otherwise skip it
+        .or(
+          search.match(/^\d+$/) 
+            ? eb("lcsc", "=", parseInt(search))
+            : eb("description", "like", searchPattern) // Fallback to description if not numeric
+        )
+    )
   }
 
   const fullComponents = await query.execute()
