@@ -246,6 +246,22 @@ export interface LedDriver {
   supply_voltage_min: number | null
 }
 
+export interface LedWithIc {
+  attributes: string | null
+  color: string | null
+  description: string | null
+  forward_current: number | null
+  forward_voltage: number | null
+  in_stock: number | null
+  lcsc: number | null
+  mfr: string | null
+  mounting_style: string | null
+  package: string | null
+  price1: number | null
+  protocol: string | null
+  stock: number | null
+}
+
 export interface Manufacturer {
   id: number
   name: string
@@ -408,6 +424,7 @@ export interface DB {
   io_expander: IoExpander
   led: Led
   led_driver: LedDriver
+  led_with_ic: LedWithIc
   manufacturers: Manufacturer
   microcontroller: Microcontroller
   mosfet: Mosfet

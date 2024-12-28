@@ -16,6 +16,7 @@ import { ledDriverTableSpec } from "lib/db/derivedtables/led_driver"
 import type { DerivedTableSpec } from "lib/db/derivedtables/types"
 import type { KyselyDatabaseInstance } from "lib/db/kysely-types"
 import { mosfetTableSpec } from "lib/db/derivedtables/mosfet"
+import { ledWithICTableSpec } from "lib/db/derivedtables/led_with_ic"
 
 const resetArg = process.argv.indexOf("--reset")
 const resetTable = resetArg !== -1 ? process.argv[resetArg + 1] : null
@@ -36,6 +37,7 @@ const DERIVED_TABLES: DerivedTableSpec<any>[] = [
   voltageRegulatorTableSpec,
   ledDriverTableSpec,
   mosfetTableSpec,
+  ledWithICTableSpec,
 ]
 
 function jsonParseOrNull(strObject: string) {

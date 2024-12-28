@@ -28,6 +28,7 @@ export default withWinterSpec({
         <a href="/voltage_regulators/list">Voltage Regulators</a>
         <a href="/led_drivers/list">LED Drivers</a>
         <a href="/mosfets/list">Mosfets</a>
+        <a href="/led_with_ic/list">LED with ICs</a>
       </div>
     </div>,
   )
