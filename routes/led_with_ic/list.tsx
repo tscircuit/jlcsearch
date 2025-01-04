@@ -77,7 +77,6 @@ export default withWinterSpec({
 
   const fullComponents = await query.execute()
 
-
   const components = fullComponents.map((c) => ({
     lcsc: c.lcsc,
     mfr: c.mfr,
