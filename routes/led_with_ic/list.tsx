@@ -12,7 +12,22 @@ export default withWinterSpec({
     color: z.string().optional(),
     protocol: z.string().optional(),
   }),
-  jsonResponse: z.any(),
+  jsonResponse: z.object({
+    leds_with_ic: z.array(
+      z.object({
+        lcsc: z.number(),
+        mfr: z.string(),
+        package: z.string(),
+        description: z.string(),
+        stock: z.number(),
+        price1: z.number(),
+        color: z.string().optional(),
+        protocol: z.string().optional(),
+        forward_voltage: z.number().optional(),
+        forward_current: z.number().optional(),
+      })
+    ),
+  }),
 } as const)(async (req, ctx) => {
   const params = req.commonParams
   const limit = 100
@@ -84,7 +99,20 @@ export default withWinterSpec({
 
   if (ctx.isApiRequest) {
     return ctx.json({
-      leds_with_ic: params.json ? fullComponents : components,
+      leds_with_ic: fullComponents
+        .map((c) => ({
+          lcsc: c.lcsc ?? 0,
+          mfr: c.mfr ?? "",
+          package: c.package ?? "",
+          description: c.description ?? "",
+          stock: c.stock ?? 0,
+          price1: c.price1 ?? 0,
+          color: c.color ?? undefined,
+          protocol: c.protocol ?? undefined,
+          forward_voltage: c.forward_voltage ?? undefined,
+          forward_current: c.forward_current ?? undefined,
+        }))
+        .filter((c) => c.lcsc !== 0 && c.package !== ""),
     })
   }
 
