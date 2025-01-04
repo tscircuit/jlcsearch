@@ -77,8 +77,6 @@ export default withWinterSpec({
 
   const fullComponents = await query.execute()
 
-  // Log the results to verify the data
-  console.log(fullComponents)
 
   const components = fullComponents.map((c) => ({
     lcsc: c.lcsc,
