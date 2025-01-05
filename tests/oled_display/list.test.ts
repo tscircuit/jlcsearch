@@ -9,7 +9,7 @@ test("GET /oled_display/list.json with json param returns OLED Display data", as
   expect(res.data).toHaveProperty("oled_displays")
   expect(Array.isArray(res.data.oled_displays)).toBe(true)
 
-  // Check structure of first OLED Display if array not empty
+  // check structure of first OLED Display if array not empty
   if (res.data.oled_displays.length > 0) {
     const oledDisplay = res.data.oled_displays[0]
     expect(oledDisplay).toHaveProperty("lcsc")
