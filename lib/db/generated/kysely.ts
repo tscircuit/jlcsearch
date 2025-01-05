@@ -320,6 +320,18 @@ export interface Mosfet {
   stock: number | null
 }
 
+export interface OledDisplay {
+  attributes: string | null
+  description: string | null
+  in_stock: number | null
+  lcsc: number | null
+  mfr: string | null
+  package: string | null
+  price1: number | null
+  protocol: string | null
+  stock: number | null
+}
+
 export interface Resistor {
   attributes: string | null
   description: string | null
@@ -428,6 +440,7 @@ export interface DB {
   manufacturers: Manufacturer
   microcontroller: Microcontroller
   mosfet: Mosfet
+  oled_display: OledDisplay
   resistor: Resistor
   v_components: VComponent
   voltage_regulator: VoltageRegulator
