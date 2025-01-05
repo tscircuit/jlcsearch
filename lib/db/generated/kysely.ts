@@ -327,8 +327,10 @@ export interface OledDisplay {
   lcsc: number | null
   mfr: string | null
   package: string | null
+  pixelResolution: string | null
   price1: number | null
   protocol: string | null
+  size: string | null
   stock: number | null
 }
 

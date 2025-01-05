@@ -11,6 +11,8 @@ interface OLEDDisplay {
   in_stock: boolean
   package?: string
   protocol?: string
+  size?: string
+  pixelResolution?: string
 }
 
 export const oledDisplayTableSpec: DerivedTableSpec<OLEDDisplay> = {
@@ -18,8 +20,9 @@ export const oledDisplayTableSpec: DerivedTableSpec<OLEDDisplay> = {
   extraColumns: [
     { name: "package", type: "text" },
     { name: "protocol", type: "text" },
+    { name: "size", type: "text" },
+    { name: "pixelResolution", type: "text" },
   ],
-
   listCandidateComponents(db: KyselyDatabaseInstance) {
     return db
       .selectFrom("components")
@@ -27,14 +30,13 @@ export const oledDisplayTableSpec: DerivedTableSpec<OLEDDisplay> = {
       .selectAll()
       .where((eb) => eb("description", "like", "%OLED Display%"))
   },
-
   mapToTable(components) {
     return components.map((c) => {
       try {
         const extraData = c.extra ? JSON.parse(c.extra) : {}
         const attrs = extraData.attributes || {}
 
-        // Extract protocol
+        // Extract protocol from description or interface attribute
         let protocol
         if (c.description.includes("I2C")) {
           protocol = "I2C"
@@ -42,15 +44,35 @@ export const oledDisplayTableSpec: DerivedTableSpec<OLEDDisplay> = {
           protocol = attrs.Interface
         }
 
+        // Extract size and resolution from description
+        let size = undefined
+        let pixelResolution = undefined
+
+        const description = c.description || ""
+
+        // Extract resolution (e.g., "128x64")
+        const resMatch = description.match(/(\d+x\d+)/)
+        if (resMatch) {
+          pixelResolution = resMatch[1]
+        }
+
+        // Extract size (e.g., "0.96")
+        const sizeMatch = description.match(/\s(\d+\.\d+)\s/)
+        if (sizeMatch) {
+          size = sizeMatch[1]
+        }
+
         return {
           lcsc: Number(c.lcsc),
           mfr: String(c.mfr || ""),
-          description: String(c.description || ""),
+          description: String(description),
           stock: Number(c.stock || 0),
           price1: extractMinQPrice(c.price),
           in_stock: Boolean((c.stock || 0) > 0),
           package: String(c.package || ""),
           protocol: protocol || undefined,
+          size,
+          pixelResolution,
         }
       } catch (e) {
         return null
