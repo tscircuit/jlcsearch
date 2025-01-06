@@ -246,6 +246,20 @@ export interface LedDriver {
   supply_voltage_min: number | null
 }
 
+export interface LedMatrix {
+  attributes: string | null
+  color: string | null
+  description: string | null
+  in_stock: number | null
+  lcsc: number | null
+  led_type: string | null
+  matrix_size: string | null
+  mfr: string | null
+  package: string | null
+  price1: number | null
+  stock: number | null
+}
+
 export interface LedWithIc {
   attributes: string | null
   color: string | null
@@ -317,6 +331,20 @@ export interface Mosfet {
   package: string | null
   power_dissipation: number | null
   price1: number | null
+  stock: number | null
+}
+
+export interface OledDisplay {
+  attributes: string | null
+  description: string | null
+  display_width: string | null
+  in_stock: number | null
+  lcsc: number | null
+  mfr: string | null
+  package: string | null
+  pixel_resolution: string | null
+  price1: number | null
+  protocol: string | null
   stock: number | null
 }
 
@@ -424,10 +452,12 @@ export interface DB {
   io_expander: IoExpander
   led: Led
   led_driver: LedDriver
+  led_matrix: LedMatrix
   led_with_ic: LedWithIc
   manufacturers: Manufacturer
   microcontroller: Microcontroller
   mosfet: Mosfet
+  oled_display: OledDisplay
   resistor: Resistor
   v_components: VComponent
   voltage_regulator: VoltageRegulator
