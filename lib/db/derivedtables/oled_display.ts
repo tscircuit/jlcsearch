@@ -11,8 +11,8 @@ interface OLEDDisplay {
   in_stock: boolean
   package?: string
   protocol?: string
-  size?: string
-  pixelResolution?: string
+  display_width?: string
+  pixel_resolution?: string
 }
 
 export const oledDisplayTableSpec: DerivedTableSpec<OLEDDisplay> = {
@@ -20,9 +20,10 @@ export const oledDisplayTableSpec: DerivedTableSpec<OLEDDisplay> = {
   extraColumns: [
     { name: "package", type: "text" },
     { name: "protocol", type: "text" },
-    { name: "size", type: "text" },
-    { name: "pixelResolution", type: "text" },
+    { name: "display_width", type: "text" },
+    { name: "pixel_resolution", type: "text" },
   ],
+
   listCandidateComponents(db: KyselyDatabaseInstance) {
     return db
       .selectFrom("components")
@@ -30,12 +31,12 @@ export const oledDisplayTableSpec: DerivedTableSpec<OLEDDisplay> = {
       .selectAll()
       .where((eb) => eb("description", "like", "%OLED Display%"))
   },
+
   mapToTable(components) {
     return components.map((c) => {
       try {
         const extraData = c.extra ? JSON.parse(c.extra) : {}
         const attrs = extraData.attributes || {}
-
         // Extract protocol from description or interface attribute
         let protocol
         if (c.description.includes("I2C")) {
@@ -43,23 +44,19 @@ export const oledDisplayTableSpec: DerivedTableSpec<OLEDDisplay> = {
         } else if (attrs.Interface) {
           protocol = attrs.Interface
         }
-
-        // Extract size and resolution from description
-        let size = undefined
-        let pixelResolution = undefined
-
+        // Extract display_width and resolution from description
+        let display_width = undefined
+        let pixel_resolution = undefined
         const description = c.description || ""
-
         // Extract resolution (e.g., "128x64")
         const resMatch = description.match(/(\d+x\d+)/)
         if (resMatch) {
-          pixelResolution = resMatch[1]
+          pixel_resolution = resMatch[1]
         }
-
-        // Extract size (e.g., "0.96")
-        const sizeMatch = description.match(/\s(\d+\.\d+)\s/)
-        if (sizeMatch) {
-          size = sizeMatch[1]
+        // Extract display_width (e.g., "0.96")
+        const widthMatch = description.match(/\s(\d+\.\d+)\s/)
+        if (widthMatch) {
+          display_width = widthMatch[1]
         }
 
         return {
@@ -71,8 +68,8 @@ export const oledDisplayTableSpec: DerivedTableSpec<OLEDDisplay> = {
           in_stock: Boolean((c.stock || 0) > 0),
           package: String(c.package || ""),
           protocol: protocol || undefined,
-          size,
-          pixelResolution,
+          display_width,
+          pixel_resolution,
         }
       } catch (e) {
         return null

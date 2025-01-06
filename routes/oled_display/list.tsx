@@ -10,8 +10,8 @@ export default withWinterSpec({
     json: z.boolean().optional(),
     package: z.string().optional(),
     protocol: z.string().optional(),
-    size: z.string().optional(),
-    pixelResolution: z.string().optional(),
+    display_width: z.string().optional(),
+    pixel_resolution: z.string().optional(),
     mfr: z.string().optional(),
     description: z.string().optional(),
   }),
@@ -25,8 +25,8 @@ export default withWinterSpec({
         stock: z.number(),
         price1: z.number(),
         protocol: z.string().optional(),
-        size: z.string().optional(),
-        pixelResolution: z.string().optional(),
+        display_width: z.string().optional(),
+        pixel_resolution: z.string().optional(),
       }),
     ),
   }),
@@ -46,8 +46,8 @@ export default withWinterSpec({
       "stock",
       "price1",
       "protocol",
-      "size",
-      "pixelResolution",
+      "display_width",
+      "pixel_resolution",
     ] as const)
     .limit(limit)
     .orderBy("stock", "desc")
@@ -69,11 +69,11 @@ export default withWinterSpec({
   if (params.protocol) {
     query = query.where("protocol", "=", params.protocol)
   }
-  if (params.size) {
-    query = query.where("size", "=", params.size)
+  if (params.display_width) {
+    query = query.where("display_width", "=", params.display_width)
   }
-  if (params.pixelResolution) {
-    query = query.where("pixelResolution", "=", params.pixelResolution)
+  if (params.pixel_resolution) {
+    query = query.where("pixel_resolution", "=", params.pixel_resolution)
   }
   if (params.mfr) {
     query = query.where("mfr", "like", `%${params.mfr}%`)
@@ -91,8 +91,8 @@ export default withWinterSpec({
     stock: c.stock,
     price: c.price1,
     protocol: c.protocol,
-    size: c.size,
-    pixelResolution: c.pixelResolution,
+    display_width: c.display_width,
+    pixel_resolution: c.pixel_resolution,
   }))
 
   if (ctx.isApiRequest) {
@@ -106,8 +106,8 @@ export default withWinterSpec({
           stock: c.stock ?? 0,
           price1: c.price1 ?? 0,
           protocol: c.protocol ?? undefined,
-          size: c.size ?? undefined,
-          pixelResolution: c.pixelResolution ?? undefined,
+          display_width: c.display_width ?? undefined,
+          pixel_resolution: c.pixel_resolution ?? undefined,
         }))
         .filter((c) => c.lcsc !== 0 && c.package !== ""),
     })
@@ -127,18 +127,18 @@ export default withWinterSpec({
     .orderBy("package")
     .execute()
 
-  const sizes = await ctx.db
+  const widths = await ctx.db
     .selectFrom("oled_display")
-    .select("size")
+    .select("display_width")
     .distinct()
-    .orderBy("size")
+    .orderBy("display_width")
     .execute()
 
   const resolutions = await ctx.db
     .selectFrom("oled_display")
-    .select("pixelResolution")
+    .select("pixel_resolution")
     .distinct()
-    .orderBy("pixelResolution")
+    .orderBy("pixel_resolution")
     .execute()
 
   return ctx.react(
@@ -176,31 +176,31 @@ export default withWinterSpec({
           </select>
         </div>
         <div>
-          <label>Size: </label>
-          <select name="size" className="border px-2 py-1 rounded">
+          <label>Display Width: </label>
+          <select name="display_width" className="border px-2 py-1 rounded">
             <option value="">All</option>
-            {sizes.map((s) => (
+            {widths.map((w) => (
               <option
-                key={s.size}
-                value={s.size ?? ""}
-                selected={s.size === params.size}
+                key={w.display_width}
+                value={w.display_width ?? ""}
+                selected={w.display_width === params.display_width}
               >
-                {s.size || "N/A"}
+                {w.display_width || "N/A"}
               </option>
             ))}
           </select>
         </div>
         <div>
           <label>Resolution: </label>
-          <select name="pixelResolution" className="border px-2 py-1 rounded">
+          <select name="pixel_resolution" className="border px-2 py-1 rounded">
             <option value="">All</option>
             {resolutions.map((r) => (
               <option
-                key={r.pixelResolution}
-                value={r.pixelResolution ?? ""}
-                selected={r.pixelResolution === params.pixelResolution}
+                key={r.pixel_resolution}
+                value={r.pixel_resolution ?? ""}
+                selected={r.pixel_resolution === params.pixel_resolution}
               >
-                {r.pixelResolution || "N/A"}
+                {r.pixel_resolution || "N/A"}
               </option>
             ))}
           </select>
@@ -218,8 +218,8 @@ export default withWinterSpec({
           mfr: c.mfr,
           package: c.package || "-",
           description: c.description,
-          size: c.size ?? "N/A",
-          pixelResolution: c.pixelResolution ?? "N/A",
+          display_width: c.display_width ?? "N/A",
+          pixel_resolution: c.pixel_resolution ?? "N/A",
           stock: <span className="tabular-nums">{c.stock}</span>,
           price: <span className="tabular-nums">{formatPrice(c.price)}</span>,
           protocol: c.protocol ?? "N/A",
