@@ -29,6 +29,7 @@ export default withWinterSpec({
         <a href="/led_drivers/list">LED Drivers</a>
         <a href="/mosfets/list">Mosfets</a>
         <a href="/led_with_ic/list">LED with ICs</a>
+        <a href="/led_segment_display/list">LED Segment Display Modules</a>
       </div>
     </div>,
   )
