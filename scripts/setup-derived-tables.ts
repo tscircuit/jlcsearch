@@ -17,6 +17,7 @@ import type { DerivedTableSpec } from "lib/db/derivedtables/types"
 import type { KyselyDatabaseInstance } from "lib/db/kysely-types"
 import { mosfetTableSpec } from "lib/db/derivedtables/mosfet"
 import { ledWithICTableSpec } from "lib/db/derivedtables/led_with_ic"
+import { oledDisplayTableSpec } from "lib/db/derivedtables/oled_display"
 import { ledSegmentDisplayTableSpec } from "lib/db/derivedtables/led_segment_display"
 
 const resetArg = process.argv.indexOf("--reset")
@@ -39,6 +40,7 @@ const DERIVED_TABLES: DerivedTableSpec<any>[] = [
   ledDriverTableSpec,
   mosfetTableSpec,
   ledWithICTableSpec,
+  oledDisplayTableSpec,
   ledSegmentDisplayTableSpec,
 ]
 
