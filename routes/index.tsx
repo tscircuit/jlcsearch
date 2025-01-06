@@ -30,6 +30,7 @@ export default withWinterSpec({
         <a href="/mosfets/list">Mosfets</a>
         <a href="/led_with_ic/list">LED with ICs</a>
         <a href="/oled_display/list"> OLED Displays Modules</a>
+        <a href="/led_segment_display/list">LED Segment Display Modules</a>
       </div>
     </div>,
   )
