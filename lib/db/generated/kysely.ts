@@ -225,6 +225,19 @@ export interface Led {
   wavelength_nm: number | null
 }
 
+export interface LedDotMatrixDisplay {
+  attributes: string | null
+  color: string | null
+  description: string | null
+  in_stock: number | null
+  lcsc: number | null
+  matrix_size: string | null
+  mfr: string | null
+  package: string | null
+  price1: number | null
+  stock: number | null
+}
+
 export interface LedDriver {
   attributes: string | null
   channel_count: number | null
@@ -451,6 +464,7 @@ export interface DB {
   header: Header
   io_expander: IoExpander
   led: Led
+  led_dot_matrix_display: LedDotMatrixDisplay
   led_driver: LedDriver
   led_matrix: LedMatrix
   led_with_ic: LedWithIc

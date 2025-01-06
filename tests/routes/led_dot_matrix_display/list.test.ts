@@ -1,16 +1,16 @@
 import { test, expect } from "bun:test"
 import { getTestServer } from "../../fixtures/get-test-server"
 
-test("GET /led_matrix/list.json with json param returns LED Matrix data", async () => {
+test("GET /led_dot_matrix_display/list.json with json param returns LED Dot Matrix data", async () => {
   const { axios } = await getTestServer()
   const res = await axios.get("/led_dot_matrix_display/list.json?json=true")
 
-  expect(res.data).toHaveProperty("led_matrices")
-  expect(Array.isArray(res.data.led_matrices)).toBe(true)
+  expect(res.data).toHaveProperty("led_dot_matrix_displays")
+  expect(Array.isArray(res.data.led_dot_matrix_displays)).toBe(true)
 
   // check structure of first LED Matrix if array not empty
-  if (res.data.led_matrices.length > 0) {
-    const ledMatrix = res.data.led_matrices[0]
+  if (res.data.led_dot_matrix_displays.length > 0) {
+    const ledMatrix = res.data.led_dot_matrix_displays[0]
     expect(ledMatrix).toHaveProperty("lcsc")
     expect(ledMatrix).toHaveProperty("mfr")
     expect(ledMatrix).toHaveProperty("package")
@@ -32,24 +32,21 @@ test("GET /led_matrix/list.json with json param returns LED Matrix data", async 
     if (ledMatrix.color) {
       expect(typeof ledMatrix.color).toBe("string")
     }
-    if (ledMatrix.led_type) {
-      expect(typeof ledMatrix.led_type).toBe("string")
-    }
   }
 })
 
-test("GET /led_matrix/list.json with filters returns filtered data", async () => {
+test("GET /led_dot_matrix_display/list.json with filters returns filtered data", async () => {
   const { axios } = await getTestServer()
 
   // Test with package filter
   const res = await axios.get(
     "/led_dot_matrix_display/list.json?json=true&package=DIP",
   )
-  expect(res.data).toHaveProperty("led_matrices")
-  expect(Array.isArray(res.data.led_matrices)).toBe(true)
+  expect(res.data).toHaveProperty("led_dot_matrix_displays")
+  expect(Array.isArray(res.data.led_dot_matrix_displays)).toBe(true)
 
   // Verify all returned LED Matrices have the specified package
-  for (const ledMatrix of res.data.led_matrices) {
+  for (const ledMatrix of res.data.led_dot_matrix_displays) {
     expect(ledMatrix.package).toBe("DIP")
   }
 
@@ -57,11 +54,11 @@ test("GET /led_matrix/list.json with filters returns filtered data", async () =>
   const colorRes = await axios.get(
     "/led_dot_matrix_display/list.json?json=true&color=Red",
   )
-  expect(colorRes.data).toHaveProperty("led_matrices")
-  expect(Array.isArray(colorRes.data.led_matrices)).toBe(true)
+  expect(colorRes.data).toHaveProperty("led_dot_matrix_displays")
+  expect(Array.isArray(colorRes.data.led_dot_matrix_displays)).toBe(true)
 
   // Verify all returned LED Matrices have the specified color
-  for (const ledMatrix of colorRes.data.led_matrices) {
+  for (const ledMatrix of colorRes.data.led_dot_matrix_displays) {
     expect(ledMatrix.color).toBe("Red")
   }
 })
