@@ -40,14 +40,12 @@ export const ledSegmentDisplayTableSpec: DerivedTableSpec<LEDSegmentDisplay> = {
         const extraData = c.extra ? JSON.parse(c.extra) : {}
         const attrs = extraData.attributes || {}
 
-        // Extract positions from description (e.g., "3 positions")
         let positions = undefined
-        const posMatch = c.description.match(/(\d+)\s*positions?/)
+        const posMatch = c.description.match(/(\d+)\s*[Pp]ositions?/)
         if (posMatch) {
           positions = posMatch[1]
         }
 
-        // Extract type from description (Common Cathode/Common Anode)
         let type = undefined
         if (c.description.includes("Common Cathode")) {
           type = "Common Cathode"
@@ -55,14 +53,12 @@ export const ledSegmentDisplayTableSpec: DerivedTableSpec<LEDSegmentDisplay> = {
           type = "Common Anode"
         }
 
-        // Extract size from description (e.g., "0.36")
         let size = undefined
         const sizeMatch = c.description.match(/(\d+\.\d+)/)
         if (sizeMatch) {
           size = sizeMatch[1]
         }
 
-        // Extract color from description
         let color = undefined
         if (c.description.includes("Red")) {
           color = "Red"
