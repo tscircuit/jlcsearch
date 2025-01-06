@@ -202,6 +202,20 @@ export interface IoExpander {
   supply_voltage_min: number | null
 }
 
+export interface LcdDisplay {
+  attributes: string | null
+  description: string | null
+  display_size: string | null
+  display_type: string | null
+  in_stock: number | null
+  lcsc: number | null
+  mfr: string | null
+  package: string | null
+  price1: number | null
+  resolution: string | null
+  stock: number | null
+}
+
 export interface Led {
   attributes: string | null
   color: string | null
@@ -478,6 +492,7 @@ export interface DB {
   diode: Diode
   header: Header
   io_expander: IoExpander
+  lcd_display: LcdDisplay
   led: Led
   led_dot_matrix_display: LedDotMatrixDisplay
   led_driver: LedDriver
