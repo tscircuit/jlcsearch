@@ -32,6 +32,8 @@ export default withWinterSpec({
         <a href="/led_dot_matrix_display/list">
           LED Dot Matrix Displays Modules
         </a>
+        <a href="/oled_display/list"> OLED Displays Modules</a>
+        <a href="/led_segment_display/list">LED Segment Display Modules</a>
       </div>
     </div>,
   )
