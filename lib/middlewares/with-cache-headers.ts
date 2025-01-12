@@ -7,7 +7,7 @@ export const withCacheHeaders: Middleware<{}, {}> = async (req, ctx, next) => {
     // Save for 24 hours
     res.headers.set(
       "Cache-Control",
-      "public, max-age=86400, stale-while-revalidate=86400",
+      "public, max-age=86400, stale-while-revalidate=604800",
     )
     res.headers.set("Vary", "*")
   }
