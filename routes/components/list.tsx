@@ -18,6 +18,7 @@ export default withWinterSpec({
   methods: ["GET"],
   queryParams: z.object({
     subcategory_name: z.string().optional(),
+    package: z.string().optional(),
     full: z.boolean().optional(),
     search: z.string().optional(),
   }),
@@ -42,6 +43,10 @@ export default withWinterSpec({
 
   if (req.query.subcategory_name) {
     query = query.where("subcategory", "=", req.query.subcategory_name)
+  }
+
+  if (req.query.package) {
+    query = query.where("package", "=", req.query.package)
   }
 
   if (req.query.search) {
