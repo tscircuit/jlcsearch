@@ -78,7 +78,7 @@ export default withWinterSpec({
             // There may be reference dimensions/designs on the [kicad viewer](https://tscircuit.github.io/kicad-viewer)
             // This issue may be eligible for a $10 bounty from the TSCircuit team (please review!)
             <a
-              href={`https://github.com/tscircuit/tscircuit/issues/new?title=Implement%20${row.package}&body=Here%27s%20are%20components%20on%20JLCPCB%20with%20this%20footprint%3A%20https%3A%2F%2Fjlcsearch.tscircuit.com%2Fcomponents%2Flist%3Fpackage%3D${encodeURIComponent(row.package)}%0A%0AThere%20may%20be%20reference%20dimensions%2Fdesigns%20on%20the%20%5Bkicad%20viewer%5D%28https%3A%2F%2Ftscircuit.github.io%2Fkicad-viewer%29%0A%0AThis%20issue%20may%20be%20eligible%20for%20a%20%2410%20bounty%20from%20the%20TSCircuit%20team%20%28please%20review%21%29`}
+              href={`https://github.com/tscircuit/footprinter/issues/new?title=Implement%20${row.package}&body=Here%27s%20are%20components%20on%20JLCPCB%20with%20this%20footprint%3A%20https%3A%2F%2Fjlcsearch.tscircuit.com%2Fcomponents%2Flist%3Fpackage%3D${encodeURIComponent(row.package)}%0A%0AThere%20may%20be%20reference%20dimensions%2Fdesigns%20on%20the%20%5Bkicad%20viewer%5D%28https%3A%2F%2Ftscircuit.github.io%2Fkicad-viewer%29%0A%0AThis%20issue%20may%20be%20eligible%20for%20a%20%2410%20bounty%20from%20the%20TSCircuit%20team%20%28please%20review%21%29`}
             >
               Create issue ($10)
             </a>
