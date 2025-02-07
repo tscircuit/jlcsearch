@@ -9,7 +9,7 @@ export default withWinterSpec({
   if (req.method === "HEAD") {
     return new Response(null, { status: 200 })
   }
-  
+
   const protocol = req.headers.get("x-forwarded-proto") || "http"
   const host = req.headers.get("host")
   const baseUrl = protocol + "://" + host
