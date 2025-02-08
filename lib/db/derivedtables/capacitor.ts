@@ -1,16 +1,9 @@
 import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
 import type { DerivedTableSpec } from "./types"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
+import { BaseComponent } from "./component-base"
 
-interface Capacitor {
-  lcsc: number
-  mfr: string
-  description: string
-  stock: number
-  in_stock: boolean
-  price1: any
-  attributes: Record<string, string>
-
+export interface Capacitor extends BaseComponent {
   // Extra columns
   capacitance_farads: number
   tolerance_fraction: number

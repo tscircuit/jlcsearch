@@ -1,14 +1,9 @@
 import type { DerivedTableSpec } from "./types"
 import type { KyselyDatabaseInstance } from "../kysely-types"
+import { BaseComponent } from "./component-base"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 
-interface OLEDDisplay {
-  lcsc: number
-  mfr: string
-  description: string
-  stock: number
-  price1: number | null
-  in_stock: boolean
+export interface OLEDDisplay extends BaseComponent {
   package?: string
   protocol?: string
   display_width?: string
@@ -70,6 +65,7 @@ export const oledDisplayTableSpec: DerivedTableSpec<OLEDDisplay> = {
           protocol: protocol || undefined,
           display_width,
           pixel_resolution,
+          attributes: attrs,
         }
       } catch (e) {
         return null

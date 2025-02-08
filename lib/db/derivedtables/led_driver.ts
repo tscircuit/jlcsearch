@@ -9,15 +9,9 @@ type UnwrapGenerated<T> = {
 import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import { parseIntOrNull } from "lib/util/parse-int-or-null"
+import { BaseComponent } from "./component-base"
 
-interface LedDriver {
-  // Required fields from DerivedTableSpec
-  lcsc: number
-  mfr: string
-  description: string
-  stock: number
-  price1: number | null
-  in_stock: boolean
+export interface LedDriver extends BaseComponent {
   // Optional LED driver specific fields
   package?: string
   supply_voltage_min?: number
@@ -99,6 +93,7 @@ export const ledDriverTableSpec: DerivedTableSpec<LedDriver> = {
           ),
           protection_features: attrs["Protection Features"],
           mounting_style: attrs["Mounting Style"],
+          attributes: attrs,
         }
       } catch (e) {
         return null

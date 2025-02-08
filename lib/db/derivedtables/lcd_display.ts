@@ -1,14 +1,9 @@
 import type { DerivedTableSpec } from "./types"
 import type { KyselyDatabaseInstance } from "../kysely-types"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
+import { BaseComponent } from "./component-base"
 
-interface LCDDisplay {
-  lcsc: number
-  mfr: string
-  description: string
-  stock: number
-  price1: number | null
-  in_stock: boolean
+export interface LCDDisplay extends BaseComponent {
   package?: string
   display_size?: string
   resolution?: string
@@ -69,6 +64,7 @@ export const lcdDisplayTableSpec: DerivedTableSpec<LCDDisplay> = {
           display_size,
           resolution,
           display_type,
+          attributes: attrs,
         }
       } catch (e) {
         return null

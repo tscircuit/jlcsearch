@@ -1,14 +1,9 @@
 import type { DerivedTableSpec } from "./types"
 import type { KyselyDatabaseInstance } from "../kysely-types"
+import { BaseComponent } from "./component-base"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 
-interface LEDDotMatrixDisplay {
-  lcsc: number
-  mfr: string
-  description: string
-  stock: number
-  price1: number | null
-  in_stock: boolean
+export interface LEDDotMatrixDisplay extends BaseComponent {
   package?: string
   matrix_size?: string
   color?: string
@@ -61,6 +56,7 @@ export const ledDotMatrixDisplayTableSpec: DerivedTableSpec<LEDDotMatrixDisplay>
             package: String(c.package || ""),
             matrix_size,
             color,
+            attributes: attrs,
           }
         } catch (e) {
           return null

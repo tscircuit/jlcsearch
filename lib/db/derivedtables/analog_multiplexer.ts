@@ -1,16 +1,9 @@
 import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
 import type { DerivedTableSpec } from "./types"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
+import { BaseComponent } from "./component-base"
 
-interface AnalogMultiplexer {
-  lcsc: number
-  mfr: string
-  description: string
-  stock: number
-  price1: number | null
-  in_stock: boolean
-  attributes: Record<string, string>
-
+export interface AnalogMultiplexer extends BaseComponent {
   // Extra columns
   package: string
   num_channels: number | null

@@ -1,17 +1,9 @@
 import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
 import type { DerivedTableSpec } from "./types"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
+import { BaseComponent } from "./component-base"
 
-interface VoltageRegulator {
-  lcsc: number
-  mfr: string
-  description: string
-  stock: number
-  price1: number | null
-  in_stock: boolean
-  attributes: Record<string, string>
-
-  // Extra columns
+export interface VoltageRegulator extends BaseComponent {
   package: string
   output_type: "fixed" | "adjustable" | "unknown"
   output_voltage_min: number | null
