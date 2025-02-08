@@ -9,14 +9,9 @@ type UnwrapGenerated<T> = {
 import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import { parseIntOrNull } from "lib/util/parse-int-or-null"
+import { BaseComponent } from "./component-base"
 
-interface Mosfet {
-  lcsc: number
-  mfr: string
-  description: string
-  stock: number
-  price1: number | null
-  in_stock: boolean
+export interface Mosfet extends BaseComponent {
   package?: string
   drain_source_voltage?: number
   continuous_drain_current?: number
@@ -87,6 +82,7 @@ export const mosfetTableSpec: DerivedTableSpec<Mosfet> = {
             attrs["Operating temperature"]?.split("~")[1],
           ),
           mounting_style: attrs["Mounting Style"],
+          attributes: attrs,
         }
       } catch (e) {
         return null
