@@ -4,8 +4,11 @@ export const withCacheHeaders: Middleware<{}, {}> = async (req, ctx, next) => {
   const res = await next(req, ctx)
 
   if (req.url.includes("tscircuit.com")) {
-    // Save for 24 hours
-    res.headers.set("Cache-Control", "public, max-age=86400")
+    // Cache for 1 week (604800 seconds) with 1 hour stale-while-revalidate
+    res.headers.set(
+      "Cache-Control",
+      "public, max-age=604800, s-maxage=604800, stale-while-revalidate=3600"
+    )
     res.headers.set("Vary", "*")
   }
 
