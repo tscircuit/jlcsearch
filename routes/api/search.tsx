@@ -1,5 +1,3 @@
-// endpoints/components.ts
-
 import { sql } from "kysely"
 import { withWinterSpec } from "lib/with-winter-spec"
 import { z } from "zod"
