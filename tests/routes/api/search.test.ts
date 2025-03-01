@@ -8,7 +8,18 @@ test("GET /components/list with search query 'C1234' returns expected components
   expect(res.data).toHaveProperty("components")
   expect(Array.isArray(res.data.components)).toBe(true)
 
-  expect(res.data.components).toMatchSnapshot()
+  expect(res.data.components).toMatchInlineSnapshot(`
+    [
+      {
+        "description": "125mW Thin Film Resistor 100V ±25ppm/℃ ±1% 1.23MΩ 0805 Chip Resistor - Surface Mount ROHS",
+        "lcsc": 217796,
+        "mfr": "ARG05FTC1234N",
+        "package": "0805",
+        "price": 0.005642857,
+        "stock": 9,
+      },
+    ]
+  `)
 })
 
 test("GET /components/list with search query '555 Timer' returns expected components", async () => {
@@ -18,15 +29,43 @@ test("GET /components/list with search query '555 Timer' returns expected compon
   expect(res.data).toHaveProperty("components")
   expect(Array.isArray(res.data.components)).toBe(true)
 
-  expect(res.data.components).toMatchSnapshot()
+  expect(res.data.components).toMatchInlineSnapshot(`
+    [
+      {
+        "description": "DIP-8 555 Timers / Counters ROHS",
+        "lcsc": 22461592,
+        "mfr": "LM555CN",
+        "package": "DIP-8",
+        "price": 0.141,
+        "stock": 2519,
+      },
+    ]
+  `)
 })
 
 test("GET /components/list with search query 'red led' returns expected components", async () => {
   const { axios } = await getTestServer()
-  const res = await axios.get("/api/search?limit=1&q=red led")
+  const res = await axios.get("/api/search?limit=1&q=red%20led")
 
   expect(res.data).toHaveProperty("components")
   expect(Array.isArray(res.data.components)).toBe(true)
 
-  expect(res.data.components).toMatchSnapshot()
+  expect(res.data.components).toMatchInlineSnapshot(`
+    [
+      {
+        "description": "-40℃~+85℃ Red 0603 LED Indication - Discrete ROHS",
+        "lcsc": 2286,
+        "mfr": "KT-0603R",
+        "package": "0603",
+        "price": 0.005314286,
+        "stock": 3208103,
+      },
+    ]
+  `)
 })
+
+declare module "bun:test" {
+  interface Matchers<T = unknown> {
+    toMatchInlineSnapshot(snapshot?: string | null): Promise<MatcherResult>
+  }
+}
