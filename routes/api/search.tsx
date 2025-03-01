@@ -46,8 +46,12 @@ export default withWinterSpec({
         eb(sql`LOWER(REPLACE(mfr, ' ', ''))`, "like", searchPattern),
         search.match(/^\d+$/)
           ? eb("lcsc", "=", parseInt(search, 10))
-          : eb(sql`LOWER(REPLACE(description, ' ', ''))`, "like", searchPattern),
-      ])
+          : eb(
+              sql`LOWER(REPLACE(description, ' ', ''))`,
+              "like",
+              searchPattern,
+            ),
+      ]),
     )
   }
 
