@@ -1,7 +1,7 @@
 import { test, expect } from "bun:test"
 import { getTestServer } from "tests/fixtures/get-test-server"
 
-test("GET /components/list with search query 'C1234' returns expected components", async () => {
+test("GET /api/search with search query 'C1234' returns expected components", async () => {
   const { axios } = await getTestServer()
   const res = await axios.get("/api/search?limit=1&q=C1234")
 
@@ -22,7 +22,7 @@ test("GET /components/list with search query 'C1234' returns expected components
   `)
 })
 
-test("GET /components/list with search query '555 Timer' returns expected components", async () => {
+test("GET /api/search with search query '555 Timer' returns expected components", async () => {
   const { axios } = await getTestServer()
   const res = await axios.get("/api/search?limit=1&q=555%20Timer")
 
@@ -43,7 +43,7 @@ test("GET /components/list with search query '555 Timer' returns expected compon
   `)
 })
 
-test("GET /components/list with search query 'red led' returns expected components", async () => {
+test("GET /api/search with search query 'red led' returns expected components", async () => {
   const { axios } = await getTestServer()
   const res = await axios.get("/api/search?limit=1&q=red%20led")
 
