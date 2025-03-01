@@ -103,6 +103,40 @@ export interface Component {
   stock: number
 }
 
+export interface ComponentsFt {
+  description: string | null
+  lcsc: string | null
+  mfr: string | null
+}
+
+export interface ComponentsFtsConfig {
+  k: string
+  v: string | null
+}
+
+export interface ComponentsFtsContent {
+  c0: string | null
+  c1: string | null
+  c2: string | null
+  id: number | null
+}
+
+export interface ComponentsFtsDatum {
+  block: Buffer | null
+  id: number | null
+}
+
+export interface ComponentsFtsDocsize {
+  id: number | null
+  sz: Buffer | null
+}
+
+export interface ComponentsFtsIdx {
+  pgno: string | null
+  segid: string
+  term: string
+}
+
 export interface Dac {
   attributes: string | null
   description: string | null
@@ -488,6 +522,12 @@ export interface DB {
   capacitor: Capacitor
   categories: Category
   components: Component
+  components_fts: ComponentsFt
+  components_fts_config: ComponentsFtsConfig
+  components_fts_content: ComponentsFtsContent
+  components_fts_data: ComponentsFtsDatum
+  components_fts_docsize: ComponentsFtsDocsize
+  components_fts_idx: ComponentsFtsIdx
   dac: Dac
   diode: Diode
   header: Header
