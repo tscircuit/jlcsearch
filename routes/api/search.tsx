@@ -1,3 +1,5 @@
+// endpoints/components.ts
+
 import { sql } from "kysely"
 import { withWinterSpec } from "lib/with-winter-spec"
 import { z } from "zod"
@@ -37,21 +39,19 @@ export default withWinterSpec({
   }
 
   if (req.query.q) {
-    const search = req.query.q.trim().toLowerCase().replace(/\s+/g, "%")
-    const searchPattern = `%${search}%`
+    const searchTerm = req.query.q.trim()
+    // Build FTS5 query with prefix matching
+    const ftsQuery = searchTerm
+      .split(/\s+/)
+      .map((term) => `${term}*`)
+      .join(" ")
 
-    query = query.where((eb) =>
-      eb.or([
-        eb(sql`LOWER(REPLACE(description, ' ', ''))`, "like", searchPattern),
-        eb(sql`LOWER(REPLACE(mfr, ' ', ''))`, "like", searchPattern),
-        search.match(/^\d+$/)
-          ? eb("lcsc", "=", parseInt(search, 10))
-          : eb(
-              sql`LOWER(REPLACE(description, ' ', ''))`,
-              "like",
-              searchPattern,
-            ),
-      ]),
+    // Use raw SQL for FTS5 MATCH query and cast lcsc to number
+    query = query.where(
+      sql<boolean>`lcsc IN (
+        SELECT CAST(lcsc AS INTEGER) FROM components_fts
+        WHERE components_fts MATCH ${ftsQuery}
+      )`,
     )
   }
 

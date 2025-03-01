@@ -5,9 +5,12 @@ import { removeStaleComponents } from "lib/db/optimizations/remove-stale-compone
 import { componentCategoryIndex } from "lib/db/optimizations/component-category-index"
 import { componentInStockCategoryIndex } from "lib/db/optimizations/component-in-stock-category-index"
 import type { DbOptimizationSpec } from "lib/db/optimizations/types"
-import { sql } from "kysely"
+import { componentSearchFTS } from "lib/db/optimizations/component-search-fts"
+import { componentPackageIndex } from "lib/db/optimizations/component-indexes"
 
 const OPTIMIZATIONS: DbOptimizationSpec[] = [
+  componentSearchFTS,
+  componentPackageIndex,
   removeStaleComponents,
   componentStockIndex,
   componentInStockColumn,
