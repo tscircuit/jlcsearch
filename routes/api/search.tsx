@@ -36,6 +36,31 @@ export default withWinterSpec({
     query = query.where("package", "=", req.query.package)
   }
 
+if (req.query.q) { 
+   const searchTerm = req.query.q.trim(); 
+   const normalizedSearch = searchTerm.toLowerCase(); 
+
+   // Build FTS5 query for scrambled word search 
+   const terms = normalizedSearch.split(/\s+/); 
+   const ftsQuery = terms
+     .map((term) => `"${term}"*`) // Prefix matching for each term 
+     .join(" OR "); // Allow scrambled word order 
+
+   // Ensure all terms are present using NEAR
+   if (terms.length > 1) {
+     ftsQuery += ` NEAR ${terms.length}`;
+   }
+
+   // Use raw SQL for FTS5 MATCH query and cast lcsc to number 
+   query = query.where( 
+     sql<boolean>`lcsc IN ( 
+       SELECT CAST(lcsc AS INTEGER) FROM components_fts 
+       WHERE components_fts MATCH ${ftsQuery} 
+       ORDER BY rank 
+     )`, 
+   ); 
+}
+/**
   if (req.query.q) {
     const searchTerm = req.query.q.trim()
     const normalizedSearch = searchTerm.toLowerCase()
@@ -55,7 +80,7 @@ export default withWinterSpec({
         ORDER BY rank
       )`,
     )
-  }
+  }**/
 
   const fullComponents = await query.execute()
 
