@@ -42,7 +42,7 @@ if (req.query.q) {
 
    // Build FTS5 query for scrambled word search 
    const terms = normalizedSearch.split(/\s+/); 
-   const ftsQuery = terms
+   let ftsQuery = terms
      .map((term) => `"${term}"*`) // Prefix matching for each term 
      .join(" OR "); // Allow scrambled word order 
 
