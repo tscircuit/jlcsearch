@@ -11,10 +11,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Setup bun
-        uses: oven-sh/setup-bun@v1
+        uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
       
@@ -23,7 +23,7 @@ jobs:
 
       - name: Cache setup artifacts
         id: cache-setup
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ./db.sqlite3
           key: db-sqlite3-${{ hashFiles('scripts/setup-*.ts') }}
