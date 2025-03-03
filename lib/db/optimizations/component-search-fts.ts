@@ -18,9 +18,11 @@ export const componentSearchFTS: DbOptimizationSpec = {
     // Create FTS5 virtual table
     await sql`
       CREATE VIRTUAL TABLE components_fts USING fts5(
-        mfr,
+        mfr UNINDEXED,
         description,
-        lcsc
+        lcsc UNINDEXED,
+        tokenize = 'unicode61 remove_diacritics 1',
+        prefix = '2 3 4'
       )
     `.execute(db)
 

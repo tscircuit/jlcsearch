@@ -38,12 +38,21 @@ export default withWinterSpec({
 
   if (req.query.q) {
     const searchTerm = req.query.q.trim()
-    // Build FTS5 query with prefix matching
-    const ftsQuery = searchTerm
-      .split(/\s+/)
-      .map((term) => `${term}*`)
-      .join(" ")
 
+    const isMfrSearch = /^[\w\d-]+$/.test(searchTerm)
+
+    // Build optimized FTS query
+    let ftsQuery: string
+    if (isMfrSearch) {
+      // Exact MFR match with prefix support
+      ftsQuery = `mfr:${searchTerm}*`
+    } else {
+      // General text search with term prefixes
+      ftsQuery = searchTerm
+        .split(/\s+/)
+        .map((term) => `"${term}"*`)
+        .join(" ")
+    }
     // Use raw SQL for FTS5 MATCH query and cast lcsc to number
     query = query.where(
       sql<boolean>`lcsc IN (
