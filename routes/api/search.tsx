@@ -38,26 +38,21 @@ export default withWinterSpec({
 
   if (req.query.q) {
     const searchTerm = req.query.q.trim()
+    const normalizedSearch = searchTerm.toLowerCase()
 
-    const isMfrSearch = /^[\w\d-]+$/.test(searchTerm)
+    // Build FTS5 query for scrambled word search
+    const terms = normalizedSearch.split(/\s+/)
+    const ftsQuery = terms
+      .map((term) => `"${term}"*`) // Prefix matching for each term
+      .join(" OR ") // Allow scrambled word order
+      .concat(` NEAR/${terms.length}`) // Ensure all terms are present
 
-    // Build optimized FTS query
-    let ftsQuery: string
-    if (isMfrSearch) {
-      // Exact MFR match with prefix support
-      ftsQuery = `mfr:${searchTerm}*`
-    } else {
-      // General text search with term prefixes
-      ftsQuery = searchTerm
-        .split(/\s+/)
-        .map((term) => `"${term}"*`)
-        .join(" ")
-    }
     // Use raw SQL for FTS5 MATCH query and cast lcsc to number
     query = query.where(
       sql<boolean>`lcsc IN (
         SELECT CAST(lcsc AS INTEGER) FROM components_fts
         WHERE components_fts MATCH ${ftsQuery}
+        ORDER BY rank
       )`,
     )
   }
