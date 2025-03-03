@@ -1,6 +1,7 @@
 import { test, expect } from "bun:test"
 import { getTestServer } from "tests/fixtures/get-test-server"
 
+
 test("GET /api/search with search query 'C1234' returns expected components", async () => {
   const { axios } = await getTestServer()
   const res = await axios.get("/api/search?limit=1&q=C1234")
