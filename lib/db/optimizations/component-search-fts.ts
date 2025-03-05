@@ -20,9 +20,7 @@ export const componentSearchFTS: DbOptimizationSpec = {
       CREATE VIRTUAL TABLE components_fts USING fts5(
         mfr,
         description,
-        lcsc UNINDEXED,
-        tokenize = 'porter unicode61',
-        prefix = '2 3 4'
+        lcsc
       )
     `.execute(db)
 
