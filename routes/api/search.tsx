@@ -32,6 +32,27 @@ export default withWinterSpec({
     .orderBy("stock", "desc")
     .where("stock", ">", 0)
 
+  console.log(
+    69,
+    await sql`
+    SELECT *
+    FROM components_fts
+    WHERE mfr LIKE '%c1234%';
+  `
+      .execute(ctx.db)
+      .catch(console.warn),
+  )
+
+  console.log(
+    77,
+    await sql`
+    SELECT mfr
+    FROM components_fts;
+  `
+      .execute(ctx.db)
+      .catch(console.warn),
+  )
+
   if (req.query.package) {
     query = query.where("package", "=", req.query.package)
   }
