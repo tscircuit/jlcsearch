@@ -55,7 +55,6 @@ export default withWinterSpec({
       SELECT lcsc
       FROM components_fts
       WHERE mfr LIKE '%${searchTerm}%'
-      ORDER BY rank
     `.execute(ctx.db)
     console.log("FTS Results (LIKE):", ftsResults.rows, searchTerm)
 
