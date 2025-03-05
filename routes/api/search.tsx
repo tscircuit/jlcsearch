@@ -35,13 +35,23 @@ export default withWinterSpec({
   console.log(
     69,
     await sql`
-      SELECT *
-      FROM components_fts
-      WHERE mfr LIKE '%c1234%';
-    `.execute(ctx.db).catch(console.warn),
+    SELECT *
+    FROM components_fts
+    WHERE mfr LIKE '%c1234%';
+  `
+      .execute(ctx.db)
+      .catch(console.warn),
   )
 
-
+  console.log(
+    77,
+    await sql`
+    SELECT mfr
+    FROM components_fts;
+  `
+      .execute(ctx.db)
+      .catch(console.warn),
+  )
 
   if (req.query.package) {
     query = query.where("package", "=", req.query.package)
@@ -49,28 +59,34 @@ export default withWinterSpec({
 
   if (req.query.q) {
     const searchTerm = req.query.q.trim().toLowerCase()
-    const generalFtsQuery = `${searchTerm}*`
-    const combinedFtsQuery = generalFtsQuery // FTS part for description/lcsc
-    const searchPattern = `%${searchTerm}%`
 
+    // Specific mfr query with exact substring match
+    const mfrFtsQuery = `mfr:${searchTerm}*`
+
+    // General query for other fields
+    const generalFtsQuery = `${searchTerm}*`
+
+    // Prioritize mfr matches by listing first
+    const combinedFtsQuery = `${mfrFtsQuery} OR ${generalFtsQuery}`
+
+    // Log the FTS query for debugging
     console.log("FTS Query:", combinedFtsQuery)
 
+    // Get matching lcsc values from FTS for debugging
     const ftsResults = await sql`
-      SELECT lcsc
+      SELECT CAST(lcsc AS INTEGER) AS lcsc
       FROM components_fts
-      WHERE components_fts MATCH ?
-        OR mfr LIKE ?
-      ORDER BY CASE WHEN mfr LIKE ? THEN 0 ELSE 1 END, rank
+      WHERE components_fts MATCH ${combinedFtsQuery}
+      ORDER BY rank
     `.execute(ctx.db)
     console.log("FTS Results:", ftsResults.rows)
 
     query = query.where(
       sql<boolean>`lcsc IN (
-        SELECT lcsc
+        SELECT CAST(lcsc AS INTEGER)
         FROM components_fts
-        WHERE components_fts MATCH ?
-          OR mfr LIKE ?
-        ORDER BY CASE WHEN mfr LIKE ? THEN 0 ELSE 1 END, rank
+        WHERE components_fts MATCH ${combinedFtsQuery}
+        ORDER BY rank
       )`,
     )
   }
