@@ -43,16 +43,6 @@ export default withWinterSpec({
       .catch(console.warn),
   )
 
-  console.log(
-    77,
-    await sql`
-      SELECT mfr
-      FROM components_fts;
-    `
-      .execute(ctx.db)
-      .catch(console.warn),
-  )
-
   if (req.query.package) {
     query = query.where("package", "=", req.query.package)
   }
@@ -60,36 +50,59 @@ export default withWinterSpec({
   if (req.query.q) {
     const searchTerm = req.query.q.trim().toLowerCase()
 
-    // Use mfr_chars for substring matching within mfr
-    const mfrFtsQuery = `mfr_chars:${searchTerm}` // Exact substring match in mfr_chars
-
-    // General query for other fields
-    const generalFtsQuery = `${searchTerm}*`
-
-    // Prioritize mfr matches
-    const combinedFtsQuery = `${mfrFtsQuery} OR ${generalFtsQuery}`
-
-    console.log("FTS Query:", combinedFtsQuery)
-
+    // Use mfr directly with LIKE since FTS isn't matching substrings
     const ftsResults = await sql`
       SELECT lcsc
       FROM components_fts
-      WHERE components_fts MATCH ${combinedFtsQuery}
+      WHERE mfr LIKE '%${searchTerm}%'
       ORDER BY rank
     `.execute(ctx.db)
-    console.log("FTS Results:", ftsResults.rows)
+    console.log("FTS Results (LIKE):", ftsResults.rows)
 
-    query = query.where(
-      sql<boolean>`lcsc IN (
+    if (ftsResults.rows.length > 0) {
+      query = query.where(
+        sql<boolean>`lcsc IN (
+          SELECT lcsc
+          FROM components_fts
+          WHERE mfr LIKE '%${searchTerm}%'
+        )`,
+      )
+    } else {
+      // Fallback to general FTS search
+      const generalFtsQuery = `${searchTerm}*`
+      console.log("Fallback FTS Query:", generalFtsQuery)
+      const fallbackResults = await sql`
         SELECT lcsc
         FROM components_fts
-        WHERE components_fts MATCH ${combinedFtsQuery}
+        WHERE components_fts MATCH ${generalFtsQuery}
         ORDER BY rank
-      )`,
-    )
+      `.execute(ctx.db)
+      console.log("Fallback FTS Results:", fallbackResults.rows)
+      query = query.where(
+        sql<boolean>`lcsc IN (
+          SELECT lcsc
+          FROM components_fts
+          WHERE components_fts MATCH ${generalFtsQuery}
+          ORDER BY rank
+        )`,
+      )
+    }
   }
 
-  const fullComponents = await query.execute()
+  let fullComponents
+  try {
+    fullComponents = await query.execute()
+    console.log("Full Components:", fullComponents)
+  } catch (error) {
+    console.error("Search query failed:", error.message)
+    return ctx.json(
+      {
+        ok: false,
+        error: { message: "Database query failed", details: error.message },
+      },
+      { status: 500 },
+    )
+  }
 
   const components = fullComponents.map((c) => ({
     lcsc: c.lcsc,
