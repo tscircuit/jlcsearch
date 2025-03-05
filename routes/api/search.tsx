@@ -44,13 +44,6 @@ export default withWinterSpec({
     const mfrFtsQuery = `mfr:${searchTerm}*`
     const generalFtsQuery = `${searchTerm}*`
     const combinedFtsQuery = `${mfrFtsQuery} OR ${generalFtsQuery}`
-    const ftsResults = await sql`
-      SELECT CAST(lcsc AS INTEGER) AS lcsc
-      FROM components_fts
-      WHERE components_fts MATCH ${combinedFtsQuery}
-      ORDER BY rank
-    `.execute(ctx.db)
-
     query = query.where((eb) =>
       eb("mfr", "like", searchPattern)
         .or("description", "like", searchPattern)
