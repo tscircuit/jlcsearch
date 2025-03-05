@@ -309,6 +309,20 @@ export interface LedDriver {
   supply_voltage_min: number | null
 }
 
+export interface LedMatrix {
+  attributes: string | null
+  color: string | null
+  description: string | null
+  in_stock: number | null
+  lcsc: number | null
+  led_type: string | null
+  matrix_size: string | null
+  mfr: string | null
+  package: string | null
+  price1: number | null
+  stock: number | null
+}
+
 export interface LedSegmentDisplay {
   attributes: string | null
   color: string | null
@@ -524,6 +538,7 @@ export interface DB {
   led: Led
   led_dot_matrix_display: LedDotMatrixDisplay
   led_driver: LedDriver
+  led_matrix: LedMatrix
   led_segment_display: LedSegmentDisplay
   led_with_ic: LedWithIc
   manufacturers: Manufacturer
