@@ -64,6 +64,7 @@ test("GET /api/search with search query 'red led' returns expected components", 
   `)
 })
 
+
 declare module "bun:test" {
   interface Matchers<T = unknown> {
     toMatchInlineSnapshot(snapshot?: string | null): Promise<MatcherResult>
