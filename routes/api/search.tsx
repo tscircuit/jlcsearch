@@ -43,15 +43,6 @@ export default withWinterSpec({
       .catch(console.warn),
   )
 
-  console.log(
-    77,
-    await sql`
-    SELECT mfr
-    FROM components_fts;
-  `
-      .execute(ctx.db)
-      .catch(console.warn),
-  )
 
   if (req.query.package) {
     query = query.where("package", "=", req.query.package)
