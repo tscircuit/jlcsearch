@@ -39,17 +39,25 @@ export default withWinterSpec({
   if (req.query.q) {
     const searchTerm = req.query.q.trim().toLowerCase()
 
-    const ftsQuery = searchTerm
+    const generalFtsQuery = searchTerm
       .split(/\s+/)
       .map((term) => `${term}*`)
       .join(" ")
 
+    const mfrCharsQuery = searchTerm
+      .split("")
+      .map((char) => `${char}`)
+      .join(" ")
+
+    const combinedFtsQuery = `(${generalFtsQuery}) OR (mfr_chars: ${mfrCharsQuery})`
+
+    // Use raw SQL for FTS5 MATCH query and cast lcsc to number
     query = query.where(
-      sql<boolean>`lcsc IN ( 
-        SELECT CAST(lcsc AS INTEGER) FROM components_fts 
-        WHERE components_fts MATCH ${ftsQuery} 
-        ORDER BY rank 
-      ) OR LOWER(mfr) LIKE '%' || ${searchTerm} || '%'`,
+      sql<boolean>`lcsc IN (
+        SELECT CAST(lcsc AS INTEGER) FROM components_fts
+        WHERE components_fts MATCH ${combinedFtsQuery}
+        ORDER BY rank
+      )`,
     )
   }
 
