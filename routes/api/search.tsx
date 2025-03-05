@@ -39,19 +39,18 @@ export default withWinterSpec({
   if (req.query.q) {
     const searchTerm = req.query.q.trim().toLowerCase()
 
+    // General FTS query for prefix matching across all fields
     const generalFtsQuery = searchTerm
       .split(/\s+/)
       .map((term) => `${term}*`)
       .join(" ")
 
-    const mfrCharsQuery = searchTerm
-      .split("")
-      .map((char) => `${char}`)
-      .join(" ")
+    // Specific mfr query with exact substring match
+    const mfrFtsQuery = `mfr: ${searchTerm}*`
 
-    const combinedFtsQuery = `(${generalFtsQuery}) OR (mfr_chars: ${mfrCharsQuery})`
+    // Combined query: prioritize mfr matches, fallback to general search
+    const combinedFtsQuery = `${mfrFtsQuery} OR ${generalFtsQuery}`
 
-    // Use raw SQL for FTS5 MATCH query and cast lcsc to number
     query = query.where(
       sql<boolean>`lcsc IN (
         SELECT CAST(lcsc AS INTEGER) FROM components_fts
