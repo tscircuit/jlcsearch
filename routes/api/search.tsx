@@ -52,7 +52,7 @@ export default withWinterSpec({
     const searchTerm = req.query.q.trim().toLowerCase()
 
     // Specific mfr query with exact substring match
-    const mfrFtsQuery = `mfr:${searchTerm}*`
+    const mfrFtsQuery = `mfr:*${searchTerm}*`
 
     // General query for other fields
     const generalFtsQuery = `${searchTerm}*`
