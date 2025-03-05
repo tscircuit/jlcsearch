@@ -107,6 +107,7 @@ export interface ComponentsFt {
   description: string | null
   lcsc: string | null
   mfr: string | null
+  mfr_chars: string | null
 }
 
 export interface ComponentsFtsConfig {
@@ -118,6 +119,7 @@ export interface ComponentsFtsContent {
   c0: string | null
   c1: string | null
   c2: string | null
+  c3: string | null
   id: number | null
 }
 
@@ -305,20 +307,6 @@ export interface LedDriver {
   stock: number | null
   supply_voltage_max: number | null
   supply_voltage_min: number | null
-}
-
-export interface LedMatrix {
-  attributes: string | null
-  color: string | null
-  description: string | null
-  in_stock: number | null
-  lcsc: number | null
-  led_type: string | null
-  matrix_size: string | null
-  mfr: string | null
-  package: string | null
-  price1: number | null
-  stock: number | null
 }
 
 export interface LedSegmentDisplay {
@@ -536,7 +524,6 @@ export interface DB {
   led: Led
   led_dot_matrix_display: LedDotMatrixDisplay
   led_driver: LedDriver
-  led_matrix: LedMatrix
   led_segment_display: LedSegmentDisplay
   led_with_ic: LedWithIc
   manufacturers: Manufacturer

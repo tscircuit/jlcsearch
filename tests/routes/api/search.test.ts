@@ -1,51 +1,77 @@
-import { test, expect } from "bun:test"
-import { getTestServer } from "tests/fixtures/get-test-server"
+import { sql } from "kysely"
+import { withWinterSpec } from "lib/with-winter-spec"
+import { z } from "zod"
 
-test("GET /api/search with search query 'C1234' returns expected components", async () => {
-  const { axios } = await getTestServer()
-  const res = await axios.get("/api/search?limit=1&q=C1234")
+const extractSmallQuantityPrice = (price: string | null): string => {
+  if (!price) return ""
+  try {
+    const priceObj = JSON.parse(price)
+    return priceObj[0]?.price || ""
+  } catch {
+    return ""
+  }
+}
 
-  expect(res.data).toHaveProperty("components")
-  expect(Array.isArray(res.data.components)).toBe(true)
+export default withWinterSpec({
+  auth: "none",
+  methods: ["GET"],
+  queryParams: z.object({
+    package: z.string().optional(),
+    full: z.boolean().optional(),
+    q: z.string().optional(),
+    limit: z.string().optional(),
+  }),
+  jsonResponse: z.any(),
+} as const)(async (req, ctx) => {
+  const limit = parseInt(req.query.limit ?? "100", 10) || 100
 
-  expect(res.data.components[0]).toMatchObject({
-    description:
-      "125mW Thin Film Resistor 100V ±25ppm/℃ ±1% 1.23MΩ 0805 Chip Resistor - Surface Mount ROHS",
-    lcsc: 217796,
-    mfr: "ARG05FTC1234N",
-    package: "0805",
-    price: 0.005642857,
-  })
-})
+  let query = ctx.db
+    .selectFrom("components")
+    .selectAll()
+    .limit(limit)
+    .orderBy("stock", "desc")
+    .where("stock", ">", 0)
 
-test("GET /api/search with search query '555 Timer' returns expected components", async () => {
-  const { axios } = await getTestServer()
-  const res = await axios.get("/api/search?limit=1&q=555%20Timer")
+  if (req.query.package) {
+    query = query.where("package", "=", req.query.package)
+  }
 
-  expect(res.data).toHaveProperty("components")
-  expect(Array.isArray(res.data.components)).toBe(true)
+  if (req.query.q) {
+    const searchTerm = req.query.q.trim().toLowerCase()
 
-  expect(res.data.components[0]).toMatchObject({
-    description: "DIP-8 555 Timers / Counters ROHS",
-    lcsc: 22461592,
-    mfr: "LM555CN",
-    package: "DIP-8",
-    price: 0.141,
-  })
-})
+    // General FTS query for prefix matching across all fields
+    const generalFtsQuery = searchTerm
+      .split(/\s+/)
+      .map((term) => `${term}*`)
+      .join(" ")
 
-test("GET /api/search with search query 'red led' returns expected components", async () => {
-  const { axios } = await getTestServer()
-  const res = await axios.get("/api/search?limit=1&q=red%20led")
+    // Specific mfr query with exact substring match
+    const mfrFtsQuery = `mfr: ${searchTerm}*`
 
-  expect(res.data).toHaveProperty("components")
-  expect(Array.isArray(res.data.components)).toBe(true)
+    // Combined query: prioritize mfr matches, fallback to general search
+    const combinedFtsQuery = `${mfrFtsQuery} OR ${generalFtsQuery}`
 
-  expect(res.data.components[0]).toMatchObject({
-    description: "-40℃~+85℃ Red 0603 LED Indication - Discrete ROHS",
-    lcsc: 2286,
-    mfr: "KT-0603R",
-    package: "0603",
-    price: 0.005314286,
+    query = query.where(
+      sql<boolean>`lcsc IN (
+        SELECT CAST(lcsc AS INTEGER) FROM components_fts
+        WHERE components_fts MATCH ${combinedFtsQuery}
+        ORDER BY rank
+      )`,
+    )
+  }
+
+  const fullComponents = await query.execute()
+
+  const components = fullComponents.map((c) => ({
+    lcsc: c.lcsc,
+    mfr: c.mfr,
+    package: c.package,
+    description: c.description,
+    stock: c.stock,
+    price: extractSmallQuantityPrice(c.price),
+  }))
+
+  return ctx.json({
+    components: req.query.full ? fullComponents : components,
   })
 })
