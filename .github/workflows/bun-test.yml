@@ -2,7 +2,7 @@
 name: Bun Test
 
 on:
-  worflow_dispatch:
+  workflow_dispatch:
   pull_request:
 
 jobs:
