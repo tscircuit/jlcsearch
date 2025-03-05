@@ -4,7 +4,7 @@ import { getTestServer } from "tests/fixtures/get-test-server"
 test("GET /api/search with search query 'C1234' returns expected components", async () => {
   const { axios } = await getTestServer()
   const res = await axios.get("/api/search?q=C1234")
-  console.log(res.data)
+
   expect(res.data).toHaveProperty("components")
   expect(Array.isArray(res.data.components)).toBe(true)
 
