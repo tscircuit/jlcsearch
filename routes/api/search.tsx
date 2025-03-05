@@ -46,7 +46,7 @@ export default withWinterSpec({
       .join(" ")
 
     // Specific mfr query with exact substring match
-    const mfrFtsQuery = `mfr: ${searchTerm}*`
+    const mfrFtsQuery = `mfr:${searchTerm}*`
 
     // Combined query: prioritize mfr matches, fallback to general search
     const combinedFtsQuery = `${mfrFtsQuery} OR ${generalFtsQuery}`
