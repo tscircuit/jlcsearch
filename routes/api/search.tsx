@@ -40,35 +40,37 @@ export default withWinterSpec({
     const searchTerm = req.query.q.trim().toLowerCase()
 
     // Specific mfr query with exact substring match
-    const mfrFtsQuery = `mfr:"${searchTerm}" OR mfr:${searchTerm}*`
+    const mfrFtsQuery = `mfr:${searchTerm}*`
 
     // General query for other fields
     const generalFtsQuery = `${searchTerm}*`
 
-    // Prioritize mfr matches with AND fallback to general
+    // Prioritize mfr matches by listing first
     const combinedFtsQuery = `${mfrFtsQuery} OR ${generalFtsQuery}`
 
-    console.log("FTS Query:", combinedFtsQuery);
+    // Log the FTS query for debugging
+    console.log("FTS Query:", combinedFtsQuery)
 
+    // Get matching lcsc values from FTS for debugging
     const ftsResults = await sql`
       SELECT CAST(lcsc AS INTEGER) AS lcsc
       FROM components_fts
       WHERE components_fts MATCH ${combinedFtsQuery}
-      ORDER BY CASE WHEN mfr LIKE '%${searchTerm}%' THEN 0 ELSE 1 END, rank
-    `.execute(ctx.db);
-    console.log("FTS Results:", ftsResults.rows);
+      ORDER BY rank
+    `.execute(ctx.db)
+    console.log("FTS Results:", ftsResults.rows)
 
     query = query.where(
       sql<boolean>`lcsc IN (
         SELECT CAST(lcsc AS INTEGER)
         FROM components_fts
         WHERE components_fts MATCH ${combinedFtsQuery}
-        ORDER BY CASE WHEN mfr LIKE '%${searchTerm}%' THEN 0 ELSE 1 END, rank
+        ORDER BY rank
       )`,
     )
   }
 
-  const fullComponents= await query.execute()
+  const fullComponents = await query.execute()
 
   const components = fullComponents.map((c) => ({
     lcsc: c.lcsc,
