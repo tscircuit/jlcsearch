@@ -43,6 +43,15 @@ export default withWinterSpec({
       .catch(console.warn),
   )
 
+  console.log(
+    77,
+    await sql`
+      SELECT mfr
+      FROM components_fts;
+    `
+      .execute(ctx.db)
+      .catch(console.warn),
+  )
 
   if (req.query.package) {
     query = query.where("package", "=", req.query.package)
@@ -51,14 +60,11 @@ export default withWinterSpec({
   if (req.query.q) {
     const searchTerm = req.query.q.trim().toLowerCase()
 
-    // Use mfr_chars for substring matching within mfr
-    const mfrFtsQuery = `mfr_chars:${searchTerm}` // Exact substring match in mfr_chars
-
-    // General query for other fields
+    // General FTS query for description and lcsc
     const generalFtsQuery = `${searchTerm}*`
 
-    // Prioritize mfr matches
-    const combinedFtsQuery = `${mfrFtsQuery} OR ${generalFtsQuery}`
+    // Combine FTS with LIKE for mfr substring matching
+    const combinedFtsQuery = `${generalFtsQuery}` // FTS part only for description/lcsc
 
     console.log("FTS Query:", combinedFtsQuery)
 
@@ -66,7 +72,8 @@ export default withWinterSpec({
       SELECT lcsc
       FROM components_fts
       WHERE components_fts MATCH ${combinedFtsQuery}
-      ORDER BY rank
+        OR mfr LIKE '%${searchTerm}%'
+      ORDER BY CASE WHEN mfr LIKE '%${searchTerm}%' THEN 0 ELSE 1 END, rank
     `.execute(ctx.db)
     console.log("FTS Results:", ftsResults.rows)
 
@@ -75,7 +82,8 @@ export default withWinterSpec({
         SELECT lcsc
         FROM components_fts
         WHERE components_fts MATCH ${combinedFtsQuery}
-        ORDER BY rank
+          OR mfr LIKE '%${searchTerm}%'
+        ORDER BY CASE WHEN mfr LIKE '%${searchTerm}%' THEN 0 ELSE 1 END, rank
       )`,
     )
   }
