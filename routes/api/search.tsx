@@ -57,7 +57,7 @@ export default withWinterSpec({
       WHERE mfr LIKE '%${searchTerm}%'
       ORDER BY rank
     `.execute(ctx.db)
-    console.log("FTS Results (LIKE):", ftsResults.rows)
+    console.log("FTS Results (LIKE):", ftsResults.rows, searchTerm)
 
     if (ftsResults.rows.length > 0) {
       query = query.where(
