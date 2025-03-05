@@ -31,6 +31,11 @@ jobs:
       - name: Run setup if cache miss
         if: steps.cache-setup.outputs.cache-hit != 'true'
         run: bun run setup
+      
+      - name: Run type and print kysely.ts content
+        run: |
+          bun run generate:db-types
+          node -e "console.log(require('fs').readFileSync('lib/db/generated/kysely.ts', 'utf8'))"
 
       - name: Run tests
         run: bun test
