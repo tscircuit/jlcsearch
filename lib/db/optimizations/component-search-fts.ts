@@ -16,6 +16,7 @@ export const componentSearchFTS: DbOptimizationSpec = {
   },
 
   async execute(db: KyselyDatabaseInstance) {
+    // Create FTS5 virtual table with mfr_chars for scrambled letter searching
     await sql`
       CREATE VIRTUAL TABLE components_fts USING fts5(
         mfr,
