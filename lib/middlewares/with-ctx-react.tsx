@@ -18,7 +18,7 @@ export const withCtxReact: Middleware<
         <html lang="en">
           <head>
             <meta charSet="utf-8" />
-            <title>{pageTitle} - JLCPCB Parts Search</title>
+            <title>{`${pageTitle} - JLCPCB Parts Search`}</title>
             <script src="https://cdn.tailwindcss.com" />
             <style
               type="text/tailwindcss"
