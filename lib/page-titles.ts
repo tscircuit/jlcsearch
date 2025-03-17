@@ -1,5 +1,5 @@
 export const pageTitles: Record<string, string> = {
-  "/": "JLCPCB Parts Search",
+  "/": "Home",
   "/components/list": "Components",
   "/capacitors/list": "Capacitors",
   "/diodes/list": "Diodes",
