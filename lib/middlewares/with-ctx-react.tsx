@@ -1,6 +1,7 @@
 import { renderToString } from "react-dom/server"
 import type { Middleware } from "winterspec"
 import type { ReactNode } from "react"
+import { getPageTitle } from "lib/page-titles"
 
 export const withCtxReact: Middleware<
   {},
@@ -10,12 +11,7 @@ export const withCtxReact: Middleware<
     const pathComponents = new URL(req.url).pathname.split("/").filter(Boolean)
     const timezone = req.headers.get("X-Timezone") || "UTC"
 
-    // Generate title based on path
-    const pageTitle =
-      pathComponents.length > 0
-        ? pathComponents[pathComponents.length - 1].charAt(0).toUpperCase() +
-          pathComponents[pathComponents.length - 1].slice(1)
-        : "JLCPCB Parts"
+    const pageTitle = getPageTitle(new URL(req.url).pathname)
 
     return new Response(
       renderToString(
