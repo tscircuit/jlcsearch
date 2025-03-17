@@ -190,5 +190,6 @@ export default withWinterSpec({
         }))}
       />
     </div>,
+    "JLCPCB Voltage Regulator Search",
   )
 })

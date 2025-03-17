@@ -230,5 +230,6 @@ export default withWinterSpec({
         }))}
       />
     </div>,
+    "JLCPCB ADC Search",
   )
 })

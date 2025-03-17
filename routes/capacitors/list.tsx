@@ -134,5 +134,6 @@ export default withWinterSpec({
         }))}
       />
     </div>,
+    "JLCPCB Capacitor Search",
   )
 })

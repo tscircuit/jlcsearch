@@ -233,5 +233,6 @@ export default withWinterSpec({
         }))}
       />
     </div>,
+    "JLCPCB WiFi Module Search",
   )
 })
