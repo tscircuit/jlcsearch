@@ -89,5 +89,6 @@ export default withWinterSpec({
       )}
       <Table rows={req.query.full ? fullComponents : components} />
     </div>,
+    "JLCPCB Component Search",
   )
 })

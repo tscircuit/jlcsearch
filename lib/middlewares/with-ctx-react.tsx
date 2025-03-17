@@ -1,24 +1,21 @@
 import { renderToString } from "react-dom/server"
 import type { Middleware } from "winterspec"
 import type { ReactNode } from "react"
-import { getPageTitle } from "lib/page-titles"
 
 export const withCtxReact: Middleware<
   {},
-  { react: (component: ReactNode) => Response }
+  { react: (component: ReactNode, title?: string) => Response }
 > = async (req, ctx, next) => {
-  ctx.react = (component: ReactNode) => {
+  ctx.react = (component: ReactNode, title?: string) => {
     const pathComponents = new URL(req.url).pathname.split("/").filter(Boolean)
     const timezone = req.headers.get("X-Timezone") || "UTC"
-
-    const pageTitle = getPageTitle(new URL(req.url).pathname)
 
     return new Response(
       renderToString(
         <html lang="en">
           <head>
             <meta charSet="utf-8" />
-            <title>{`${pageTitle} - JLCPCB Parts Search`}</title>
+            <title>{`${title || "JLCPCB Parts Search"}`}</title>
             <script src="https://cdn.tailwindcss.com" />
             <style
               type="text/tailwindcss"

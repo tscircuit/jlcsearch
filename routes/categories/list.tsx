@@ -68,5 +68,6 @@ export default withWinterSpec({
         }))}
       />
     </div>,
+    "JLCPCB Component Categories",
   )
 })

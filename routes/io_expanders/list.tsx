@@ -178,5 +178,6 @@ export default withWinterSpec({
         }))}
       />
     </div>,
+    "JLCPCB I/O Expander Search",
   )
 })

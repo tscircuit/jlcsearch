@@ -257,5 +257,6 @@ export default withWinterSpec({
         }))}
       />
     </div>,
+    "JLCPCB LED Segment Display Search",
   )
 })

@@ -160,5 +160,6 @@ export default withWinterSpec({
         }))}
       />
     </div>,
+    "JLCPCB Diode Search",
   )
 })

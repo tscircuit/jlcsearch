@@ -226,5 +226,6 @@ export default withWinterSpec({
         }))}
       />
     </div>,
+    "JLCPCB LCD Display Search",
   )
 })

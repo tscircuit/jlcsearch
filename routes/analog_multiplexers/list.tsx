@@ -196,5 +196,6 @@ export default withWinterSpec({
         }))}
       />
     </div>,
+    "JLCPCB Analog Multiplexer Search",
   )
 })

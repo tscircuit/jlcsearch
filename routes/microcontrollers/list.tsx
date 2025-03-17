@@ -254,5 +254,6 @@ export default withWinterSpec({
         }))}
       />
     </div>,
+    "JLCPCB Microcontroller Search",
   )
 })
