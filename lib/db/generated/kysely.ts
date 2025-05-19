@@ -309,20 +309,6 @@ export interface LedDriver {
   supply_voltage_min: number | null
 }
 
-export interface LedMatrix {
-  attributes: string | null
-  color: string | null
-  description: string | null
-  in_stock: number | null
-  lcsc: number | null
-  led_type: string | null
-  matrix_size: string | null
-  mfr: string | null
-  package: string | null
-  price1: number | null
-  stock: number | null
-}
-
 export interface LedSegmentDisplay {
   attributes: string | null
   color: string | null
@@ -423,6 +409,20 @@ export interface OledDisplay {
   pixel_resolution: string | null
   price1: number | null
   protocol: string | null
+  stock: number | null
+}
+
+export interface Potentiometer {
+  attributes: string | null
+  description: string | null
+  in_stock: number | null
+  is_surface_mount: number | null
+  lcsc: number | null
+  max_resistance: number | null
+  mfr: string | null
+  package: string | null
+  pin_variant: string | null
+  price1: number | null
   stock: number | null
 }
 
@@ -538,13 +538,13 @@ export interface DB {
   led: Led
   led_dot_matrix_display: LedDotMatrixDisplay
   led_driver: LedDriver
-  led_matrix: LedMatrix
   led_segment_display: LedSegmentDisplay
   led_with_ic: LedWithIc
   manufacturers: Manufacturer
   microcontroller: Microcontroller
   mosfet: Mosfet
   oled_display: OledDisplay
+  potentiometer: Potentiometer
   resistor: Resistor
   v_components: VComponent
   voltage_regulator: VoltageRegulator
