@@ -125,7 +125,10 @@ export default withWinterSpec({
             <option value="two_pin" selected={params.pinVariant === "two_pin"}>
               2-Pin
             </option>
-            <option value="three_pin" selected={params.pinVariant === "three_pin"}>
+            <option
+              value="three_pin"
+              selected={params.pinVariant === "three_pin"}
+            >
               3-Pin
             </option>
           </select>
@@ -140,7 +143,9 @@ export default withWinterSpec({
           mfr: p.mfr,
           package: p.package,
           maxResistance: (
-            <span className="tabular-nums">{formatSiUnit(p.max_resistance)}Ω</span>
+            <span className="tabular-nums">
+              {formatSiUnit(p.max_resistance)}Ω
+            </span>
           ),
           pinVariant: p.pin_variant === "two_pin" ? "2-Pin" : "3-Pin",
           stock: <span className="tabular-nums">{p.stock}</span>,
@@ -150,4 +155,4 @@ export default withWinterSpec({
     </div>,
     "JLCPCB Potentiometer Search",
   )
-}) 
+})

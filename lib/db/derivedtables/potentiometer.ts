@@ -24,7 +24,7 @@ export const potentiometerTableSpec: DerivedTableSpec<Potentiometer> = {
       .innerJoin("categories", "components.category_id", "categories.id")
       .selectAll()
       .where("categories.category", "=", "Resistors")
-      .where("components.description", "ilike", "%potentiometer%"),
+      .where("components.description", "like", "%potentiometer%"),
   mapToTable: (components) => {
     return components.map((c): Potentiometer | null => {
       if (!c.extra) return null
@@ -58,4 +58,4 @@ export const potentiometerTableSpec: DerivedTableSpec<Potentiometer> = {
       }
     })
   },
-} 
+}
