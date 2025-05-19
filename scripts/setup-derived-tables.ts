@@ -21,6 +21,7 @@ import { ledDotMatrixDisplayTableSpec } from "lib/db/derivedtables/led_dot_matri
 import { oledDisplayTableSpec } from "lib/db/derivedtables/oled_display"
 import { ledSegmentDisplayTableSpec } from "lib/db/derivedtables/led_segment_display"
 import { lcdDisplayTableSpec } from "lib/db/derivedtables/lcd_display"
+import { potentiometerTableSpec } from "lib/db/derivedtables/potentiometer"
 
 const resetArg = process.argv.indexOf("--reset")
 const resetTable = resetArg !== -1 ? process.argv[resetArg + 1] : null
@@ -46,6 +47,7 @@ const DERIVED_TABLES: DerivedTableSpec<any>[] = [
   oledDisplayTableSpec,
   ledSegmentDisplayTableSpec,
   lcdDisplayTableSpec,
+  potentiometerTableSpec,
 ]
 
 function jsonParseOrNull(strObject: string) {
