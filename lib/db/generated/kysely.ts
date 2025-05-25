@@ -57,6 +57,21 @@ export interface AnalogMultiplexer {
   supply_voltage_min: number | null
 }
 
+export interface Battery {
+  attributes: string | null
+  capacity: number | null
+  chemistry: string | null
+  description: string | null
+  in_stock: number | null
+  is_rechargeable: number | null
+  lcsc: number | null
+  mfr: string | null
+  package: string | null
+  price1: number | null
+  stock: number | null
+  voltage: number | null
+}
+
 export interface Capacitor {
   attributes: string | null
   capacitance_farads: number | null
@@ -538,6 +553,7 @@ export interface WifiModule {
 export interface DB {
   adc: Adc
   analog_multiplexer: AnalogMultiplexer
+  battery: Battery
   capacitor: Capacitor
   categories: Category
   components: Component
