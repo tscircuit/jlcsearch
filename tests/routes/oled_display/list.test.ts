@@ -1,5 +1,5 @@
 import { test, expect } from "bun:test"
-import { getTestServer } from "../fixtures/get-test-server"
+import { getTestServer } from "../../fixtures/get-test-server"
 
 test("GET /oled_display/list.json with json param returns OLED Display data", async () => {
   const { axios } = await getTestServer()

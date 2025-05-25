@@ -186,6 +186,23 @@ export interface Diode {
   stock: number | null
 }
 
+export interface Fuse {
+  attributes: string | null
+  current_rating: number | null
+  description: string | null
+  in_stock: number | null
+  is_glass_encased: number | null
+  is_resettable: number | null
+  is_surface_mount: number | null
+  lcsc: number | null
+  mfr: string | null
+  package: string | null
+  price1: number | null
+  response_time: string | null
+  stock: number | null
+  voltage_rating: number | null
+}
+
 export interface Header {
   attributes: string | null
   contact_material: string | null
@@ -532,6 +549,7 @@ export interface DB {
   components_fts_idx: ComponentsFtsIdx
   dac: Dac
   diode: Diode
+  fuse: Fuse
   header: Header
   io_expander: IoExpander
   lcd_display: LcdDisplay
