@@ -61,9 +61,8 @@ export interface BjtTransistor {
   attributes: string | null
   collector_current: number | null
   collector_emitter_voltage: number | null
+  current_gain: number | null
   description: string | null
-  frequency: number | null
-  gain: number | null
   in_stock: number | null
   lcsc: number | null
   mfr: string | null
@@ -72,7 +71,7 @@ export interface BjtTransistor {
   price1: number | null
   stock: number | null
   temperature_range: string | null
-  type: string | null
+  transition_frequency: number | null
 }
 
 export interface Capacitor {

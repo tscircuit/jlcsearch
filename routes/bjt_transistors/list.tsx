@@ -9,11 +9,10 @@ export default withWinterSpec({
   commonParams: z.object({
     json: z.boolean().optional(),
     package: z.string().optional(),
-    type: z.string().optional(),
-    gain_min: z.coerce.number().optional(),
+    current_gain_min: z.coerce.number().optional(),
     collector_current_min: z.coerce.number().optional(),
     collector_emitter_voltage_min: z.coerce.number().optional(),
-    frequency_min: z.coerce.number().optional(),
+    transition_frequency_min: z.coerce.number().optional(),
     power_min: z.coerce.number().optional(),
     temperature_range: z.string().optional(),
     mfr: z.string().optional(),
@@ -30,11 +29,10 @@ export default withWinterSpec({
           price1: z.number().nullable(),
           in_stock: z.boolean(),
           package: z.string(),
-          type: z.string(),
-          gain: z.number().nullable(),
+          current_gain: z.number().nullable(),
           collector_current: z.number(),
           collector_emitter_voltage: z.number().nullable(),
-          frequency: z.number().nullable(),
+          transition_frequency: z.number().nullable(),
           power: z.number().nullable(),
           temperature_range: z.string().nullable(),
         }),
@@ -53,11 +51,8 @@ export default withWinterSpec({
   if (params.package) {
     query = query.where("package", "=", params.package)
   }
-  if (params.type) {
-    query = query.where("type", "=", params.type)
-  }
-  if (params.gain_min) {
-    query = query.where("gain", ">=", params.gain_min)
+  if (params.current_gain_min) {
+    query = query.where("current_gain", ">=", params.current_gain_min)
   }
   if (params.collector_current_min) {
     query = query.where("collector_current", ">=", params.collector_current_min)
@@ -69,8 +64,12 @@ export default withWinterSpec({
       params.collector_emitter_voltage_min,
     )
   }
-  if (params.frequency_min) {
-    query = query.where("frequency", ">=", params.frequency_min)
+  if (params.transition_frequency_min) {
+    query = query.where(
+      "transition_frequency",
+      ">=",
+      params.transition_frequency_min,
+    )
   }
   if (params.power_min) {
     query = query.where("power", ">=", params.power_min)
@@ -97,11 +96,10 @@ export default withWinterSpec({
         lcsc: c.lcsc ?? 0,
         mfr: c.mfr || "",
         package: c.package || "",
-        type: c.type || "",
-        gain: c.gain,
+        current_gain: c.current_gain,
         collector_current: c.collector_current ?? 0,
         collector_emitter_voltage: c.collector_emitter_voltage,
-        frequency: c.frequency,
+        transition_frequency: c.transition_frequency,
         power: c.power,
         temperature_range: c.temperature_range,
         description: c.description || "",
@@ -114,11 +112,10 @@ export default withWinterSpec({
     lcsc: number
     mfr: string
     package: string
-    type: string
-    gain: number | null
+    current_gain: number | null
     collector_current: number
     collector_emitter_voltage: number | null
-    frequency: number | null
+    transition_frequency: number | null
     power: number | null
     temperature_range: string | null
     description: string
@@ -138,11 +135,10 @@ export default withWinterSpec({
         price1: c.price1,
         in_stock: Boolean((c.stock || 0) > 0),
         package: String(c.package || ""),
-        type: String(c.type || ""),
-        gain: c.gain,
+        current_gain: c.current_gain,
         collector_current: c.collector_current ?? 0,
         collector_emitter_voltage: c.collector_emitter_voltage,
-        frequency: c.frequency,
+        transition_frequency: c.transition_frequency,
         power: c.power,
         temperature_range: c.temperature_range,
       })),
@@ -165,18 +161,10 @@ export default withWinterSpec({
           </select>
         </div>
         <div>
-          <label>Type:</label>
-          <select name="type" className="border px-2 py-1 rounded">
-            <option value="">All</option>
-            <option value="NPN">NPN</option>
-            <option value="PNP">PNP</option>
-          </select>
-        </div>
-        <div>
-          <label>Min Gain:</label>
+          <label>Min Current Gain:</label>
           <input
             type="number"
-            name="gain_min"
+            name="current_gain_min"
             className="border px-2 py-1 rounded"
           />
         </div>
@@ -211,9 +199,8 @@ export default withWinterSpec({
           ) : null,
           MFR: c.mfr || null,
           Package: c.package || null,
-          Type: c.type || null,
-          "Gain (hFE)": c.gain ? (
-            <span className="tabular-nums">{c.gain}</span>
+          "Current Gain (hFE)": c.current_gain ? (
+            <span className="tabular-nums">{c.current_gain}</span>
           ) : null,
           "Collector Current (A)": c.collector_current ? (
             <span className="tabular-nums">{c.collector_current}A</span>
@@ -221,9 +208,9 @@ export default withWinterSpec({
           "Collector-Emitter Voltage (V)": c.collector_emitter_voltage ? (
             <span className="tabular-nums">{c.collector_emitter_voltage}V</span>
           ) : null,
-          "Frequency (MHz)": c.frequency ? (
+          "Transition Frequency (MHz)": c.transition_frequency ? (
             <span className="tabular-nums">
-              {(c.frequency / 1e6).toFixed(1)}
+              {(c.transition_frequency / 1e6).toFixed(1)}
             </span>
           ) : null,
           "Power (W)": c.power ? (

@@ -21,13 +21,12 @@ test("GET /bjt_transistors/list with json param returns BJT transistor data", as
     expect(bjt).toHaveProperty("price1")
     expect(bjt).toHaveProperty("in_stock")
     expect(bjt).toHaveProperty("package")
-    expect(bjt).toHaveProperty("type")
 
     // BJT specific fields
-    expect(bjt).toHaveProperty("gain")
+    expect(bjt).toHaveProperty("current_gain")
     expect(bjt).toHaveProperty("collector_current")
     expect(bjt).toHaveProperty("collector_emitter_voltage")
-    expect(bjt).toHaveProperty("frequency")
+    expect(bjt).toHaveProperty("transition_frequency")
     expect(bjt).toHaveProperty("power")
     expect(bjt).toHaveProperty("temperature_range")
 
@@ -39,7 +38,6 @@ test("GET /bjt_transistors/list with json param returns BJT transistor data", as
     expect(bjt.price1 === null || typeof bjt.price1 === "number").toBe(true)
     expect(typeof bjt.in_stock).toBe("boolean")
     expect(typeof bjt.package).toBe("string")
-    expect(typeof bjt.type).toBe("string")
   }
 })
 
@@ -55,21 +53,6 @@ test("GET /bjt_transistors/list with package filter returns filtered data", asyn
   // Verify all returned BJTs have the specified package
   for (const bjt of res.data.bjt_transistors) {
     expect(bjt.package).toBe("SOT-23")
-  }
-})
-
-test("GET /bjt_transistors/list with type filter returns filtered data", async () => {
-  const { axios } = await getTestServer()
-
-  // Test with type filter (NPN/PNP)
-  const res = await axios.get("/bjt_transistors/list?json=true&type=NPN")
-
-  expect(res.data).toHaveProperty("bjt_transistors")
-  expect(Array.isArray(res.data.bjt_transistors)).toBe(true)
-
-  // Verify all returned BJTs are of the specified type
-  for (const bjt of res.data.bjt_transistors) {
-    expect(bjt.type).toBe("NPN")
   }
 })
 
