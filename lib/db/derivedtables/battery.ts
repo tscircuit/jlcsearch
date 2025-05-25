@@ -25,6 +25,8 @@ export const batteryTableSpec: DerivedTableSpec<Battery> = {
       .selectFrom("components")
       .select(["lcsc", "mfr", "description", "stock", "price", "extra"])
       .where("description", "like", "%battery%")
+      .where("description", "not like", "%connector%")
+      .where("description", "not like", "%holder%")
   },
   mapToTable(components) {
     return components
