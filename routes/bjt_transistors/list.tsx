@@ -13,7 +13,7 @@ export default withWinterSpec({
     collector_current_min: z.coerce.number().optional(),
     collector_emitter_voltage_min: z.coerce.number().optional(),
     transition_frequency_min: z.coerce.number().optional(),
-    power_min: z.coerce.number().optional(),
+    power_dissipation_min: z.coerce.number().optional(),
     temperature_range: z.string().optional(),
     mfr: z.string().optional(),
     search: z.string().optional(),
@@ -33,7 +33,7 @@ export default withWinterSpec({
           collector_current: z.number(),
           collector_emitter_voltage: z.number().nullable(),
           transition_frequency: z.number().nullable(),
-          power: z.number().nullable(),
+          power_dissipation: z.number().nullable(),
           temperature_range: z.string().nullable(),
         }),
       ),
@@ -71,8 +71,8 @@ export default withWinterSpec({
       params.transition_frequency_min,
     )
   }
-  if (params.power_min) {
-    query = query.where("power", ">=", params.power_min)
+  if (params.power_dissipation_min) {
+    query = query.where("power_dissipation", ">=", params.power_dissipation_min)
   }
   if (params.temperature_range) {
     query = query.where(
@@ -100,7 +100,7 @@ export default withWinterSpec({
         collector_current: c.collector_current ?? 0,
         collector_emitter_voltage: c.collector_emitter_voltage,
         transition_frequency: c.transition_frequency,
-        power: c.power,
+        power_dissipation: c.power_dissipation,
         temperature_range: c.temperature_range,
         description: c.description || "",
         stock: c.stock ?? 0,
@@ -116,7 +116,7 @@ export default withWinterSpec({
     collector_current: number
     collector_emitter_voltage: number | null
     transition_frequency: number | null
-    power: number | null
+    power_dissipation: number | null
     temperature_range: string | null
     description: string
     stock: number
@@ -139,7 +139,7 @@ export default withWinterSpec({
         collector_current: c.collector_current ?? 0,
         collector_emitter_voltage: c.collector_emitter_voltage,
         transition_frequency: c.transition_frequency,
-        power: c.power,
+        power_dissipation: c.power_dissipation,
         temperature_range: c.temperature_range,
       })),
     })
@@ -213,8 +213,8 @@ export default withWinterSpec({
               {(c.transition_frequency / 1e6).toFixed(1)}
             </span>
           ) : null,
-          "Power (W)": c.power ? (
-            <span className="tabular-nums">{c.power}W</span>
+          "Power Dissipation (W)": c.power_dissipation ? (
+            <span className="tabular-nums">{c.power_dissipation}W</span>
           ) : null,
           "Temperature Range": c.temperature_range || null,
           Description: c.description || null,

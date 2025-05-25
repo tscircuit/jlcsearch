@@ -10,7 +10,7 @@ export interface BJTTransistor extends BaseComponent {
   collector_current?: number
   collector_emitter_voltage?: number
   transition_frequency?: number
-  power?: number
+  power_dissipation?: number
   temperature_range?: string
 }
 
@@ -22,7 +22,7 @@ export const bjtTransistorTableSpec: DerivedTableSpec<BJTTransistor> = {
     { name: "collector_current", type: "integer" },
     { name: "collector_emitter_voltage", type: "integer" },
     { name: "transition_frequency", type: "integer" },
-    { name: "power", type: "integer" },
+    { name: "power_dissipation", type: "integer" },
     { name: "temperature_range", type: "text" },
   ],
   listCandidateComponents(db: KyselyDatabaseInstance) {
@@ -60,7 +60,7 @@ export const bjtTransistorTableSpec: DerivedTableSpec<BJTTransistor> = {
         const transition_frequency = parseValue(
           attrs["Transition Frequency (fT)"],
         )
-        const power = parseValue(attrs["Power Dissipation (Pd)"])
+        const power_dissipation = parseValue(attrs["Power Dissipation (Pd)"])
         const temperature_range = attrs["Operating Temperature"] || undefined
 
         return {
@@ -75,7 +75,7 @@ export const bjtTransistorTableSpec: DerivedTableSpec<BJTTransistor> = {
           collector_current: collector_current,
           collector_emitter_voltage: collector_emitter_voltage,
           transition_frequency: transition_frequency,
-          power: power,
+          power_dissipation: power_dissipation,
           temperature_range: temperature_range,
           attributes: attrs,
         }

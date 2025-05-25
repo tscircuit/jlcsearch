@@ -27,7 +27,7 @@ test("GET /bjt_transistors/list with json param returns BJT transistor data", as
     expect(bjt).toHaveProperty("collector_current")
     expect(bjt).toHaveProperty("collector_emitter_voltage")
     expect(bjt).toHaveProperty("transition_frequency")
-    expect(bjt).toHaveProperty("power")
+    expect(bjt).toHaveProperty("power_dissipation")
     expect(bjt).toHaveProperty("temperature_range")
 
     // Check types

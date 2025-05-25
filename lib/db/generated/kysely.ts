@@ -67,7 +67,7 @@ export interface BjtTransistor {
   lcsc: number | null
   mfr: string | null
   package: string | null
-  power: number | null
+  power_dissipation: number | null
   price1: number | null
   stock: number | null
   temperature_range: string | null
