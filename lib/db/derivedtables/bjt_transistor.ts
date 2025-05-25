@@ -1,0 +1,89 @@
+import type { DerivedTableSpec } from "./types"
+import type { KyselyDatabaseInstance } from "../kysely-types"
+import { BaseComponent } from "./component-base"
+import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
+import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
+
+export interface BJTTransistor extends BaseComponent {
+  package?: string
+  type?: string // NPN/PNP
+  gain?: number
+  collector_current?: number
+  collector_emitter_voltage?: number
+  frequency?: number
+  power?: number
+  temperature_range?: string
+}
+
+export const bjtTransistorTableSpec: DerivedTableSpec<BJTTransistor> = {
+  tableName: "bjt_transistor",
+  extraColumns: [
+    { name: "package", type: "text" },
+    { name: "type", type: "text" },
+    { name: "gain", type: "integer" },
+    { name: "collector_current", type: "integer" },
+    { name: "collector_emitter_voltage", type: "integer" },
+    { name: "frequency", type: "integer" },
+    { name: "power", type: "integer" },
+    { name: "temperature_range", type: "text" },
+  ],
+  listCandidateComponents(db: KyselyDatabaseInstance) {
+    return db
+      .selectFrom("components")
+      .innerJoin("categories", "components.category_id", "categories.id")
+      .selectAll()
+      .where((eb) =>
+        eb.or([
+          eb("description", "like", "%BJT%"),
+          eb("description", "like", "%Bipolar Transistor%"),
+          eb("description", "like", "%Transistor NPN%"),
+          eb("description", "like", "%Transistor PNP%"),
+        ]),
+      )
+  },
+  mapToTable(components) {
+    return components.map((c) => {
+      try {
+        const attrs = c.extra ? JSON.parse(c.extra)?.attributes || {} : {}
+        const desc = c.description.toLowerCase()
+
+        const parseValue = (val: string | undefined): number | undefined => {
+          if (!val) return undefined
+          const result = parseAndConvertSiUnit(val)
+          return result?.value || undefined
+        }
+
+        // Extract values from attributes
+        const gain = parseValue(attrs["Current Gain (hFE)"])
+        const collector_current = parseValue(attrs["Collector Current (Ic)"])
+        const collector_emitter_voltage = parseValue(
+          attrs["Collector-Emitter Breakdown Voltage (Vceo)"],
+        )
+        const frequency = parseValue(attrs["Transition Frequency (fT)"])
+        const power = parseValue(attrs["Power Dissipation (Pd)"])
+        const temperature_range = attrs["Operating Temperature"] || undefined
+        const type = attrs["Type"]?.toUpperCase() || undefined
+
+        return {
+          lcsc: Number(c.lcsc),
+          mfr: String(c.mfr || ""),
+          description: String(c.description || ""),
+          stock: Number(c.stock || 0),
+          price1: extractMinQPrice(c.price),
+          in_stock: Boolean((c.stock || 0) > 0),
+          package: c.package || "",
+          type: type,
+          gain: gain,
+          collector_current: collector_current,
+          collector_emitter_voltage: collector_emitter_voltage,
+          frequency: frequency,
+          power: power,
+          temperature_range: temperature_range,
+          attributes: attrs,
+        }
+      } catch (e) {
+        return null
+      }
+    })
+  },
+}
