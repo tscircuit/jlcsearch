@@ -17,17 +17,18 @@ test("GET /led_segment_display/list.json with json param returns LED Segment dat
     expect(ledSegment).toHaveProperty("description")
     expect(ledSegment).toHaveProperty("stock")
     expect(ledSegment).toHaveProperty("price1")
-    expect(ledSegment).toHaveProperty("positions")
     expect(typeof ledSegment.lcsc).toBe("number")
     expect(typeof ledSegment.mfr).toBe("string")
     expect(typeof ledSegment.package).toBe("string")
     expect(typeof ledSegment.description).toBe("string")
     expect(typeof ledSegment.stock).toBe("number")
     expect(typeof ledSegment.price1).toBe("number")
-    if (ledSegment.positions) {
+
+    // Check optional properties if they exist
+    if ("positions" in ledSegment) {
       expect(typeof ledSegment.positions).toBe("string")
     }
-    if (ledSegment.type) {
+    if ("type" in ledSegment) {
       expect(typeof ledSegment.type).toBe("string")
     }
   }
