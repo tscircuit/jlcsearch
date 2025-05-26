@@ -57,6 +57,23 @@ export interface AnalogMultiplexer {
   supply_voltage_min: number | null
 }
 
+export interface BjtTransistor {
+  attributes: string | null
+  collector_current: number | null
+  collector_emitter_voltage: number | null
+  current_gain: number | null
+  description: string | null
+  in_stock: number | null
+  lcsc: number | null
+  mfr: string | null
+  package: string | null
+  power_dissipation: number | null
+  price1: number | null
+  stock: number | null
+  temperature_range: string | null
+  transition_frequency: number | null
+}
+
 export interface Capacitor {
   attributes: string | null
   capacitance_farads: number | null
@@ -538,6 +555,7 @@ export interface WifiModule {
 export interface DB {
   adc: Adc
   analog_multiplexer: AnalogMultiplexer
+  bjt_transistor: BjtTransistor
   capacitor: Capacitor
   categories: Category
   components: Component
