@@ -57,6 +57,20 @@ export interface AnalogMultiplexer {
   supply_voltage_min: number | null
 }
 
+export interface BatteryConnector {
+  attributes: string | null
+  battery_type: string | null
+  description: string | null
+  in_stock: number | null
+  lcsc: number | null
+  mfr: string | null
+  number_of_contacts: number | null
+  operating_temperature: string | null
+  package: string | null
+  price1: number | null
+  stock: number | null
+}
+
 export interface BjtTransistor {
   attributes: string | null
   collector_current: number | null
@@ -555,6 +569,7 @@ export interface WifiModule {
 export interface DB {
   adc: Adc
   analog_multiplexer: AnalogMultiplexer
+  battery_connector: BatteryConnector
   bjt_transistor: BjtTransistor
   capacitor: Capacitor
   categories: Category

@@ -39,6 +39,7 @@ export default withWinterSpec({
         <a href="/lcd_display/list">LCD Display Modules</a>
         <a href="/fuses/list">Fuses</a>
         <a href="/bjt_transistors/list">BJT Transistors</a>
+        <a href="/battery_connectors/list">Battery Connectors</a>
       </div>
     </div>,
   )
