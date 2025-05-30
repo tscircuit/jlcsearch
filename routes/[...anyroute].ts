@@ -5,7 +5,7 @@ export default withWinterSpec({
   auth: "none",
   methods: ["GET", "POST"],
   jsonResponse: z.object({
-    error: z.string(),
+    error_code: z.string(),
     message: z.string(),
   }),
 } as const)(async (req, ctx) => {
