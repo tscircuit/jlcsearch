@@ -18,10 +18,16 @@ export default withWinterSpec({
   }
 
   return ctx.react(
-    React.createElement("div", { className: "p-8" },
-      React.createElement("h1", { className: "text-2xl font-bold mb-4" }, "404 - Not Found"),
-      React.createElement("p", null, "The requested page could not be found.")
+    React.createElement(
+      "div",
+      { className: "p-8" },
+      React.createElement(
+        "h1",
+        { className: "text-2xl font-bold mb-4" },
+        "404 - Not Found",
+      ),
+      React.createElement("p", null, "The requested page could not be found."),
     ),
-    "404 Not Found"
+    "404 Not Found",
   )
 })
