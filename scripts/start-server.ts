@@ -13,5 +13,9 @@ Bun.serve({
     const response = winterspecBundle.makeRequest(req)
     return response
   },
+  routes: {
+    [`/database/${process.env.DATABASE_DOWNLOAD_TOKEN}`]: () =>
+      new Response(Bun.file("./db.sqlite3")),
+  },
   port: 3065,
 })

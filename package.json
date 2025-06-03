@@ -4,7 +4,7 @@
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@flydotio/dockerfile": "^0.5.9",
-    "@types/bun": "latest",
+    "@types/bun": "^1.2.15",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "better-sqlite3": "^11.7.0",
@@ -25,7 +25,7 @@
     "setup:replace-db-file": "rm -f ./db.sqlite3 && mv ./cache.sqlite3 ./db.sqlite3",
     "setup:optimize-db": "bun run scripts/setup-db-optimizations.ts",
     "setup:derived-tables": "bun run scripts/setup-derived-tables.ts",
-    "setup:download": "curl -o db.sqlite \"https://jlcsearch.tscircuit.com/api/download-database?token=$DATABASE_DOWNLOAD_TOKEN\"",
+    "setup:download": "curl -o db.sqlite \"https://jlcsearch.fly.dev/database/$DATABASE_DOWNLOAD_TOKEN\"",
     "format": "biome format --write .",
     "format:check": "biome format ."
   },
