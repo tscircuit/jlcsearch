@@ -480,6 +480,26 @@ export interface Resistor {
   tolerance_fraction: number | null
 }
 
+export interface Switch {
+  attributes: string | null
+  circuit: string | null
+  current_rating_a: number | null
+  description: string | null
+  in_stock: number | null
+  is_latching: number | null
+  lcsc: number | null
+  mfr: string | null
+  mounting_style: string | null
+  operating_temp_max: number | null
+  operating_temp_min: number | null
+  package: string | null
+  pin_count: number | null
+  price1: number | null
+  stock: number | null
+  switch_type: string | null
+  voltage_rating_v: number | null
+}
+
 export interface VComponent {
   basic: number | null
   category: string | null
@@ -582,6 +602,7 @@ export interface DB {
   oled_display: OledDisplay
   potentiometer: Potentiometer
   resistor: Resistor
+  switch: Switch
   v_components: VComponent
   voltage_regulator: VoltageRegulator
   wifi_module: WifiModule

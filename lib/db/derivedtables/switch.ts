@@ -13,6 +13,7 @@ export interface Switch extends BaseComponent {
   is_latching: boolean | null
   operating_temp_min: number | null
   operating_temp_max: number | null
+  pin_count: number | null
 }
 
 export const switchTableSpec: DerivedTableSpec<Switch> = {
@@ -27,6 +28,7 @@ export const switchTableSpec: DerivedTableSpec<Switch> = {
     { name: "is_latching", type: "boolean" },
     { name: "operating_temp_min", type: "real" },
     { name: "operating_temp_max", type: "real" },
+    { name: "pin_count", type: "integer" },
   ],
   listCandidateComponents(db) {
     return db
@@ -88,6 +90,7 @@ export const switchTableSpec: DerivedTableSpec<Switch> = {
         is_latching: isLatching,
         operating_temp_min: tempMin,
         operating_temp_max: tempMax,
+        pin_count: c.joints ?? null,
         attributes: attrs,
       }
     })
