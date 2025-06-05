@@ -105,7 +105,7 @@ export default withWinterSpec({
           description: c.description ?? "",
           stock: c.stock ?? 0,
           price1: c.price1 ?? 0,
-          protocol: c.protocol ?? undefined,
+          protocol: c.protocol ?? "",
           display_width: c.display_width ?? undefined,
           pixel_resolution: c.pixel_resolution ?? undefined,
         }))
