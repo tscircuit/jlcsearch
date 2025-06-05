@@ -105,7 +105,7 @@ export default withWinterSpec({
           stock: c.stock ?? 0,
           price1: c.price1 ?? 0,
           color: c.color ?? undefined,
-          protocol: c.protocol ?? undefined,
+          protocol: c.protocol ?? "",
           forward_voltage: c.forward_voltage ?? undefined,
           forward_current: c.forward_current ?? undefined,
         }))

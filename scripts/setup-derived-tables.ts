@@ -24,6 +24,7 @@ import { lcdDisplayTableSpec } from "lib/db/derivedtables/lcd_display"
 import { potentiometerTableSpec } from "lib/db/derivedtables/potentiometer"
 import { fuseTableSpec } from "lib/db/derivedtables/fuse"
 import { bjtTransistorTableSpec } from "lib/db/derivedtables/bjt_transistor"
+import { switchTableSpec } from "lib/db/derivedtables/switch"
 
 const resetArg = process.argv.indexOf("--reset")
 const resetTable = resetArg !== -1 ? process.argv[resetArg + 1] : null
@@ -52,6 +53,7 @@ const DERIVED_TABLES: DerivedTableSpec<any>[] = [
   potentiometerTableSpec,
   fuseTableSpec,
   bjtTransistorTableSpec,
+  switchTableSpec,
 ]
 
 function jsonParseOrNull(strObject: string) {
