@@ -220,6 +220,25 @@ export interface Fuse {
   voltage_rating: number | null
 }
 
+export interface Gyroscope {
+  attributes: string | null
+  axes: string | null
+  description: string | null
+  has_i2c: number | null
+  has_spi: number | null
+  has_uart: number | null
+  in_stock: number | null
+  lcsc: number | null
+  mfr: string | null
+  operating_temp_max: number | null
+  operating_temp_min: number | null
+  package: string | null
+  price1: number | null
+  stock: number | null
+  supply_voltage_max: number | null
+  supply_voltage_min: number | null
+}
+
 export interface Header {
   attributes: string | null
   contact_material: string | null
@@ -588,6 +607,7 @@ export interface DB {
   dac: Dac
   diode: Diode
   fuse: Fuse
+  gyroscope: Gyroscope
   header: Header
   io_expander: IoExpander
   lcd_display: LcdDisplay
