@@ -1,4 +1,3 @@
-import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
 import type { DerivedTableSpec } from "./types"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import { BaseComponent } from "./component-base"

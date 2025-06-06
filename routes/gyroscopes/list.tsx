@@ -55,9 +55,9 @@ export default withWinterSpec({
           supply_voltage_min: g.supply_voltage_min ?? undefined,
           supply_voltage_max: g.supply_voltage_max ?? undefined,
           axes: g.axes ?? undefined,
-          has_i2c: g.has_i2c ?? undefined,
-          has_spi: g.has_spi ?? undefined,
-          has_uart: g.has_uart ?? undefined,
+          has_i2c: g.has_i2c === 1,
+          has_spi: g.has_spi === 1,
+          has_uart: g.has_uart === 1,
           stock: g.stock ?? undefined,
           price1: g.price1 ?? undefined,
         }))
