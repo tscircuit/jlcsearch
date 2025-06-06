@@ -8,7 +8,13 @@
     "indentStyle": "space"
   },
   "files": {
-    "ignore": ["cosmos-export", "dist", "package.json", "*.md"]
+    "ignore": [
+      "cosmos-export",
+      "dist",
+      "package.json",
+      "*.md",
+      "lib/db/generated/kysely.ts"
+    ]
   },
   "javascript": {
     "formatter": {

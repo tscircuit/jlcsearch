@@ -47,8 +47,10 @@ you can do the following:
 1. Create a new "derived table" inside `lib/db/derivedtables`, reference `docs`
    to understand the structure and available properties for different components
 2. Run `bun run scripts/setup-derived-tables.ts --reset led_driver` (if `led_driver` is the name of the table you're adding)
-3. Create a new route inside `routes` to represent the page
-4. Add the new route to the `routes/index.ts` file
+3. Run `bun run generate:db-types` to generate the new table types
+4. Create a new route inside `routes` to represent the page
+5. Add the new route to the `routes/index.ts` file
+6. Make sure to run `bun run format`
 
 AI is incredibly good at performing every step in the process above, end to end.
 I recommend using [aider](https://www.aider.chat/) and adding docs, lib, routes
