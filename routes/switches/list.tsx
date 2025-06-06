@@ -10,6 +10,8 @@ export default withWinterSpec({
     json: z.boolean().optional(),
     switch_type: z.string().optional(),
     circuit: z.string().optional(),
+    pin_count: z.coerce.number().optional(),
+    package: z.string().optional(),
   }),
   jsonResponse: z.string().or(
     z.object({
@@ -20,6 +22,7 @@ export default withWinterSpec({
           package: z.string(),
           switch_type: z.string(),
           circuit: z.string().optional(),
+          pin_count: z.number().optional(),
           stock: z.number().optional(),
           price1: z.number().optional(),
         }),
@@ -43,6 +46,14 @@ export default withWinterSpec({
     query = query.where("circuit", "=", params.circuit)
   }
 
+  if (params.package) {
+    query = query.where("package", "=", params.package)
+  }
+
+  if (params.pin_count) {
+    query = query.where("pin_count", "=", params.pin_count)
+  }
+
   const types = await ctx.db
     .selectFrom("switch")
     .select("switch_type")
@@ -56,6 +67,22 @@ export default withWinterSpec({
     .where("circuit", "is not", null)
     .execute()
 
+  const packages = await ctx.db
+    .selectFrom("switch")
+    .select("package")
+    .distinct()
+    .where("package", "is not", null)
+    .orderBy("package")
+    .execute()
+
+  const pinCounts = await ctx.db
+    .selectFrom("switch")
+    .select("pin_count")
+    .distinct()
+    .where("pin_count", "is not", null)
+    .orderBy("pin_count")
+    .execute()
+
   const switches = await query.execute()
 
   if (ctx.isApiRequest) {
@@ -65,6 +92,7 @@ export default withWinterSpec({
           lcsc: s.lcsc ?? 0,
           mfr: s.mfr ?? "",
           package: s.package ?? "",
+          pin_count: s.pin_count ?? undefined,
           switch_type: s.switch_type ?? "",
           circuit: s.circuit ?? undefined,
           stock: s.stock ?? undefined,
@@ -111,6 +139,38 @@ export default withWinterSpec({
           </select>
         </div>
 
+        <div>
+          <label>Package:</label>
+          <select name="package">
+            <option value="">All</option>
+            {packages.map((p) => (
+              <option
+                key={p.package}
+                value={p.package ?? ""}
+                selected={p.package === params.package}
+              >
+                {p.package}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label>Pin Count:</label>
+          <select name="pin_count">
+            <option value="">All</option>
+            {pinCounts.map((p) => (
+              <option
+                key={p.pin_count}
+                value={p.pin_count?.toString() ?? ""}
+                selected={p.pin_count === params.pin_count}
+              >
+                {p.pin_count}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <button type="submit">Filter</button>
       </form>
 
@@ -120,6 +180,7 @@ export default withWinterSpec({
           mfr: s.mfr,
           package: s.package,
           type: s.switch_type,
+          pins: s.pin_count,
           circuit: s.circuit ?? "",
           stock: <span className="tabular-nums">{s.stock}</span>,
           price: <span className="tabular-nums">{formatPrice(s.price1)}</span>,
