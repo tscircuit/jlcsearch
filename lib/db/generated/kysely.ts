@@ -259,6 +259,29 @@ export interface Fuse {
   voltage_rating: number | null;
 }
 
+export interface GasSensor {
+  attributes: string | null;
+  description: string | null;
+  in_stock: number | null;
+  lcsc: number | null;
+  measures_air_quality: number | null;
+  measures_carbon_monoxide: number | null;
+  measures_co2: number | null;
+  measures_explosive_gases: number | null;
+  measures_formaldehyde: number | null;
+  measures_hydrogen: number | null;
+  measures_methane: number | null;
+  measures_nitrogen_oxides: number | null;
+  measures_oxygen: number | null;
+  measures_sulfur_hexafluoride: number | null;
+  measures_volatile_organic_compounds: number | null;
+  mfr: string | null;
+  package: string | null;
+  price1: number | null;
+  sensor_type: string | null;
+  stock: number | null;
+}
+
 export interface Gyroscope {
   attributes: string | null;
   axes: string | null;
@@ -648,6 +671,7 @@ export interface DB {
   dac: Dac;
   diode: Diode;
   fuse: Fuse;
+  gas_sensor: GasSensor;
   gyroscope: Gyroscope;
   header: Header;
   io_expander: IoExpander;
