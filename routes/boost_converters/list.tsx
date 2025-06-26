@@ -22,7 +22,7 @@ export default withWinterSpec({
         stock: z.number(),
         price1: z.number().nullable(),
         in_stock: z.boolean(),
-        package: z.string(),
+        package: z.string().nullable(),
         input_voltage_min: z.number().nullable(),
         input_voltage_max: z.number().nullable(),
         output_voltage_min: z.number().nullable(),
@@ -64,12 +64,12 @@ export default withWinterSpec({
   if (ctx.isApiRequest) {
     return ctx.json({
       boost_converters: converters.map((c) => ({
-        lcsc: c.lcsc,
-        mfr: c.mfr,
-        description: c.description,
-        stock: c.stock,
-        price1: c.price1,
-        in_stock: c.in_stock === 1 || c.in_stock === true,
+        lcsc: Number(c.lcsc),
+        mfr: String(c.mfr || ""),
+        description: String(c.description || ""),
+        stock: Number(c.stock || 0),
+        price1: c.price1 === null ? null : Number(c.price1),
+        in_stock: Boolean(c.in_stock),
         package: c.package,
         input_voltage_min: c.input_voltage_min,
         input_voltage_max: c.input_voltage_max,
