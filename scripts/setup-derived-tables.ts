@@ -27,6 +27,7 @@ import { bjtTransistorTableSpec } from "lib/db/derivedtables/bjt_transistor"
 import { switchTableSpec } from "lib/db/derivedtables/switch"
 import { gyroscopeTableSpec } from "lib/db/derivedtables/gyroscope"
 import { accelerometerTableSpec } from "lib/db/derivedtables/accelerometer"
+import { boostConverterTableSpec } from "lib/db/derivedtables/boost_converter"
 
 const resetArg = process.argv.indexOf("--reset")
 const resetTable = resetArg !== -1 ? process.argv[resetArg + 1] : null
@@ -46,6 +47,7 @@ const DERIVED_TABLES: DerivedTableSpec<any>[] = [
   microcontrollerTableSpec,
   voltageRegulatorTableSpec,
   ledDriverTableSpec,
+  boostConverterTableSpec,
   mosfetTableSpec,
   gyroscopeTableSpec,
   accelerometerTableSpec,
