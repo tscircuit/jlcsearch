@@ -113,6 +113,26 @@ export interface BoostConverter {
   topology: string | null;
 }
 
+export interface BuckBoostConverter {
+  attributes: string | null;
+  description: string | null;
+  in_stock: number | null;
+  input_voltage_max: number | null;
+  input_voltage_min: number | null;
+  is_synchronous: number | null;
+  lcsc: number | null;
+  mfr: string | null;
+  number_of_outputs: number | null;
+  output_current_max: number | null;
+  output_voltage_max: number | null;
+  output_voltage_min: number | null;
+  package: string | null;
+  price1: number | null;
+  stock: number | null;
+  switching_frequency: number | null;
+  topology: string | null;
+}
+
 export interface Capacitor {
   attributes: string | null;
   capacitance_farads: number | null;
@@ -659,6 +679,7 @@ export interface DB {
   analog_multiplexer: AnalogMultiplexer;
   bjt_transistor: BjtTransistor;
   boost_converter: BoostConverter;
+  buck_boost_converter: BuckBoostConverter;
   capacitor: Capacitor;
   categories: Category;
   components: Component;
