@@ -53,7 +53,7 @@ export default withWinterSpec({
   }
 
   // Apply capacitance filter with a small tolerance for rounding errors
-  if (params.capacitance !== undefined) {
+  if (params.capacitance != null) {
     const delta = params.capacitance * 0.0001
     query = query
       .where("capacitance_farads", ">=", params.capacitance - delta)
