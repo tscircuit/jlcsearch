@@ -52,9 +52,12 @@ export default withWinterSpec({
     query = query.where("package", "=", params.package)
   }
 
-  // Apply exact resistance filter
-  if (params.resistance !== undefined) {
-    query = query.where("resistance", "=", params.resistance)
+  // Apply resistance filter with a small tolerance for rounding errors
+  if (params.resistance != null) {
+    const delta = params.resistance * 0.0001
+    query = query
+      .where("resistance", ">=", params.resistance - delta)
+      .where("resistance", "<=", params.resistance + delta)
   }
 
   // Get unique packages for dropdown
