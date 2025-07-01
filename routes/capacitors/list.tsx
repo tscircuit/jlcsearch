@@ -52,9 +52,12 @@ export default withWinterSpec({
     query = query.where("package", "=", params.package)
   }
 
-  // Apply exact capacitance filter
+  // Apply capacitance filter with a small tolerance for rounding errors
   if (params.capacitance !== undefined) {
-    query = query.where("capacitance_farads", "=", params.capacitance)
+    const delta = params.capacitance * 0.0001
+    query = query
+      .where("capacitance_farads", ">=", params.capacitance - delta)
+      .where("capacitance_farads", "<=", params.capacitance + delta)
   }
 
   // Get unique packages for dropdown
