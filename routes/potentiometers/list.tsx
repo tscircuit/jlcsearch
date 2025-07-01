@@ -4,6 +4,7 @@ import { z } from "zod"
 import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
 import { formatSiUnit } from "lib/util/format-si-unit"
 import { formatPrice } from "lib/util/format-price"
+import { sql } from "kysely"
 
 export default withWinterSpec({
   auth: "none",
@@ -54,7 +55,9 @@ export default withWinterSpec({
 
   // Apply exact resistance filter
   if (params.maxResistance !== undefined) {
-    query = query.where("max_resistance", "=", params.maxResistance)
+    query = query.where(
+      sql<boolean>`CEIL(max_resistance) = CEIL(${params.maxResistance})`,
+    )
   }
 
   // Apply pin variant filter

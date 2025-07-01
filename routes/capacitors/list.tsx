@@ -4,6 +4,7 @@ import { z } from "zod"
 import { formatPrice } from "lib/util/format-price"
 import { formatSiUnit } from "lib/util/format-si-unit"
 import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
+import { sql } from "kysely"
 
 export default withWinterSpec({
   auth: "none",
@@ -54,7 +55,9 @@ export default withWinterSpec({
 
   // Apply exact capacitance filter
   if (params.capacitance !== undefined) {
-    query = query.where("capacitance_farads", "=", params.capacitance)
+    query = query.where(
+      sql<boolean>`CEIL(capacitance_farads) = CEIL(${params.capacitance})`,
+    )
   }
 
   // Get unique packages for dropdown

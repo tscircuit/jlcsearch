@@ -21,7 +21,6 @@ export const getTestServer = async (
   options: { env?: Record<string, string> } = {},
 ): Promise<TestFixture> => {
   const port = 3001 + Math.floor(Math.random() * 999)
-  const testInstanceId = Math.random().toString(36).substring(2, 15)
 
   const fixture = {} as TestFixture
 
