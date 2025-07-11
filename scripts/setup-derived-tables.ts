@@ -29,6 +29,7 @@ import { gyroscopeTableSpec } from "lib/db/derivedtables/gyroscope"
 import { accelerometerTableSpec } from "lib/db/derivedtables/accelerometer"
 import { gasSensorTableSpec } from "lib/db/derivedtables/gas_sensor"
 import { boostConverterTableSpec } from "lib/db/derivedtables/boost_converter"
+import { buckBoostConverterTableSpec } from "lib/db/derivedtables/buck_boost_converter"
 
 const resetArg = process.argv.indexOf("--reset")
 const resetTable = resetArg !== -1 ? process.argv[resetArg + 1] : null
@@ -49,6 +50,7 @@ const DERIVED_TABLES: DerivedTableSpec<any>[] = [
   voltageRegulatorTableSpec,
   ledDriverTableSpec,
   boostConverterTableSpec,
+  buckBoostConverterTableSpec,
   mosfetTableSpec,
   gyroscopeTableSpec,
   accelerometerTableSpec,
