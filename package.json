@@ -4,7 +4,7 @@
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@flydotio/dockerfile": "^0.5.9",
-    "@types/bun": "^1.2.15",
+    "@types/bun": "^1.2.19",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "better-sqlite3": "^11.7.0",

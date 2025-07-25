@@ -561,6 +561,24 @@ export interface Potentiometer {
   stock: number | null;
 }
 
+export interface Relay {
+  attributes: string | null;
+  coil_resistance: number | null;
+  coil_voltage: number | null;
+  contact_form: string | null;
+  description: string | null;
+  in_stock: number | null;
+  lcsc: number | null;
+  max_switching_current: number | null;
+  max_switching_voltage: number | null;
+  mfr: string | null;
+  package: string | null;
+  pin_number: number | null;
+  price1: number | null;
+  relay_type: string | null;
+  stock: number | null;
+}
+
 export interface Resistor {
   attributes: string | null;
   description: string | null;
@@ -707,6 +725,7 @@ export interface DB {
   mosfet: Mosfet;
   oled_display: OledDisplay;
   potentiometer: Potentiometer;
+  relay: Relay;
   resistor: Resistor;
   switch: Switch;
   v_components: VComponent;
