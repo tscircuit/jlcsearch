@@ -32,6 +32,7 @@ import { boostConverterTableSpec } from "lib/db/derivedtables/boost_converter"
 import { buckBoostConverterTableSpec } from "lib/db/derivedtables/buck_boost_converter"
 import { relayTableSpec } from "lib/db/derivedtables/relay"
 import { usbCConnectorTableSpec } from "lib/db/derivedtables/usb_c_connector"
+import { pcieM2ConnectorTableSpec } from "lib/db/derivedtables/pcie_m2_connector"
 
 const resetArg = process.argv.indexOf("--reset")
 const resetTable = resetArg !== -1 ? process.argv[resetArg + 1] : null
@@ -68,6 +69,7 @@ const DERIVED_TABLES: DerivedTableSpec<any>[] = [
   switchTableSpec,
   relayTableSpec,
   usbCConnectorTableSpec,
+  pcieM2ConnectorTableSpec,
 ]
 
 function jsonParseOrNull(strObject: string) {

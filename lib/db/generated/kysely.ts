@@ -547,6 +547,18 @@ export interface OledDisplay {
   stock: number | null;
 }
 
+export interface PcieM2Connector {
+  attributes: string | null;
+  description: string | null;
+  in_stock: number | null;
+  is_right_angle: number | null;
+  key: string | null;
+  lcsc: Generated<number | null>;
+  mfr: string | null;
+  price1: number | null;
+  stock: number | null;
+}
+
 export interface Potentiometer {
   attributes: string | null;
   description: string | null;
@@ -742,6 +754,7 @@ export interface DB {
   microcontroller: Microcontroller;
   mosfet: Mosfet;
   oled_display: OledDisplay;
+  pcie_m2_connector: PcieM2Connector;
   potentiometer: Potentiometer;
   relay: Relay;
   resistor: Resistor;
