@@ -11,7 +11,7 @@ export default withWinterSpec({
     pitch: z.string().optional(),
     num_pins: z.coerce.number().optional(),
     is_right_angle: z.boolean().optional(),
-    gender: z.enum(["male", "female"]).optional(),
+    gender: z.enum(["male", "female", ""]).optional(),
   }),
   jsonResponse: z.string().or(
     z.object({

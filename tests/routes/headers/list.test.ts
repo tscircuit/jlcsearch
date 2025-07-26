@@ -43,3 +43,17 @@ test("GET /headers/list with filters returns filtered data", async () => {
     expect(header.gender).toBe("male")
   }
 })
+
+test("GET /headers/list allows empty gender parameter", async () => {
+  const { axios } = await getTestServer()
+
+  const res = await axios.get("/headers/list", {
+    params: {
+      json: true,
+      gender: "",
+    },
+  })
+
+  expect(res.data).toHaveProperty("headers")
+  expect(Array.isArray(res.data.headers)).toBe(true)
+})
