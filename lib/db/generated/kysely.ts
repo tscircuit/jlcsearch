@@ -17,7 +17,7 @@ export interface Accelerometer {
   has_spi: number | null;
   has_uart: number | null;
   in_stock: number | null;
-  lcsc: number | null;
+  lcsc: Generated<number | null>;
   mfr: string | null;
   operating_temp_max: number | null;
   operating_temp_min: number | null;
@@ -38,7 +38,7 @@ export interface Adc {
   has_uart: number | null;
   in_stock: number | null;
   is_differential: number | null;
-  lcsc: number | null;
+  lcsc: Generated<number | null>;
   mfr: string | null;
   num_channels: number | null;
   operating_temp_max: number | null;
@@ -61,7 +61,7 @@ export interface AnalogMultiplexer {
   has_parallel_interface: number | null;
   has_spi: number | null;
   in_stock: number | null;
-  lcsc: number | null;
+  lcsc: Generated<number | null>;
   leakage_current_na: number | null;
   mfr: string | null;
   num_bits: number | null;
@@ -83,7 +83,7 @@ export interface BjtTransistor {
   current_gain: number | null;
   description: string | null;
   in_stock: number | null;
-  lcsc: number | null;
+  lcsc: Generated<number | null>;
   mfr: string | null;
   package: string | null;
   power_dissipation: number | null;
@@ -100,7 +100,7 @@ export interface BoostConverter {
   input_voltage_max: number | null;
   input_voltage_min: number | null;
   is_synchronous: number | null;
-  lcsc: number | null;
+  lcsc: Generated<number | null>;
   mfr: string | null;
   number_of_outputs: number | null;
   output_current_max: number | null;
@@ -120,7 +120,7 @@ export interface BuckBoostConverter {
   input_voltage_max: number | null;
   input_voltage_min: number | null;
   is_synchronous: number | null;
-  lcsc: number | null;
+  lcsc: Generated<number | null>;
   mfr: string | null;
   number_of_outputs: number | null;
   output_current_max: number | null;
@@ -142,7 +142,7 @@ export interface Capacitor {
   in_stock: number | null;
   is_polarized: number | null;
   is_surface_mount: number | null;
-  lcsc: number | null;
+  lcsc: Generated<number | null>;
   lifetime_hours: number | null;
   mfr: string | null;
   package: string | null;
@@ -156,7 +156,7 @@ export interface Capacitor {
 
 export interface Category {
   category: string;
-  id: number;
+  id: Generated<number>;
   subcategory: string;
 }
 
@@ -170,7 +170,7 @@ export interface Component {
   joints: number;
   last_on_stock: Generated<number>;
   last_update: number;
-  lcsc: number;
+  lcsc: Generated<number>;
   manufacturer_id: number;
   mfr: string;
   package: string;
@@ -196,16 +196,16 @@ export interface ComponentsFtsContent {
   c1: string | null;
   c2: string | null;
   c3: string | null;
-  id: number | null;
+  id: Generated<number | null>;
 }
 
 export interface ComponentsFtsDatum {
   block: Buffer | null;
-  id: number | null;
+  id: Generated<number | null>;
 }
 
 export interface ComponentsFtsDocsize {
-  id: number | null;
+  id: Generated<number | null>;
   sz: Buffer | null;
 }
 
@@ -222,7 +222,7 @@ export interface Dac {
   has_parallel_interface: number | null;
   has_spi: number | null;
   in_stock: number | null;
-  lcsc: number | null;
+  lcsc: Generated<number | null>;
   mfr: string | null;
   nonlinearity_lsb: number | null;
   num_channels: number | null;
@@ -249,7 +249,7 @@ export interface Diode {
   is_schottky: number | null;
   is_tvs: number | null;
   is_zener: number | null;
-  lcsc: number | null;
+  lcsc: Generated<number | null>;
   mfr: string | null;
   operating_temp_max: number | null;
   operating_temp_min: number | null;
@@ -270,7 +270,7 @@ export interface Fuse {
   is_glass_encased: number | null;
   is_resettable: number | null;
   is_surface_mount: number | null;
-  lcsc: number | null;
+  lcsc: Generated<number | null>;
   mfr: string | null;
   package: string | null;
   price1: number | null;
@@ -283,7 +283,7 @@ export interface GasSensor {
   attributes: string | null;
   description: string | null;
   in_stock: number | null;
-  lcsc: number | null;
+  lcsc: Generated<number | null>;
   measures_air_quality: number | null;
   measures_carbon_monoxide: number | null;
   measures_co2: number | null;
@@ -310,7 +310,7 @@ export interface Gyroscope {
   has_spi: number | null;
   has_uart: number | null;
   in_stock: number | null;
-  lcsc: number | null;
+  lcsc: Generated<number | null>;
   mfr: string | null;
   operating_temp_max: number | null;
   operating_temp_min: number | null;
@@ -332,7 +332,7 @@ export interface Header {
   insulation_height_mm: number | null;
   is_right_angle: number | null;
   is_shrouded: number | null;
-  lcsc: number | null;
+  lcsc: Generated<number | null>;
   mfr: string | null;
   mounting_style: string | null;
   num_pins: number | null;
@@ -358,7 +358,7 @@ export interface IoExpander {
   has_smbus: number | null;
   has_spi: number | null;
   in_stock: number | null;
-  lcsc: number | null;
+  lcsc: Generated<number | null>;
   mfr: string | null;
   num_gpios: number | null;
   operating_temp_max: number | null;
@@ -379,7 +379,7 @@ export interface LcdDisplay {
   display_size: string | null;
   display_type: string | null;
   in_stock: number | null;
-  lcsc: number | null;
+  lcsc: Generated<number | null>;
   mfr: string | null;
   package: string | null;
   price1: number | null;
@@ -395,7 +395,7 @@ export interface Led {
   forward_voltage: number | null;
   in_stock: number | null;
   is_rgb: number | null;
-  lcsc: number | null;
+  lcsc: Generated<number | null>;
   lens_color: string | null;
   luminous_intensity_mcd: number | null;
   mfr: string | null;
@@ -415,7 +415,7 @@ export interface LedDotMatrixDisplay {
   color: string | null;
   description: string | null;
   in_stock: number | null;
-  lcsc: number | null;
+  lcsc: Generated<number | null>;
   matrix_size: string | null;
   mfr: string | null;
   package: string | null;
@@ -430,7 +430,7 @@ export interface LedDriver {
   dimming_method: string | null;
   efficiency_percent: number | null;
   in_stock: number | null;
-  lcsc: number | null;
+  lcsc: Generated<number | null>;
   mfr: string | null;
   mounting_style: string | null;
   operating_temp_max: number | null;
@@ -449,7 +449,7 @@ export interface LedSegmentDisplay {
   color: string | null;
   description: string | null;
   in_stock: number | null;
-  lcsc: number | null;
+  lcsc: Generated<number | null>;
   mfr: string | null;
   package: string | null;
   positions: string | null;
@@ -466,7 +466,7 @@ export interface LedWithIc {
   forward_current: number | null;
   forward_voltage: number | null;
   in_stock: number | null;
-  lcsc: number | null;
+  lcsc: Generated<number | null>;
   mfr: string | null;
   mounting_style: string | null;
   package: string | null;
@@ -476,7 +476,7 @@ export interface LedWithIc {
 }
 
 export interface Manufacturer {
-  id: number;
+  id: Generated<number>;
   name: string;
 }
 
@@ -503,7 +503,7 @@ export interface Microcontroller {
   has_usb: number | null;
   has_watchdog: number | null;
   in_stock: number | null;
-  lcsc: number | null;
+  lcsc: Generated<number | null>;
   mfr: string | null;
   operating_temp_max: number | null;
   operating_temp_min: number | null;
@@ -522,7 +522,7 @@ export interface Mosfet {
   drain_source_voltage: number | null;
   gate_threshold_voltage: number | null;
   in_stock: number | null;
-  lcsc: number | null;
+  lcsc: Generated<number | null>;
   mfr: string | null;
   mounting_style: string | null;
   operating_temp_max: number | null;
@@ -538,7 +538,7 @@ export interface OledDisplay {
   description: string | null;
   display_width: string | null;
   in_stock: number | null;
-  lcsc: number | null;
+  lcsc: Generated<number | null>;
   mfr: string | null;
   package: string | null;
   pixel_resolution: string | null;
@@ -552,7 +552,7 @@ export interface Potentiometer {
   description: string | null;
   in_stock: number | null;
   is_surface_mount: number | null;
-  lcsc: number | null;
+  lcsc: Generated<number | null>;
   max_resistance: number | null;
   mfr: string | null;
   package: string | null;
@@ -568,7 +568,7 @@ export interface Relay {
   contact_form: string | null;
   description: string | null;
   in_stock: number | null;
-  lcsc: number | null;
+  lcsc: Generated<number | null>;
   max_switching_current: number | null;
   max_switching_voltage: number | null;
   mfr: string | null;
@@ -586,7 +586,7 @@ export interface Resistor {
   is_multi_resistor_chip: number | null;
   is_potentiometer: number | null;
   is_surface_mount: number | null;
-  lcsc: number | null;
+  lcsc: Generated<number | null>;
   max_overload_voltage: number | null;
   mfr: string | null;
   number_of_pins: number | null;
@@ -606,7 +606,7 @@ export interface Switch {
   description: string | null;
   in_stock: number | null;
   is_latching: number | null;
-  lcsc: number | null;
+  lcsc: Generated<number | null>;
   mfr: string | null;
   mounting_style: string | null;
   operating_temp_max: number | null;
@@ -617,6 +617,24 @@ export interface Switch {
   stock: number | null;
   switch_type: string | null;
   voltage_rating_v: number | null;
+}
+
+export interface UsbCConnector {
+  attributes: string | null;
+  current_rating_a: number | null;
+  description: string | null;
+  gender: string | null;
+  in_stock: number | null;
+  lcsc: Generated<number | null>;
+  mfr: string | null;
+  mounting_style: string | null;
+  number_of_contacts: number | null;
+  number_of_ports: number | null;
+  operating_temp_max: number | null;
+  operating_temp_min: number | null;
+  package: string | null;
+  price1: number | null;
+  stock: number | null;
 }
 
 export interface VComponent {
@@ -647,7 +665,7 @@ export interface VoltageRegulator {
   input_voltage_min: number | null;
   is_low_dropout: number | null;
   is_positive: number | null;
-  lcsc: number | null;
+  lcsc: Generated<number | null>;
   mfr: string | null;
   operating_temp_max: number | null;
   operating_temp_min: number | null;
@@ -677,7 +695,7 @@ export interface WifiModule {
   has_spi: number | null;
   has_uart: number | null;
   in_stock: number | null;
-  lcsc: number | null;
+  lcsc: Generated<number | null>;
   mfr: string | null;
   operating_temp_max: number | null;
   operating_temp_min: number | null;
@@ -728,6 +746,7 @@ export interface DB {
   relay: Relay;
   resistor: Resistor;
   switch: Switch;
+  usb_c_connector: UsbCConnector;
   v_components: VComponent;
   voltage_regulator: VoltageRegulator;
   wifi_module: WifiModule;
