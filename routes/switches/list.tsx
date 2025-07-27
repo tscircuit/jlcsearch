@@ -23,6 +23,9 @@ export default withWinterSpec({
           switch_type: z.string(),
           circuit: z.string().optional(),
           pin_count: z.number().optional(),
+          width_mm: z.number().optional(),
+          length_mm: z.number().optional(),
+          switch_height_mm: z.number().optional(),
           stock: z.number().optional(),
           price1: z.number().optional(),
         }),
@@ -95,6 +98,9 @@ export default withWinterSpec({
           pin_count: s.pin_count ?? undefined,
           switch_type: s.switch_type ?? "",
           circuit: s.circuit ?? undefined,
+          width_mm: s.width_mm ?? undefined,
+          length_mm: s.length_mm ?? undefined,
+          switch_height_mm: s.switch_height_mm ?? undefined,
           stock: s.stock ?? undefined,
           price1: s.price1 ?? undefined,
         }))
@@ -181,6 +187,21 @@ export default withWinterSpec({
           package: s.package,
           type: s.switch_type,
           pins: s.pin_count,
+          width: s.width_mm ? (
+            <span className="tabular-nums">{s.width_mm}mm</span>
+          ) : (
+            ""
+          ),
+          length: s.length_mm ? (
+            <span className="tabular-nums">{s.length_mm}mm</span>
+          ) : (
+            ""
+          ),
+          height: s.switch_height_mm ? (
+            <span className="tabular-nums">{s.switch_height_mm}mm</span>
+          ) : (
+            ""
+          ),
           circuit: s.circuit ?? "",
           stock: <span className="tabular-nums">{s.stock}</span>,
           price: <span className="tabular-nums">{formatPrice(s.price1)}</span>,

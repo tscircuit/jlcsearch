@@ -14,6 +14,9 @@ export interface Switch extends BaseComponent {
   operating_temp_min: number | null
   operating_temp_max: number | null
   pin_count: number | null
+  width_mm: number | null
+  length_mm: number | null
+  switch_height_mm: number | null
 }
 
 export const switchTableSpec: DerivedTableSpec<Switch> = {
@@ -29,6 +32,9 @@ export const switchTableSpec: DerivedTableSpec<Switch> = {
     { name: "operating_temp_min", type: "real" },
     { name: "operating_temp_max", type: "real" },
     { name: "pin_count", type: "integer" },
+    { name: "width_mm", type: "real" },
+    { name: "length_mm", type: "real" },
+    { name: "switch_height_mm", type: "real" },
   ],
   listCandidateComponents(db) {
     return db
@@ -70,6 +76,10 @@ export const switchTableSpec: DerivedTableSpec<Switch> = {
         tempMax = parseNum(max)
       }
 
+      const width = parseNum(attrs["Switch Width"])
+      const length = parseNum(attrs["Switch Length"])
+      const switchHeight = parseNum(attrs["Switch Height"])
+
       return {
         lcsc: c.lcsc,
         mfr: c.mfr,
@@ -91,6 +101,9 @@ export const switchTableSpec: DerivedTableSpec<Switch> = {
         operating_temp_min: tempMin,
         operating_temp_max: tempMax,
         pin_count: c.joints ?? null,
+        width_mm: width,
+        length_mm: length,
+        switch_height_mm: switchHeight,
         attributes: attrs,
       }
     })

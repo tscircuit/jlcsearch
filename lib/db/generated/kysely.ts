@@ -619,6 +619,7 @@ export interface Switch {
   in_stock: number | null;
   is_latching: number | null;
   lcsc: Generated<number | null>;
+  length_mm: number | null;
   mfr: string | null;
   mounting_style: string | null;
   operating_temp_max: number | null;
@@ -627,8 +628,10 @@ export interface Switch {
   pin_count: number | null;
   price1: number | null;
   stock: number | null;
+  switch_height_mm: number | null;
   switch_type: string | null;
   voltage_rating_v: number | null;
+  width_mm: number | null;
 }
 
 export interface UsbCConnector {
