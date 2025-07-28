@@ -31,13 +31,7 @@ export const ledWithICTableSpec: DerivedTableSpec<LEDWithIC> = {
       .selectFrom("components")
       .innerJoin("categories", "components.category_id", "categories.id")
       .selectAll()
-      .where((eb) =>
-        eb.or([
-          eb("categories.subcategory", "=", "LEDs (Built-in IC)"),
-          eb("description", "like", "%LED%"),
-          eb("description", "like", "%IC%"),
-        ]),
-      )
+      .where("categories.subcategory", "=", "RGB LEDs(Built-In IC)")
   },
   mapToTable(components) {
     return components.map((c) => {

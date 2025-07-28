@@ -32,47 +32,37 @@ export default withWinterSpec({
   const params = req.commonParams
   const limit = 100
 
-  // Hardcoding the search value to "LEDs(Built-in IC)"
-  const search = "LEDs(Built-in IC)"
-  const searchPattern = `%${search}%`
-
   let query = ctx.db
     .selectFrom("led_with_ic")
+    .innerJoin("components", "led_with_ic.lcsc", "components.lcsc")
+    .innerJoin("categories", "components.category_id", "categories.id")
     .select([
-      "lcsc",
-      "mfr",
-      "package",
-      "description",
-      "stock",
-      "price1",
-      "color",
-      "protocol",
-      "forward_voltage",
-      "forward_current",
+      "led_with_ic.lcsc",
+      "led_with_ic.mfr",
+      "led_with_ic.package",
+      "led_with_ic.description",
+      "led_with_ic.stock",
+      "led_with_ic.price1",
+      "led_with_ic.color",
+      "led_with_ic.protocol",
+      "led_with_ic.forward_voltage",
+      "led_with_ic.forward_current",
     ] as const)
     .limit(limit)
-    .orderBy("stock", "desc")
-    .where("stock", ">", 0)
-    .where((eb) =>
-      eb("description", "like", searchPattern)
-        .or("mfr", "like", searchPattern)
-        .or(
-          search.match(/^\d+$/)
-            ? eb("lcsc", "=", parseInt(search))
-            : eb("description", "like", searchPattern),
-        ),
-    )
+    .orderBy("led_with_ic.stock", "desc")
+    .where("categories.subcategory", "=", "RGB LEDs(Built-In IC)")
+    .where("led_with_ic.stock", ">", 0)
 
   if (params.package) {
-    query = query.where("package", "=", params.package)
+    query = query.where("led_with_ic.package", "=", params.package)
   }
 
   if (params.color) {
-    query = query.where("color", "=", params.color)
+    query = query.where("led_with_ic.color", "=", params.color)
   }
 
   if (params.protocol) {
-    query = query.where("protocol", "=", params.protocol)
+    query = query.where("led_with_ic.protocol", "=", params.protocol)
   }
 
   const fullComponents = await query.execute()
@@ -115,23 +105,32 @@ export default withWinterSpec({
 
   const packages = await ctx.db
     .selectFrom("led_with_ic")
-    .select("package")
+    .innerJoin("components", "led_with_ic.lcsc", "components.lcsc")
+    .innerJoin("categories", "components.category_id", "categories.id")
+    .select("led_with_ic.package")
     .distinct()
-    .orderBy("package")
+    .where("categories.subcategory", "=", "RGB LEDs(Built-In IC)")
+    .orderBy("led_with_ic.package")
     .execute()
 
   const colors = await ctx.db
     .selectFrom("led_with_ic")
-    .select("color")
+    .innerJoin("components", "led_with_ic.lcsc", "components.lcsc")
+    .innerJoin("categories", "components.category_id", "categories.id")
+    .select("led_with_ic.color")
     .distinct()
-    .orderBy("color")
+    .where("categories.subcategory", "=", "RGB LEDs(Built-In IC)")
+    .orderBy("led_with_ic.color")
     .execute()
 
   const protocols = await ctx.db
     .selectFrom("led_with_ic")
-    .select("protocol")
+    .innerJoin("components", "led_with_ic.lcsc", "components.lcsc")
+    .innerJoin("categories", "components.category_id", "categories.id")
+    .select("led_with_ic.protocol")
     .distinct()
-    .orderBy("protocol")
+    .where("categories.subcategory", "=", "RGB LEDs(Built-In IC)")
+    .orderBy("led_with_ic.protocol")
     .execute()
 
   return ctx.react(
