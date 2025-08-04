@@ -13,6 +13,7 @@ import { wifiModuleTableSpec } from "lib/db/derivedtables/wifi_module"
 import { microcontrollerTableSpec } from "lib/db/derivedtables/microcontroller"
 import { voltageRegulatorTableSpec } from "lib/db/derivedtables/voltage_regulator"
 import { ledDriverTableSpec } from "lib/db/derivedtables/led_driver"
+import { ldoTableSpec } from "lib/db/derivedtables/ldo"
 import type { DerivedTableSpec } from "lib/db/derivedtables/types"
 import type { KyselyDatabaseInstance } from "lib/db/kysely-types"
 import { mosfetTableSpec } from "lib/db/derivedtables/mosfet"
@@ -51,6 +52,7 @@ const DERIVED_TABLES: DerivedTableSpec<any>[] = [
   wifiModuleTableSpec,
   microcontrollerTableSpec,
   voltageRegulatorTableSpec,
+  ldoTableSpec,
   ledDriverTableSpec,
   boostConverterTableSpec,
   buckBoostConverterTableSpec,

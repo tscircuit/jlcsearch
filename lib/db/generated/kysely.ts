@@ -387,6 +387,31 @@ export interface LcdDisplay {
   stock: number | null;
 }
 
+export interface Ldo {
+  attributes: string | null;
+  description: string | null;
+  dropout_voltage: number | null;
+  in_stock: number | null;
+  input_voltage_max: number | null;
+  input_voltage_min: number | null;
+  is_positive: number | null;
+  lcsc: Generated<number | null>;
+  mfr: string | null;
+  operating_temp_max: number | null;
+  operating_temp_min: number | null;
+  output_current_max: number | null;
+  output_noise_uvrms: number | null;
+  output_type: string | null;
+  output_voltage_max: number | null;
+  output_voltage_min: number | null;
+  package: string | null;
+  power_supply_rejection_db: number | null;
+  price1: number | null;
+  quiescent_current: number | null;
+  stock: number | null;
+  topology: string | null;
+}
+
 export interface Led {
   attributes: string | null;
   color: string | null;
@@ -547,18 +572,6 @@ export interface OledDisplay {
   stock: number | null;
 }
 
-export interface PcieM2Connector {
-  attributes: string | null;
-  description: string | null;
-  in_stock: number | null;
-  is_right_angle: number | null;
-  key: string | null;
-  lcsc: Generated<number | null>;
-  mfr: string | null;
-  price1: number | null;
-  stock: number | null;
-}
-
 export interface Potentiometer {
   attributes: string | null;
   description: string | null;
@@ -570,24 +583,6 @@ export interface Potentiometer {
   package: string | null;
   pin_variant: string | null;
   price1: number | null;
-  stock: number | null;
-}
-
-export interface Relay {
-  attributes: string | null;
-  coil_resistance: number | null;
-  coil_voltage: number | null;
-  contact_form: string | null;
-  description: string | null;
-  in_stock: number | null;
-  lcsc: Generated<number | null>;
-  max_switching_current: number | null;
-  max_switching_voltage: number | null;
-  mfr: string | null;
-  package: string | null;
-  pin_number: number | null;
-  price1: number | null;
-  relay_type: string | null;
   stock: number | null;
 }
 
@@ -632,24 +627,6 @@ export interface Switch {
   switch_type: string | null;
   voltage_rating_v: number | null;
   width_mm: number | null;
-}
-
-export interface UsbCConnector {
-  attributes: string | null;
-  current_rating_a: number | null;
-  description: string | null;
-  gender: string | null;
-  in_stock: number | null;
-  lcsc: Generated<number | null>;
-  mfr: string | null;
-  mounting_style: string | null;
-  number_of_contacts: number | null;
-  number_of_ports: number | null;
-  operating_temp_max: number | null;
-  operating_temp_min: number | null;
-  package: string | null;
-  price1: number | null;
-  stock: number | null;
 }
 
 export interface VComponent {
@@ -748,6 +725,7 @@ export interface DB {
   header: Header;
   io_expander: IoExpander;
   lcd_display: LcdDisplay;
+  ldo: Ldo;
   led: Led;
   led_dot_matrix_display: LedDotMatrixDisplay;
   led_driver: LedDriver;
@@ -757,12 +735,9 @@ export interface DB {
   microcontroller: Microcontroller;
   mosfet: Mosfet;
   oled_display: OledDisplay;
-  pcie_m2_connector: PcieM2Connector;
   potentiometer: Potentiometer;
-  relay: Relay;
   resistor: Resistor;
   switch: Switch;
-  usb_c_connector: UsbCConnector;
   v_components: VComponent;
   voltage_regulator: VoltageRegulator;
   wifi_module: WifiModule;
