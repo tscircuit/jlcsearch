@@ -387,6 +387,31 @@ export interface LcdDisplay {
   stock: number | null;
 }
 
+export interface Ldo {
+  attributes: string | null;
+  description: string | null;
+  dropout_voltage: number | null;
+  in_stock: number | null;
+  input_voltage_max: number | null;
+  input_voltage_min: number | null;
+  is_positive: number | null;
+  lcsc: Generated<number | null>;
+  mfr: string | null;
+  operating_temp_max: number | null;
+  operating_temp_min: number | null;
+  output_current_max: number | null;
+  output_noise_uvrms: number | null;
+  output_type: string | null;
+  output_voltage_max: number | null;
+  output_voltage_min: number | null;
+  package: string | null;
+  power_supply_rejection_db: number | null;
+  price1: number | null;
+  quiescent_current: number | null;
+  stock: number | null;
+  topology: string | null;
+}
+
 export interface Led {
   attributes: string | null;
   color: string | null;
@@ -748,6 +773,7 @@ export interface DB {
   header: Header;
   io_expander: IoExpander;
   lcd_display: LcdDisplay;
+  ldo: Ldo;
   led: Led;
   led_dot_matrix_display: LedDotMatrixDisplay;
   led_driver: LedDriver;
