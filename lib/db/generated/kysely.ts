@@ -572,6 +572,18 @@ export interface OledDisplay {
   stock: number | null;
 }
 
+export interface PcieM2Connector {
+  attributes: string | null;
+  description: string | null;
+  in_stock: number | null;
+  is_right_angle: number | null;
+  key: string | null;
+  lcsc: Generated<number | null>;
+  mfr: string | null;
+  price1: number | null;
+  stock: number | null;
+}
+
 export interface Potentiometer {
   attributes: string | null;
   description: string | null;
@@ -583,6 +595,24 @@ export interface Potentiometer {
   package: string | null;
   pin_variant: string | null;
   price1: number | null;
+  stock: number | null;
+}
+
+export interface Relay {
+  attributes: string | null;
+  coil_resistance: number | null;
+  coil_voltage: number | null;
+  contact_form: string | null;
+  description: string | null;
+  in_stock: number | null;
+  lcsc: Generated<number | null>;
+  max_switching_current: number | null;
+  max_switching_voltage: number | null;
+  mfr: string | null;
+  package: string | null;
+  pin_number: number | null;
+  price1: number | null;
+  relay_type: string | null;
   stock: number | null;
 }
 
@@ -627,6 +657,24 @@ export interface Switch {
   switch_type: string | null;
   voltage_rating_v: number | null;
   width_mm: number | null;
+}
+
+export interface UsbCConnector {
+  attributes: string | null;
+  current_rating_a: number | null;
+  description: string | null;
+  gender: string | null;
+  in_stock: number | null;
+  lcsc: Generated<number | null>;
+  mfr: string | null;
+  mounting_style: string | null;
+  number_of_contacts: number | null;
+  number_of_ports: number | null;
+  operating_temp_max: number | null;
+  operating_temp_min: number | null;
+  package: string | null;
+  price1: number | null;
+  stock: number | null;
 }
 
 export interface VComponent {
@@ -735,9 +783,12 @@ export interface DB {
   microcontroller: Microcontroller;
   mosfet: Mosfet;
   oled_display: OledDisplay;
+  pcie_m2_connector: PcieM2Connector;
   potentiometer: Potentiometer;
+  relay: Relay;
   resistor: Resistor;
   switch: Switch;
+  usb_c_connector: UsbCConnector;
   v_components: VComponent;
   voltage_regulator: VoltageRegulator;
   wifi_module: WifiModule;

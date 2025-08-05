@@ -7,7 +7,8 @@ export interface Ldo extends Omit<VoltageRegulator, "is_low_dropout"> {}
 export const ldoTableSpec: DerivedTableSpec<Ldo> = {
   tableName: "ldo",
   extraColumns: voltageRegulatorTableSpec.extraColumns.filter(
-    (col) => col.name !== "is_low_dropout",
+    (col): col is { name: keyof Ldo; type: string } =>
+      col.name !== "is_low_dropout",
   ),
   listCandidateComponents: (db) =>
     voltageRegulatorTableSpec.listCandidateComponents(db),
