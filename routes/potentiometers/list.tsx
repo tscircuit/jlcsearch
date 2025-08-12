@@ -53,7 +53,7 @@ export default withWinterSpec({
   }
 
   // Apply resistance filter with a small tolerance for rounding errors
-  if (params.maxResistance !== undefined) {
+  if (params.maxResistance != null) {
     const delta = params.maxResistance * 0.0001
     query = query
       .where("max_resistance", ">=", params.maxResistance - delta)
