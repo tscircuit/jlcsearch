@@ -33,6 +33,7 @@ export default withWinterSpec({
         <a href="/dacs/list">DACs</a>
         <a href="/wifi_modules/list">WiFi Modules</a>
         <a href="/microcontrollers/list">Microcontrollers</a>
+        <a href="/risc_v_processors/list">RISC-V Processors</a>
         <a href="/voltage_regulators/list">Voltage Regulators</a>
         <a href="/ldos/list">LDO Regulators</a>
         <a href="/boost_converters/list">Boost DC-DC Converters</a>

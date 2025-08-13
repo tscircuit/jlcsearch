@@ -9,6 +9,7 @@ This document provides examples of components available in each category.
 - [Capacitors](./capacitors.md)
 - [Resistors](./resistors.md)
 - [Embedded Processors & Controllers](./embedded_processors__controllers.md)
+- [RISC V Processors](./risc_v_processors.md)
 - [Transistors](./transistors.md)
 - [Power Management ICs](./power_management_ics.md)
 - [Diodes](./diodes.md)
