@@ -29,6 +29,9 @@ export default withWinterSpec({
         <a href="/gyroscopes/list">Gyroscopes</a>
         <a href="/accelerometers/list">Accelerometers</a>
         <a href="/gas_sensors/list">Gas Sensors</a>
+        <a href="/reflective_optical_interrupters/list">
+          Reflective Optical Interrupters
+        </a>
         <a href="/diodes/list">Diodes</a>
         <a href="/dacs/list">DACs</a>
         <a href="/wifi_modules/list">WiFi Modules</a>
