@@ -262,6 +262,20 @@ export interface Diode {
   stock: number | null;
 }
 
+export interface FpcConnector {
+  attributes: string | null;
+  contact_type: string | null;
+  description: string | null;
+  in_stock: number | null;
+  lcsc: Generated<number | null>;
+  locking_feature: string | null;
+  mfr: string | null;
+  number_of_contacts: number | null;
+  pitch_mm: number | null;
+  price1: number | null;
+  stock: number | null;
+}
+
 export interface Fuse {
   attributes: string | null;
   current_rating: number | null;
@@ -767,6 +781,7 @@ export interface DB {
   components_fts_idx: ComponentsFtsIdx;
   dac: Dac;
   diode: Diode;
+  fpc_connector: FpcConnector;
   fuse: Fuse;
   gas_sensor: GasSensor;
   gyroscope: Gyroscope;
