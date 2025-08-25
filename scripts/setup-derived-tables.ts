@@ -35,6 +35,7 @@ import { relayTableSpec } from "lib/db/derivedtables/relay"
 import { usbCConnectorTableSpec } from "lib/db/derivedtables/usb_c_connector"
 import { pcieM2ConnectorTableSpec } from "lib/db/derivedtables/pcie_m2_connector"
 import { fpcConnectorTableSpec } from "lib/db/derivedtables/fpc_connector"
+import { screwTerminalBlockTableSpec } from "lib/db/derivedtables/screw_terminal_block"
 
 const resetArg = process.argv.indexOf("--reset")
 const resetTable = resetArg !== -1 ? process.argv[resetArg + 1] : null
@@ -74,6 +75,7 @@ const DERIVED_TABLES: DerivedTableSpec<any>[] = [
   fpcConnectorTableSpec,
   usbCConnectorTableSpec,
   pcieM2ConnectorTableSpec,
+  screwTerminalBlockTableSpec,
 ]
 
 function jsonParseOrNull(strObject: string) {
