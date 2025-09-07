@@ -650,6 +650,20 @@ export interface Resistor {
   tolerance_fraction: number | null;
 }
 
+export interface ScrewTerminalBlock {
+  attributes: string | null;
+  current_rating_a: number | null;
+  description: string | null;
+  in_stock: number | null;
+  lcsc: Generated<number | null>;
+  mfr: string | null;
+  number_of_pins: number | null;
+  pitch_mm: number | null;
+  price1: number | null;
+  stock: number | null;
+  voltage_rating_v: number | null;
+}
+
 export interface Switch {
   attributes: string | null;
   circuit: string | null;
@@ -802,6 +816,7 @@ export interface DB {
   potentiometer: Potentiometer;
   relay: Relay;
   resistor: Resistor;
+  screw_terminal_block: ScrewTerminalBlock;
   switch: Switch;
   usb_c_connector: UsbCConnector;
   v_components: VComponent;

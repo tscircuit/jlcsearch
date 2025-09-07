@@ -22,6 +22,7 @@ export default withWinterSpec({
         <a href="/usb_c_connectors/list">USB-C Connectors</a>
         <a href="/pcie_m2_connectors/list">PCIe M.2 Connectors</a>
         <a href="/fpc_connectors/list">FPC Connectors</a>
+        <a href="/screw_terminal_blocks/list">Screw Terminal Blocks</a>
         <a href="/leds/list">LEDs</a>
         <a href="/adcs/list">ADCs</a>
         <a href="/analog_multiplexers/list">Analog Muxes</a>
