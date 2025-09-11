@@ -387,6 +387,21 @@ export interface IoExpander {
   supply_voltage_min: number | null;
 }
 
+export interface JstConnector {
+  attributes: string | null;
+  description: string | null;
+  in_stock: number | null;
+  lcsc: Generated<number | null>;
+  mfr: string | null;
+  package: string | null;
+  pitch_mm: number | null;
+  num_rows: number | null;
+  num_pins: number | null;
+  reference_series: string | null;
+  price1: number | null;
+  stock: number | null;
+}
+
 export interface LcdDisplay {
   attributes: string | null;
   description: string | null;
@@ -787,6 +802,7 @@ export interface DB {
   gyroscope: Gyroscope;
   header: Header;
   io_expander: IoExpander;
+  jst_connector: JstConnector;
   lcd_display: LcdDisplay;
   ldo: Ldo;
   led: Led;
