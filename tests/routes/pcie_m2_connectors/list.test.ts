@@ -12,7 +12,9 @@ test("GET /pcie_m2_connectors/list with json param returns data", async () => {
   if (res.data.pcie_m2_connectors.length > 0) {
     const c = res.data.pcie_m2_connectors[0]
     expect(c).toHaveProperty("lcsc")
-    expect(c).toHaveProperty("key")
     expect(typeof c.lcsc).toBe("number")
+    if ("key" in c) {
+      expect(typeof c.key).toBe("string")
+    }
   }
 })

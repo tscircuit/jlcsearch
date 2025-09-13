@@ -114,6 +114,7 @@ async function createTable(
     { name: "stock", type: "integer" },
     { name: "price1", type: "real" },
     { name: "in_stock", type: "boolean" },
+    { name: "is_basic_part", type: "boolean" },
   ].concat(spec.extraColumns as any, [{ name: "attributes", type: "text" }])) {
     tableCreator = tableCreator.addColumn(
       col.name as string,
@@ -146,6 +147,7 @@ async function createTable(
         ? null
         : {
             ...c,
+            is_basic_part: components[i].basic === 1,
             attributes: jsonParseOrNull(components[i].extra)?.attributes,
           },
     )

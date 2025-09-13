@@ -14,6 +14,7 @@ export interface DerivedTableSpec<
     stock: number
     price1: number | null
     in_stock: boolean
+    is_basic_part?: boolean
   },
 > {
   tableName: string
