@@ -95,6 +95,7 @@ export const ledWithICTableSpec: DerivedTableSpec<LEDWithIC> = {
           stock: Number(c.stock || 0),
           price1: extractMinQPrice(c.price),
           in_stock: Boolean((c.stock || 0) > 0),
+        is_basic_part: c.basic === 1,
           package: String(c.package || ""),
           forward_voltage: forwardVoltage,
           forward_current: forwardCurrent,

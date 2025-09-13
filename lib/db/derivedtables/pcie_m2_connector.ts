@@ -45,6 +45,7 @@ export const pcieM2ConnectorTableSpec: DerivedTableSpec<PcieM2Connector> = {
         stock: Number(c.stock || 0),
         price1: extractMinQPrice(c.price),
         in_stock: Boolean((c.stock || 0) > 0),
+        is_basic_part: c.basic === 1,
         key,
         is_right_angle: isRightAngle,
         attributes: attrs,

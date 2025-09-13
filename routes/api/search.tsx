@@ -29,6 +29,7 @@ export default withWinterSpec({
     .selectFrom("components")
     .selectAll()
     .limit(limit)
+    .orderBy("basic", "desc")
     .orderBy("stock", "desc")
     .where("stock", ">", 0)
 
@@ -56,7 +57,12 @@ export default withWinterSpec({
     )
   }
 
-  const fullComponents = await query.execute()
+  const rows = await query.execute()
+
+  const fullComponents = rows.map(({ basic, ...rest }) => ({
+    ...rest,
+    is_basic_part: basic === 1,
+  }))
 
   const components = fullComponents.map((c) => ({
     lcsc: c.lcsc,
@@ -65,9 +71,12 @@ export default withWinterSpec({
     description: c.description,
     stock: c.stock,
     price: extractSmallQuantityPrice(c.price),
+    is_basic_part: c.is_basic_part,
   }))
 
   return ctx.json({
-    components: req.query.full ? fullComponents : components,
+    components: req.query.full
+      ? fullComponents
+      : components,
   })
 })

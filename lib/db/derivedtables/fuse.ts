@@ -86,6 +86,7 @@ export const fuseTableSpec: DerivedTableSpec<Fuse> = {
           stock: Number(c.stock || 0),
           price1: extractMinQPrice(c.price),
           in_stock: Boolean((c.stock || 0) > 0),
+        is_basic_part: c.basic === 1,
           current_rating: current_rating as number,
           voltage_rating: voltage_rating as number,
           response_time,

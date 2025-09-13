@@ -70,6 +70,7 @@ export const bjtTransistorTableSpec: DerivedTableSpec<BJTTransistor> = {
           stock: Number(c.stock || 0),
           price1: extractMinQPrice(c.price),
           in_stock: Boolean((c.stock || 0) > 0),
+        is_basic_part: c.basic === 1,
           package: c.package || "",
           current_gain: current_gain,
           collector_current: collector_current,

@@ -15,7 +15,7 @@ export const ldoTableSpec: DerivedTableSpec<Ldo> = {
   mapToTable: (components) =>
     voltageRegulatorTableSpec.mapToTable(components as any).map((c) => {
       if (!c || !c.is_low_dropout) return null
-      const { is_low_dropout, ...rest } = c
-      return rest
+      const { is_low_dropout, is_basic_part, ...rest } = c
+      return { ...rest, is_basic_part }
     }),
 }

@@ -65,6 +65,7 @@ export const usbCConnectorTableSpec: DerivedTableSpec<UsbCConnector> = {
           stock: Number(c.stock || 0),
           price1: extractMinQPrice(c.price),
           in_stock: Boolean((c.stock || 0) > 0),
+        is_basic_part: c.basic === 1,
           package: String(c.package || ""),
           mounting_style: attrs["Mounting Style"] || null,
           current_rating_a: parseNum(attrs["Current Rating - Power (Max)"]),

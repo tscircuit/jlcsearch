@@ -161,6 +161,7 @@ export const ledTableSpec: DerivedTableSpec<Led> = {
         price1: extractMinQPrice(c.price)!,
         stock: c.stock,
         in_stock: c.stock > 0,
+        is_basic_part: c.basic === 1,
         package: c.package || "",
         forward_voltage: forwardVoltage,
         forward_current: forwardCurrent,

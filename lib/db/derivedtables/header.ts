@@ -193,6 +193,7 @@ export const headerTableSpec: DerivedTableSpec<Header> = {
         description: c.description,
         stock: c.stock,
         in_stock: c.stock > 0,
+        is_basic_part: c.basic === 1,
         price1: extractMinQPrice(c.price)!,
         package: c.package || "",
         pitch_mm: pitch,
