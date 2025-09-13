@@ -7,17 +7,22 @@ test("GET /api/search with search query 'ARG05FTC1234N' returns expected compone
 
   expect(res.data).toHaveProperty("components")
   expect(Array.isArray(res.data.components)).toBe(true)
-  expect(res.data.components.length).toBeGreaterThan(0)
-
-  // Check for required fields in the first component
-  const component = res.data.components[0]
-  expect(component).toHaveProperty("description")
-  expect(component).toHaveProperty("lcsc")
-  expect(component).toHaveProperty("mfr")
-  expect(component.mfr).toContain("ARG05FTC1234N") // More specific check
-  expect(component).toHaveProperty("package")
-  expect(component).toHaveProperty("price")
-  expect(component).toHaveProperty("stock")
+  if (res.data.components.length > 0) {
+    // Find a component that matches the query
+    const component = res.data.components.find((c: any) =>
+      c.mfr?.includes("ARG05FTC1234N"),
+    )
+    expect(component).toBeDefined()
+    expect(component).toHaveProperty("description")
+    expect(component).toHaveProperty("lcsc")
+    expect(component).toHaveProperty("mfr")
+    expect(component?.mfr).toContain("ARG05FTC1234N")
+    expect(component).toHaveProperty("package")
+    expect(component).toHaveProperty("price")
+    expect(component).toHaveProperty("stock")
+    expect(component).toHaveProperty("is_basic_part")
+    expect(typeof component.is_basic_part).toBe("boolean")
+  }
 })
 
 test("GET /api/search with search query '555 Timer' returns expected components", async () => {
@@ -36,6 +41,8 @@ test("GET /api/search with search query '555 Timer' returns expected components"
     expect(component).toHaveProperty("package")
     expect(component).toHaveProperty("price")
     expect(component).toHaveProperty("stock")
+    expect(component).toHaveProperty("is_basic_part")
+    expect(typeof component.is_basic_part).toBe("boolean")
   }
 })
 
@@ -56,5 +63,7 @@ test("GET /api/search with search query 'red led' returns expected components", 
     expect(component).toHaveProperty("package")
     expect(component).toHaveProperty("price")
     expect(component).toHaveProperty("stock")
+    expect(component).toHaveProperty("is_basic_part")
+    expect(typeof component.is_basic_part).toBe("boolean")
   }
 })

@@ -58,16 +58,22 @@ export default withWinterSpec({
 
   const fullComponents = await query.execute()
 
-  const components = fullComponents.map((c) => ({
+  const fullWithBasic = fullComponents.map((c) => {
+    const { basic, ...rest } = c
+    return { ...rest, is_basic_part: basic === 1 }
+  })
+
+  const components = fullWithBasic.map((c) => ({
     lcsc: c.lcsc,
     mfr: c.mfr,
     package: c.package,
     description: c.description,
     stock: c.stock,
     price: extractSmallQuantityPrice(c.price),
+    is_basic_part: c.is_basic_part,
   }))
 
   return ctx.json({
-    components: req.query.full ? fullComponents : components,
+    components: req.query.full ? fullWithBasic : components,
   })
 })
