@@ -78,6 +78,7 @@ export const gasSensorTableSpec: DerivedTableSpec<GasSensor> = {
         stock: c.stock,
         price1: extractMinQPrice(c.price),
         in_stock: c.stock > 0,
+        is_basic_part: c.basic === 1,
         package: c.package || "",
         sensor_type: sensorType,
         measures_air_quality: measuresAirQuality,

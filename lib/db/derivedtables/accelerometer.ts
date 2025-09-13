@@ -98,6 +98,7 @@ export const accelerometerTableSpec: DerivedTableSpec<Accelerometer> = {
         stock: c.stock,
         price1: extractMinQPrice(c.price),
         in_stock: c.stock > 0,
+        is_basic_part: c.basic === 1,
         package: c.package || "",
         supply_voltage_min: voltageMin,
         supply_voltage_max: voltageMax,

@@ -125,6 +125,7 @@ export const dacTableSpec: DerivedTableSpec<Dac> = {
         stock: c.stock,
         price1: extractMinQPrice(c.price),
         in_stock: c.stock > 0,
+        is_basic_part: c.basic === 1,
         package: c.package || "",
         resolution_bits: resolution,
         num_channels: numChannels,
