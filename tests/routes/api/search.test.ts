@@ -18,6 +18,7 @@ test("GET /api/search with search query 'ARG05FTC1234N' returns expected compone
   expect(component).toHaveProperty("package")
   expect(component).toHaveProperty("price")
   expect(component).toHaveProperty("stock")
+  expect(component).toHaveProperty("is_basic_part")
 })
 
 test("GET /api/search with search query '555 Timer' returns expected components", async () => {
@@ -36,6 +37,7 @@ test("GET /api/search with search query '555 Timer' returns expected components"
     expect(component).toHaveProperty("package")
     expect(component).toHaveProperty("price")
     expect(component).toHaveProperty("stock")
+    expect(component).toHaveProperty("is_basic_part")
   }
 })
 
@@ -56,5 +58,6 @@ test("GET /api/search with search query 'red led' returns expected components", 
     expect(component).toHaveProperty("package")
     expect(component).toHaveProperty("price")
     expect(component).toHaveProperty("stock")
+    expect(component).toHaveProperty("is_basic_part")
   }
 })
