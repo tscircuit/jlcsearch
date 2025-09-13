@@ -59,7 +59,7 @@ export default withWinterSpec({
   const fullComponents = await query.execute()
 
   const fullWithBasic = fullComponents.map((c) => {
-    const { basic, ...rest } = c as any
+    const { basic, ...rest } = c
     return { ...rest, is_basic_part: basic === 1 }
   })
 
@@ -69,7 +69,7 @@ export default withWinterSpec({
     package: c.package,
     description: c.description,
     stock: c.stock,
-    price: extractSmallQuantityPrice((c as any).price),
+    price: extractSmallQuantityPrice(c.price),
     is_basic_part: c.is_basic_part,
   }))
 
