@@ -22,6 +22,8 @@ export interface Switch extends BaseComponent {
 export const switchTableSpec: DerivedTableSpec<Switch> = {
   tableName: "switch",
   extraColumns: [
+    { name: "kicad_footprint", type: "text" },
+    { name: "jlc_part_number", type: "text" },
     { name: "package", type: "text" },
     { name: "switch_type", type: "text" },
     { name: "circuit", type: "text" },
@@ -88,6 +90,8 @@ export const switchTableSpec: DerivedTableSpec<Switch> = {
         price1: extractMinQPrice(c.price)!,
         in_stock: c.stock > 0,
         package: c.package || "",
+        kicad_footprint: c.kicad_footprint,
+        jlc_part_number: c.jlc_part_number,
         switch_type: (c as any).subcategory || "",
         circuit: attrs["Circuit"] || null,
         current_rating_a:

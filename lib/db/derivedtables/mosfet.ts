@@ -25,6 +25,8 @@ export interface Mosfet extends BaseComponent {
 export const mosfetTableSpec: DerivedTableSpec<Mosfet> = {
   tableName: "mosfet",
   extraColumns: [
+    { name: "kicad_footprint", type: "text" },
+    { name: "jlc_part_number", type: "text" },
     { name: "package", type: "text" },
     { name: "drain_source_voltage", type: "real" },
     { name: "continuous_drain_current", type: "real" },
@@ -65,6 +67,8 @@ export const mosfetTableSpec: DerivedTableSpec<Mosfet> = {
           price1: extractMinQPrice(c.price),
           in_stock: Boolean((c.stock || 0) > 0),
           package: String(c.package || ""),
+          kicad_footprint: c.kicad_footprint,
+          jlc_part_number: c.jlc_part_number,
           drain_source_voltage: parseValue(
             attrs["Drain Source Voltage (Vdss)"],
           ),

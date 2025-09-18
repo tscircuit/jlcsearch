@@ -13,6 +13,8 @@ export interface LCDDisplay extends BaseComponent {
 export const lcdDisplayTableSpec: DerivedTableSpec<LCDDisplay> = {
   tableName: "lcd_display",
   extraColumns: [
+    { name: "kicad_footprint", type: "text" },
+    { name: "jlc_part_number", type: "text" },
     { name: "package", type: "text" },
     { name: "display_size", type: "text" },
     { name: "resolution", type: "text" },
@@ -61,6 +63,8 @@ export const lcdDisplayTableSpec: DerivedTableSpec<LCDDisplay> = {
           price1: extractMinQPrice(c.price),
           in_stock: Boolean((c.stock || 0) > 0),
           package: String(c.package || ""),
+          kicad_footprint: c.kicad_footprint,
+          jlc_part_number: c.jlc_part_number,
           display_size,
           resolution,
           display_type,

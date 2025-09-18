@@ -19,6 +19,8 @@ export interface Relay extends BaseComponent {
 export const relayTableSpec: DerivedTableSpec<Relay> = {
   tableName: "relay",
   extraColumns: [
+    { name: "kicad_footprint", type: "text" },
+    { name: "jlc_part_number", type: "text" },
     { name: "package", type: "text" },
     { name: "relay_type", type: "text" },
     { name: "contact_form", type: "text" },
@@ -59,6 +61,8 @@ export const relayTableSpec: DerivedTableSpec<Relay> = {
           price1: extractMinQPrice(c.price),
           in_stock: Boolean((c.stock || 0) > 0),
           package: String(c.package || ""),
+          kicad_footprint: c.kicad_footprint,
+          jlc_part_number: c.jlc_part_number,
           relay_type: (c as any).subcategory || "",
           contact_form: attrs["Contact Form"] || null,
           coil_voltage: parseValue(attrs["Coil Voltage"]),

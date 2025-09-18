@@ -22,6 +22,8 @@ export interface Led extends BaseComponent {
 export const ledTableSpec: DerivedTableSpec<Led> = {
   tableName: "led",
   extraColumns: [
+    { name: "kicad_footprint", type: "text" },
+    { name: "jlc_part_number", type: "text" },
     { name: "package", type: "text" },
     { name: "forward_voltage", type: "real" },
     { name: "forward_current", type: "real" },
@@ -162,6 +164,8 @@ export const ledTableSpec: DerivedTableSpec<Led> = {
         stock: c.stock,
         in_stock: c.stock > 0,
         package: c.package || "",
+        kicad_footprint: c.kicad_footprint,
+        jlc_part_number: c.jlc_part_number,
         forward_voltage: forwardVoltage,
         forward_current: forwardCurrent,
         color: color,

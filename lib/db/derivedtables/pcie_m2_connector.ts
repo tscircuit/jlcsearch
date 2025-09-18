@@ -10,6 +10,8 @@ export interface PcieM2Connector extends BaseComponent {
 export const pcieM2ConnectorTableSpec: DerivedTableSpec<PcieM2Connector> = {
   tableName: "pcie_m2_connector",
   extraColumns: [
+    { name: "kicad_footprint", type: "text" },
+    { name: "jlc_part_number", type: "text" },
     { name: "key", type: "text" },
     { name: "is_right_angle", type: "boolean" },
   ],
@@ -45,6 +47,8 @@ export const pcieM2ConnectorTableSpec: DerivedTableSpec<PcieM2Connector> = {
         stock: Number(c.stock || 0),
         price1: extractMinQPrice(c.price),
         in_stock: Boolean((c.stock || 0) > 0),
+        kicad_footprint: c.kicad_footprint,
+        jlc_part_number: c.jlc_part_number,
         key,
         is_right_angle: isRightAngle,
         attributes: attrs,

@@ -20,6 +20,8 @@ export const buckBoostConverterTableSpec: DerivedTableSpec<BuckBoostConverter> =
   {
     tableName: "buck_boost_converter",
     extraColumns: [
+      { name: "kicad_footprint", type: "text" },
+      { name: "jlc_part_number", type: "text" },
       { name: "package", type: "text" },
       { name: "input_voltage_min", type: "real" },
       { name: "input_voltage_max", type: "real" },
@@ -118,6 +120,8 @@ export const buckBoostConverterTableSpec: DerivedTableSpec<BuckBoostConverter> =
             price1: extractMinQPrice(c.price),
             in_stock: c.stock > 0,
             package: c.package || "",
+            kicad_footprint: c.kicad_footprint,
+            jlc_part_number: c.jlc_part_number,
             input_voltage_min: inputMin,
             input_voltage_max: inputMax,
             output_voltage_min: outputMin,

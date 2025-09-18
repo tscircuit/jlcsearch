@@ -21,6 +21,8 @@ export interface Capacitor extends BaseComponent {
 export const capacitorTableSpec: DerivedTableSpec<Capacitor> = {
   tableName: "capacitor",
   extraColumns: [
+    { name: "kicad_footprint", type: "text" },
+    { name: "jlc_part_number", type: "text" },
     { name: "capacitance_farads", type: "real" },
     { name: "tolerance_fraction", type: "real" },
     { name: "voltage_rating", type: "real" },
@@ -111,6 +113,8 @@ export const capacitorTableSpec: DerivedTableSpec<Capacitor> = {
         stock: c.stock,
         price1: extractMinQPrice(c.price),
         in_stock: c.stock > 0,
+        kicad_footprint: c.kicad_footprint,
+        jlc_part_number: c.jlc_part_number,
         capacitance_farads: capacitance,
         tolerance_fraction: tolerance,
         voltage_rating: voltage,

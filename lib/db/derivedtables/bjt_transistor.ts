@@ -17,6 +17,8 @@ export interface BJTTransistor extends BaseComponent {
 export const bjtTransistorTableSpec: DerivedTableSpec<BJTTransistor> = {
   tableName: "bjt_transistor",
   extraColumns: [
+    { name: "kicad_footprint", type: "text" },
+    { name: "jlc_part_number", type: "text" },
     { name: "package", type: "text" },
     { name: "current_gain", type: "integer" },
     { name: "collector_current", type: "integer" },
@@ -71,6 +73,8 @@ export const bjtTransistorTableSpec: DerivedTableSpec<BJTTransistor> = {
           price1: extractMinQPrice(c.price),
           in_stock: Boolean((c.stock || 0) > 0),
           package: c.package || "",
+          kicad_footprint: c.kicad_footprint,
+          jlc_part_number: c.jlc_part_number,
           current_gain: current_gain,
           collector_current: collector_current,
           collector_emitter_voltage: collector_emitter_voltage,

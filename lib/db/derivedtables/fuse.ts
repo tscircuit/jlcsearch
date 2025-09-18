@@ -16,6 +16,8 @@ export interface Fuse extends BaseComponent {
 export const fuseTableSpec: DerivedTableSpec<Fuse> = {
   tableName: "fuse",
   extraColumns: [
+    { name: "kicad_footprint", type: "text" },
+    { name: "jlc_part_number", type: "text" },
     { name: "current_rating", type: "real" },
     { name: "voltage_rating", type: "real" },
     { name: "response_time", type: "text" },
@@ -86,6 +88,8 @@ export const fuseTableSpec: DerivedTableSpec<Fuse> = {
           stock: Number(c.stock || 0),
           price1: extractMinQPrice(c.price),
           in_stock: Boolean((c.stock || 0) > 0),
+          kicad_footprint: c.kicad_footprint,
+          jlc_part_number: c.jlc_part_number,
           current_rating: current_rating as number,
           voltage_rating: voltage_rating as number,
           response_time,

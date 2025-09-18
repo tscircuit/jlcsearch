@@ -21,6 +21,8 @@ export interface GasSensor extends BaseComponent {
 export const gasSensorTableSpec: DerivedTableSpec<GasSensor> = {
   tableName: "gas_sensor",
   extraColumns: [
+    { name: "kicad_footprint", type: "text" },
+    { name: "jlc_part_number", type: "text" },
     { name: "package", type: "text" },
     { name: "sensor_type", type: "text" },
     { name: "measures_air_quality", type: "boolean" },
@@ -79,6 +81,8 @@ export const gasSensorTableSpec: DerivedTableSpec<GasSensor> = {
         price1: extractMinQPrice(c.price),
         in_stock: c.stock > 0,
         package: c.package || "",
+        kicad_footprint: c.kicad_footprint,
+        jlc_part_number: c.jlc_part_number,
         sensor_type: sensorType,
         measures_air_quality: measuresAirQuality,
         measures_co2: measuresCo2,

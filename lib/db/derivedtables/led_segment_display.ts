@@ -14,6 +14,8 @@ export interface LEDSegmentDisplay extends BaseComponent {
 export const ledSegmentDisplayTableSpec: DerivedTableSpec<LEDSegmentDisplay> = {
   tableName: "led_segment_display",
   extraColumns: [
+    { name: "kicad_footprint", type: "text" },
+    { name: "jlc_part_number", type: "text" },
     { name: "package", type: "text" },
     { name: "positions", type: "text" },
     { name: "type", type: "text" },
@@ -67,6 +69,8 @@ export const ledSegmentDisplayTableSpec: DerivedTableSpec<LEDSegmentDisplay> = {
           price1: extractMinQPrice(c.price),
           in_stock: Boolean((c.stock || 0) > 0),
           package: String(c.package || ""),
+          kicad_footprint: c.kicad_footprint,
+          jlc_part_number: c.jlc_part_number,
           positions,
           type,
           size,

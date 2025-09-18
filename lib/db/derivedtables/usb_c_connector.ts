@@ -18,6 +18,8 @@ export interface UsbCConnector extends BaseComponent {
 export const usbCConnectorTableSpec: DerivedTableSpec<UsbCConnector> = {
   tableName: "usb_c_connector",
   extraColumns: [
+    { name: "kicad_footprint", type: "text" },
+    { name: "jlc_part_number", type: "text" },
     { name: "package", type: "text" },
     { name: "mounting_style", type: "text" },
     { name: "current_rating_a", type: "real" },
@@ -66,6 +68,8 @@ export const usbCConnectorTableSpec: DerivedTableSpec<UsbCConnector> = {
           price1: extractMinQPrice(c.price),
           in_stock: Boolean((c.stock || 0) > 0),
           package: String(c.package || ""),
+          kicad_footprint: c.kicad_footprint,
+          jlc_part_number: c.jlc_part_number,
           mounting_style: attrs["Mounting Style"] || null,
           current_rating_a: parseNum(attrs["Current Rating - Power (Max)"]),
           number_of_ports: parseInt(attrs["Number of Ports"] || "") || null,

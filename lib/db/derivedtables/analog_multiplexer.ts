@@ -24,6 +24,8 @@ export interface AnalogMultiplexer extends BaseComponent {
 export const analogMultiplexerTableSpec: DerivedTableSpec<AnalogMultiplexer> = {
   tableName: "analog_multiplexer",
   extraColumns: [
+    { name: "kicad_footprint", type: "text" },
+    { name: "jlc_part_number", type: "text" },
     { name: "package", type: "text" },
     { name: "num_channels", type: "integer" },
     { name: "num_bits", type: "integer" },
@@ -141,6 +143,8 @@ export const analogMultiplexerTableSpec: DerivedTableSpec<AnalogMultiplexer> = {
         price1: extractMinQPrice(c.price),
         in_stock: c.stock > 0,
         package: c.package || "",
+        kicad_footprint: c.kicad_footprint,
+        jlc_part_number: c.jlc_part_number,
         num_channels: numChannels,
         num_bits: numBits,
         on_resistance_ohms: onResistance,

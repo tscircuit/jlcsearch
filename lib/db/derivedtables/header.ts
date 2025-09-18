@@ -28,6 +28,8 @@ export interface Header extends BaseComponent {
 export const headerTableSpec: DerivedTableSpec<Header> = {
   tableName: "header",
   extraColumns: [
+    { name: "kicad_footprint", type: "text" },
+    { name: "jlc_part_number", type: "text" },
     { name: "package", type: "text" },
     { name: "pitch_mm", type: "real" },
     { name: "num_rows", type: "integer" },
@@ -195,6 +197,8 @@ export const headerTableSpec: DerivedTableSpec<Header> = {
         in_stock: c.stock > 0,
         price1: extractMinQPrice(c.price)!,
         package: c.package || "",
+        kicad_footprint: c.kicad_footprint,
+        jlc_part_number: c.jlc_part_number,
         pitch_mm: pitch,
         num_rows: numRows,
         num_pins: numPins || 0,

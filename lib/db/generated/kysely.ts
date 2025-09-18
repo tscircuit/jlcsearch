@@ -26,11 +26,15 @@ export interface Accelerometer {
   stock: number | null;
   supply_voltage_max: number | null;
   supply_voltage_min: number | null;
+  kicad_footprint: string | null;
+  jlc_part_number: string | null;
 }
 
 export interface Adc {
   attributes: string | null;
   description: string | null;
+  kicad_footprint: string | null;
+  jlc_part_number: string | null;
   has_i2c: number | null;
   has_parallel_interface: number | null;
   has_serial_interface: number | null;
@@ -56,6 +60,8 @@ export interface AnalogMultiplexer {
   attributes: string | null;
   channel_type: string | null;
   description: string | null;
+  kicad_footprint: string | null;
+  jlc_part_number: string | null;
   has_enable: number | null;
   has_i2c: number | null;
   has_parallel_interface: number | null;
@@ -79,6 +85,8 @@ export interface AnalogMultiplexer {
 export interface BjtTransistor {
   attributes: string | null;
   collector_current: number | null;
+  kicad_footprint: string | null;
+  jlc_part_number: string | null;
   collector_emitter_voltage: number | null;
   current_gain: number | null;
   description: string | null;
@@ -96,6 +104,8 @@ export interface BjtTransistor {
 export interface BoostConverter {
   attributes: string | null;
   description: string | null;
+  kicad_footprint: string | null;
+  jlc_part_number: string | null;
   in_stock: number | null;
   input_voltage_max: number | null;
   input_voltage_min: number | null;
@@ -116,6 +126,8 @@ export interface BoostConverter {
 export interface BuckBoostConverter {
   attributes: string | null;
   description: string | null;
+  kicad_footprint: string | null;
+  jlc_part_number: string | null;
   in_stock: number | null;
   input_voltage_max: number | null;
   input_voltage_min: number | null;
@@ -136,6 +148,8 @@ export interface BuckBoostConverter {
 export interface Capacitor {
   attributes: string | null;
   capacitance_farads: number | null;
+  kicad_footprint: string | null;
+  jlc_part_number: string | null;
   capacitor_type: string | null;
   description: string | null;
   esr_ohms: number | null;
@@ -177,6 +191,8 @@ export interface Component {
   preferred: Generated<number>;
   price: string;
   stock: number;
+  kicad_footprint: string | null;
+  jlc_part_number: string | null;
 }
 
 export interface ComponentsFt {
@@ -218,6 +234,8 @@ export interface ComponentsFtsIdx {
 export interface Dac {
   attributes: string | null;
   description: string | null;
+  kicad_footprint: string | null;
+  jlc_part_number: string | null;
   has_i2c: number | null;
   has_parallel_interface: number | null;
   has_spi: number | null;
@@ -241,6 +259,8 @@ export interface Dac {
 export interface Diode {
   attributes: string | null;
   configuration: string | null;
+  kicad_footprint: string | null;
+  jlc_part_number: string | null;
   description: string | null;
   diode_type: string | null;
   forward_current: number | null;
@@ -274,11 +294,15 @@ export interface FpcConnector {
   pitch_mm: number | null;
   price1: number | null;
   stock: number | null;
+  kicad_footprint: string | null;
+  jlc_part_number: string | null;
 }
 
 export interface Fuse {
   attributes: string | null;
   current_rating: number | null;
+  kicad_footprint: string | null;
+  jlc_part_number: string | null;
   description: string | null;
   in_stock: number | null;
   is_glass_encased: number | null;
@@ -296,6 +320,8 @@ export interface Fuse {
 export interface GasSensor {
   attributes: string | null;
   description: string | null;
+  kicad_footprint: string | null;
+  jlc_part_number: string | null;
   in_stock: number | null;
   lcsc: Generated<number | null>;
   measures_air_quality: number | null;
@@ -319,6 +345,8 @@ export interface GasSensor {
 export interface Gyroscope {
   attributes: string | null;
   axes: string | null;
+  kicad_footprint: string | null;
+  jlc_part_number: string | null;
   description: string | null;
   has_i2c: number | null;
   has_spi: number | null;
@@ -338,6 +366,8 @@ export interface Gyroscope {
 export interface Header {
   attributes: string | null;
   contact_material: string | null;
+  kicad_footprint: string | null;
+  jlc_part_number: string | null;
   contact_plating: string | null;
   current_rating_amp: number | null;
   description: string | null;
@@ -366,6 +396,8 @@ export interface Header {
 export interface IoExpander {
   attributes: string | null;
   clock_frequency_hz: number | null;
+  kicad_footprint: string | null;
+  jlc_part_number: string | null;
   description: string | null;
   has_i2c: number | null;
   has_interrupt: number | null;
@@ -400,11 +432,15 @@ export interface JstConnector {
   reference_series: string | null;
   price1: number | null;
   stock: number | null;
+  kicad_footprint: string | null;
+  jlc_part_number: string | null;
 }
 
 export interface LcdDisplay {
   attributes: string | null;
   description: string | null;
+  kicad_footprint: string | null;
+  jlc_part_number: string | null;
   display_size: string | null;
   display_type: string | null;
   in_stock: number | null;
@@ -419,6 +455,8 @@ export interface LcdDisplay {
 export interface Ldo {
   attributes: string | null;
   description: string | null;
+  kicad_footprint: string | null;
+  jlc_part_number: string | null;
   dropout_voltage: number | null;
   in_stock: number | null;
   input_voltage_max: number | null;
@@ -444,6 +482,8 @@ export interface Ldo {
 export interface Led {
   attributes: string | null;
   color: string | null;
+  kicad_footprint: string | null;
+  jlc_part_number: string | null;
   description: string | null;
   forward_current: number | null;
   forward_voltage: number | null;
@@ -467,6 +507,8 @@ export interface Led {
 export interface LedDotMatrixDisplay {
   attributes: string | null;
   color: string | null;
+  kicad_footprint: string | null;
+  jlc_part_number: string | null;
   description: string | null;
   in_stock: number | null;
   lcsc: Generated<number | null>;
@@ -480,6 +522,8 @@ export interface LedDotMatrixDisplay {
 export interface LedDriver {
   attributes: string | null;
   channel_count: number | null;
+  kicad_footprint: string | null;
+  jlc_part_number: string | null;
   description: string | null;
   dimming_method: string | null;
   efficiency_percent: number | null;
@@ -501,6 +545,8 @@ export interface LedDriver {
 export interface LedSegmentDisplay {
   attributes: string | null;
   color: string | null;
+  kicad_footprint: string | null;
+  jlc_part_number: string | null;
   description: string | null;
   in_stock: number | null;
   lcsc: Generated<number | null>;
@@ -516,6 +562,8 @@ export interface LedSegmentDisplay {
 export interface LedWithIc {
   attributes: string | null;
   color: string | null;
+  kicad_footprint: string | null;
+  jlc_part_number: string | null;
   description: string | null;
   forward_current: number | null;
   forward_voltage: number | null;
@@ -537,6 +585,8 @@ export interface Manufacturer {
 export interface Microcontroller {
   adc_resolution_bits: number | null;
   attributes: string | null;
+  kicad_footprint: string | null;
+  jlc_part_number: string | null;
   cpu_core: string | null;
   cpu_speed_hz: number | null;
   dac_resolution_bits: number | null;
@@ -572,6 +622,8 @@ export interface Microcontroller {
 export interface Mosfet {
   attributes: string | null;
   continuous_drain_current: number | null;
+  kicad_footprint: string | null;
+  jlc_part_number: string | null;
   description: string | null;
   drain_source_voltage: number | null;
   gate_threshold_voltage: number | null;
@@ -590,6 +642,8 @@ export interface Mosfet {
 export interface OledDisplay {
   attributes: string | null;
   description: string | null;
+  kicad_footprint: string | null;
+  jlc_part_number: string | null;
   display_width: string | null;
   in_stock: number | null;
   lcsc: Generated<number | null>;
@@ -611,11 +665,15 @@ export interface PcieM2Connector {
   mfr: string | null;
   price1: number | null;
   stock: number | null;
+  kicad_footprint: string | null;
+  jlc_part_number: string | null;
 }
 
 export interface Potentiometer {
   attributes: string | null;
   description: string | null;
+  kicad_footprint: string | null;
+  jlc_part_number: string | null;
   in_stock: number | null;
   is_surface_mount: number | null;
   lcsc: Generated<number | null>;
@@ -630,6 +688,8 @@ export interface Potentiometer {
 export interface Relay {
   attributes: string | null;
   coil_resistance: number | null;
+  kicad_footprint: string | null;
+  jlc_part_number: string | null;
   coil_voltage: number | null;
   contact_form: string | null;
   description: string | null;
@@ -648,6 +708,8 @@ export interface Relay {
 export interface Resistor {
   attributes: string | null;
   description: string | null;
+  kicad_footprint: string | null;
+  jlc_part_number: string | null;
   in_stock: number | null;
   is_multi_resistor_chip: number | null;
   is_potentiometer: number | null;
@@ -668,6 +730,8 @@ export interface Resistor {
 export interface Switch {
   attributes: string | null;
   circuit: string | null;
+  kicad_footprint: string | null;
+  jlc_part_number: string | null;
   current_rating_a: number | null;
   description: string | null;
   in_stock: number | null;
@@ -691,6 +755,8 @@ export interface Switch {
 export interface UsbCConnector {
   attributes: string | null;
   current_rating_a: number | null;
+  kicad_footprint: string | null;
+  jlc_part_number: string | null;
   description: string | null;
   gender: string | null;
   in_stock: number | null;
@@ -728,6 +794,8 @@ export interface VComponent {
 export interface VoltageRegulator {
   attributes: string | null;
   description: string | null;
+  kicad_footprint: string | null;
+  jlc_part_number: string | null;
   dropout_voltage: number | null;
   in_stock: number | null;
   input_voltage_max: number | null;
@@ -754,6 +822,8 @@ export interface VoltageRegulator {
 export interface WifiModule {
   antenna_type: string | null;
   attributes: string | null;
+  kicad_footprint: string | null;
+  jlc_part_number: string | null;
   core_processor: string | null;
   description: string | null;
   frequency_ghz: number | null;

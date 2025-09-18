@@ -23,6 +23,8 @@ export interface Dac extends BaseComponent {
 export const dacTableSpec: DerivedTableSpec<Dac> = {
   tableName: "dac",
   extraColumns: [
+    { name: "kicad_footprint", type: "text" },
+    { name: "jlc_part_number", type: "text" },
     { name: "package", type: "text" },
     { name: "resolution_bits", type: "integer" },
     { name: "num_channels", type: "integer" },
@@ -126,6 +128,8 @@ export const dacTableSpec: DerivedTableSpec<Dac> = {
         price1: extractMinQPrice(c.price),
         in_stock: c.stock > 0,
         package: c.package || "",
+        kicad_footprint: c.kicad_footprint,
+        jlc_part_number: c.jlc_part_number,
         resolution_bits: resolution,
         num_channels: numChannels,
         settling_time_us: settlingTime,

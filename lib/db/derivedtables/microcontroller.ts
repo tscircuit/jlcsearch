@@ -35,6 +35,8 @@ export interface Microcontroller extends BaseComponent {
 export const microcontrollerTableSpec: DerivedTableSpec<Microcontroller> = {
   tableName: "microcontroller",
   extraColumns: [
+    { name: "kicad_footprint", type: "text" },
+    { name: "jlc_part_number", type: "text" },
     { name: "package", type: "text" },
     { name: "cpu_core", type: "text" },
     { name: "cpu_speed_hz", type: "real" },
@@ -225,6 +227,8 @@ export const microcontrollerTableSpec: DerivedTableSpec<Microcontroller> = {
         price1: extractMinQPrice(c.price),
         in_stock: c.stock > 0,
         package: c.package || "",
+        kicad_footprint: c.kicad_footprint,
+        jlc_part_number: c.jlc_part_number,
         cpu_core: cpuCore,
         cpu_speed_hz: cpuSpeed,
         flash_size_bytes: flashSize,

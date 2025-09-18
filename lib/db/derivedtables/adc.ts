@@ -24,6 +24,8 @@ export interface Adc extends BaseComponent {
 export const adcTableSpec: DerivedTableSpec<Adc> = {
   tableName: "adc",
   extraColumns: [
+    { name: "kicad_footprint", type: "text" },
+    { name: "jlc_part_number", type: "text" },
     { name: "package", type: "text" },
     { name: "resolution_bits", type: "integer" },
     { name: "sampling_rate_hz", type: "real" },
@@ -112,6 +114,8 @@ export const adcTableSpec: DerivedTableSpec<Adc> = {
         price1: extractMinQPrice(c.price),
         in_stock: c.stock > 0,
         package: c.package || "",
+        kicad_footprint: c.kicad_footprint,
+        jlc_part_number: c.jlc_part_number,
         resolution_bits: resolution,
         sampling_rate_hz: samplingRate,
         num_channels: numChannels,

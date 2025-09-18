@@ -61,3 +61,24 @@ test("GET /mosfets/list with voltage filter returns filtered data", async () => 
     }
   }
 })
+
+test("GET /mosfets/list returns new properties", async () => {
+  const { axios } = await getTestServer()
+  const res = await axios.get("/mosfets/list?json=true")
+
+  expect(res.data).toHaveProperty("mosfets")
+
+  if (res.data.mosfets.length > 0) {
+    const mosfet = res.data.mosfets[0]
+    expect(mosfet).toHaveProperty("kicad_footprint")
+    expect(mosfet).toHaveProperty("jlc_part_number")
+
+    // The value can be null, so we check for either string or null
+    if (mosfet.kicad_footprint !== null) {
+      expect(typeof mosfet.kicad_footprint).toBe("string")
+    }
+    if (mosfet.jlc_part_number !== null) {
+      expect(typeof mosfet.jlc_part_number).toBe("string")
+    }
+  }
+})

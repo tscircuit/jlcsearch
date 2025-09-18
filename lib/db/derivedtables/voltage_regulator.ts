@@ -25,6 +25,8 @@ export interface VoltageRegulator extends BaseComponent {
 export const voltageRegulatorTableSpec: DerivedTableSpec<VoltageRegulator> = {
   tableName: "voltage_regulator",
   extraColumns: [
+    { name: "kicad_footprint", type: "text" },
+    { name: "jlc_part_number", type: "text" },
     { name: "package", type: "text" },
     { name: "output_type", type: "text" },
     { name: "output_voltage_min", type: "real" },
@@ -181,6 +183,8 @@ export const voltageRegulatorTableSpec: DerivedTableSpec<VoltageRegulator> = {
         price1: extractMinQPrice(c.price),
         in_stock: c.stock > 0,
         package: c.package || "",
+        kicad_footprint: c.kicad_footprint,
+        jlc_part_number: c.jlc_part_number,
         output_type: outputType,
         output_voltage_min: voltageMin,
         output_voltage_max: voltageMax,

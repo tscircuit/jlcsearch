@@ -40,6 +40,8 @@ export default withWinterSpec({
           power_dissipation: z.number().nullable(),
           operating_temp_min: z.number().nullable(),
           operating_temp_max: z.number().nullable(),
+          kicad_footprint: z.string().nullable(),
+          jlc_part_number: z.string().nullable(),
         }),
       ),
     }),
@@ -125,6 +127,8 @@ export default withWinterSpec({
         power_dissipation: mosfet.power_dissipation,
         operating_temp_min: mosfet.operating_temp_min,
         operating_temp_max: mosfet.operating_temp_max,
+        kicad_footprint: (mosfet as any).kicad_footprint ?? null,
+        jlc_part_number: (mosfet as any).jlc_part_number ?? null,
       })),
     })
   }

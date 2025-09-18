@@ -19,6 +19,8 @@ export interface Resistor extends BaseComponent {
 export const resistorTableSpec: DerivedTableSpec<Resistor> = {
   tableName: "resistor",
   extraColumns: [
+    { name: "kicad_footprint", type: "text" },
+    { name: "jlc_part_number", type: "text" },
     { name: "resistance", type: "real" },
     { name: "tolerance_fraction", type: "real" },
     { name: "power_watts", type: "real" },
@@ -78,6 +80,8 @@ export const resistorTableSpec: DerivedTableSpec<Resistor> = {
         stock: c.stock,
         price1: extractMinQPrice(c.price)!,
         in_stock: c.stock > 0,
+        kicad_footprint: c.kicad_footprint,
+        jlc_part_number: c.jlc_part_number,
         resistance: resistance,
         tolerance_fraction: tolerance,
         power_watts,

@@ -29,6 +29,8 @@ export interface LedDriver extends BaseComponent {
 export const ledDriverTableSpec: DerivedTableSpec<LedDriver> = {
   tableName: "led_driver",
   extraColumns: [
+    { name: "kicad_footprint", type: "text" },
+    { name: "jlc_part_number", type: "text" },
     { name: "package", type: "text" },
     { name: "supply_voltage_min", type: "real" },
     { name: "supply_voltage_max", type: "real" },
@@ -74,6 +76,8 @@ export const ledDriverTableSpec: DerivedTableSpec<LedDriver> = {
           price1: extractMinQPrice(c.price),
           in_stock: Boolean((c.stock || 0) > 0),
           package: String(c.package || ""),
+          kicad_footprint: c.kicad_footprint,
+          jlc_part_number: c.jlc_part_number,
           supply_voltage_min: parseValue(attrs["Input Voltage"]?.split("~")[0]),
           supply_voltage_max: parseValue(attrs["Input Voltage"]?.split("~")[1]),
           output_current_max: parseValue(attrs["Output Current"]),

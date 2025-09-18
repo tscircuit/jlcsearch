@@ -17,6 +17,8 @@ export interface Accelerometer extends BaseComponent {
 export const accelerometerTableSpec: DerivedTableSpec<Accelerometer> = {
   tableName: "accelerometer",
   extraColumns: [
+    { name: "kicad_footprint", type: "text" },
+    { name: "jlc_part_number", type: "text" },
     { name: "package", type: "text" },
     { name: "supply_voltage_min", type: "real" },
     { name: "supply_voltage_max", type: "real" },
@@ -99,6 +101,8 @@ export const accelerometerTableSpec: DerivedTableSpec<Accelerometer> = {
         price1: extractMinQPrice(c.price),
         in_stock: c.stock > 0,
         package: c.package || "",
+        kicad_footprint: c.kicad_footprint,
+        jlc_part_number: c.jlc_part_number,
         supply_voltage_min: voltageMin,
         supply_voltage_max: voltageMax,
         operating_temp_min: tempMin,

@@ -15,6 +15,8 @@ export interface JstConnector extends BaseComponent {
 export const jstConnectorTableSpec: DerivedTableSpec<JstConnector> = {
   tableName: "jst_connector",
   extraColumns: [
+    { name: "kicad_footprint", type: "text" },
+    { name: "jlc_part_number", type: "text" },
     { name: "package", type: "text" },
     { name: "pitch_mm", type: "real" },
     { name: "num_rows", type: "integer" },
@@ -66,6 +68,8 @@ export const jstConnectorTableSpec: DerivedTableSpec<JstConnector> = {
           price1: extractMinQPrice(c.price),
           in_stock: Boolean((c.stock || 0) > 0),
           package: String(c.package || ""),
+          kicad_footprint: c.kicad_footprint,
+          jlc_part_number: c.jlc_part_number,
           pitch_mm: parseNum(attrs["Pitch"]),
           num_rows: isNaN(numRows) ? null : numRows,
           num_pins: isNaN(numPins) ? null : numPins,

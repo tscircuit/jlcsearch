@@ -13,6 +13,8 @@ export const ledDotMatrixDisplayTableSpec: DerivedTableSpec<LEDDotMatrixDisplay>
   {
     tableName: "led_dot_matrix_display",
     extraColumns: [
+      { name: "kicad_footprint", type: "text" },
+      { name: "jlc_part_number", type: "text" },
       { name: "package", type: "text" },
       { name: "matrix_size", type: "text" },
       { name: "color", type: "text" },
@@ -54,6 +56,8 @@ export const ledDotMatrixDisplayTableSpec: DerivedTableSpec<LEDDotMatrixDisplay>
             price1: extractMinQPrice(c.price),
             in_stock: Boolean((c.stock || 0) > 0),
             package: String(c.package || ""),
+            kicad_footprint: c.kicad_footprint,
+            jlc_part_number: c.jlc_part_number,
             matrix_size,
             color,
             attributes: attrs,

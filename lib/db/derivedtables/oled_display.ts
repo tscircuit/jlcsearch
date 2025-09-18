@@ -13,6 +13,8 @@ export interface OLEDDisplay extends BaseComponent {
 export const oledDisplayTableSpec: DerivedTableSpec<OLEDDisplay> = {
   tableName: "oled_display",
   extraColumns: [
+    { name: "kicad_footprint", type: "text" },
+    { name: "jlc_part_number", type: "text" },
     { name: "package", type: "text" },
     { name: "protocol", type: "text" },
     { name: "display_width", type: "text" },
@@ -62,6 +64,8 @@ export const oledDisplayTableSpec: DerivedTableSpec<OLEDDisplay> = {
           price1: extractMinQPrice(c.price),
           in_stock: Boolean((c.stock || 0) > 0),
           package: String(c.package || ""),
+          kicad_footprint: c.kicad_footprint,
+          jlc_part_number: c.jlc_part_number,
           protocol: protocol || undefined,
           display_width,
           pixel_resolution,

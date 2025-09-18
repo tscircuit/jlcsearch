@@ -13,6 +13,8 @@ export interface Potentiometer extends BaseComponent {
 export const potentiometerTableSpec: DerivedTableSpec<Potentiometer> = {
   tableName: "potentiometer",
   extraColumns: [
+    { name: "kicad_footprint", type: "text" },
+    { name: "jlc_part_number", type: "text" },
     { name: "max_resistance", type: "real" },
     { name: "pin_variant", type: "text" },
     { name: "package", type: "text" },
@@ -50,6 +52,8 @@ export const potentiometerTableSpec: DerivedTableSpec<Potentiometer> = {
         stock: c.stock,
         price1: extractMinQPrice(c.price)!,
         in_stock: c.stock > 0,
+        kicad_footprint: c.kicad_footprint,
+        jlc_part_number: c.jlc_part_number,
         max_resistance: maxResistance,
         pin_variant: pinVariant,
         package: c.package || "",

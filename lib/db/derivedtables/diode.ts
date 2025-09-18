@@ -24,6 +24,8 @@ export interface Diode extends BaseComponent {
 export const diodeTableSpec: DerivedTableSpec<Diode> = {
   tableName: "diode",
   extraColumns: [
+    { name: "kicad_footprint", type: "text" },
+    { name: "jlc_part_number", type: "text" },
     { name: "package", type: "text" },
     { name: "forward_voltage", type: "real" },
     { name: "reverse_voltage", type: "real" },
@@ -156,6 +158,8 @@ export const diodeTableSpec: DerivedTableSpec<Diode> = {
         price1: extractMinQPrice(c.price),
         in_stock: c.stock > 0,
         package: c.package || "",
+        kicad_footprint: c.kicad_footprint,
+        jlc_part_number: c.jlc_part_number,
         forward_voltage: forwardVoltage,
         reverse_voltage: reverseVoltage,
         forward_current: forwardCurrent,

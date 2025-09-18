@@ -14,6 +14,8 @@ export interface FpcConnector extends BaseComponent {
 export const fpcConnectorTableSpec: DerivedTableSpec<FpcConnector> = {
   tableName: "fpc_connector",
   extraColumns: [
+    { name: "kicad_footprint", type: "text" },
+    { name: "jlc_part_number", type: "text" },
     { name: "pitch_mm", type: "real" },
     { name: "number_of_contacts", type: "integer" },
     { name: "contact_type", type: "text" },
@@ -51,6 +53,8 @@ export const fpcConnectorTableSpec: DerivedTableSpec<FpcConnector> = {
           stock: Number(c.stock || 0),
           price1: extractMinQPrice(c.price),
           in_stock: Boolean((c.stock || 0) > 0),
+          kicad_footprint: c.kicad_footprint,
+          jlc_part_number: c.jlc_part_number,
           pitch_mm: parseNum(attrs["Pitch"]),
           number_of_contacts: isNaN(contacts) ? null : contacts,
           contact_type: attrs["Contact Type"] || null,

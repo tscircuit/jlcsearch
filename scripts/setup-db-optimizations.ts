@@ -7,8 +7,55 @@ import { componentInStockCategoryIndex } from "lib/db/optimizations/component-in
 import type { DbOptimizationSpec } from "lib/db/optimizations/types"
 import { componentSearchFTS } from "lib/db/optimizations/component-search-fts"
 import { componentPackageIndex } from "lib/db/optimizations/component-indexes"
+import { sql } from "kysely"
+import type { KyselyDatabaseInstance } from "lib/db/kysely-types"
+
+const addKicadAndJlcPartNumberColumns: DbOptimizationSpec = {
+  name: "add_kicad_jlc_part_number_columns",
+  description:
+    "Adds kicad_footprint and jlc_part_number columns to components table",
+
+  async checkIfAdded(db: KyselyDatabaseInstance) {
+    try {
+      const result = await sql`
+        PRAGMA table_info(components)
+      `.execute(db)
+      const columns = (result.rows as any[]).map((row) => row.name)
+      const hasNewCols =
+        columns.includes("kicad_footprint") &&
+        columns.includes("jlc_part_number")
+      const hasOldCol = columns.includes("kicad_library")
+      return hasNewCols && !hasOldCol
+    } catch (e) {
+      return false
+    }
+  },
+
+  async execute(db: KyselyDatabaseInstance) {
+    const bunDb = getBunDatabaseClient()
+    try {
+      bunDb.exec("ALTER TABLE components DROP COLUMN kicad_library;")
+    } catch (e: any) {
+      if (!e.message.includes("no such column")) {
+        console.warn("Could not drop kicad_library column", e.message)
+      }
+    }
+    try {
+      bunDb.exec("ALTER TABLE components ADD COLUMN kicad_footprint TEXT;")
+    } catch (e: any) {
+      if (!e.message.includes("duplicate column name")) throw e
+    }
+    try {
+      bunDb.exec("ALTER TABLE components ADD COLUMN jlc_part_number TEXT;")
+    } catch (e: any) {
+      if (!e.message.includes("duplicate column name")) throw e
+    }
+    bunDb.close()
+  },
+}
 
 const OPTIMIZATIONS: DbOptimizationSpec[] = [
+  addKicadAndJlcPartNumberColumns,
   componentSearchFTS,
   componentPackageIndex,
   removeStaleComponents,

@@ -26,6 +26,8 @@ export interface WifiModule extends BaseComponent {
 export const wifiModuleTableSpec: DerivedTableSpec<WifiModule> = {
   tableName: "wifi_module",
   extraColumns: [
+    { name: "kicad_footprint", type: "text" },
+    { name: "jlc_part_number", type: "text" },
     { name: "package", type: "text" },
     { name: "core_processor", type: "text" },
     { name: "antenna_type", type: "text" },
@@ -137,6 +139,8 @@ export const wifiModuleTableSpec: DerivedTableSpec<WifiModule> = {
         price1: extractMinQPrice(c.price),
         in_stock: c.stock > 0,
         package: c.package || "",
+        kicad_footprint: c.kicad_footprint,
+        jlc_part_number: c.jlc_part_number,
         core_processor: attrs["Core Processor"] || null,
         antenna_type: attrs["Antenna Type"] || null,
         operating_voltage: voltage,

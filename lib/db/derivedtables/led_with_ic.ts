@@ -19,6 +19,8 @@ export interface LEDWithIC extends BaseComponent {
 export const ledWithICTableSpec: DerivedTableSpec<LEDWithIC> = {
   tableName: "led_with_ic",
   extraColumns: [
+    { name: "kicad_footprint", type: "text" },
+    { name: "jlc_part_number", type: "text" },
     { name: "package", type: "text" },
     { name: "forward_voltage", type: "real" },
     { name: "forward_current", type: "real" },
@@ -96,6 +98,8 @@ export const ledWithICTableSpec: DerivedTableSpec<LEDWithIC> = {
           price1: extractMinQPrice(c.price),
           in_stock: Boolean((c.stock || 0) > 0),
           package: String(c.package || ""),
+          kicad_footprint: c.kicad_footprint,
+          jlc_part_number: c.jlc_part_number,
           forward_voltage: forwardVoltage,
           forward_current: forwardCurrent,
           color: color || undefined,
