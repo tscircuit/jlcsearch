@@ -27,6 +27,7 @@ export const relayTableSpec: DerivedTableSpec<Relay> = {
     { name: "max_switching_current", type: "real" },
     { name: "max_switching_voltage", type: "real" },
     { name: "pin_number", type: "integer" },
+    { name: "is_basic", type: "boolean" },
   ],
   listCandidateComponents(db: KyselyDatabaseInstance) {
     return db
@@ -58,6 +59,7 @@ export const relayTableSpec: DerivedTableSpec<Relay> = {
           stock: Number(c.stock || 0),
           price1: extractMinQPrice(c.price),
           in_stock: Boolean((c.stock || 0) > 0),
+          is_basic: Boolean(c.basic),
           package: String(c.package || ""),
           relay_type: (c as any).subcategory || "",
           contact_form: attrs["Contact Form"] || null,

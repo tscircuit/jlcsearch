@@ -38,6 +38,7 @@ export const adcTableSpec: DerivedTableSpec<Adc> = {
     { name: "is_differential", type: "boolean" },
     { name: "operating_temp_min", type: "real" },
     { name: "operating_temp_max", type: "real" },
+    { name: "is_basic", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db
@@ -111,6 +112,7 @@ export const adcTableSpec: DerivedTableSpec<Adc> = {
         stock: c.stock,
         price1: extractMinQPrice(c.price),
         in_stock: c.stock > 0,
+        is_basic: Boolean(c.basic),
         package: c.package || "",
         resolution_bits: resolution,
         sampling_rate_hz: samplingRate,

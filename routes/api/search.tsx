@@ -20,6 +20,7 @@ export default withWinterSpec({
     full: z.boolean().optional(),
     q: z.string().optional(),
     limit: z.string().optional(),
+    is_basic: z.boolean().optional(),
   }),
   jsonResponse: z.any(),
 } as const)(async (req, ctx) => {
@@ -34,6 +35,10 @@ export default withWinterSpec({
 
   if (req.query.package) {
     query = query.where("package", "=", req.query.package)
+  }
+
+  if (req.query.is_basic) {
+    query = query.where("basic", "=", 1)
   }
 
   if (req.query.q) {
@@ -62,6 +67,7 @@ export default withWinterSpec({
     lcsc: c.lcsc,
     mfr: c.mfr,
     package: c.package,
+    is_basic: Boolean(c.basic),
     description: c.description,
     stock: c.stock,
     price: extractSmallQuantityPrice(c.price),

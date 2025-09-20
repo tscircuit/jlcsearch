@@ -17,6 +17,7 @@ export const potentiometerTableSpec: DerivedTableSpec<Potentiometer> = {
     { name: "pin_variant", type: "text" },
     { name: "package", type: "text" },
     { name: "is_surface_mount", type: "boolean" },
+    { name: "is_basic", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db
@@ -50,6 +51,7 @@ export const potentiometerTableSpec: DerivedTableSpec<Potentiometer> = {
         stock: c.stock,
         price1: extractMinQPrice(c.price)!,
         in_stock: c.stock > 0,
+        is_basic: Boolean(c.basic),
         max_resistance: maxResistance,
         pin_variant: pinVariant,
         package: c.package || "",

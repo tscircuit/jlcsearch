@@ -12,6 +12,7 @@ export const pcieM2ConnectorTableSpec: DerivedTableSpec<PcieM2Connector> = {
   extraColumns: [
     { name: "key", type: "text" },
     { name: "is_right_angle", type: "boolean" },
+    { name: "is_basic", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db
@@ -45,6 +46,7 @@ export const pcieM2ConnectorTableSpec: DerivedTableSpec<PcieM2Connector> = {
         stock: Number(c.stock || 0),
         price1: extractMinQPrice(c.price),
         in_stock: Boolean((c.stock || 0) > 0),
+        is_basic: Boolean(c.basic),
         key,
         is_right_angle: isRightAngle,
         attributes: attrs,

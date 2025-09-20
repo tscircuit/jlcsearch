@@ -23,6 +23,7 @@ export const fuseTableSpec: DerivedTableSpec<Fuse> = {
     { name: "is_surface_mount", type: "boolean" },
     { name: "is_glass_encased", type: "boolean" },
     { name: "is_resettable", type: "boolean" },
+    { name: "is_basic", type: "boolean" },
   ],
   listCandidateComponents(db: KyselyDatabaseInstance) {
     return db
@@ -86,6 +87,7 @@ export const fuseTableSpec: DerivedTableSpec<Fuse> = {
           stock: Number(c.stock || 0),
           price1: extractMinQPrice(c.price),
           in_stock: Boolean((c.stock || 0) > 0),
+          is_basic: Boolean(c.basic),
           current_rating: current_rating as number,
           voltage_rating: voltage_rating as number,
           response_time,

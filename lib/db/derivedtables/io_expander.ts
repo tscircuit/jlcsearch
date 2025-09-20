@@ -38,6 +38,7 @@ export const ioExpanderTableSpec: DerivedTableSpec<IoExpander> = {
     { name: "output_type", type: "text" },
     { name: "sink_current_ma", type: "real" },
     { name: "source_current_ma", type: "real" },
+    { name: "is_basic", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db
@@ -135,6 +136,7 @@ export const ioExpanderTableSpec: DerivedTableSpec<IoExpander> = {
         stock: c.stock,
         price1: extractMinQPrice(c.price),
         in_stock: c.stock > 0,
+        is_basic: Boolean(c.basic),
         package: c.package || "",
         num_gpios: numGpios,
         supply_voltage_min: voltageMin,

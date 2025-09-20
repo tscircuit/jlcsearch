@@ -35,6 +35,7 @@ export const ledTableSpec: DerivedTableSpec<Led> = {
     { name: "lens_color", type: "text" },
     { name: "mounting_style", type: "text" },
     { name: "is_rgb", type: "boolean" },
+    { name: "is_basic", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db
@@ -161,6 +162,7 @@ export const ledTableSpec: DerivedTableSpec<Led> = {
         price1: extractMinQPrice(c.price)!,
         stock: c.stock,
         in_stock: c.stock > 0,
+        is_basic: Boolean(c.basic),
         package: c.package || "",
         forward_voltage: forwardVoltage,
         forward_current: forwardCurrent,

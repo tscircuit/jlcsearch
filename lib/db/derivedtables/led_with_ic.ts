@@ -25,6 +25,7 @@ export const ledWithICTableSpec: DerivedTableSpec<LEDWithIC> = {
     { name: "color", type: "text" },
     { name: "mounting_style", type: "text" },
     { name: "protocol", type: "text" },
+    { name: "is_basic", type: "boolean" },
   ],
   listCandidateComponents(db: KyselyDatabaseInstance) {
     return db
@@ -95,6 +96,7 @@ export const ledWithICTableSpec: DerivedTableSpec<LEDWithIC> = {
           stock: Number(c.stock || 0),
           price1: extractMinQPrice(c.price),
           in_stock: Boolean((c.stock || 0) > 0),
+          is_basic: Boolean(c.basic),
           package: String(c.package || ""),
           forward_voltage: forwardVoltage,
           forward_current: forwardCurrent,

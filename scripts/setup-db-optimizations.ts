@@ -7,10 +7,12 @@ import { componentInStockCategoryIndex } from "lib/db/optimizations/component-in
 import type { DbOptimizationSpec } from "lib/db/optimizations/types"
 import { componentSearchFTS } from "lib/db/optimizations/component-search-fts"
 import { componentPackageIndex } from "lib/db/optimizations/component-indexes"
+import { componentBasicIndex } from "lib/db/optimizations/component-basic-index"
 
 const OPTIMIZATIONS: DbOptimizationSpec[] = [
   componentSearchFTS,
   componentPackageIndex,
+  componentBasicIndex,
   removeStaleComponents,
   componentStockIndex,
   componentInStockColumn,

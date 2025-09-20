@@ -11,6 +11,7 @@ export default withWinterSpec({
   commonParams: z.object({
     json: z.boolean().optional(),
     package: z.string().optional(),
+    is_basic: z.boolean().optional(),
     capacitance: z
       .string()
       .optional()
@@ -28,6 +29,7 @@ export default withWinterSpec({
           lcsc: z.number().int(),
           mfr: z.string(),
           package: z.string(),
+          is_basic: z.boolean(),
           capacitance: z.number(),
           voltage: z.number().optional(),
           type: z.string().optional(),
@@ -50,6 +52,10 @@ export default withWinterSpec({
 
   if (params.package) {
     query = query.where("package", "=", params.package)
+  }
+
+  if (params.is_basic) {
+    query = query.where("is_basic", "=", 1)
   }
 
   // Apply capacitance filter with a small tolerance for rounding errors
@@ -76,6 +82,7 @@ export default withWinterSpec({
           lcsc: c.lcsc ?? 0,
           mfr: c.mfr ?? "",
           package: c.package ?? "",
+          is_basic: Boolean(c.is_basic),
           capacitance: c.capacitance_farads ?? 0,
           voltage: c.voltage_rating ?? undefined,
           type: c.capacitor_type ?? undefined,
@@ -108,6 +115,18 @@ export default withWinterSpec({
         </div>
 
         <div>
+          <label>
+            Basic Part:
+            <input
+              type="checkbox"
+              name="is_basic"
+              value="true"
+              checked={params.is_basic}
+            />
+          </label>
+        </div>
+
+        <div>
           <label>Capacitance:</label>
           <input
             type="text"
@@ -125,6 +144,7 @@ export default withWinterSpec({
           lcsc: c.lcsc,
           mfr: c.mfr,
           package: c.package,
+          is_basic: c.is_basic ? "✓" : "",
           capacitance: (
             <span className="tabular-nums">
               {formatSiUnit(c.capacitance_farads)}F
