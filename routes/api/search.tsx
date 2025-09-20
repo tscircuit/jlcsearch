@@ -49,15 +49,10 @@ export default withWinterSpec({
     const mfrFtsQuery = `mfr:${searchTerm}*`
     const generalFtsQuery = `${searchTerm}*`
     const combinedFtsQuery = `${mfrFtsQuery} OR ${generalFtsQuery}`
-    query = query.where((eb) =>
-      eb("mfr", "like", searchPattern)
-        .or("description", "like", searchPattern)
-        .or(sql<boolean>`lcsc IN (
-          SELECT CAST(lcsc AS INTEGER)
-          FROM components_fts
-          WHERE components_fts MATCH ${combinedFtsQuery}
-          ORDER BY rank
-        )`),
+    query = query.where(
+      sql`lcsc`,
+      "in",
+      sql`(SELECT CAST(lcsc AS INTEGER) FROM components_fts WHERE components_fts MATCH ${combinedFtsQuery})`,
     )
   }
 
