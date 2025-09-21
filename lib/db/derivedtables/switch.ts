@@ -35,6 +35,7 @@ export const switchTableSpec: DerivedTableSpec<Switch> = {
     { name: "width_mm", type: "real" },
     { name: "length_mm", type: "real" },
     { name: "switch_height_mm", type: "real" },
+    { name: "is_basic", type: "boolean" },
   ],
   listCandidateComponents(db) {
     return db
@@ -87,6 +88,7 @@ export const switchTableSpec: DerivedTableSpec<Switch> = {
         stock: c.stock,
         price1: extractMinQPrice(c.price)!,
         in_stock: c.stock > 0,
+        is_basic: Boolean(c.basic),
         package: c.package || "",
         switch_type: (c as any).subcategory || "",
         circuit: attrs["Circuit"] || null,

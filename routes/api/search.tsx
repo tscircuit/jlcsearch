@@ -20,6 +20,7 @@ export default withWinterSpec({
     full: z.boolean().optional(),
     q: z.string().optional(),
     limit: z.string().optional(),
+    is_basic: z.boolean().optional(),
   }),
   jsonResponse: z.any(),
 } as const)(async (req, ctx) => {
@@ -36,6 +37,10 @@ export default withWinterSpec({
     query = query.where("package", "=", req.query.package)
   }
 
+  if (req.query.is_basic) {
+    query = query.where("basic", "=", 1)
+  }
+
   if (req.query.q) {
     const searchTerm = req.query.q.trim().toLowerCase()
     const searchPattern = `%${searchTerm}%`
@@ -44,15 +49,10 @@ export default withWinterSpec({
     const mfrFtsQuery = `mfr:${searchTerm}*`
     const generalFtsQuery = `${searchTerm}*`
     const combinedFtsQuery = `${mfrFtsQuery} OR ${generalFtsQuery}`
-    query = query.where((eb) =>
-      eb("mfr", "like", searchPattern)
-        .or("description", "like", searchPattern)
-        .or(sql<boolean>`lcsc IN (
-          SELECT CAST(lcsc AS INTEGER)
-          FROM components_fts
-          WHERE components_fts MATCH ${combinedFtsQuery}
-          ORDER BY rank
-        )`),
+    query = query.where(
+      sql`lcsc`,
+      "in",
+      sql`(SELECT CAST(lcsc AS INTEGER) FROM components_fts WHERE components_fts MATCH ${combinedFtsQuery})`,
     )
   }
 
@@ -62,6 +62,7 @@ export default withWinterSpec({
     lcsc: c.lcsc,
     mfr: c.mfr,
     package: c.package,
+    is_basic: Boolean(c.basic),
     description: c.description,
     stock: c.stock,
     price: extractSmallQuantityPrice(c.price),

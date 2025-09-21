@@ -36,6 +36,7 @@ export const dacTableSpec: DerivedTableSpec<Dac> = {
     { name: "operating_temp_min", type: "real" },
     { name: "operating_temp_max", type: "real" },
     { name: "nonlinearity_lsb", type: "real" },
+    { name: "is_basic", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db
@@ -125,6 +126,7 @@ export const dacTableSpec: DerivedTableSpec<Dac> = {
         stock: c.stock,
         price1: extractMinQPrice(c.price),
         in_stock: c.stock > 0,
+        is_basic: Boolean(c.basic),
         package: c.package || "",
         resolution_bits: resolution,
         num_channels: numChannels,

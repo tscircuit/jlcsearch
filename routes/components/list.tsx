@@ -21,6 +21,7 @@ export default withWinterSpec({
     package: z.string().optional(),
     full: z.boolean().optional(),
     search: z.string().optional(),
+    is_basic: z.boolean().optional(),
   }),
   jsonResponse: z.any(),
 } as const)(async (req, ctx) => {
@@ -36,6 +37,7 @@ export default withWinterSpec({
       "stock",
       "price",
       "extra",
+      "basic",
     ])
     .limit(limit)
     .orderBy("stock", "desc")
@@ -47,6 +49,10 @@ export default withWinterSpec({
 
   if (req.query.package) {
     query = query.where("package", "=", req.query.package)
+  }
+
+  if (req.query.is_basic) {
+    query = query.where("basic", "=", 1)
   }
 
   if (req.query.search) {
@@ -66,10 +72,11 @@ export default withWinterSpec({
 
   const fullComponents = await query.execute()
 
-  const components = fullComponents.map((c) => ({
+  const components = fullComponents.map((c: any) => ({
     lcsc: c.lcsc,
     mfr: c.mfr,
     package: c.package,
+    is_basic: Boolean(c.basic),
     description: c.description,
     stock: c.stock,
     price: extractSmallQuantityPrice(c.price),
@@ -84,6 +91,28 @@ export default withWinterSpec({
   return ctx.react(
     <div>
       <h2>Components</h2>
+      <form method="GET" className="flex flex-row gap-4">
+        <input
+          type="hidden"
+          name="subcategory_name"
+          value={req.query.subcategory_name ?? ""}
+        />
+        <input type="hidden" name="package" value={req.query.package ?? ""} />
+        <input type="hidden" name="search" value={req.query.search ?? ""} />
+        <div>
+          <label>
+            Basic Part:
+            <input
+              type="checkbox"
+              name="is_basic"
+              value="true"
+              checked={req.query.is_basic}
+            />
+          </label>
+        </div>
+        <button type="submit">Filter</button>
+      </form>
+
       {req.query.subcategory_name && (
         <div>Filtering by subcategory: {req.query.subcategory_name}</div>
       )}

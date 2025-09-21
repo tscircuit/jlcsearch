@@ -43,6 +43,7 @@ export const wifiModuleTableSpec: DerivedTableSpec<WifiModule> = {
     { name: "has_gpio", type: "boolean" },
     { name: "has_adc", type: "boolean" },
     { name: "has_pwm", type: "boolean" },
+    { name: "is_basic", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db
@@ -136,6 +137,7 @@ export const wifiModuleTableSpec: DerivedTableSpec<WifiModule> = {
         stock: c.stock,
         price1: extractMinQPrice(c.price),
         in_stock: c.stock > 0,
+        is_basic: Boolean(c.basic),
         package: c.package || "",
         core_processor: attrs["Core Processor"] || null,
         antenna_type: attrs["Antenna Type"] || null,

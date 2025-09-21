@@ -17,7 +17,7 @@ export default withWinterSpec({
         z.object({
           lcsc: z.number().int(),
           mfr: z.string(),
-          key: z.string().optional(),
+          key: z.string().nullable(),
           is_right_angle: z.boolean().optional(),
           stock: z.number().optional(),
           price1: z.number().optional(),
@@ -57,7 +57,7 @@ export default withWinterSpec({
         .map((c) => ({
           lcsc: c.lcsc ?? 0,
           mfr: c.mfr ?? "",
-          key: c.key ?? undefined,
+          key: c.key ?? null,
           is_right_angle: Boolean(c.is_right_angle),
           stock: c.stock ?? undefined,
           price1: c.price1 ?? undefined,

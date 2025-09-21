@@ -24,6 +24,7 @@ export const bjtTransistorTableSpec: DerivedTableSpec<BJTTransistor> = {
     { name: "transition_frequency", type: "integer" },
     { name: "power_dissipation", type: "integer" },
     { name: "temperature_range", type: "text" },
+    { name: "is_basic", type: "boolean" },
   ],
   listCandidateComponents(db: KyselyDatabaseInstance) {
     return db
@@ -70,6 +71,7 @@ export const bjtTransistorTableSpec: DerivedTableSpec<BJTTransistor> = {
           stock: Number(c.stock || 0),
           price1: extractMinQPrice(c.price),
           in_stock: Boolean((c.stock || 0) > 0),
+          is_basic: Boolean(c.basic),
           package: c.package || "",
           current_gain: current_gain,
           collector_current: collector_current,

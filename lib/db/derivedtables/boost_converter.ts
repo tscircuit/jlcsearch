@@ -29,6 +29,7 @@ export const boostConverterTableSpec: DerivedTableSpec<BoostConverter> = {
     { name: "is_synchronous", type: "boolean" },
     { name: "topology", type: "text" },
     { name: "number_of_outputs", type: "integer" },
+    { name: "is_basic", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db
@@ -113,6 +114,7 @@ export const boostConverterTableSpec: DerivedTableSpec<BoostConverter> = {
           stock: c.stock,
           price1: extractMinQPrice(c.price),
           in_stock: c.stock > 0,
+          is_basic: Boolean(c.basic),
           package: c.package || "",
           input_voltage_min: inputMin,
           input_voltage_max: inputMax,

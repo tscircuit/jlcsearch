@@ -33,6 +33,7 @@ export const mosfetTableSpec: DerivedTableSpec<Mosfet> = {
     { name: "operating_temp_min", type: "real" },
     { name: "operating_temp_max", type: "real" },
     { name: "mounting_style", type: "text" },
+    { name: "is_basic", type: "boolean" },
   ],
   listCandidateComponents(db: KyselyDatabaseInstance) {
     return db
@@ -64,6 +65,7 @@ export const mosfetTableSpec: DerivedTableSpec<Mosfet> = {
           stock: Number(c.stock || 0),
           price1: extractMinQPrice(c.price),
           in_stock: Boolean((c.stock || 0) > 0),
+          is_basic: Boolean(c.basic),
           package: String(c.package || ""),
           drain_source_voltage: parseValue(
             attrs["Drain Source Voltage (Vdss)"],

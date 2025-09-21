@@ -38,6 +38,7 @@ export const diodeTableSpec: DerivedTableSpec<Diode> = {
     { name: "operating_temp_max", type: "real" },
     { name: "power_dissipation_watts", type: "real" },
     { name: "configuration", type: "text" },
+    { name: "is_basic", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db
@@ -155,6 +156,7 @@ export const diodeTableSpec: DerivedTableSpec<Diode> = {
         stock: c.stock,
         price1: extractMinQPrice(c.price),
         in_stock: c.stock > 0,
+        is_basic: Boolean(c.basic),
         package: c.package || "",
         forward_voltage: forwardVoltage,
         reverse_voltage: reverseVoltage,

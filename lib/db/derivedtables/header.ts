@@ -46,6 +46,7 @@ export const headerTableSpec: DerivedTableSpec<Header> = {
     { name: "operating_temperature_max", type: "real" },
     { name: "is_shrouded", type: "boolean" },
     { name: "is_right_angle", type: "boolean" },
+    { name: "is_basic", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db
@@ -193,6 +194,7 @@ export const headerTableSpec: DerivedTableSpec<Header> = {
         description: c.description,
         stock: c.stock,
         in_stock: c.stock > 0,
+        is_basic: Boolean(c.basic),
         price1: extractMinQPrice(c.price)!,
         package: c.package || "",
         pitch_mm: pitch,

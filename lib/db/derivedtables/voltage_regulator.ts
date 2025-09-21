@@ -41,6 +41,7 @@ export const voltageRegulatorTableSpec: DerivedTableSpec<VoltageRegulator> = {
     { name: "is_low_dropout", type: "boolean" },
     { name: "is_positive", type: "boolean" },
     { name: "topology", type: "text" },
+    { name: "is_basic", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db
@@ -180,6 +181,7 @@ export const voltageRegulatorTableSpec: DerivedTableSpec<VoltageRegulator> = {
         stock: c.stock,
         price1: extractMinQPrice(c.price),
         in_stock: c.stock > 0,
+        is_basic: Boolean(c.basic),
         package: c.package || "",
         output_type: outputType,
         output_voltage_min: voltageMin,

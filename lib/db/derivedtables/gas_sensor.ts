@@ -34,6 +34,7 @@ export const gasSensorTableSpec: DerivedTableSpec<GasSensor> = {
     { name: "measures_formaldehyde", type: "boolean" },
     { name: "measures_hydrogen", type: "boolean" },
     { name: "measures_explosive_gases", type: "boolean" },
+    { name: "is_basic", type: "boolean" },
   ],
   listCandidateComponents(db) {
     return db
@@ -78,6 +79,7 @@ export const gasSensorTableSpec: DerivedTableSpec<GasSensor> = {
         stock: c.stock,
         price1: extractMinQPrice(c.price),
         in_stock: c.stock > 0,
+        is_basic: Boolean(c.basic),
         package: c.package || "",
         sensor_type: sensorType,
         measures_air_quality: measuresAirQuality,

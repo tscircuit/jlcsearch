@@ -1,9 +1,9 @@
 import { test, expect } from "bun:test"
 import { getTestServer } from "tests/fixtures/get-test-server"
 
-test("GET /api/search with search query 'ARG05FTC1234N' returns expected components", async () => {
+test("GET /api/search with search query 'STM32F401RCT6' returns expected components", async () => {
   const { axios } = await getTestServer()
-  const res = await axios.get("/api/search?q=ARG05FTC1234N")
+  const res = await axios.get("/api/search?q=STM32F401RCT6")
 
   expect(res.data).toHaveProperty("components")
   expect(Array.isArray(res.data.components)).toBe(true)
@@ -14,7 +14,7 @@ test("GET /api/search with search query 'ARG05FTC1234N' returns expected compone
   expect(component).toHaveProperty("description")
   expect(component).toHaveProperty("lcsc")
   expect(component).toHaveProperty("mfr")
-  expect(component.mfr).toContain("ARG05FTC1234N") // More specific check
+  expect(component.mfr).toContain("STM32F401RCT6") // More specific check
   expect(component).toHaveProperty("package")
   expect(component).toHaveProperty("price")
   expect(component).toHaveProperty("stock")

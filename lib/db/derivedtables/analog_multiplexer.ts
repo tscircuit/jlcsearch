@@ -38,6 +38,7 @@ export const analogMultiplexerTableSpec: DerivedTableSpec<AnalogMultiplexer> = {
     { name: "operating_temp_min", type: "real" },
     { name: "operating_temp_max", type: "real" },
     { name: "channel_type", type: "text" },
+    { name: "is_basic", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db
@@ -140,6 +141,7 @@ export const analogMultiplexerTableSpec: DerivedTableSpec<AnalogMultiplexer> = {
         stock: c.stock,
         price1: extractMinQPrice(c.price),
         in_stock: c.stock > 0,
+        is_basic: Boolean(c.basic),
         package: c.package || "",
         num_channels: numChannels,
         num_bits: numBits,

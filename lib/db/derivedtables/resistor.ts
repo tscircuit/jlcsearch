@@ -29,6 +29,7 @@ export const resistorTableSpec: DerivedTableSpec<Resistor> = {
     { name: "is_potentiometer", type: "boolean" },
     { name: "is_surface_mount", type: "boolean" },
     { name: "is_multi_resistor_chip", type: "boolean" },
+    { name: "is_basic", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db
@@ -78,6 +79,7 @@ export const resistorTableSpec: DerivedTableSpec<Resistor> = {
         stock: c.stock,
         price1: extractMinQPrice(c.price)!,
         in_stock: c.stock > 0,
+        is_basic: Boolean(c.basic),
         resistance: resistance,
         tolerance_fraction: tolerance,
         power_watts,

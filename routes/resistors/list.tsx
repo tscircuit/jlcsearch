@@ -11,6 +11,7 @@ export default withWinterSpec({
   commonParams: z.object({
     json: z.boolean().optional(),
     package: z.string().optional(),
+    is_basic: z.boolean().optional(),
     resistance: z
       .string()
       .optional()
@@ -28,6 +29,7 @@ export default withWinterSpec({
           lcsc: z.number().int(),
           mfr: z.string(),
           package: z.string(),
+          is_basic: z.boolean(),
           resistance: z.number(),
           tolerance_fraction: z.number().optional(),
           power_watts: z.number().optional(),
@@ -50,6 +52,10 @@ export default withWinterSpec({
   // Apply package filter
   if (params.package) {
     query = query.where("package", "=", params.package)
+  }
+
+  if (params.is_basic) {
+    query = query.where("is_basic", "=", 1)
   }
 
   // Apply resistance filter with a small tolerance for rounding errors
@@ -75,6 +81,7 @@ export default withWinterSpec({
           lcsc: r.lcsc ?? 0,
           mfr: r.mfr ?? "",
           package: r.package ?? "",
+          is_basic: Boolean(r.is_basic),
           resistance: r.resistance ?? 0,
           tolerance_fraction: r.tolerance_fraction ?? undefined,
           power_watts: r.power_watts ?? undefined,
@@ -107,6 +114,18 @@ export default withWinterSpec({
         </div>
 
         <div>
+          <label>
+            Basic Part:
+            <input
+              type="checkbox"
+              name="is_basic"
+              value="true"
+              checked={params.is_basic}
+            />
+          </label>
+        </div>
+
+        <div>
           <label>Resistance:</label>
           <input
             type="text"
@@ -124,6 +143,7 @@ export default withWinterSpec({
           lcsc: r.lcsc,
           mfr: r.mfr,
           package: r.package,
+          is_basic: r.is_basic ? "✓" : "",
           resistance: (
             <span className="tabular-nums">{formatSiUnit(r.resistance)}Ω</span>
           ),
