@@ -1,6 +1,4 @@
-import { defineConfig } from "winterspec"
-
-export default defineConfig({
+export default {
   routesDirectory: "./routes",
   platform: "node",
-})
+}

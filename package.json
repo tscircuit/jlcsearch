@@ -26,6 +26,7 @@
     "setup:optimize-db": "bun run scripts/setup-db-optimizations.ts",
     "setup:derived-tables": "bun run scripts/setup-derived-tables.ts",
     "setup:download": "curl -o db.sqlite \"https://jlcsearch.fly.dev/database/$DATABASE_DOWNLOAD_TOKEN\"",
+    "generate:openapi": "mkdir -p .tmp && TMPDIR=$(pwd)/.tmp WINTERSPEC_CODEGEN=true bunx winterspec codegen openapi --root . --routes-directory ./routes --platform node --tsconfig tsconfig.json --output docs/openapi.json",
     "format": "biome format --write .",
     "format:check": "biome format ."
   },
