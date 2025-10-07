@@ -60,6 +60,7 @@ export const relayTableSpec: DerivedTableSpec<Relay> = {
           price1: extractMinQPrice(c.price),
           in_stock: Boolean((c.stock || 0) > 0),
           is_basic: Boolean(c.basic),
+          is_extended_promotional: Boolean(c.is_extended_promotional),
           package: String(c.package || ""),
           relay_type: (c as any).subcategory || "",
           contact_form: attrs["Contact Form"] || null,

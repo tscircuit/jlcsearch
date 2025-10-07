@@ -157,6 +157,7 @@ export const diodeTableSpec: DerivedTableSpec<Diode> = {
         price1: extractMinQPrice(c.price),
         in_stock: c.stock > 0,
         is_basic: Boolean(c.basic),
+        is_extended_promotional: Boolean(c.is_extended_promotional),
         package: c.package || "",
         forward_voltage: forwardVoltage,
         reverse_voltage: reverseVoltage,

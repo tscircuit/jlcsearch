@@ -53,6 +53,7 @@ export const fpcConnectorTableSpec: DerivedTableSpec<FpcConnector> = {
           price1: extractMinQPrice(c.price),
           in_stock: Boolean((c.stock || 0) > 0),
           is_basic: Boolean(c.basic),
+          is_extended_promotional: Boolean(c.is_extended_promotional),
           pitch_mm: parseNum(attrs["Pitch"]),
           number_of_contacts: isNaN(contacts) ? null : contacts,
           contact_type: attrs["Contact Type"] || null,

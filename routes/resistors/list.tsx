@@ -30,6 +30,7 @@ export default withWinterSpec({
           mfr: z.string(),
           package: z.string(),
           is_basic: z.boolean(),
+          is_extended_promotional: z.boolean(),
           resistance: z.number(),
           tolerance_fraction: z.number().optional(),
           power_watts: z.number().optional(),
@@ -82,6 +83,7 @@ export default withWinterSpec({
           mfr: r.mfr ?? "",
           package: r.package ?? "",
           is_basic: Boolean(r.is_basic),
+          is_extended_promotional: Boolean(r.is_extended_promotional),
           resistance: r.resistance ?? 0,
           tolerance_fraction: r.tolerance_fraction ?? undefined,
           power_watts: r.power_watts ?? undefined,
@@ -144,6 +146,7 @@ export default withWinterSpec({
           mfr: r.mfr,
           package: r.package,
           is_basic: r.is_basic ? "✓" : "",
+          is_extended_promotional: r.is_extended_promotional ? "✓" : "",
           resistance: (
             <span className="tabular-nums">{formatSiUnit(r.resistance)}Ω</span>
           ),

@@ -75,6 +75,7 @@ export const ledDriverTableSpec: DerivedTableSpec<LedDriver> = {
           price1: extractMinQPrice(c.price),
           in_stock: Boolean((c.stock || 0) > 0),
           is_basic: Boolean(c.basic),
+          is_extended_promotional: Boolean(c.is_extended_promotional),
           package: String(c.package || ""),
           supply_voltage_min: parseValue(attrs["Input Voltage"]?.split("~")[0]),
           supply_voltage_max: parseValue(attrs["Input Voltage"]?.split("~")[1]),

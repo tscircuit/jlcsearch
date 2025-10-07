@@ -30,6 +30,7 @@ export default withWinterSpec({
           mfr: z.string(),
           package: z.string(),
           is_basic: z.boolean(),
+          is_extended_promotional: z.boolean(),
           capacitance: z.number(),
           voltage: z.number().optional(),
           type: z.string().optional(),
@@ -83,6 +84,7 @@ export default withWinterSpec({
           mfr: c.mfr ?? "",
           package: c.package ?? "",
           is_basic: Boolean(c.is_basic),
+          is_extended_promotional: Boolean(c.is_extended_promotional),
           capacitance: c.capacitance_farads ?? 0,
           voltage: c.voltage_rating ?? undefined,
           type: c.capacitor_type ?? undefined,
@@ -145,6 +147,7 @@ export default withWinterSpec({
           mfr: c.mfr,
           package: c.package,
           is_basic: c.is_basic ? "✓" : "",
+          is_extended_promotional: c.is_extended_promotional ? "✓" : "",
           capacitance: (
             <span className="tabular-nums">
               {formatSiUnit(c.capacitance_farads)}F
