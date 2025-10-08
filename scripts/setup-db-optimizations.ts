@@ -1,6 +1,5 @@
 import { getBunDatabaseClient, getDbClient } from "lib/db/get-db-client"
 import { componentStockIndex } from "lib/db/optimizations/component-stock-index"
-import { componentInStockColumn } from "lib/db/optimizations/component-in-stock-column"
 import { removeStaleComponents } from "lib/db/optimizations/remove-stale-components"
 import { componentCategoryIndex } from "lib/db/optimizations/component-category-index"
 import { componentInStockCategoryIndex } from "lib/db/optimizations/component-in-stock-category-index"
@@ -8,16 +7,17 @@ import type { DbOptimizationSpec } from "lib/db/optimizations/types"
 import { componentSearchFTS } from "lib/db/optimizations/component-search-fts"
 import { componentPackageIndex } from "lib/db/optimizations/component-indexes"
 import { componentBasicIndex } from "lib/db/optimizations/component-basic-index"
-import { componentExtendedPromotionalColumn } from "lib/db/optimizations/component-extended-promotional-column"
+import { componentInStockIndex } from "lib/db/optimizations/component-in-stock-index"
+import { componentExtendedPromotionalIndex } from "lib/db/optimizations/component-extended-promotional-index"
 
 const OPTIMIZATIONS: DbOptimizationSpec[] = [
   componentSearchFTS,
   componentPackageIndex,
   componentBasicIndex,
+  componentInStockIndex,
+  componentExtendedPromotionalIndex,
   removeStaleComponents,
   componentStockIndex,
-  componentInStockColumn,
-  componentExtendedPromotionalColumn,
   componentCategoryIndex,
   componentInStockCategoryIndex,
 ]
