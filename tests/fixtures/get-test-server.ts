@@ -1,4 +1,3 @@
-import { afterEach } from "bun:test"
 import defaultAxios from "redaxios"
 import type { KyselyDatabaseInstance } from "lib/db/kysely-types"
 import * as Path from "node:path"
@@ -47,7 +46,8 @@ export const getTestServer = async (
     headers: {},
   })
 
-  afterEach(async () => {
+  globalThis.deferredCleanupFns ??= []
+  globalThis.deferredCleanupFns.push(async () => {
     await server.stop()
   })
 
