@@ -121,6 +121,7 @@ button {
                       json
                     </a>
                   )}
+                  <a href="/docs/openapi.json">OpenAPI</a>
                   <a href="https://tscircuit.com">tscircuit</a>
                 </div>
               </div>
