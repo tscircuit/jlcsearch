@@ -20,6 +20,7 @@ export const ledSegmentDisplayTableSpec: DerivedTableSpec<LEDSegmentDisplay> = {
     { name: "size", type: "text" },
     { name: "color", type: "text" },
     { name: "is_basic", type: "boolean" },
+{ name: "is_preferred", type: "boolean" },
   ],
 
   listCandidateComponents(db: KyselyDatabaseInstance) {
@@ -68,6 +69,7 @@ export const ledSegmentDisplayTableSpec: DerivedTableSpec<LEDSegmentDisplay> = {
           price1: extractMinQPrice(c.price),
           in_stock: Boolean((c.stock || 0) > 0),
           is_basic: Boolean(c.basic),
+        is_preferred: Boolean(c.basic),
           package: String(c.package || ""),
           positions,
           type,

@@ -25,6 +25,7 @@ export const bjtTransistorTableSpec: DerivedTableSpec<BJTTransistor> = {
     { name: "power_dissipation", type: "integer" },
     { name: "temperature_range", type: "text" },
     { name: "is_basic", type: "boolean" },
+{ name: "is_preferred", type: "boolean" },
   ],
   listCandidateComponents(db: KyselyDatabaseInstance) {
     return db
@@ -72,6 +73,7 @@ export const bjtTransistorTableSpec: DerivedTableSpec<BJTTransistor> = {
           price1: extractMinQPrice(c.price),
           in_stock: Boolean((c.stock || 0) > 0),
           is_basic: Boolean(c.basic),
+        is_preferred: Boolean(c.basic),
           package: c.package || "",
           current_gain: current_gain,
           collector_current: collector_current,

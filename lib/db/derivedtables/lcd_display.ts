@@ -18,6 +18,7 @@ export const lcdDisplayTableSpec: DerivedTableSpec<LCDDisplay> = {
     { name: "resolution", type: "text" },
     { name: "display_type", type: "text" },
     { name: "is_basic", type: "boolean" },
+{ name: "is_preferred", type: "boolean" },
   ],
   listCandidateComponents(db: KyselyDatabaseInstance) {
     return db
@@ -62,6 +63,7 @@ export const lcdDisplayTableSpec: DerivedTableSpec<LCDDisplay> = {
           price1: extractMinQPrice(c.price),
           in_stock: Boolean((c.stock || 0) > 0),
           is_basic: Boolean(c.basic),
+        is_preferred: Boolean(c.basic),
           package: String(c.package || ""),
           display_size,
           resolution,

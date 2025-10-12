@@ -27,6 +27,7 @@ export const usbCConnectorTableSpec: DerivedTableSpec<UsbCConnector> = {
     { name: "operating_temp_min", type: "real" },
     { name: "operating_temp_max", type: "real" },
     { name: "is_basic", type: "boolean" },
+{ name: "is_preferred", type: "boolean" },
   ],
   listCandidateComponents(db: KyselyDatabaseInstance) {
     return db
@@ -67,6 +68,7 @@ export const usbCConnectorTableSpec: DerivedTableSpec<UsbCConnector> = {
           price1: extractMinQPrice(c.price),
           in_stock: Boolean((c.stock || 0) > 0),
           is_basic: Boolean(c.basic),
+        is_preferred: Boolean(c.basic),
           package: String(c.package || ""),
           mounting_style: attrs["Mounting Style"] || null,
           current_rating_a: parseNum(attrs["Current Rating - Power (Max)"]),

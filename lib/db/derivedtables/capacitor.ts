@@ -33,6 +33,7 @@ export const capacitorTableSpec: DerivedTableSpec<Capacitor> = {
     { name: "is_surface_mount", type: "boolean" },
     { name: "capacitor_type", type: "text" },
     { name: "is_basic", type: "boolean" },
+{ name: "is_preferred", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db
@@ -113,6 +114,7 @@ export const capacitorTableSpec: DerivedTableSpec<Capacitor> = {
         price1: extractMinQPrice(c.price),
         in_stock: c.stock > 0,
         is_basic: Boolean(c.basic),
+        is_preferred: Boolean(c.basic),
         capacitance_farads: capacitance,
         tolerance_fraction: tolerance,
         voltage_rating: voltage,
