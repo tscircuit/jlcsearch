@@ -12,6 +12,7 @@ export default withWinterSpec({
     json: z.boolean().optional(),
     package: z.string().optional(),
     is_basic: z.boolean().optional(),
+    is_preferred: z.boolean().optional(),
     capacitance: z
       .string()
       .optional()
@@ -30,6 +31,7 @@ export default withWinterSpec({
           mfr: z.string(),
           package: z.string(),
           is_basic: z.boolean(),
+          is_preferred: z.boolean(),
           capacitance: z.number(),
           voltage: z.number().optional(),
           type: z.string().optional(),
@@ -57,6 +59,9 @@ export default withWinterSpec({
   if (params.is_basic) {
     query = query.where("is_basic", "=", 1)
   }
+  if (params.is_preferred) {
+    query = query.where("is_preferred", "=", 1)
+  }
 
   // Apply capacitance filter with a small tolerance for rounding errors
   if (params.capacitance != null) {
@@ -83,6 +88,7 @@ export default withWinterSpec({
           mfr: c.mfr ?? "",
           package: c.package ?? "",
           is_basic: Boolean(c.is_basic),
+          is_preferred: Boolean(c.is_preferred),
           capacitance: c.capacitance_farads ?? 0,
           voltage: c.voltage_rating ?? undefined,
           type: c.capacitor_type ?? undefined,
@@ -127,6 +133,18 @@ export default withWinterSpec({
         </div>
 
         <div>
+          <label>
+            Preferred Part:
+            <input
+              type="checkbox"
+              name="is_preferred"
+              value="true"
+              checked={params.is_preferred}
+            />
+          </label>
+        </div>
+
+        <div>
           <label>Capacitance:</label>
           <input
             type="text"
@@ -145,6 +163,7 @@ export default withWinterSpec({
           mfr: c.mfr,
           package: c.package,
           is_basic: c.is_basic ? "✓" : "",
+          is_preferred: c.is_preferred ? "✓" : "",
           capacitance: (
             <span className="tabular-nums">
               {formatSiUnit(c.capacitance_farads)}F

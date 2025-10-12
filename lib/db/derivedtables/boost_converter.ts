@@ -30,6 +30,7 @@ export const boostConverterTableSpec: DerivedTableSpec<BoostConverter> = {
     { name: "topology", type: "text" },
     { name: "number_of_outputs", type: "integer" },
     { name: "is_basic", type: "boolean" },
+    { name: "is_preferred", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db
@@ -115,6 +116,7 @@ export const boostConverterTableSpec: DerivedTableSpec<BoostConverter> = {
           price1: extractMinQPrice(c.price),
           in_stock: c.stock > 0,
           is_basic: Boolean(c.basic),
+          is_preferred: Boolean(c.preferred),
           package: c.package || "",
           input_voltage_min: inputMin,
           input_voltage_max: inputMax,

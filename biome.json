@@ -13,7 +13,8 @@
       "dist",
       "package.json",
       "*.md",
-      "lib/db/generated/kysely.ts"
+      "lib/db/generated/kysely.ts",
+      "MANUAL"
     ]
   },
   "javascript": {
