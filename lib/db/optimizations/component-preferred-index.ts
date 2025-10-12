@@ -4,7 +4,8 @@ import type { KyselyDatabaseInstance } from "../kysely-types"
 
 export const componentPreferredIndex: DbOptimizationSpec = {
   name: "idx_components_preferred",
-  description: "Index on components.preferred for faster preferred component queries",
+  description:
+    "Index on components.preferred for faster preferred component queries",
 
   async checkIfAdded(db: KyselyDatabaseInstance) {
     const result = await sql`
