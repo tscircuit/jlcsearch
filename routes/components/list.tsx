@@ -22,6 +22,7 @@ export default withWinterSpec({
     full: z.boolean().optional(),
     search: z.string().optional(),
     is_basic: z.boolean().optional(),
+    is_preferred: z.boolean().optional(),
   }),
   jsonResponse: z.any(),
 } as const)(async (req, ctx) => {
@@ -54,6 +55,9 @@ export default withWinterSpec({
   if (req.query.is_basic) {
     query = query.where("basic", "=", 1)
   }
+  if (req.query.is_preferred) {
+    query = query.where("preferred", "=", 1)
+  }
 
   if (req.query.search) {
     const search = req.query.search // TypeScript now knows this is defined within this block
@@ -77,6 +81,7 @@ export default withWinterSpec({
     mfr: c.mfr,
     package: c.package,
     is_basic: Boolean(c.basic),
+    is_preferred: Boolean(c.preferred),
     description: c.description,
     stock: c.stock,
     price: extractSmallQuantityPrice(c.price),
@@ -107,6 +112,17 @@ export default withWinterSpec({
               name="is_basic"
               value="true"
               checked={req.query.is_basic}
+            />
+          </label>
+        </div>
+        <div>
+          <label>
+            Preferred Part:
+            <input
+              type="checkbox"
+              name="is_preferred"
+              value="true"
+              checked={req.query.is_preferred}
             />
           </label>
         </div>
