@@ -182,3 +182,7 @@ db.sqlite3
 db.backup.sqlite3
 .bin
 .fly.toml.swp
+
+
+#MANUAL folder gets created on build, ignore it 
+/MANUAL
