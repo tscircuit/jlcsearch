@@ -53,7 +53,7 @@ export const potentiometerTableSpec: DerivedTableSpec<Potentiometer> = {
         price1: extractMinQPrice(c.price)!,
         in_stock: c.stock > 0,
         is_basic: Boolean(c.basic),
-        is_preferred: Boolean(c.basic),
+        is_preferred: Boolean(c.preferred),
         max_resistance: maxResistance,
         pin_variant: pinVariant,
         package: c.package || "",

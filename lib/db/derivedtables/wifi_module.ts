@@ -139,7 +139,7 @@ export const wifiModuleTableSpec: DerivedTableSpec<WifiModule> = {
         price1: extractMinQPrice(c.price),
         in_stock: c.stock > 0,
         is_basic: Boolean(c.basic),
-        is_preferred: Boolean(c.basic),
+        is_preferred: Boolean(c.preferred),
         package: c.package || "",
         core_processor: attrs["Core Processor"] || null,
         antenna_type: attrs["Antenna Type"] || null,

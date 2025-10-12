@@ -114,7 +114,7 @@ export const adcTableSpec: DerivedTableSpec<Adc> = {
         price1: extractMinQPrice(c.price),
         in_stock: c.stock > 0,
         is_basic: Boolean(c.basic),
-        is_preferred: Boolean(c.basic),
+        is_preferred: Boolean(c.preferred),
         package: c.package || "",
         resolution_bits: resolution,
         sampling_rate_hz: samplingRate,
