@@ -36,7 +36,7 @@ export const ledTableSpec: DerivedTableSpec<Led> = {
     { name: "mounting_style", type: "text" },
     { name: "is_rgb", type: "boolean" },
     { name: "is_basic", type: "boolean" },
-{ name: "is_preferred", type: "boolean" },
+    { name: "is_preferred", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db

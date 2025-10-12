@@ -33,7 +33,7 @@ export const capacitorTableSpec: DerivedTableSpec<Capacitor> = {
     { name: "is_surface_mount", type: "boolean" },
     { name: "capacitor_type", type: "text" },
     { name: "is_basic", type: "boolean" },
-{ name: "is_preferred", type: "boolean" },
+    { name: "is_preferred", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db

@@ -39,7 +39,7 @@ export const ioExpanderTableSpec: DerivedTableSpec<IoExpander> = {
     { name: "sink_current_ma", type: "real" },
     { name: "source_current_ma", type: "real" },
     { name: "is_basic", type: "boolean" },
-{ name: "is_preferred", type: "boolean" },
+    { name: "is_preferred", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db

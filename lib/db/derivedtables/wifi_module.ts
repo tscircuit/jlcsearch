@@ -44,7 +44,7 @@ export const wifiModuleTableSpec: DerivedTableSpec<WifiModule> = {
     { name: "has_adc", type: "boolean" },
     { name: "has_pwm", type: "boolean" },
     { name: "is_basic", type: "boolean" },
-{ name: "is_preferred", type: "boolean" },
+    { name: "is_preferred", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db

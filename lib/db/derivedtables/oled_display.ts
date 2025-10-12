@@ -18,7 +18,7 @@ export const oledDisplayTableSpec: DerivedTableSpec<OLEDDisplay> = {
     { name: "display_width", type: "text" },
     { name: "pixel_resolution", type: "text" },
     { name: "is_basic", type: "boolean" },
-{ name: "is_preferred", type: "boolean" },
+    { name: "is_preferred", type: "boolean" },
   ],
 
   listCandidateComponents(db: KyselyDatabaseInstance) {
@@ -64,7 +64,7 @@ export const oledDisplayTableSpec: DerivedTableSpec<OLEDDisplay> = {
           price1: extractMinQPrice(c.price),
           in_stock: Boolean((c.stock || 0) > 0),
           is_basic: Boolean(c.basic),
-        is_preferred: Boolean(c.preferred),
+          is_preferred: Boolean(c.preferred),
           package: String(c.package || ""),
           protocol: protocol || undefined,
           display_width,

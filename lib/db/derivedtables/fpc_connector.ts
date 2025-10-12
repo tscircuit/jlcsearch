@@ -19,7 +19,7 @@ export const fpcConnectorTableSpec: DerivedTableSpec<FpcConnector> = {
     { name: "contact_type", type: "text" },
     { name: "locking_feature", type: "text" },
     { name: "is_basic", type: "boolean" },
-{ name: "is_preferred", type: "boolean" },
+    { name: "is_preferred", type: "boolean" },
   ],
   listCandidateComponents(db: KyselyDatabaseInstance) {
     return db
@@ -54,7 +54,7 @@ export const fpcConnectorTableSpec: DerivedTableSpec<FpcConnector> = {
           price1: extractMinQPrice(c.price),
           in_stock: Boolean((c.stock || 0) > 0),
           is_basic: Boolean(c.basic),
-        is_preferred: Boolean(c.preferred),
+          is_preferred: Boolean(c.preferred),
           pitch_mm: parseNum(attrs["Pitch"]),
           number_of_contacts: isNaN(contacts) ? null : contacts,
           contact_type: attrs["Contact Type"] || null,

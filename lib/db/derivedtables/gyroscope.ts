@@ -27,7 +27,7 @@ export const gyroscopeTableSpec: DerivedTableSpec<Gyroscope> = {
     { name: "has_spi", type: "boolean" },
     { name: "has_uart", type: "boolean" },
     { name: "is_basic", type: "boolean" },
-{ name: "is_preferred", type: "boolean" },
+    { name: "is_preferred", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db

@@ -61,7 +61,7 @@ export const microcontrollerTableSpec: DerivedTableSpec<Microcontroller> = {
     { name: "adc_resolution_bits", type: "integer" },
     { name: "dac_resolution_bits", type: "integer" },
     { name: "is_basic", type: "boolean" },
-{ name: "is_preferred", type: "boolean" },
+    { name: "is_preferred", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db

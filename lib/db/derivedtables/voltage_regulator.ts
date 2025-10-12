@@ -42,7 +42,7 @@ export const voltageRegulatorTableSpec: DerivedTableSpec<VoltageRegulator> = {
     { name: "is_positive", type: "boolean" },
     { name: "topology", type: "text" },
     { name: "is_basic", type: "boolean" },
-{ name: "is_preferred", type: "boolean" },
+    { name: "is_preferred", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db

@@ -18,7 +18,7 @@ export const potentiometerTableSpec: DerivedTableSpec<Potentiometer> = {
     { name: "package", type: "text" },
     { name: "is_surface_mount", type: "boolean" },
     { name: "is_basic", type: "boolean" },
-{ name: "is_preferred", type: "boolean" },
+    { name: "is_preferred", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db

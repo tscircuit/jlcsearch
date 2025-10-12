@@ -39,7 +39,7 @@ export const diodeTableSpec: DerivedTableSpec<Diode> = {
     { name: "power_dissipation_watts", type: "real" },
     { name: "configuration", type: "text" },
     { name: "is_basic", type: "boolean" },
-{ name: "is_preferred", type: "boolean" },
+    { name: "is_preferred", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db

@@ -35,7 +35,7 @@ export const gasSensorTableSpec: DerivedTableSpec<GasSensor> = {
     { name: "measures_hydrogen", type: "boolean" },
     { name: "measures_explosive_gases", type: "boolean" },
     { name: "is_basic", type: "boolean" },
-{ name: "is_preferred", type: "boolean" },
+    { name: "is_preferred", type: "boolean" },
   ],
   listCandidateComponents(db) {
     return db

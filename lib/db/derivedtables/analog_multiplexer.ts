@@ -39,7 +39,7 @@ export const analogMultiplexerTableSpec: DerivedTableSpec<AnalogMultiplexer> = {
     { name: "operating_temp_max", type: "real" },
     { name: "channel_type", type: "text" },
     { name: "is_basic", type: "boolean" },
-{ name: "is_preferred", type: "boolean" },
+    { name: "is_preferred", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db
