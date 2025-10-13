@@ -38,7 +38,7 @@ curl https://jlcsearch.tscircuit.com/resistors/list.json?package=&resistance=1k
 
 ## Development
 
-Prequisities \& Notes:  The automation scripts in this repo are only set up for macOS and Linux development.  The setup command below will fail if run on Windows, but no worries, you can simply use WSL (although it may be very slow).    [Bun](https://bun.com/) is required, so follow the Installing &rarr; macOS and Linux instructions [here](https://bun.com/docs/installation#macos-and-linux) (same for WSL).  
+Prerequisites \& Notes:  The automation scripts in this repo are only set up for macOS and Linux development.  The setup command below will fail if run on Windows, but no worries, you can simply use WSL (although it may be very slow).    [Bun](https://bun.com/) is required, so follow the Installing &rarr; macOS and Linux instructions [here](https://bun.com/docs/installation#macos-and-linux) (same for WSL).  
 
 Run `bun i` then `bun run setup` to download the necessary dependencies and vendor data (be aware this can take a while),
 you can then run `bun run start` to start the server.
