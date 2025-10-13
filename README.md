@@ -38,7 +38,9 @@ curl https://jlcsearch.tscircuit.com/resistors/list.json?package=&resistance=1k
 
 ## Development
 
-Run `bun i` then `bun run setup` to download the necessary dependencies and vendor data,
+Prerequisites \& Notes:  The automation scripts in this repo are only set up for macOS and Linux development.  The setup command below will fail if run on Windows, but no worries, you can simply use WSL (although it may be very slow).    [Bun](https://bun.com/) is required, so follow the Installing &rarr; macOS and Linux instructions [here](https://bun.com/docs/installation#macos-and-linux) (same for WSL).  
+
+Run `bun i` then `bun run setup` to download the necessary dependencies and vendor data (be aware this can take a while),
 you can then run `bun run start` to start the server.
 
 All the routes are in the `routes` folder. If you want to add a new page/table,
@@ -55,6 +57,22 @@ you can do the following:
 AI is incredibly good at performing every step in the process above, end to end.
 I recommend using [aider](https://www.aider.chat/) and adding docs, lib, routes
 and scripts folders to the context.
+
+## How Does It work?
+As a developer new to this codebase, or a curious user, you may have some questions about the flow of data through the scripts and automations inside this repo.  It all starts with the [jlcparts](https://github.com/yaqwsx/jlcparts) project, which compiles a massive **11GB** sqlite3 database of *everything* [JLCPCB](https://jlcpcb.com) has to offer.  As you can imagine, this would be very resource-intensive and slow to search, so the next steps are scripts that optimize it heavily, although it's more accurate to say that they rebuild it entirely. 
+`scripts/setup-db-optimizations.ts` and `scripts/setup-derived-tables.ts` show the various optimizations that are performed, including:
+- Removing stale components that haven't been in stock for over a year.
+- Only keeping categories of components that we are currently interested in and have a schema defined for (see the corresponding component types in `lib/db/derivedtables` for examples).
+- Adding columns for traits that we care about such as price, stock level, and basic/ preferred status (to save on assembly costs).
+
+The result is `db.sqlite3` which presently comes in at **under 2GB** in size. 
+
+If you wish to use some data that exists in the [jlcparts](https://github.com/yaqwsx/jlcparts) database but is not yet being brought over to the optimized `db.sqlite3`, you can look at the originating database to get familiar with it and find the data structures you wish to bring over.  An easy way to do this can be: after you have run `bun run setup` and it has completed, the cache zip archive files are still located at `./buildtmp` - simply unpack these yourself (preferably into a separate directory outside of the project) and there is your 11GB `cache.sqlite3` database to look at.  
+
+To recap:
+- If you wish to use additional **component data** (like the basic/ preferred status) that exists in [jlcparts](https://github.com/yaqwsx/jlcparts), it won't be in the optimized `db.sqlite3` (and thus jlcsearch won't know about it) until you add it via a script in `lib/db/optimizations/` and then call it in `scripts/setup-db-optimizations.ts`.  You should then do `bun run setup` again to rebuild the optimized database with your new data.  
+- If you wish to add additional **component types** (like gyroscopes or Molex connectors) you would need to set up a new schema for them in `lib/db/derivedtables` and then do `bun run generate:db-types` to generate the new table types as per the Development section above.
+
 
 ## Acknowledgements
 
