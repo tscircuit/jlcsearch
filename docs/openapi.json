@@ -1,7 +1,7 @@
 {
   "openapi": "3.0.0",
   "info": {
-    "title": "WinterSpec API",
+    "title": "JLCSearch JLCPCB In-Stock Parts Engine API",
     "version": "1.0.0"
   },
   "paths": {
