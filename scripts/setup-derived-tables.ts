@@ -36,6 +36,7 @@ import { usbCConnectorTableSpec } from "lib/db/derivedtables/usb_c_connector"
 import { pcieM2ConnectorTableSpec } from "lib/db/derivedtables/pcie_m2_connector"
 import { fpcConnectorTableSpec } from "lib/db/derivedtables/fpc_connector"
 import { jstConnectorTableSpec } from "lib/db/derivedtables/jst_connector"
+import { fpgaTableSpec } from "lib/db/derivedtables/fpga"
 
 const resetArg = process.argv.indexOf("--reset")
 const resetTable = resetArg !== -1 ? process.argv[resetArg + 1] : null
@@ -76,6 +77,7 @@ const DERIVED_TABLES: DerivedTableSpec<any>[] = [
   usbCConnectorTableSpec,
   pcieM2ConnectorTableSpec,
   jstConnectorTableSpec,
+  fpgaTableSpec,
 ]
 
 function jsonParseOrNull(strObject: string) {

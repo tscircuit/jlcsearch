@@ -37,6 +37,7 @@ export default withWinterSpec({
         <a href="/microcontrollers/list">Microcontrollers</a>
         <a href="/arm_processors/list">ARM Processors</a>
         <a href="/risc_v_processors/list">RISC-V Processors</a>
+        <a href="/fpgas/list">FPGAs &amp; CPLDs</a>
         <a href="/voltage_regulators/list">Voltage Regulators</a>
         <a href="/ldos/list">LDO Regulators</a>
         <a href="/boost_converters/list">Boost DC-DC Converters</a>
