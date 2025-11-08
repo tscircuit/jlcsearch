@@ -58,3 +58,16 @@ test("GET /api/search with search query 'red led' returns expected components", 
     expect(component).toHaveProperty("stock")
   }
 })
+
+test("GET /api/search with part number strips leading 'C'", async () => {
+  const { axios } = await getTestServer()
+  const res = await axios.get("/api/search?q=C1002")
+
+  expect(res.data).toHaveProperty("components")
+  expect(Array.isArray(res.data.components)).toBe(true)
+  expect(res.data.components.length).toBe(1)
+
+  const component = res.data.components[0]
+  expect(component).toHaveProperty("lcsc", 1002)
+  expect(component).toHaveProperty("mfr")
+})

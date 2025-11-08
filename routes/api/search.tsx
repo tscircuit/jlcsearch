@@ -46,18 +46,28 @@ export default withWinterSpec({
   }
 
   if (req.query.q) {
-    const searchTerm = req.query.q.trim().toLowerCase()
-    const searchPattern = `%${searchTerm}%`
+    const rawSearchTerm = req.query.q.trim()
+    const searchTerm = rawSearchTerm.toLowerCase()
 
-    // Full-text search query for mfr and other fields
-    const mfrFtsQuery = `mfr:${searchTerm}*`
-    const generalFtsQuery = `${searchTerm}*`
-    const combinedFtsQuery = `${mfrFtsQuery} OR ${generalFtsQuery}`
-    query = query.where(
-      sql`lcsc`,
-      "in",
-      sql`(SELECT CAST(lcsc AS INTEGER) FROM components_fts WHERE components_fts MATCH ${combinedFtsQuery})`,
-    )
+    if (/^c\d+$/i.test(rawSearchTerm)) {
+      const lcscNumber = Number.parseInt(rawSearchTerm.slice(1), 10)
+
+      if (!Number.isNaN(lcscNumber)) {
+        query = query.where("lcsc", "=", lcscNumber)
+      }
+    } else {
+      const searchPattern = `%${searchTerm}%`
+
+      // Full-text search query for mfr and other fields
+      const mfrFtsQuery = `mfr:${searchTerm}*`
+      const generalFtsQuery = `${searchTerm}*`
+      const combinedFtsQuery = `${mfrFtsQuery} OR ${generalFtsQuery}`
+      query = query.where(
+        sql`lcsc`,
+        "in",
+        sql`(SELECT CAST(lcsc AS INTEGER) FROM components_fts WHERE components_fts MATCH ${combinedFtsQuery})`,
+      )
+    }
   }
 
   const fullComponents = await query.execute()
