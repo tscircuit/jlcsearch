@@ -16,6 +16,7 @@ export default withWinterSpec({
         <a href="/categories/list">Categories</a>
         <a href="/footprint_index/list">Footprint Index</a>
         <a href="/resistors/list">Resistors</a>
+        <a href="/resistor_arrays/list">Resistor Arrays</a>
         <a href="/capacitors/list">Capacitors</a>
         <a href="/potentiometers/list">Potentiometers</a>
         <a href="/headers/list">Headers</a>

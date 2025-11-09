@@ -1,6 +1,7 @@
 import { sql } from "kysely"
 import { getBunDatabaseClient, getDbClient } from "lib/db/get-db-client"
 import { resistorTableSpec } from "lib/db/derivedtables/resistor"
+import { resistorArrayTableSpec } from "lib/db/derivedtables/resistor_array"
 import { capacitorTableSpec } from "lib/db/derivedtables/capacitor"
 import { ledTableSpec } from "lib/db/derivedtables/led"
 import { headerTableSpec } from "lib/db/derivedtables/header"
@@ -44,6 +45,7 @@ const resetAll = resetArg !== -1 && !resetTable
 
 const DERIVED_TABLES: DerivedTableSpec<any>[] = [
   resistorTableSpec,
+  resistorArrayTableSpec,
   capacitorTableSpec,
   ledTableSpec,
   headerTableSpec,
