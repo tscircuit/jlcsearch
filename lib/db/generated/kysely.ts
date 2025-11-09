@@ -712,6 +712,27 @@ export interface Resistor {
   tolerance_fraction: number | null;
 }
 
+export interface ResistorArray {
+  attributes: string | null;
+  description: string | null;
+  in_stock: number | null;
+  is_basic: number | null;
+  is_preferred: number | null;
+  is_surface_mount: number | null;
+  lcsc: Generated<number | null>;
+  mfr: string | null;
+  number_of_pins: number | null;
+  number_of_resistors: number | null;
+  package: string | null;
+  power_watts: number | null;
+  price1: number | null;
+  resistance: number | null;
+  stock: number | null;
+  temperature_coefficient_ppm: number | null;
+  tolerance_fraction: number | null;
+  topology: string | null;
+}
+
 export interface Switch {
   attributes: string | null;
   circuit: string | null;
@@ -870,6 +891,7 @@ export interface DB {
   potentiometer: Potentiometer;
   relay: Relay;
   resistor: Resistor;
+  resistor_array: ResistorArray;
   switch: Switch;
   usb_c_connector: UsbCConnector;
   v_components: VComponent;
