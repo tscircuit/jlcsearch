@@ -2,6 +2,7 @@ import { Table } from "lib/ui/Table"
 import { withWinterSpec } from "lib/with-winter-spec"
 import { z } from "zod"
 import { formatPrice } from "lib/util/format-price"
+import { boolish } from "lib/zod"
 
 export default withWinterSpec({
   auth: "none",
@@ -10,7 +11,10 @@ export default withWinterSpec({
     json: z.boolean().optional(),
     pitch: z.string().optional(),
     num_pins: z.coerce.number().optional(),
-    is_right_angle: z.boolean().optional(),
+    is_right_angle: z
+      .union([z.literal(""), boolish])
+      .transform((value) => (value === "" ? undefined : value))
+      .optional(),
     gender: z.enum(["male", "female", ""]).optional(),
   }),
   jsonResponse: z.string().or(
@@ -151,10 +155,16 @@ export default withWinterSpec({
           <label>Right Angle:</label>
           <select name="is_right_angle">
             <option value="">All</option>
-            <option value="true" selected={params.is_right_angle === true}>
+            <option
+              value="true"
+              selected={params.is_right_angle?.toString() === "true"}
+            >
               Yes
             </option>
-            <option value="false" selected={params.is_right_angle === false}>
+            <option
+              value="false"
+              selected={params.is_right_angle?.toString() === "false"}
+            >
               No
             </option>
           </select>
