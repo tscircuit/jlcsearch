@@ -850,6 +850,27 @@ export interface WifiModule {
   tx_current_ma: number | null;
 }
 
+export interface WireToBoardConnector {
+  attributes: string | null;
+  description: string | null;
+  gender: string | null;
+  in_stock: number | null;
+  is_basic: number | null;
+  is_preferred: number | null;
+  is_smd: number | null;
+  lcsc: Generated<number | null>;
+  mfr: string | null;
+  mounting_style: string | null;
+  num_pins: number | null;
+  num_pins_per_row: number | null;
+  num_rows: number | null;
+  package: string | null;
+  pitch_mm: number | null;
+  price1: number | null;
+  reference_series: string | null;
+  stock: number | null;
+}
+
 export interface DB {
   accelerometer: Accelerometer;
   adc: Adc;
@@ -897,4 +918,5 @@ export interface DB {
   v_components: VComponent;
   voltage_regulator: VoltageRegulator;
   wifi_module: WifiModule;
+  wire_to_board_connector: WireToBoardConnector;
 }

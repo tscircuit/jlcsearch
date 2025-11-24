@@ -38,6 +38,7 @@ import { pcieM2ConnectorTableSpec } from "lib/db/derivedtables/pcie_m2_connector
 import { fpcConnectorTableSpec } from "lib/db/derivedtables/fpc_connector"
 import { jstConnectorTableSpec } from "lib/db/derivedtables/jst_connector"
 import { fpgaTableSpec } from "lib/db/derivedtables/fpga"
+import { wireToBoardConnectorTableSpec } from "lib/db/derivedtables/wire_to_board_connector"
 
 const resetArg = process.argv.indexOf("--reset")
 const resetTable = resetArg !== -1 ? process.argv[resetArg + 1] : null
@@ -79,6 +80,7 @@ const DERIVED_TABLES: DerivedTableSpec<any>[] = [
   usbCConnectorTableSpec,
   pcieM2ConnectorTableSpec,
   jstConnectorTableSpec,
+  wireToBoardConnectorTableSpec,
   fpgaTableSpec,
 ]
 
