@@ -24,6 +24,7 @@ export default withWinterSpec({
         <a href="/pcie_m2_connectors/list">PCIe M.2 Connectors</a>
         <a href="/fpc_connectors/list">FPC Connectors</a>
         <a href="/jst_connectors/list">JST Connectors</a>
+        <a href="/wire_to_board_connectors/list">Wire to Board Connectors</a>
         <a href="/leds/list">LEDs</a>
         <a href="/adcs/list">ADCs</a>
         <a href="/analog_multiplexers/list">Analog Muxes</a>
