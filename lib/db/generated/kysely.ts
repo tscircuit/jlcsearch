@@ -78,6 +78,23 @@ export interface AnalogMultiplexer {
   supply_voltage_min: number | null;
 }
 
+export interface BatteryHolder {
+  attributes: string | null;
+  battery_type: string | null;
+  connector_type: string | null;
+  description: string | null;
+  in_stock: number | null;
+  is_basic: number | null;
+  is_preferred: number | null;
+  lcsc: Generated<number | null>;
+  mfr: string | null;
+  operating_temp_max: number | null;
+  operating_temp_min: number | null;
+  package: string | null;
+  price1: number | null;
+  stock: number | null;
+}
+
 export interface BjtTransistor {
   attributes: string | null;
   collector_current: number | null;
@@ -875,6 +892,7 @@ export interface DB {
   accelerometer: Accelerometer;
   adc: Adc;
   analog_multiplexer: AnalogMultiplexer;
+  battery_holder: BatteryHolder;
   bjt_transistor: BjtTransistor;
   boost_converter: BoostConverter;
   buck_boost_converter: BuckBoostConverter;
