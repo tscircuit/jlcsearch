@@ -39,6 +39,7 @@ import { fpcConnectorTableSpec } from "lib/db/derivedtables/fpc_connector"
 import { jstConnectorTableSpec } from "lib/db/derivedtables/jst_connector"
 import { fpgaTableSpec } from "lib/db/derivedtables/fpga"
 import { wireToBoardConnectorTableSpec } from "lib/db/derivedtables/wire_to_board_connector"
+import { batteryHolderTableSpec } from "lib/db/derivedtables/battery_holder"
 
 const resetArg = process.argv.indexOf("--reset")
 const resetTable = resetArg !== -1 ? process.argv[resetArg + 1] : null
@@ -82,6 +83,7 @@ const DERIVED_TABLES: DerivedTableSpec<any>[] = [
   jstConnectorTableSpec,
   wireToBoardConnectorTableSpec,
   fpgaTableSpec,
+  batteryHolderTableSpec,
 ]
 
 function jsonParseOrNull(strObject: string) {
