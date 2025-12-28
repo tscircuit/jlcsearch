@@ -1,3 +1,4 @@
+import { getIsExtendedPromotional } from "lib/util/component-utils"
 import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import { BaseComponent } from "./component-base"
@@ -117,6 +118,7 @@ export const boostConverterTableSpec: DerivedTableSpec<BoostConverter> = {
           in_stock: c.stock > 0,
           is_basic: Boolean(c.basic),
           is_preferred: Boolean(c.preferred),
+          is_extended_promotional: getIsExtendedPromotional(c),
           package: c.package || "",
           input_voltage_min: inputMin,
           input_voltage_max: inputMax,

@@ -1,3 +1,4 @@
+import { getIsExtendedPromotional } from "lib/util/component-utils"
 import type { DerivedTableSpec } from "./types"
 import type { KyselyDatabaseInstance } from "../kysely-types"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
@@ -64,6 +65,7 @@ export const lcdDisplayTableSpec: DerivedTableSpec<LCDDisplay> = {
           in_stock: Boolean((c.stock || 0) > 0),
           is_basic: Boolean(c.basic),
           is_preferred: Boolean(c.preferred),
+          is_extended_promotional: getIsExtendedPromotional(c),
           package: String(c.package || ""),
           display_size,
           resolution,

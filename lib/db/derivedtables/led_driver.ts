@@ -1,3 +1,4 @@
+import { getIsExtendedPromotional } from "lib/util/component-utils"
 import type { DerivedTableSpec } from "./types"
 import type { SelectQueryBuilder, Generated } from "kysely"
 import type { Component } from "../generated/kysely"
@@ -77,6 +78,7 @@ export const ledDriverTableSpec: DerivedTableSpec<LedDriver> = {
           in_stock: Boolean((c.stock || 0) > 0),
           is_basic: Boolean(c.basic),
           is_preferred: Boolean(c.preferred),
+          is_extended_promotional: getIsExtendedPromotional(c),
           package: String(c.package || ""),
           supply_voltage_min: parseValue(attrs["Input Voltage"]?.split("~")[0]),
           supply_voltage_max: parseValue(attrs["Input Voltage"]?.split("~")[1]),

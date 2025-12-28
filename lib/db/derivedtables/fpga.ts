@@ -1,3 +1,4 @@
+import { getIsExtendedPromotional } from "lib/util/component-utils"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import type { DerivedTableSpec } from "./types"
 import { BaseComponent } from "./component-base"
@@ -99,6 +100,7 @@ export const fpgaTableSpec: DerivedTableSpec<FPGA> = {
           in_stock: Boolean((c.stock ?? 0) > 0),
           is_basic: Boolean(c.basic),
           is_preferred: Boolean(c.preferred),
+          is_extended_promotional: getIsExtendedPromotional(c),
           package: extra?.package ?? c.package ?? "",
           type: attrs["Type"] ?? null,
           logic_array_blocks: parseNumericValue(attrs["Logic Array Blocks"]),

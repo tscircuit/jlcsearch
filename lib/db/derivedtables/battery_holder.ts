@@ -1,3 +1,4 @@
+import { getIsExtendedPromotional } from "lib/util/component-utils"
 import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
 import type { DerivedTableSpec } from "./types"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
@@ -74,6 +75,7 @@ export const batteryHolderTableSpec: DerivedTableSpec<BatteryHolder> = {
           in_stock: Boolean((c.stock || 0) > 0),
           is_basic: Boolean(c.basic),
           is_preferred: Boolean(c.preferred),
+          is_extended_promotional: getIsExtendedPromotional(c),
           package: String(c.package || ""),
           connector_type: attrs["Connector Type"] || null,
           battery_type: attrs["Battery Type"] || null,

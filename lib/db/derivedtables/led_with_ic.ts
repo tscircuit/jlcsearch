@@ -1,3 +1,4 @@
+import { getIsExtendedPromotional } from "lib/util/component-utils"
 import type { DerivedTableSpec } from "./types"
 import { BaseComponent } from "./component-base"
 import type { SelectQueryBuilder, Generated } from "kysely"
@@ -99,6 +100,7 @@ export const ledWithICTableSpec: DerivedTableSpec<LEDWithIC> = {
           in_stock: Boolean((c.stock || 0) > 0),
           is_basic: Boolean(c.basic),
           is_preferred: Boolean(c.preferred),
+          is_extended_promotional: getIsExtendedPromotional(c),
           package: String(c.package || ""),
           forward_voltage: forwardVoltage,
           forward_current: forwardCurrent,
