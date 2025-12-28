@@ -1,3 +1,4 @@
+import { getIsExtendedPromotional } from "lib/util/component-utils"
 import type { DerivedTableSpec } from "./types"
 import type { KyselyDatabaseInstance } from "../kysely-types"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
@@ -90,6 +91,7 @@ export const fuseTableSpec: DerivedTableSpec<Fuse> = {
           in_stock: Boolean((c.stock || 0) > 0),
           is_basic: Boolean(c.basic),
           is_preferred: Boolean(c.preferred),
+          is_extended_promotional: getIsExtendedPromotional(c),
           current_rating: current_rating as number,
           voltage_rating: voltage_rating as number,
           response_time,

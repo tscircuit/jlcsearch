@@ -1,3 +1,4 @@
+import { getIsExtendedPromotional } from "lib/util/component-utils"
 import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
 import type { DerivedTableSpec } from "./types"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
@@ -165,6 +166,7 @@ export const ledTableSpec: DerivedTableSpec<Led> = {
         in_stock: c.stock > 0,
         is_basic: Boolean(c.basic),
         is_preferred: Boolean(c.preferred),
+        is_extended_promotional: getIsExtendedPromotional(c),
         package: c.package || "",
         forward_voltage: forwardVoltage,
         forward_current: forwardCurrent,

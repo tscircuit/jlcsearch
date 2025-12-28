@@ -1,3 +1,4 @@
+import { getIsExtendedPromotional } from "lib/util/component-utils"
 import type { DerivedTableSpec } from "./types"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import { BaseComponent } from "./component-base"
@@ -49,6 +50,7 @@ export const pcieM2ConnectorTableSpec: DerivedTableSpec<PcieM2Connector> = {
         in_stock: Boolean((c.stock || 0) > 0),
         is_basic: Boolean(c.basic),
         is_preferred: Boolean(c.preferred),
+        is_extended_promotional: getIsExtendedPromotional(c),
         key,
         is_right_angle: isRightAngle,
         attributes: attrs,
