@@ -75,7 +75,6 @@ test("GET /api/search with part number strips leading 'C'", async () => {
 test("GET /api/search with . in query", async () => {
   const { axios } = await getTestServer()
   const res = await axios.get("/api/search?q=0.1uf")
-  console.log(res.data)
   expect(res.data).toHaveProperty("components")
   expect(Array.isArray(res.data.components)).toBe(true)
 })
