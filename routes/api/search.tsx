@@ -12,6 +12,10 @@ const extractSmallQuantityPrice = (price: string | null): string => {
   }
 }
 
+const escapeFts5SearchTerm = (term: string): string => {
+  return `"${term.replace(/"/g, '""')}"`
+}
+
 export default withWinterSpec({
   auth: "none",
   methods: ["GET"],
@@ -56,11 +60,9 @@ export default withWinterSpec({
         query = query.where("lcsc", "=", lcscNumber)
       }
     } else {
-      const searchPattern = `%${searchTerm}%`
-
-      // Full-text search query for mfr and other fields
-      const mfrFtsQuery = `mfr:${searchTerm}*`
-      const generalFtsQuery = `${searchTerm}*`
+      const quotedTerm = escapeFts5SearchTerm(searchTerm)
+      const mfrFtsQuery = `mfr:${quotedTerm}`
+      const generalFtsQuery = quotedTerm
       const combinedFtsQuery = `${mfrFtsQuery} OR ${generalFtsQuery}`
       query = query.where(
         sql`lcsc`,
