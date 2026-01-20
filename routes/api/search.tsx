@@ -61,8 +61,8 @@ export default withWinterSpec({
       }
     } else {
       const quotedTerm = escapeFts5SearchTerm(searchTerm)
-      const mfrFtsQuery = `mfr:${quotedTerm}`
-      const generalFtsQuery = quotedTerm
+      const mfrFtsQuery = `mfr:${quotedTerm}*`
+      const generalFtsQuery = `${quotedTerm}*`
       const combinedFtsQuery = `${mfrFtsQuery} OR ${generalFtsQuery}`
       query = query.where(
         sql`lcsc`,
