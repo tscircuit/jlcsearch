@@ -26,7 +26,26 @@ export const potentiometerTableSpec: DerivedTableSpec<Potentiometer> = {
       .innerJoin("categories", "components.category_id", "categories.id")
       .selectAll()
       .where("categories.category", "=", "Resistors")
-      .where("components.description", "like", "%potentiometer%"),
+      .where((eb) =>
+        eb.or([
+          eb(
+            "categories.subcategory",
+            "=",
+            "Variable Resistors/Potentiometers",
+          ),
+          eb("categories.subcategory", "=", "Variable Resistors"),
+          eb(
+            "categories.subcategory",
+            "=",
+            "Potentiometers & Variable Resistors",
+          ),
+          eb(
+            "categories.subcategory",
+            "=",
+            "Potentiometers, Variable Resistors",
+          ),
+        ]),
+      ),
   mapToTable: (components) => {
     return components.map((c): Potentiometer | null => {
       if (!c.extra) return null
