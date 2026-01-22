@@ -31,12 +31,6 @@ export const potentiometerTableSpec: DerivedTableSpec<Potentiometer> = {
           eb(
             "categories.subcategory",
             "=",
-            "Variable Resistors/Potentiometers",
-          ),
-          eb("categories.subcategory", "=", "Variable Resistors"),
-          eb(
-            "categories.subcategory",
-            "=",
             "Potentiometers & Variable Resistors",
           ),
           eb(
