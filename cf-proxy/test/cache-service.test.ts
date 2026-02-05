@@ -1,7 +1,7 @@
-import { env } from "cloudflare:test"
 import { beforeEach, describe, expect, it } from "vitest"
 import { type CacheMetadata, isFresh, isUsableStale } from "../src/cache-entry"
 import { CacheService } from "../src/cache-service"
+import { createTestEnv } from "./test-env"
 
 describe("isFresh", () => {
   it("returns true for entries less than 1 day old", () => {
@@ -51,6 +51,7 @@ describe("CacheService", () => {
   let cache: CacheService
 
   beforeEach(() => {
+    const env = createTestEnv()
     cache = new CacheService(env.CACHE_KV)
   })
 
