@@ -1,10 +1,15 @@
 import { afterEach } from "bun:test"
+import { setupDerivedTables } from "lib/db/derivedtables/setup-derived-tables"
 
 declare global {
   var deferredCleanupFns: Array<() => void | Promise<void>>
+  var derivedTablesSetupPromise: Promise<void> | undefined
 }
 
 globalThis.deferredCleanupFns ??= []
+globalThis.derivedTablesSetupPromise ??= setupDerivedTables({ populate: false })
+
+await globalThis.derivedTablesSetupPromise
 
 afterEach(async () => {
   const cleanupFns = [...globalThis.deferredCleanupFns]

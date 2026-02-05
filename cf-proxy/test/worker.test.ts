@@ -1,14 +1,33 @@
-import { SELF, env } from "cloudflare:test"
-import { beforeEach, describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import { generateCacheKey } from "../src/cache-key"
+import { createSelf, createTestEnv } from "./test-env"
 
 describe("Worker integration", () => {
+  const env = createTestEnv()
+  const SELF = createSelf(env)
+  const originalFetch = globalThis.fetch
+
   beforeEach(async () => {
+    globalThis.fetch = (async (input: RequestInfo | URL) => {
+      const url = typeof input === "string" ? input : input.toString()
+      if (url.includes("nonexistent-path-that-will-timeout")) {
+        throw new Error("Simulated origin failure")
+      }
+      return new Response('{"status":"ok"}', {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      })
+    }) as typeof fetch
+
     // Clear the KV store between tests
     const keys = await env.CACHE_KV.list()
     for (const key of keys.keys) {
       await env.CACHE_KV.delete(key.name)
     }
+  })
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch
   })
 
   it("returns response with x-cache: HIT when entry is in cache", async () => {
