@@ -68,14 +68,41 @@ export class CacheService {
   buildResponse(
     entry: CacheEntry,
     cacheStatus: "HIT" | "MISS" | "STALE",
+    origin: string | null,
   ): Response {
     const headers = new Headers(entry.metadata.headers)
     headers.set("x-cache", cacheStatus)
     headers.set("x-cached-at", entry.metadata.cachedAt)
+    addCorsHeaders(headers, origin)
 
     return new Response(entry.body, {
       status: entry.metadata.status,
       headers,
     })
   }
+}
+
+const ALLOWED_HEADERS = [
+  "x-csrf-token",
+  "x-requested-with",
+  "accept",
+  "accept-version",
+  "content-length",
+  "content-md5",
+  "content-type",
+  "date",
+  "authorization",
+  "user-agent",
+]
+
+/**
+ * Adds CORS headers matching the Fly server implementation.
+ */
+export function addCorsHeaders(headers: Headers, origin: string | null): void {
+  headers.set("access-control-allow-origin", origin ?? "*")
+  headers.set("access-control-allow-methods", "GET, POST, PUT, DELETE, OPTIONS")
+  headers.set("access-control-allow-credentials", "true")
+  headers.set("access-control-allow-headers", ALLOWED_HEADERS.join(", "))
+  headers.set("access-control-max-age", "86400")
+  headers.set("vary", "Origin")
 }
