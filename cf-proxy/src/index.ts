@@ -1,8 +1,12 @@
 import { CacheService, addCorsHeaders } from "./cache-service"
+import { getD1Client } from "./db/get-d1-client"
+import { getD1Handler } from "./d1-routes"
 
 export interface Env {
   CACHE_KV: KVNamespace
   ORIGIN_URL: string
+  DB: D1Database
+  USE_D1: string
 }
 
 const ORIGIN_TIMEOUT_MS = 10_000
@@ -21,9 +25,22 @@ export default {
       return handleOptions(origin)
     }
 
+    // Health check endpoint for D1
+    if (url.pathname === "/_d1/health") {
+      return handleD1Health(env, origin)
+    }
+
     // Only cache GET requests
     if (request.method !== "GET") {
       return proxyToOrigin(url, request, env, origin)
+    }
+
+    // Check if this is a JSON API request that can be handled by D1
+    if (env.USE_D1 === "true") {
+      const d1Response = await tryD1Query(url, request, env, origin)
+      if (d1Response) {
+        return d1Response
+      }
     }
 
     const cache = new CacheService(env.CACHE_KV)
@@ -83,6 +100,96 @@ export default {
       )
     }
   },
+}
+
+/**
+ * Attempts to handle the request via D1 if it's a supported JSON API route.
+ * Returns null if the request should be handled by the origin.
+ */
+async function tryD1Query(
+  url: URL,
+  request: Request,
+  env: Env,
+  origin: string | null,
+): Promise<Response | null> {
+  // Check if this is a JSON request
+  const isJsonRequest =
+    url.searchParams.get("json") === "true" ||
+    request.headers.get("accept")?.includes("application/json")
+
+  if (!isJsonRequest) {
+    return null
+  }
+
+  // Get handler for this route
+  const handler = getD1Handler(url.pathname)
+  if (!handler) {
+    return null
+  }
+
+  try {
+    const db = getD1Client(env.DB)
+    const params = Object.fromEntries(url.searchParams)
+    const result = await handler(db, params)
+
+    const headers = new Headers({
+      "content-type": "application/json",
+      "x-data-source": "d1",
+      "x-cache": "D1",
+    })
+    addCorsHeaders(headers, origin)
+
+    return new Response(JSON.stringify(result.data), {
+      status: 200,
+      headers,
+    })
+  } catch (error) {
+    // Log error and fall through to origin proxy
+    console.error("D1 query failed:", error)
+    return null
+  }
+}
+
+/**
+ * Handles the D1 health check endpoint.
+ */
+async function handleD1Health(
+  env: Env,
+  origin: string | null,
+): Promise<Response> {
+  const headers = new Headers({
+    "content-type": "application/json",
+  })
+  addCorsHeaders(headers, origin)
+
+  try {
+    const db = getD1Client(env.DB)
+    const result = await db
+      .selectFrom("resistor")
+      .select("lcsc")
+      .limit(1)
+      .execute()
+
+    return new Response(
+      JSON.stringify({
+        ok: true,
+        d1: true,
+        use_d1: env.USE_D1,
+        rows: result.length,
+      }),
+      { status: 200, headers },
+    )
+  } catch (error) {
+    return new Response(
+      JSON.stringify({
+        ok: false,
+        d1: false,
+        use_d1: env.USE_D1,
+        error: error instanceof Error ? error.message : "Unknown error",
+      }),
+      { status: 500, headers },
+    )
+  }
 }
 
 /**
