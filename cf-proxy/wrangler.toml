@@ -9,10 +9,18 @@ routes = [
 
 [vars]
 ORIGIN_URL = "https://jlcsearch.fly.dev"
+USE_D1 = "true"  # Feature flag for gradual D1 rollout
 
 # KV namespace binding - run `wrangler kv:namespace create CACHE_KV` to create
 # Then update the id below with the generated ID
 [[kv_namespaces]]
 binding = "CACHE_KV"
 id = "4fe1b99f0b90468bb4684a5b6822b10a"
+
+# D1 database binding - run `wrangler d1 create jlcsearch` to create
+# Then update the database_id below with the generated ID
+[[d1_databases]]
+binding = "DB"
+database_name = "jlcsearch"
+database_id = "dbd51802-2175-4e82-b1a9-8f129e46ec26"
 

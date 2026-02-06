@@ -93,7 +93,7 @@ describe("CacheService", () => {
         },
       }
 
-      const response = cache.buildResponse(entry, "HIT")
+      const response = cache.buildResponse(entry, "HIT", null)
 
       expect(response.headers.get("x-cache")).toBe("HIT")
       expect(response.headers.get("x-cached-at")).toBe("2024-01-15T00:00:00Z")
@@ -111,7 +111,7 @@ describe("CacheService", () => {
         },
       }
 
-      const response = cache.buildResponse(entry, "STALE")
+      const response = cache.buildResponse(entry, "STALE", null)
 
       expect(response.headers.get("x-cache")).toBe("STALE")
     })
