@@ -132,7 +132,11 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
     filters: {
       package: { field: "package", type: "string" },
       output_type: { field: "output_type", type: "string" },
-      output_voltage: { field: "output_voltage_min", type: "number", operator: "<=" },
+      output_voltage: {
+        field: "output_voltage_min",
+        type: "number",
+        operator: "<=",
+      },
     },
   },
   led: {
@@ -150,14 +154,46 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
   mosfet: {
     filters: {
       package: { field: "package", type: "string" },
-      drain_source_voltage_min: { field: "drain_source_voltage", type: "number", operator: ">=" },
-      drain_source_voltage_max: { field: "drain_source_voltage", type: "number", operator: "<=" },
-      continuous_drain_current_min: { field: "continuous_drain_current", type: "number", operator: ">=" },
-      continuous_drain_current_max: { field: "continuous_drain_current", type: "number", operator: "<=" },
-      gate_threshold_voltage_min: { field: "gate_threshold_voltage", type: "number", operator: ">=" },
-      gate_threshold_voltage_max: { field: "gate_threshold_voltage", type: "number", operator: "<=" },
-      power_dissipation_min: { field: "power_dissipation", type: "number", operator: ">=" },
-      power_dissipation_max: { field: "power_dissipation", type: "number", operator: "<=" },
+      drain_source_voltage_min: {
+        field: "drain_source_voltage",
+        type: "number",
+        operator: ">=",
+      },
+      drain_source_voltage_max: {
+        field: "drain_source_voltage",
+        type: "number",
+        operator: "<=",
+      },
+      continuous_drain_current_min: {
+        field: "continuous_drain_current",
+        type: "number",
+        operator: ">=",
+      },
+      continuous_drain_current_max: {
+        field: "continuous_drain_current",
+        type: "number",
+        operator: "<=",
+      },
+      gate_threshold_voltage_min: {
+        field: "gate_threshold_voltage",
+        type: "number",
+        operator: ">=",
+      },
+      gate_threshold_voltage_max: {
+        field: "gate_threshold_voltage",
+        type: "number",
+        operator: "<=",
+      },
+      power_dissipation_min: {
+        field: "power_dissipation",
+        type: "number",
+        operator: ">=",
+      },
+      power_dissipation_max: {
+        field: "power_dissipation",
+        type: "number",
+        operator: "<=",
+      },
       mounting_style: { field: "mounting_style", type: "string" },
     },
   },
@@ -210,8 +246,16 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
   boost_converter: {
     filters: {
       package: { field: "package", type: "string" },
-      output_voltage_min: { field: "output_voltage_min", type: "number", operator: "<=" },
-      output_voltage_max: { field: "output_voltage_max", type: "number", operator: ">=" },
+      output_voltage_min: {
+        field: "output_voltage_min",
+        type: "number",
+        operator: "<=",
+      },
+      output_voltage_max: {
+        field: "output_voltage_max",
+        type: "number",
+        operator: ">=",
+      },
     },
   },
   buck_boost_converter: {
