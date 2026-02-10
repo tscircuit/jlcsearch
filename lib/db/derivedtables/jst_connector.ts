@@ -22,6 +22,7 @@ export const jstConnectorTableSpec: DerivedTableSpec<JstConnector> = {
     { name: "reference_series", type: "text" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   listCandidateComponents(db: KyselyDatabaseInstance) {
     return db
@@ -69,6 +70,7 @@ export const jstConnectorTableSpec: DerivedTableSpec<JstConnector> = {
           in_stock: Boolean((c.stock || 0) > 0),
           is_basic: Boolean(c.basic),
           is_preferred: Boolean(c.preferred),
+        is_extended_promotional: Boolean(c.extended_promotional),
           package: String(c.package || ""),
           pitch_mm: parseNum(attrs["Pitch"]),
           num_rows: isNaN(numRows) ? null : numRows,
