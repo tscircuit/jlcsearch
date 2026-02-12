@@ -27,6 +27,7 @@ This document provides examples of components available in each category.
 - [Relays](./relays.md)
 - [Pushbutton Switches & Relays](./pushbutton_switches__relays.md)
 - [Sensors](./sensors.md)
+- [Reflective Optical Interrupters](./reflective_optical_interrupters.md)
 - [Amplifiers](./amplifiers.md)
 - [Clock and Timing](./clock_and_timing.md)
 - [Interface ICs](./interface_ics.md)
