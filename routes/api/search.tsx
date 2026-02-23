@@ -90,17 +90,15 @@ export default withWinterSpec({
   try {
     openai = getOpenAiClient()
   } catch (err) {
-    const isComplex = q && (q.split(" ").length > 1 || /[0-9]/.test(q))
-    if (isComplex) {
-      return ctx.error(400, {
-        error_code: "openai_not_configured",
-        message: "OpenAI API key is required for complex queries",
-      })
-    }
     return executeGeneralSearch(q)
   }
 
   if (!q) return executeGeneralSearch()
+
+  // Skip OpenAI for simple part numbers (alphanumeric, no spaces)
+  if (q && /^[A-Za-z0-9]+$/.test(q)) {
+    return executeGeneralSearch(q)
+  }
 
   // 2. OpenAI Routing
   const completion = await openai.chat.completions.create({
