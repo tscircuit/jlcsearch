@@ -76,7 +76,9 @@ export const bjtTransistorTableSpec: DerivedTableSpec<BJTTransistor> = {
           in_stock: Boolean((c.stock || 0) > 0),
           is_basic: Boolean(c.basic),
           is_preferred: Boolean(c.preferred),
-        is_extended_promotional: Boolean(c.extra && JSON.parse(c.extra).promotional),
+          is_extended_promotional: Boolean(
+            c.extra && JSON.parse(c.extra).promotional,
+          ),
           package: c.package || "",
           current_gain: current_gain,
           collector_current: collector_current,

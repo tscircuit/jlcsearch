@@ -93,7 +93,9 @@ export const switchTableSpec: DerivedTableSpec<Switch> = {
         in_stock: c.stock > 0,
         is_basic: Boolean(c.basic),
         is_preferred: Boolean(c.preferred),
-        is_extended_promotional: Boolean(c.extra && JSON.parse(c.extra).promotional),
+        is_extended_promotional: Boolean(
+          c.extra && JSON.parse(c.extra).promotional,
+        ),
         package: c.package || "",
         switch_type: (c as any).subcategory || "",
         circuit: attrs["Circuit"] || null,

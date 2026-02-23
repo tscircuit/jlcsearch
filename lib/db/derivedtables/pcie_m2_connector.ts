@@ -51,7 +51,9 @@ export const pcieM2ConnectorTableSpec: DerivedTableSpec<PcieM2Connector> = {
         in_stock: Boolean((c.stock || 0) > 0),
         is_basic: Boolean(c.basic),
         is_preferred: Boolean(c.preferred),
-        is_extended_promotional: Boolean(c.extra && JSON.parse(c.extra).promotional),
+        is_extended_promotional: Boolean(
+          c.extra && JSON.parse(c.extra).promotional,
+        ),
         key,
         is_right_angle: isRightAngle,
         attributes: attrs,
