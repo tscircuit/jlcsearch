@@ -3,6 +3,7 @@ import type { DerivedTableSpec } from "./types"
 import { BaseComponent } from "./component-base"
 
 export interface FPGA extends BaseComponent {
+  is_extended_promotional: boolean
   package: string
   type: string | null
   logic_array_blocks: number | null

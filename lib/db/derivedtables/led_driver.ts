@@ -12,6 +12,7 @@ import { parseIntOrNull } from "lib/util/parse-int-or-null"
 import { BaseComponent } from "./component-base"
 
 export interface LedDriver extends BaseComponent {
+  is_extended_promotional: boolean
   // Optional LED driver specific fields
   package?: string
   supply_voltage_min?: number

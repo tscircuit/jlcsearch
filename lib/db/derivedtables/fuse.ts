@@ -4,6 +4,7 @@ import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import { BaseComponent } from "./component-base"
 
 export interface Fuse extends BaseComponent {
+  is_extended_promotional: boolean
   current_rating: number // in Amperes
   voltage_rating: number // in Volts
   response_time: string // "fast", "medium", "slow"

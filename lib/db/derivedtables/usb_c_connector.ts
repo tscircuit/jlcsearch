@@ -5,6 +5,7 @@ import { BaseComponent } from "./component-base"
 import type { KyselyDatabaseInstance } from "../kysely-types"
 
 export interface UsbCConnector extends BaseComponent {
+  is_extended_promotional: boolean
   package: string
   mounting_style: string | null
   current_rating_a: number | null

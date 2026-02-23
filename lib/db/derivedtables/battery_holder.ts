@@ -5,6 +5,7 @@ import { BaseComponent } from "./component-base"
 import type { KyselyDatabaseInstance } from "../kysely-types"
 
 export interface BatteryHolder extends BaseComponent {
+  is_extended_promotional: boolean
   package: string
   connector_type: string | null
   battery_type: string | null

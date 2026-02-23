@@ -4,6 +4,7 @@ import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import { BaseComponent } from "./component-base"
 
 export interface VoltageRegulator extends BaseComponent {
+  is_extended_promotional: boolean
   package: string
   output_type: "fixed" | "adjustable" | "unknown"
   output_voltage_min: number | null

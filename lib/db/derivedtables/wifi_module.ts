@@ -4,6 +4,7 @@ import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import { BaseComponent } from "./component-base"
 
 export interface WifiModule extends BaseComponent {
+  is_extended_promotional: boolean
   package: string
   core_processor: string | null
   antenna_type: string | null

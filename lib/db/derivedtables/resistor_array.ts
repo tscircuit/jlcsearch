@@ -4,6 +4,7 @@ import type { DerivedTableSpec } from "./types"
 import { BaseComponent } from "./component-base"
 
 export interface ResistorArray extends BaseComponent {
+  is_extended_promotional: boolean
   package: string
   resistance: number | null
   tolerance_fraction: number | null

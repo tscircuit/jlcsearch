@@ -3,6 +3,7 @@ import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import { BaseComponent } from "./component-base"
 
 export interface Accelerometer extends BaseComponent {
+  is_extended_promotional: boolean
   package: string
   supply_voltage_min: number | null
   supply_voltage_max: number | null

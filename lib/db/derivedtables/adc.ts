@@ -4,6 +4,7 @@ import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import { BaseComponent } from "./component-base"
 
 export interface Adc extends BaseComponent {
+  is_extended_promotional: boolean
   // Extra columns
   package: string
   resolution_bits: number | null

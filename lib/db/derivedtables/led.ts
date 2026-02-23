@@ -4,6 +4,7 @@ import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import { BaseComponent } from "./component-base"
 
 export interface Led extends BaseComponent {
+  is_extended_promotional: boolean
   package: string
   forward_voltage: number | null
   forward_current: number | null

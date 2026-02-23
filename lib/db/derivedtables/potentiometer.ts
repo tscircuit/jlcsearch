@@ -4,6 +4,7 @@ import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import { BaseComponent } from "./component-base"
 
 export interface Potentiometer extends BaseComponent {
+  is_extended_promotional: boolean
   max_resistance: number
   pin_variant: "two_pin" | "three_pin"
   package: string

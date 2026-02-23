@@ -6,6 +6,7 @@ import { BaseComponent } from "./component-base"
 import type { KyselyDatabaseInstance } from "../kysely-types"
 
 export interface Relay extends BaseComponent {
+  is_extended_promotional: boolean
   package: string
   relay_type: string
   contact_form: string | null

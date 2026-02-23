@@ -12,6 +12,7 @@ import { parseIntOrNull } from "lib/util/parse-int-or-null"
 import { BaseComponent } from "./component-base"
 
 export interface Mosfet extends BaseComponent {
+  is_extended_promotional: boolean
   package?: string
   drain_source_voltage?: number
   continuous_drain_current?: number

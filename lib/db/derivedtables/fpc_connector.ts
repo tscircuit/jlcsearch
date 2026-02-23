@@ -5,6 +5,7 @@ import { BaseComponent } from "./component-base"
 import type { KyselyDatabaseInstance } from "../kysely-types"
 
 export interface FpcConnector extends BaseComponent {
+  is_extended_promotional: boolean
   pitch_mm: number | null
   number_of_contacts: number | null
   contact_type: string | null

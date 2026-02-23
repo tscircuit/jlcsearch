@@ -4,6 +4,7 @@ import { BaseComponent } from "./component-base"
 import type { DerivedTableSpec } from "./types"
 
 export interface BoostConverter extends BaseComponent {
+  is_extended_promotional: boolean
   package: string
   input_voltage_min: number | null
   input_voltage_max: number | null

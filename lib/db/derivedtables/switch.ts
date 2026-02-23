@@ -4,6 +4,7 @@ import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import { BaseComponent } from "./component-base"
 
 export interface Switch extends BaseComponent {
+  is_extended_promotional: boolean
   package: string
   switch_type: string
   circuit: string | null

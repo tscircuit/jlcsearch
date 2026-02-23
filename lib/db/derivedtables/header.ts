@@ -4,6 +4,7 @@ import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import { BaseComponent } from "./component-base"
 
 export interface Header extends BaseComponent {
+  is_extended_promotional: boolean
   // Extra columns
   package: string
   pitch_mm: number

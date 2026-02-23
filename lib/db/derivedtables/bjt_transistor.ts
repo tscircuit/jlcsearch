@@ -5,6 +5,7 @@ import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
 
 export interface BJTTransistor extends BaseComponent {
+  is_extended_promotional: boolean
   package?: string
   current_gain?: number
   collector_current?: number

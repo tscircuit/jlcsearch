@@ -5,6 +5,7 @@ import type { DerivedTableSpec } from "./types"
 import type { KyselyDatabaseInstance } from "../kysely-types"
 
 export interface WireToBoardConnector extends BaseComponent {
+  is_extended_promotional: boolean
   package: string
   pitch_mm: number | null
   num_rows: number | null

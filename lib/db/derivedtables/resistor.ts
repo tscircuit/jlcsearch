@@ -4,6 +4,7 @@ import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import { BaseComponent } from "./component-base"
 
 export interface Resistor extends BaseComponent {
+  is_extended_promotional: boolean
   resistance: number
   tolerance_fraction: number
   power_watts: number

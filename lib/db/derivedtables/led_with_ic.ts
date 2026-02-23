@@ -8,6 +8,7 @@ import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 
 export interface LEDWithIC extends BaseComponent {
+  is_extended_promotional: boolean
   package?: string
   forward_voltage: number | null
   forward_current: number | null

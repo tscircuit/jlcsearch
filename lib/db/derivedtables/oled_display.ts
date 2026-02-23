@@ -4,6 +4,7 @@ import { BaseComponent } from "./component-base"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 
 export interface OLEDDisplay extends BaseComponent {
+  is_extended_promotional: boolean
   package?: string
   protocol?: string
   display_width?: string
