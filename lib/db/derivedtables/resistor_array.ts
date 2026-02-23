@@ -126,7 +126,9 @@ export const resistorArrayTableSpec: DerivedTableSpec<ResistorArray> = {
         in_stock: component.stock > 0,
         is_basic: Boolean(component.basic),
         is_preferred: Boolean(component.preferred),
-        is_extended_promotional: Boolean(component.extra && JSON.parse(component.extra).promotional),
+        is_extended_promotional: Boolean(
+          component.extra && JSON.parse(component.extra).promotional,
+        ),
         package: component.package ?? "",
         resistance,
         tolerance_fraction: tolerance,
