@@ -80,17 +80,14 @@ export default withWinterSpec({
       price: extractSmallQuantityPrice(c.price),
     }))
 
-    return ctx.json({
-      components: req.query.full ? fullComponents : components,
-    })
+    return ctx.json({ components: req.query.full ? fullComponents : components })
   }
 
   // 1. Check for OpenAI key
-  let openai
+  let openai;
   try {
     openai = getOpenAiClient()
   } catch (err) {
-    // If not configured, only fail for complex queries
     const isComplex = q && (q.split(" ").length > 1 || /[0-9]/.test(q))
     if (isComplex) {
       return ctx.error(400, {
@@ -125,10 +122,7 @@ Output format: {"table": string, "filters": object, "q": string}`,
   }
 
   // 3. Specialized Search
-  let specQuery = ctx.db
-    .selectFrom(routing.table as any)
-    .selectAll()
-    .limit(limit)
+  let specQuery = ctx.db.selectFrom(routing.table as any).selectAll().limit(limit)
   for (const [k, v] of Object.entries(routing.filters || {})) {
     specQuery = specQuery.where(k as any, "=", v as any)
   }
