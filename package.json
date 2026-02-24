@@ -1,6 +1,9 @@
 {
   "name": "jlcpcb-parts-engine",
   "module": "index.ts",
+  "workspaces": [
+    "cf-proxy"
+  ],
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
     "@flydotio/dockerfile": "^0.5.9",
