@@ -78,3 +78,5 @@ To recap:
 
 None of this would be possible without [JLCPCB](https://jlcpcb.com) and the work
 [jlcparts](https://github.com/yaqwsx/jlcparts) project.
+
+<!-- CI trigger commit -->

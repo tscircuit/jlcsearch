@@ -185,4 +185,4 @@ db.backup.sqlite3
 
 
 #MANUAL folder gets created on build, ignore it 
-/MANUAL
+/MANUALbun.lock
