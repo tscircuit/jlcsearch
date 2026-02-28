@@ -12,6 +12,7 @@ export default withWinterSpec({
   methods: ["GET"],
   commonParams: z.object({
     json: z.boolean().optional(),
+    is_extended_promotional: z.boolean().optional(),
     package: z.string().optional(),
     drain_source_voltage_min: z.coerce.number().optional(),
     drain_source_voltage_max: z.coerce.number().optional(),
@@ -51,6 +52,10 @@ export default withWinterSpec({
     .selectAll()
     .orderBy("stock", "desc")
     .limit(100)
+  if (params.is_extended_promotional) {
+    query = query.where("is_extended_promotional", "=", 1)
+  }
+
 
   if (params.package) {
     query = query.where("package", "=", params.package)
@@ -238,11 +243,35 @@ export default withWinterSpec({
           />
         </div>
 
+        <div>
+
+          <label>
+
+            Extended Promotional:
+
+            <input
+
+              type="checkbox"
+
+              name="is_extended_promotional"
+
+              value="true"
+
+              checked={params.is_extended_promotional}
+
+            />
+
+          </label>
+
+        </div>
+
+
         <button type="submit">Filter</button>
       </form>
 
       <Table
         rows={results.map((m) => ({
+          "Extended Promotional": m.is_extended_promotional ? "✓" : "",
           lcsc: m.lcsc,
           mfr: m.mfr,
           package: m.package,

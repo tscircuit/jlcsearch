@@ -8,6 +8,7 @@ export default withWinterSpec({
   methods: ["GET", "POST"],
   commonParams: z.object({
     json: z.boolean().optional(),
+    is_extended_promotional: z.boolean().optional(),
     package: z.string().optional(),
     current_rating: z.string().optional(),
     voltage_rating: z.string().optional(),
@@ -34,7 +35,7 @@ export default withWinterSpec({
     ),
   }),
 } as const)(async (req, ctx) => {
-  const params = req.commonParams
+      const params = req.commonParams
   const limit = 100
   const search = "fuse"
   const searchPattern = `%${search}%`
@@ -69,6 +70,10 @@ export default withWinterSpec({
     )
 
   // Add filters for each column
+  if (params.is_extended_promotional) {
+    query = query.where("is_extended_promotional", "=", 1)
+  }
+
   if (params.package) {
     query = query.where("package", "=", params.package)
   }
@@ -92,15 +97,16 @@ export default withWinterSpec({
   if (params.mfr) {
     query = query.where("mfr", "like", `%${params.mfr}%`)
   }
-  if (params.description) {
-    query = query.where("description", "like", `%${params.description}%`)
-  }
+      if (params.description) {
+        query = query.where("description", "like", `%${params.description}%`)
+      }
 
   const fullComponents = await query.execute()
   const components = fullComponents.map((c) => ({
     lcsc: c.lcsc,
     mfr: c.mfr,
     package: c.package,
+    "Extended Promotional": c.is_extended_promotional ? "✓" : "",
     description: c.description,
     stock: c.stock,
     price: c.price1,
@@ -181,6 +187,18 @@ export default withWinterSpec({
             ))}
           </select>
         </div>
+        <div>
+          <label>
+            Extended Promotional:
+            <input
+              type="checkbox"
+              name="is_extended_promotional"
+              value="true"
+              checked={params.is_extended_promotional}
+            />
+          </label>
+        </div>
+        <button type="submit">Filter</button>
       </form>
       <Table rows={components} timezone="UTC" />
     </div>,

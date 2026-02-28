@@ -8,6 +8,7 @@ export default withWinterSpec({
   methods: ["GET"],
   commonParams: z.object({
     json: z.boolean().optional(),
+    is_extended_promotional: z.boolean().optional(),
     package: z.string().optional(),
     current_gain_min: z.coerce.number().optional(),
     collector_current_min: z.coerce.number().optional(),
@@ -48,6 +49,10 @@ export default withWinterSpec({
     .limit(100)
 
   // Add filters for each column
+  if (params.is_extended_promotional) {
+    query = query.where("is_extended_promotional", "=", 1)
+  }
+
   if (params.package) {
     query = query.where("package", "=", params.package)
   }
@@ -184,9 +189,22 @@ export default withWinterSpec({
             className="border px-2 py-1 rounded"
           />
         </div>
+        <div>
+          <label>
+            Extended Promotional:
+            <input
+              type="checkbox"
+              name="is_extended_promotional"
+              value="true"
+              checked={params.is_extended_promotional}
+            />
+          </label>
+        </div>
+        <button type="submit">Filter</button>
       </form>
       <Table
         rows={components.map((c) => ({
+          "Extended Promotional": c.is_extended_promotional ? "✓" : "",
           LCSC: c.lcsc ? (
             <a
               href={`https://jlcpcv.com/partdetail/${c.mfr}/C${c.lcsc}`}

@@ -8,6 +8,7 @@ import type { DbOptimizationSpec } from "lib/db/optimizations/types"
 import { componentSearchFTS } from "lib/db/optimizations/component-search-fts"
 import { componentPackageIndex } from "lib/db/optimizations/component-indexes"
 import { componentBasicIndex } from "lib/db/optimizations/component-basic-index"
+import { componentExtendedPromotionalColumn } from "lib/db/optimizations/component-extended-promotional-column"
 import { componentPreferredIndex } from "lib/db/optimizations/component-preferred-index"
 
 const OPTIMIZATIONS: DbOptimizationSpec[] = [
@@ -15,6 +16,7 @@ const OPTIMIZATIONS: DbOptimizationSpec[] = [
   componentPackageIndex,
   componentBasicIndex,
   componentPreferredIndex,
+  componentExtendedPromotionalColumn,
   removeStaleComponents,
   componentStockIndex,
   componentInStockColumn,

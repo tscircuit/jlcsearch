@@ -8,6 +8,7 @@ export default withWinterSpec({
   methods: ["GET", "POST"],
   commonParams: z.object({
     json: z.boolean().optional(),
+    is_extended_promotional: z.boolean().optional(),
     package: z.string().optional(),
     color: z.string().optional(),
     protocol: z.string().optional(),
@@ -52,6 +53,10 @@ export default withWinterSpec({
     .orderBy("led_with_ic.stock", "desc")
     .where("categories.subcategory", "=", "RGB LEDs(Built-In IC)")
     .where("led_with_ic.stock", ">", 0)
+  if (params.is_extended_promotional) {
+    query = query.where("is_extended_promotional", "=", 1)
+  }
+
 
   if (params.package) {
     query = query.where("led_with_ic.package", "=", params.package)
@@ -186,11 +191,35 @@ export default withWinterSpec({
           </select>
         </div>
 
+        <div>
+
+          <label>
+
+            Extended Promotional:
+
+            <input
+
+              type="checkbox"
+
+              name="is_extended_promotional"
+
+              value="true"
+
+              checked={params.is_extended_promotional}
+
+            />
+
+          </label>
+
+        </div>
+
+
         <button type="submit">Filter</button>
       </form>
 
       <Table
         rows={components.map((c) => ({
+          "Extended Promotional": c.is_extended_promotional ? "✓" : "",
           lcsc: c.lcsc,
           mfr: c.mfr,
           package: c.package,
