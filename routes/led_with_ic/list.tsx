@@ -213,7 +213,7 @@ export default withWinterSpec({
           lcsc: c.lcsc,
           mfr: c.mfr,
           package: c.package,
-    is_extended_promotional: Boolean(c.is_extended_promotional),
+          is_extended_promotional: Boolean(c.is_extended_promotional),
           description: c.description,
           stock: <span className="tabular-nums">{c.stock}</span>,
           price: <span className="tabular-nums">{formatPrice(c.price)}</span>,
