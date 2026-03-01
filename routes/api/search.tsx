@@ -12,8 +12,32 @@ const extractSmallQuantityPrice = (price: string | null): string => {
   }
 }
 
-const escapeFts5SearchTerm = (term: string): string => {
-  return `"${term.replace(/"/g, '""')}"`
+/**
+ * Builds a safe FTS5 query from a raw search term that may contain
+ * special characters (e.g. "0.1uf", "10k-1%", "BC547B").
+ *
+ * FTS5 treats most punctuation as token separators, so "0.1uf" is
+ * tokenized as ["0", "1uf"] by the unicode61 tokenizer.  Passing the
+ * raw string directly — even inside double-quotes — can trigger a
+ * "syntax error near '.'" in some SQLite builds.
+ *
+ * Strategy:
+ *   1. Replace all non-alphanumeric characters with spaces.
+ *   2. Split into individual tokens, discard empties.
+ *   3. Build an AND-prefix FTS5 query: each token becomes `"token"*`.
+ *   4. If no tokens survive, return null (caller should fall back to LIKE).
+ */
+const buildSafeFts5Query = (rawTerm: string): string | null => {
+  const tokens = rawTerm
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, " ")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+
+  if (tokens.length === 0) return null
+
+  return tokens.map((t) => `"${t}"*`).join(" ")
 }
 
 export default withWinterSpec({
@@ -64,15 +88,28 @@ export default withWinterSpec({
         query = query.where("lcsc", "=", lcscNumber)
       }
     } else {
-      const quotedTerm = escapeFts5SearchTerm(searchTerm)
-      const mfrFtsQuery = `mfr:${quotedTerm}*`
-      const generalFtsQuery = `${quotedTerm}*`
-      const combinedFtsQuery = `${mfrFtsQuery} OR ${generalFtsQuery}`
-      query = query.where(
-        sql`lcsc`,
-        "in",
-        sql`(SELECT CAST(lcsc AS INTEGER) FROM components_fts WHERE components_fts MATCH ${combinedFtsQuery})`,
-      )
+      const safeFtsQuery = buildSafeFts5Query(searchTerm)
+
+      if (safeFtsQuery) {
+        // FTS5-safe path: use tokenised prefix query for speed
+        const mfrFtsQuery = `mfr:(${safeFtsQuery})`
+        const generalFtsQuery = safeFtsQuery
+        const combinedFtsQuery = `${mfrFtsQuery} OR ${generalFtsQuery}`
+        query = query.where(
+          sql`lcsc`,
+          "in",
+          sql`(SELECT CAST(lcsc AS INTEGER) FROM components_fts WHERE components_fts MATCH ${combinedFtsQuery})`,
+        )
+      } else {
+        // Fallback for terms that are all special characters: LIKE search
+        const likePattern = `%${searchTerm}%`
+        query = query.where((eb) =>
+          eb.or([
+            eb("mfr", "like", likePattern),
+            eb("description", "like", likePattern),
+          ]),
+        )
+      }
     }
   }
 
