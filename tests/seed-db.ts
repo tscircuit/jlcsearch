@@ -55,7 +55,7 @@ try {
       mfr_chars
     )
   `)
-} catch (e) {
+} catch (e: any) {
   console.log(
     "FTS5 table might already exist or FTS5 not supported:",
     e.message,
@@ -139,7 +139,7 @@ for (const comp of mockComponents) {
   })
 
   // Get the rowid of the inserted component
-  const rowid = db.query("SELECT last_insert_rowid() as id").get().id
+  const rowid = (db.query("SELECT last_insert_rowid() as id").get() as any).id
 
   insertFts.run({
     $rowid: rowid,
