@@ -38,6 +38,7 @@ export default withWinterSpec({
     .innerJoin("components", "led_with_ic.lcsc", "components.lcsc")
     .innerJoin("categories", "components.category_id", "categories.id")
     .select([
+      "is_extended_promotional",
       "led_with_ic.lcsc",
       "led_with_ic.mfr",
       "led_with_ic.package",
@@ -57,7 +58,6 @@ export default withWinterSpec({
     query = query.where("is_extended_promotional", "=", 1)
   }
 
-
   if (params.package) {
     query = query.where("led_with_ic.package", "=", params.package)
   }
@@ -76,6 +76,7 @@ export default withWinterSpec({
     lcsc: c.lcsc,
     mfr: c.mfr,
     package: c.package,
+    is_extended_promotional: Boolean(c.is_extended_promotional),
     description: c.description,
     stock: c.stock,
     price: c.price1,
@@ -192,27 +193,16 @@ export default withWinterSpec({
         </div>
 
         <div>
-
           <label>
-
             Extended Promotional:
-
             <input
-
               type="checkbox"
-
               name="is_extended_promotional"
-
               value="true"
-
               checked={params.is_extended_promotional}
-
             />
-
           </label>
-
         </div>
-
 
         <button type="submit">Filter</button>
       </form>
@@ -223,6 +213,7 @@ export default withWinterSpec({
           lcsc: c.lcsc,
           mfr: c.mfr,
           package: c.package,
+    is_extended_promotional: Boolean(c.is_extended_promotional),
           description: c.description,
           stock: <span className="tabular-nums">{c.stock}</span>,
           price: <span className="tabular-nums">{formatPrice(c.price)}</span>,

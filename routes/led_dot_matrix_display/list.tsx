@@ -38,6 +38,7 @@ export default withWinterSpec({
   let query = ctx.db
     .selectFrom("led_dot_matrix_display")
     .select([
+      "is_extended_promotional",
       "lcsc",
       "mfr",
       "package",

@@ -35,7 +35,7 @@ export default withWinterSpec({
     ),
   }),
 } as const)(async (req, ctx) => {
-      const params = req.commonParams
+  const params = req.commonParams
   const limit = 100
   const search = "fuse"
   const searchPattern = `%${search}%`
@@ -43,6 +43,7 @@ export default withWinterSpec({
   let query = ctx.db
     .selectFrom("fuse")
     .select([
+      "is_extended_promotional",
       "lcsc",
       "mfr",
       "package",
@@ -97,9 +98,9 @@ export default withWinterSpec({
   if (params.mfr) {
     query = query.where("mfr", "like", `%${params.mfr}%`)
   }
-      if (params.description) {
-        query = query.where("description", "like", `%${params.description}%`)
-      }
+  if (params.description) {
+    query = query.where("description", "like", `%${params.description}%`)
+  }
 
   const fullComponents = await query.execute()
   const components = fullComponents.map((c) => ({

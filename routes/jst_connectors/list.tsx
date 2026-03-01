@@ -41,7 +41,6 @@ export default withWinterSpec({
     query = query.where("is_extended_promotional", "=", 1)
   }
 
-
   if (params.pitch) {
     const p = Number(params.pitch)
     if (!isNaN(p)) {

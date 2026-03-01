@@ -50,7 +50,6 @@ export default withWinterSpec({
     query = query.where("is_extended_promotional", "=", 1)
   }
 
-
   if (params.pitch) {
     const p = Number(params.pitch)
     if (!Number.isNaN(p)) {
@@ -163,27 +162,16 @@ export default withWinterSpec({
         </div>
 
         <div>
-
           <label>
-
             Extended Promotional:
-
             <input
-
               type="checkbox"
-
               name="is_extended_promotional"
-
               value="true"
-
               checked={params.is_extended_promotional}
-
             />
-
           </label>
-
         </div>
-
 
         <button type="submit">Filter</button>
       </form>

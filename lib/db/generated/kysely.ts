@@ -10,6 +10,7 @@ export type Generated<T> = T extends ColumnType<infer S, infer I, infer U>
   : ColumnType<T, T | undefined, T>;
 
 export interface Accelerometer {
+  is_extended_promotional: number | null;
   attributes: string | null;
   axes: string | null;
   description: string | null;
@@ -31,6 +32,7 @@ export interface Accelerometer {
 }
 
 export interface Adc {
+  is_extended_promotional: number | null;
   attributes: string | null;
   description: string | null;
   has_i2c: number | null;
@@ -55,6 +57,7 @@ export interface Adc {
 }
 
 export interface AnalogMultiplexer {
+  is_extended_promotional: number | null;
   attributes: string | null;
   channel_type: string | null;
   description: string | null;
@@ -79,6 +82,7 @@ export interface AnalogMultiplexer {
 }
 
 export interface BatteryHolder {
+  is_extended_promotional: number | null;
   attributes: string | null;
   battery_type: string | null;
   connector_type: string | null;
@@ -96,6 +100,7 @@ export interface BatteryHolder {
 }
 
 export interface BjtTransistor {
+  is_extended_promotional: number | null;
   attributes: string | null;
   collector_current: number | null;
   collector_emitter_voltage: number | null;
@@ -113,6 +118,7 @@ export interface BjtTransistor {
 }
 
 export interface BoostConverter {
+  is_extended_promotional: number | null;
   attributes: string | null;
   description: string | null;
   in_stock: number | null;
@@ -135,6 +141,7 @@ export interface BoostConverter {
 }
 
 export interface BuckBoostConverter {
+  is_extended_promotional: number | null;
   attributes: string | null;
   description: string | null;
   in_stock: number | null;
@@ -157,6 +164,7 @@ export interface BuckBoostConverter {
 }
 
 export interface Capacitor {
+  is_extended_promotional: number | null;
   attributes: string | null;
   capacitance_farads: number | null;
   capacitor_type: string | null;
@@ -180,12 +188,14 @@ export interface Capacitor {
 }
 
 export interface Category {
+  is_extended_promotional: number | null;
   category: string;
   id: Generated<number>;
   subcategory: string;
 }
 
 export interface Component {
+  is_extended_promotional: number | null;
   basic: number;
   category_id: number;
   datasheet: string;
@@ -205,6 +215,7 @@ export interface Component {
 }
 
 export interface ComponentsFt {
+  is_extended_promotional: number | null;
   description: string | null;
   lcsc: string | null;
   mfr: string | null;
@@ -212,11 +223,13 @@ export interface ComponentsFt {
 }
 
 export interface ComponentsFtsConfig {
+  is_extended_promotional: number | null;
   k: string;
   v: string | null;
 }
 
 export interface ComponentsFtsContent {
+  is_extended_promotional: number | null;
   c0: string | null;
   c1: string | null;
   c2: string | null;
@@ -225,22 +238,26 @@ export interface ComponentsFtsContent {
 }
 
 export interface ComponentsFtsDatum {
+  is_extended_promotional: number | null;
   block: Buffer | null;
   id: Generated<number | null>;
 }
 
 export interface ComponentsFtsDocsize {
+  is_extended_promotional: number | null;
   id: Generated<number | null>;
   sz: Buffer | null;
 }
 
 export interface ComponentsFtsIdx {
+  is_extended_promotional: number | null;
   pgno: string | null;
   segid: string;
   term: string;
 }
 
 export interface Dac {
+  is_extended_promotional: number | null;
   attributes: string | null;
   description: string | null;
   has_i2c: number | null;
@@ -264,6 +281,7 @@ export interface Dac {
 }
 
 export interface Diode {
+  is_extended_promotional: number | null;
   attributes: string | null;
   configuration: string | null;
   description: string | null;
@@ -288,6 +306,7 @@ export interface Diode {
 }
 
 export interface FpcConnector {
+  is_extended_promotional: number | null;
   attributes: string | null;
   contact_type: string | null;
   description: string | null;
@@ -304,6 +323,7 @@ export interface FpcConnector {
 }
 
 export interface Fpga {
+  is_extended_promotional: number | null;
   attributes: string | null;
   description: string | null;
   embedded_ram_bits: number | null;
@@ -327,6 +347,7 @@ export interface Fpga {
 }
 
 export interface Fuse {
+  is_extended_promotional: number | null;
   attributes: string | null;
   current_rating: number | null;
   description: string | null;
@@ -344,6 +365,7 @@ export interface Fuse {
 }
 
 export interface GasSensor {
+  is_extended_promotional: number | null;
   attributes: string | null;
   description: string | null;
   in_stock: number | null;
@@ -369,6 +391,7 @@ export interface GasSensor {
 }
 
 export interface Gyroscope {
+  is_extended_promotional: number | null;
   attributes: string | null;
   axes: string | null;
   description: string | null;
@@ -390,6 +413,7 @@ export interface Gyroscope {
 }
 
 export interface Header {
+  is_extended_promotional: number | null;
   attributes: string | null;
   contact_material: string | null;
   contact_plating: string | null;
@@ -418,6 +442,7 @@ export interface Header {
 }
 
 export interface IoExpander {
+  is_extended_promotional: number | null;
   attributes: string | null;
   clock_frequency_hz: number | null;
   description: string | null;
@@ -442,6 +467,7 @@ export interface IoExpander {
 }
 
 export interface JstConnector {
+  is_extended_promotional: number | null;
   attributes: string | null;
   description: string | null;
   in_stock: number | null;
@@ -459,6 +485,7 @@ export interface JstConnector {
 }
 
 export interface LcdDisplay {
+  is_extended_promotional: number | null;
   attributes: string | null;
   description: string | null;
   display_size: string | null;
@@ -473,6 +500,7 @@ export interface LcdDisplay {
 }
 
 export interface Ldo {
+  is_extended_promotional: number | null;
   attributes: string | null;
   description: string | null;
   dropout_voltage: number | null;
@@ -500,6 +528,7 @@ export interface Ldo {
 }
 
 export interface Led {
+  is_extended_promotional: number | null;
   attributes: string | null;
   color: string | null;
   description: string | null;
@@ -523,6 +552,7 @@ export interface Led {
 }
 
 export interface LedDotMatrixDisplay {
+  is_extended_promotional: number | null;
   attributes: string | null;
   color: string | null;
   description: string | null;
@@ -536,6 +566,7 @@ export interface LedDotMatrixDisplay {
 }
 
 export interface LedDriver {
+  is_extended_promotional: number | null;
   attributes: string | null;
   channel_count: number | null;
   description: string | null;
@@ -557,6 +588,7 @@ export interface LedDriver {
 }
 
 export interface LedSegmentDisplay {
+  is_extended_promotional: number | null;
   attributes: string | null;
   color: string | null;
   description: string | null;
@@ -572,6 +604,7 @@ export interface LedSegmentDisplay {
 }
 
 export interface LedWithIc {
+  is_extended_promotional: number | null;
   attributes: string | null;
   color: string | null;
   description: string | null;
@@ -588,11 +621,13 @@ export interface LedWithIc {
 }
 
 export interface Manufacturer {
+  is_extended_promotional: number | null;
   id: Generated<number>;
   name: string;
 }
 
 export interface Microcontroller {
+  is_extended_promotional: number | null;
   adc_resolution_bits: number | null;
   attributes: string | null;
   cpu_core: string | null;
@@ -628,6 +663,7 @@ export interface Microcontroller {
 }
 
 export interface Mosfet {
+  is_extended_promotional: number | null;
   attributes: string | null;
   continuous_drain_current: number | null;
   description: string | null;
@@ -646,6 +682,7 @@ export interface Mosfet {
 }
 
 export interface OledDisplay {
+  is_extended_promotional: number | null;
   attributes: string | null;
   description: string | null;
   display_width: string | null;
@@ -660,6 +697,7 @@ export interface OledDisplay {
 }
 
 export interface PcieM2Connector {
+  is_extended_promotional: number | null;
   attributes: string | null;
   description: string | null;
   in_stock: number | null;
@@ -674,6 +712,7 @@ export interface PcieM2Connector {
 }
 
 export interface Potentiometer {
+  is_extended_promotional: number | null;
   attributes: string | null;
   description: string | null;
   in_stock: number | null;
@@ -688,6 +727,7 @@ export interface Potentiometer {
 }
 
 export interface Relay {
+  is_extended_promotional: number | null;
   attributes: string | null;
   coil_resistance: number | null;
   coil_voltage: number | null;
@@ -708,6 +748,7 @@ export interface Relay {
 }
 
 export interface Resistor {
+  is_extended_promotional: number | null;
   attributes: string | null;
   description: string | null;
   in_stock: number | null;
@@ -730,6 +771,7 @@ export interface Resistor {
 }
 
 export interface ResistorArray {
+  is_extended_promotional: number | null;
   attributes: string | null;
   description: string | null;
   in_stock: number | null;
@@ -751,6 +793,7 @@ export interface ResistorArray {
 }
 
 export interface Switch {
+  is_extended_promotional: number | null;
   attributes: string | null;
   circuit: string | null;
   current_rating_a: number | null;
@@ -776,6 +819,7 @@ export interface Switch {
 }
 
 export interface UsbCConnector {
+  is_extended_promotional: number | null;
   attributes: string | null;
   current_rating_a: number | null;
   description: string | null;
@@ -796,6 +840,7 @@ export interface UsbCConnector {
 }
 
 export interface VComponent {
+  is_extended_promotional: number | null;
   basic: number | null;
   category: string | null;
   category_id: number | null;
@@ -815,6 +860,7 @@ export interface VComponent {
 }
 
 export interface VoltageRegulator {
+  is_extended_promotional: number | null;
   attributes: string | null;
   description: string | null;
   dropout_voltage: number | null;
@@ -841,6 +887,7 @@ export interface VoltageRegulator {
 }
 
 export interface WifiModule {
+  is_extended_promotional: number | null;
   antenna_type: string | null;
   attributes: string | null;
   core_processor: string | null;
@@ -868,6 +915,7 @@ export interface WifiModule {
 }
 
 export interface WireToBoardConnector {
+  is_extended_promotional: number | null;
   attributes: string | null;
   description: string | null;
   gender: string | null;

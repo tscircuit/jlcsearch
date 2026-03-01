@@ -40,6 +40,7 @@ export default withWinterSpec({
   let query = ctx.db
     .selectFrom("lcd_display")
     .select([
+      "is_extended_promotional",
       "lcsc",
       "mfr",
       "package",

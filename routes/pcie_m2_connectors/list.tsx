@@ -38,7 +38,6 @@ export default withWinterSpec({
     query = query.where("is_extended_promotional", "=", 1)
   }
 
-
   if (params.key) {
     query = query.where("key", "=", params.key)
   }
@@ -106,27 +105,16 @@ export default withWinterSpec({
         </div>
 
         <div>
-
           <label>
-
             Extended Promotional:
-
             <input
-
               type="checkbox"
-
               name="is_extended_promotional"
-
               value="true"
-
               checked={params.is_extended_promotional}
-
             />
-
           </label>
-
         </div>
-
 
         <button type="submit">Filter</button>
       </form>
