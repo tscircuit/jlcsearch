@@ -8,6 +8,7 @@ export default withWinterSpec({
   methods: ["GET", "POST"],
   commonParams: z.object({
     json: z.boolean().optional(),
+    is_extended_promotional: z.boolean().optional(),
     package: z.string().optional(),
     protocol: z.string().optional(),
     display_width: z.string().optional(),
@@ -39,6 +40,7 @@ export default withWinterSpec({
   let query = ctx.db
     .selectFrom("oled_display")
     .select([
+      "is_extended_promotional",
       "lcsc",
       "mfr",
       "package",
@@ -63,6 +65,10 @@ export default withWinterSpec({
     )
 
   // Add filters for each column
+  if (params.is_extended_promotional) {
+    query = query.where("is_extended_promotional", "=", 1)
+  }
+
   if (params.package) {
     query = query.where("package", "=", params.package)
   }
@@ -87,6 +93,7 @@ export default withWinterSpec({
     lcsc: c.lcsc,
     mfr: c.mfr,
     package: c.package,
+    is_extended_promotional: Boolean(c.is_extended_promotional),
     description: c.description,
     stock: c.stock,
     price: c.price1,
@@ -205,6 +212,17 @@ export default withWinterSpec({
             ))}
           </select>
         </div>
+        <div>
+          <label>
+            Extended Promotional:
+            <input
+              type="checkbox"
+              name="is_extended_promotional"
+              value="true"
+              checked={params.is_extended_promotional}
+            />
+          </label>
+        </div>
         <button
           type="submit"
           className="bg-blue-500 text-white px-4 py-1 rounded hover:bg-blue-600"
@@ -214,6 +232,7 @@ export default withWinterSpec({
       </form>
       <Table
         rows={components.map((c) => ({
+          "Extended Promotional": c.is_extended_promotional ? "✓" : "",
           lcsc: c.lcsc,
           mfr: c.mfr,
           package: c.package || "-",

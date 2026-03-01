@@ -9,6 +9,7 @@ export default withWinterSpec({
   methods: ["GET", "POST"],
   commonParams: z.object({
     json: z.boolean().optional(),
+    is_extended_promotional: z.boolean().optional(),
     pitch: z.string().optional(),
     num_pins: z.coerce.number().optional(),
     is_right_angle: z
@@ -47,6 +48,10 @@ export default withWinterSpec({
   const params = req.commonParams
 
   // Apply filters
+  if (params.is_extended_promotional) {
+    query = query.where("is_extended_promotional", "=", 1)
+  }
+
   if (params.pitch) {
     query = query.where("pitch_mm", "=", parseFloat(params.pitch))
   }
@@ -170,11 +175,24 @@ export default withWinterSpec({
           </select>
         </div>
 
+        <div>
+          <label>
+            Extended Promotional:
+            <input
+              type="checkbox"
+              name="is_extended_promotional"
+              value="true"
+              checked={params.is_extended_promotional}
+            />
+          </label>
+        </div>
+
         <button type="submit">Filter</button>
       </form>
 
       <Table
         rows={headers.map((h) => ({
+          "Extended Promotional": h.is_extended_promotional ? "✓" : "",
           lcsc: h.lcsc,
           mfr: h.mfr,
           package: h.package,

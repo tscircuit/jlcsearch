@@ -8,6 +8,7 @@ export default withWinterSpec({
   methods: ["GET", "POST"],
   commonParams: z.object({
     json: z.boolean().optional(),
+    is_extended_promotional: z.boolean().optional(),
     switch_type: z.string().optional(),
     circuit: z.string().optional(),
     pin_count: z.coerce.number().optional(),
@@ -40,6 +41,9 @@ export default withWinterSpec({
     .selectAll()
     .limit(100)
     .orderBy("stock", "desc")
+  if (params.is_extended_promotional) {
+    query = query.where("is_extended_promotional", "=", 1)
+  }
 
   if (params.switch_type) {
     query = query.where("switch_type", "=", params.switch_type)
@@ -177,11 +181,24 @@ export default withWinterSpec({
           </select>
         </div>
 
+        <div>
+          <label>
+            Extended Promotional:
+            <input
+              type="checkbox"
+              name="is_extended_promotional"
+              value="true"
+              checked={params.is_extended_promotional}
+            />
+          </label>
+        </div>
+
         <button type="submit">Filter</button>
       </form>
 
       <Table
         rows={switches.map((s) => ({
+          "Extended Promotional": s.is_extended_promotional ? "✓" : "",
           lcsc: s.lcsc,
           mfr: s.mfr,
           package: s.package,
