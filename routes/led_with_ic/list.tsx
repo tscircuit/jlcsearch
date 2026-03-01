@@ -38,7 +38,7 @@ export default withWinterSpec({
     .innerJoin("components", "led_with_ic.lcsc", "components.lcsc")
     .innerJoin("categories", "components.category_id", "categories.id")
     .select([
-      "is_extended_promotional",
+      "led_with_ic.is_extended_promotional",
       "led_with_ic.lcsc",
       "led_with_ic.mfr",
       "led_with_ic.package",
@@ -55,7 +55,7 @@ export default withWinterSpec({
     .where("categories.subcategory", "=", "RGB LEDs(Built-In IC)")
     .where("led_with_ic.stock", ">", 0)
   if (params.is_extended_promotional) {
-    query = query.where("is_extended_promotional", "=", 1)
+    query = query.where("led_with_ic.is_extended_promotional", "=", 1)
   }
 
   if (params.package) {
