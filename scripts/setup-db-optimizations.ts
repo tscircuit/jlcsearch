@@ -11,6 +11,7 @@ import { componentBasicIndex } from "lib/db/optimizations/component-basic-index"
 import { componentExtendedPromotionalColumn } from "lib/db/optimizations/component-extended-promotional-column"
 import { componentPreferredIndex } from "lib/db/optimizations/component-preferred-index"
 
+// Optimization list for components database
 const OPTIMIZATIONS: DbOptimizationSpec[] = [
   componentSearchFTS,
   componentPackageIndex,
