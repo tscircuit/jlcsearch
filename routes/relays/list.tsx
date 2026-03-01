@@ -8,6 +8,7 @@ export default withWinterSpec({
   methods: ["GET", "POST"],
   commonParams: z.object({
     json: z.boolean().optional(),
+    is_extended_promotional: z.boolean().optional(),
     relay_type: z.string().optional(),
     package: z.string().optional(),
   }),
@@ -33,6 +34,9 @@ export default withWinterSpec({
     .selectAll()
     .limit(100)
     .orderBy("stock", "desc")
+  if (params.is_extended_promotional) {
+    query = query.where("is_extended_promotional", "=", 1)
+  }
 
   if (params.relay_type) {
     query = query.where("relay_type", "=", params.relay_type)
@@ -110,11 +114,24 @@ export default withWinterSpec({
           </select>
         </div>
 
+        <div>
+          <label>
+            Extended Promotional:
+            <input
+              type="checkbox"
+              name="is_extended_promotional"
+              value="true"
+              checked={params.is_extended_promotional}
+            />
+          </label>
+        </div>
+
         <button type="submit">Filter</button>
       </form>
 
       <Table
         rows={relays.map((r) => ({
+          "Extended Promotional": r.is_extended_promotional ? "✓" : "",
           lcsc: r.lcsc,
           mfr: r.mfr,
           package: r.package,

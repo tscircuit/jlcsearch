@@ -1,6 +1,9 @@
 {
   "name": "jlcpcb-parts-engine",
   "module": "index.ts",
+  "workspaces": [
+    "cf-proxy"
+  ],
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@flydotio/dockerfile": "^0.5.9",
@@ -28,14 +31,18 @@
     "setup:download": "curl -o db.sqlite \"https://jlcsearch.fly.dev/database/$DATABASE_DOWNLOAD_TOKEN\"",
     "generate:openapi": "mkdir -p .tmp && TMPDIR=$(pwd)/.tmp WINTERSPEC_CODEGEN=true bunx winterspec codegen openapi --root . --routes-directory ./routes --platform node --tsconfig tsconfig.json --output docs/openapi.json",
     "format": "biome format --write .",
-    "format:check": "biome format ."
+    "format:check": "biome format .",
+    "pretest": "bun tests/seed-db.ts",
+    "test": "bun test"
   },
   "type": "module",
   "dependencies": {
     "@tscircuit/footprinter": "^0.0.143",
+    "kleur": "^4.1.5",
     "kysely-bun-sqlite": "^0.3.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "redaxios": "^0.5.1"
+    "redaxios": "^0.5.1",
+    "zod": "^3.22.4"
   }
 }

@@ -8,6 +8,7 @@ export default withWinterSpec({
   methods: ["GET", "POST"],
   commonParams: z.object({
     json: z.boolean().optional(),
+    is_extended_promotional: z.boolean().optional(),
     package: z.string().optional(),
     current_rating: z.string().optional(),
     voltage_rating: z.string().optional(),
@@ -42,6 +43,7 @@ export default withWinterSpec({
   let query = ctx.db
     .selectFrom("fuse")
     .select([
+      "is_extended_promotional",
       "lcsc",
       "mfr",
       "package",
@@ -69,6 +71,10 @@ export default withWinterSpec({
     )
 
   // Add filters for each column
+  if (params.is_extended_promotional) {
+    query = query.where("is_extended_promotional", "=", 1)
+  }
+
   if (params.package) {
     query = query.where("package", "=", params.package)
   }
@@ -101,6 +107,7 @@ export default withWinterSpec({
     lcsc: c.lcsc,
     mfr: c.mfr,
     package: c.package,
+    "Extended Promotional": c.is_extended_promotional ? "✓" : "",
     description: c.description,
     stock: c.stock,
     price: c.price1,
@@ -181,6 +188,18 @@ export default withWinterSpec({
             ))}
           </select>
         </div>
+        <div>
+          <label>
+            Extended Promotional:
+            <input
+              type="checkbox"
+              name="is_extended_promotional"
+              value="true"
+              checked={params.is_extended_promotional}
+            />
+          </label>
+        </div>
+        <button type="submit">Filter</button>
       </form>
       <Table rows={components} timezone="UTC" />
     </div>,
