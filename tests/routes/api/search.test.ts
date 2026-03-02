@@ -78,3 +78,25 @@ test("GET /api/search with . in query", async () => {
   expect(res.data).toHaveProperty("components")
   expect(Array.isArray(res.data.components)).toBe(true)
 })
+
+test("GET /api/search returns is_extended_promotional field", async () => {
+  const { axios } = await getTestServer()
+  const res = await axios.get("/api/search?q=resistor&limit=1")
+
+  expect(res.data).toHaveProperty("components")
+  expect(Array.isArray(res.data.components)).toBe(true)
+
+  if (res.data.components.length > 0) {
+    const component = res.data.components[0]
+    expect(component).toHaveProperty("is_extended_promotional")
+    expect(typeof component.is_extended_promotional).toBe("boolean")
+  }
+})
+
+test("GET /api/search with is_extended_promotional filter", async () => {
+  const { axios } = await getTestServer()
+  const res = await axios.get("/api/search?is_extended_promotional=true")
+
+  expect(res.data).toHaveProperty("components")
+  expect(Array.isArray(res.data.components)).toBe(true)
+})
