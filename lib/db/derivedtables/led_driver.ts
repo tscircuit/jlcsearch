@@ -42,6 +42,7 @@ export const ledDriverTableSpec: DerivedTableSpec<LedDriver> = {
     { name: "mounting_style", type: "text" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   listCandidateComponents(db: KyselyDatabaseInstance) {
     return db
@@ -77,6 +78,7 @@ export const ledDriverTableSpec: DerivedTableSpec<LedDriver> = {
           in_stock: Boolean((c.stock || 0) > 0),
           is_basic: Boolean(c.basic),
           is_preferred: Boolean(c.preferred),
+          is_extended_promotional: Boolean(c.extended_promotional),
           package: String(c.package || ""),
           supply_voltage_min: parseValue(attrs["Input Voltage"]?.split("~")[0]),
           supply_voltage_max: parseValue(attrs["Input Voltage"]?.split("~")[1]),
