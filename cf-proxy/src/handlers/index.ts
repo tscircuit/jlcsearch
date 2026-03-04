@@ -34,6 +34,20 @@ export async function queryTable(
   // Build WHERE conditions using Kysely's sql template tag for safe parameterization
   const conditions: RawBuilder<unknown>[] = []
 
+  // Extended promotional filter: preferred=1 AND basic=0
+  const extPromoVal = params["is_extended_promotional"];
+  if (extPromoVal !== undefined && extPromoVal !== "") {
+    const boolValue = extPromoVal === "true" || extPromoVal === "1" ? 1 : 0;
+    conditions.push(sql`${sql.id("is_extended_promotional")} = ${boolValue}`);
+  }
+
+  // Global filter for extended promotional flag
+  const iep = params['is_extended_promotional'];
+  if (iep !== undefined && iep !== "") {
+    const boolVal = iep === 'true' || iep === '1' ? 1 : 0;
+    conditions.push(sql`${sql.id('is_extended_promotional')} = ${boolVal}`);
+  }
+
   // Apply filters based on config
   for (const [paramName, fieldConfig] of Object.entries(config.filters)) {
     const value = params[paramName]
