@@ -16,6 +16,23 @@ const escapeFts5SearchTerm = (term: string): string => {
   return `"${term.replace(/"/g, '""')}"`
 }
 
+const getFtsTokens = (term: string): string[] => {
+  return (
+    term
+      .toLowerCase()
+      .match(/[a-z0-9]+/g)
+      ?.filter(Boolean) ?? []
+  )
+}
+
+const buildFts5SearchQuery = (term: string): string => {
+  const tokens = getFtsTokens(term)
+  if (tokens.length === 0) return ""
+
+  const tokenSearch = tokens.map((token) => `${escapeFts5SearchTerm(token)}*`)
+  return tokenSearch.join(" AND ")
+}
+
 export default withWinterSpec({
   auth: "none",
   methods: ["GET"],
@@ -60,15 +77,15 @@ export default withWinterSpec({
         query = query.where("lcsc", "=", lcscNumber)
       }
     } else {
-      const quotedTerm = escapeFts5SearchTerm(searchTerm)
-      const mfrFtsQuery = `mfr:${quotedTerm}*`
-      const generalFtsQuery = `${quotedTerm}*`
-      const combinedFtsQuery = `${mfrFtsQuery} OR ${generalFtsQuery}`
-      query = query.where(
-        sql`lcsc`,
-        "in",
-        sql`(SELECT CAST(lcsc AS INTEGER) FROM components_fts WHERE components_fts MATCH ${combinedFtsQuery})`,
-      )
+      const ftsSearchQuery = buildFts5SearchQuery(searchTerm)
+
+      if (ftsSearchQuery) {
+        query = query.where(
+          sql`lcsc`,
+          "in",
+          sql`(SELECT CAST(lcsc AS INTEGER) FROM components_fts WHERE components_fts MATCH ${ftsSearchQuery})`,
+        )
+      }
     }
   }
 

@@ -78,3 +78,58 @@ test("GET /api/search with . in query", async () => {
   expect(res.data).toHaveProperty("components")
   expect(Array.isArray(res.data.components)).toBe(true)
 })
+
+test("GET /api/search handles mixed package/value query '0402 5.1k resistor'", async () => {
+  const { axios } = await getTestServer()
+  const res = await axios.get("/api/search?limit=10&q=0402%205.1k%20resistor")
+
+  expect(res.data).toHaveProperty("components")
+  expect(Array.isArray(res.data.components)).toBe(true)
+  expect(res.data.components.length).toBeGreaterThan(0)
+
+  const hasRelevantResult = res.data.components.some((component: any) => {
+    const haystack =
+      `${component.mfr} ${component.description} ${component.package}`.toLowerCase()
+    return haystack.includes("0402") && haystack.includes("resistor")
+  })
+
+  expect(hasRelevantResult).toBe(true)
+})
+
+test("GET /api/search handles connector query 'USB Type-C 16P'", async () => {
+  const { axios } = await getTestServer()
+  const res = await axios.get("/api/search?limit=10&q=USB%20Type-C%2016P")
+
+  expect(res.data).toHaveProperty("components")
+  expect(Array.isArray(res.data.components)).toBe(true)
+  expect(res.data.components.length).toBeGreaterThan(0)
+
+  const hasRelevantResult = res.data.components.some((component: any) => {
+    const haystack =
+      `${component.mfr} ${component.description} ${component.package}`.toLowerCase()
+    return (
+      haystack.includes("usb") &&
+      (haystack.includes("type-c") || haystack.includes("type c")) &&
+      haystack.includes("16")
+    )
+  })
+
+  expect(hasRelevantResult).toBe(true)
+})
+
+test("GET /api/search handles LED package query '0402 LED'", async () => {
+  const { axios } = await getTestServer()
+  const res = await axios.get("/api/search?limit=10&q=0402%20LED")
+
+  expect(res.data).toHaveProperty("components")
+  expect(Array.isArray(res.data.components)).toBe(true)
+  expect(res.data.components.length).toBeGreaterThan(0)
+
+  const hasRelevantResult = res.data.components.some((component: any) => {
+    const haystack =
+      `${component.mfr} ${component.description} ${component.package}`.toLowerCase()
+    return haystack.includes("0402") && haystack.includes("led")
+  })
+
+  expect(hasRelevantResult).toBe(true)
+})
