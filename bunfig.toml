@@ -1,5 +1,7 @@
 [test]
 preload = ["./tests/preload.ts"]
+# Only run main app tests; cf-proxy has its own deps (kysely-d1) and uses vitest
+root = "tests"
 
 [install.lockfile]
 save = false
