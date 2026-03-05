@@ -191,6 +191,7 @@ export interface Component {
   datasheet: string;
   description: string;
   extra: string | null;
+  extended_promotional?: number;
   flag: Generated<number>;
   joints: number;
   last_on_stock: Generated<number>;
