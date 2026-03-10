@@ -89,6 +89,7 @@ export default withWinterSpec({
         lcsc: m.lcsc,
         mfr: m.mfr,
         package: m.package,
+        is_extended_promotional: Boolean(m.is_extended_promotional),
         cpu_core: m.cpu_core,
         cpu_speed_hz: m.cpu_speed_hz,
         flash_size_bytes: m.flash_size_bytes,
@@ -193,6 +194,7 @@ export default withWinterSpec({
           lcsc: m.lcsc,
           mfr: m.mfr,
           package: m.package,
+          is_extended_promotional: m.is_extended_promotional ? "✓" : "",
           core: m.cpu_core,
           speed: m.cpu_speed_hz ? (
             <span className="tabular-nums">

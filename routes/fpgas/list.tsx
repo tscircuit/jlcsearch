@@ -95,6 +95,7 @@ export default withWinterSpec({
         lcsc: f.lcsc ?? 0,
         mfr: f.mfr ?? "",
         package: f.package ?? "",
+        is_extended_promotional: Boolean(f.is_extended_promotional),
         type: f.type ?? null,
         logic_array_blocks: f.logic_array_blocks ?? null,
         logic_elements: f.logic_elements ?? null,
@@ -186,6 +187,7 @@ export default withWinterSpec({
           lcsc: f.lcsc,
           mfr: f.mfr,
           package: f.package,
+          is_extended_promotional: f.is_extended_promotional ? "✓" : "",
           type: f.type ?? "",
           "logic blocks": f.logic_array_blocks ?? "",
           "logic elements": f.logic_elements

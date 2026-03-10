@@ -189,6 +189,7 @@ export default withWinterSpec({
     package: c.package,
     is_basic: Boolean(c.basic),
     is_preferred: Boolean(c.preferred),
+    is_extended_promotional: Boolean(c.is_extended_promotional),
     description: c.description,
     stock: c.stock,
     price: extractSmallQuantityPrice(c.price),

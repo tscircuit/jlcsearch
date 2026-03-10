@@ -51,6 +51,7 @@ export default withWinterSpec({
         lcsc: r.lcsc,
         mfr: r.mfr,
         package: r.package,
+        is_extended_promotional: Boolean(r.is_extended_promotional),
         output_type: r.output_type,
         is_positive: r.is_positive === 1,
         output_voltage_min: r.output_voltage_min,
@@ -122,6 +123,7 @@ export default withWinterSpec({
           lcsc: r.lcsc,
           mfr: r.mfr,
           package: r.package,
+          is_extended_promotional: r.is_extended_promotional ? "✓" : "",
           type: [
             r.output_type === "fixed" ? "Fixed" : "Adjustable",
             r.is_positive ? "Positive" : "Negative",
