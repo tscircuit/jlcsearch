@@ -32,6 +32,7 @@ export default withWinterSpec({
           price1: z.number().nullable(),
           in_stock: z.boolean(),
           package: z.string().nullable(),
+          is_extended_promotional: z.boolean(),
           supply_voltage_min: z.number().nullable(),
           supply_voltage_max: z.number().nullable(),
           output_current_max: z.number().nullable(),
@@ -87,6 +88,7 @@ export default withWinterSpec({
         price1: driver.price1 === null ? null : Number(driver.price1),
         in_stock: Boolean((driver.stock || 0) > 0),
         package: driver.package,
+        is_extended_promotional: Boolean(driver.is_extended_promotional),
         supply_voltage_min: driver.supply_voltage_min,
         supply_voltage_max: driver.supply_voltage_max,
         output_current_max: driver.output_current_max,
@@ -213,6 +215,7 @@ export default withWinterSpec({
           lcsc: d.lcsc,
           mfr: d.mfr,
           package: d.package,
+          is_extended_promotional: d.is_extended_promotional ? "✓" : "",
           description: d.description,
           voltage: d.supply_voltage_min && (
             <span className="tabular-nums">

@@ -23,6 +23,7 @@ export default withWinterSpec({
         price1: z.number().nullable(),
         in_stock: z.boolean(),
         package: z.string().nullable(),
+        is_extended_promotional: z.boolean(),
         input_voltage_min: z.number().nullable(),
         input_voltage_max: z.number().nullable(),
         output_voltage_min: z.number().nullable(),
@@ -71,6 +72,7 @@ export default withWinterSpec({
         price1: c.price1 === null ? null : Number(c.price1),
         in_stock: Boolean(c.in_stock),
         package: c.package,
+        is_extended_promotional: Boolean(c.is_extended_promotional),
         input_voltage_min: c.input_voltage_min,
         input_voltage_max: c.input_voltage_max,
         output_voltage_min: c.output_voltage_min,
@@ -146,6 +148,7 @@ export default withWinterSpec({
           lcsc: c.lcsc,
           mfr: c.mfr,
           package: c.package,
+          is_extended_promotional: c.is_extended_promotional ? "✓" : "",
           input:
             c.input_voltage_min && c.input_voltage_max
               ? `${c.input_voltage_min}V - ${c.input_voltage_max}V`
