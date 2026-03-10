@@ -12,6 +12,7 @@ import { parseIntOrNull } from "lib/util/parse-int-or-null"
 import { BaseComponent } from "./component-base"
 
 export interface Mosfet extends BaseComponent {
+  is_extended_promotional: boolean
   package?: string
   drain_source_voltage?: number
   continuous_drain_current?: number
@@ -35,6 +36,7 @@ export const mosfetTableSpec: DerivedTableSpec<Mosfet> = {
     { name: "mounting_style", type: "text" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   listCandidateComponents(db: KyselyDatabaseInstance) {
     return db
@@ -68,6 +70,9 @@ export const mosfetTableSpec: DerivedTableSpec<Mosfet> = {
           in_stock: Boolean((c.stock || 0) > 0),
           is_basic: Boolean(c.basic),
           is_preferred: Boolean(c.preferred),
+          is_extended_promotional: Boolean(
+            c.extra && JSON.parse(c.extra).promotional,
+          ),
           package: String(c.package || ""),
           drain_source_voltage: parseValue(
             attrs["Drain Source Voltage (Vdss)"],

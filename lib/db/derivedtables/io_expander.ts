@@ -4,6 +4,7 @@ import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import { BaseComponent } from "./component-base"
 
 export interface IoExpander extends BaseComponent {
+  is_extended_promotional: boolean
   // Extra columns
   package: string
   num_gpios: number | null
@@ -40,6 +41,7 @@ export const ioExpanderTableSpec: DerivedTableSpec<IoExpander> = {
     { name: "source_current_ma", type: "real" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db
@@ -139,6 +141,9 @@ export const ioExpanderTableSpec: DerivedTableSpec<IoExpander> = {
         in_stock: c.stock > 0,
         is_basic: Boolean(c.basic),
         is_preferred: Boolean(c.preferred),
+        is_extended_promotional: Boolean(
+          c.extra && JSON.parse(c.extra).promotional,
+        ),
         package: c.package || "",
         num_gpios: numGpios,
         supply_voltage_min: voltageMin,

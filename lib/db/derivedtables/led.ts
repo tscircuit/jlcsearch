@@ -4,6 +4,7 @@ import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import { BaseComponent } from "./component-base"
 
 export interface Led extends BaseComponent {
+  is_extended_promotional: boolean
   package: string
   forward_voltage: number | null
   forward_current: number | null
@@ -37,6 +38,7 @@ export const ledTableSpec: DerivedTableSpec<Led> = {
     { name: "is_rgb", type: "boolean" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db
@@ -165,6 +167,9 @@ export const ledTableSpec: DerivedTableSpec<Led> = {
         in_stock: c.stock > 0,
         is_basic: Boolean(c.basic),
         is_preferred: Boolean(c.preferred),
+        is_extended_promotional: Boolean(
+          c.extra && JSON.parse(c.extra).promotional,
+        ),
         package: c.package || "",
         forward_voltage: forwardVoltage,
         forward_current: forwardCurrent,
