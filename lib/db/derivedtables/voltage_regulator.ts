@@ -43,6 +43,7 @@ export const voltageRegulatorTableSpec: DerivedTableSpec<VoltageRegulator> = {
     { name: "topology", type: "text" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db
@@ -184,6 +185,7 @@ export const voltageRegulatorTableSpec: DerivedTableSpec<VoltageRegulator> = {
         in_stock: c.stock > 0,
         is_basic: Boolean(c.basic),
         is_preferred: Boolean(c.preferred),
+        is_extended_promotional: false, // TODO: Populate from JLCPCB promotional data
         package: c.package || "",
         output_type: outputType,
         output_voltage_min: voltageMin,
