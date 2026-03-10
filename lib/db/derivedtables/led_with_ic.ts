@@ -100,7 +100,7 @@ export const ledWithICTableSpec: DerivedTableSpec<LEDWithIC> = {
           in_stock: Boolean((c.stock || 0) > 0),
           is_basic: Boolean(c.basic),
           is_preferred: Boolean(c.preferred),
-        is_extended_promotional: Boolean(c.extended_promotional),
+          is_extended_promotional: Boolean(c.extended_promotional),
           package: String(c.package || ""),
           forward_voltage: forwardVoltage,
           forward_current: forwardCurrent,
