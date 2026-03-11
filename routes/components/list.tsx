@@ -1,6 +1,4 @@
-import { sql } from "kysely"
 import { Table } from "lib/ui/Table"
-import { ExpressionBuilder } from "kysely"
 import { withWinterSpec } from "lib/with-winter-spec"
 import { z } from "zod"
 
@@ -41,9 +39,6 @@ export default withWinterSpec({
       "extra",
       "basic",
       "preferred",
-      sql<number>`CASE WHEN preferred = 1 AND basic = 0 THEN 1 ELSE 0 END`.as(
-        "is_extended_promotional",
-      ),
     ])
     .limit(limit)
     .orderBy("stock", "desc")
@@ -92,7 +87,7 @@ export default withWinterSpec({
     package: c.package,
     is_basic: Boolean(c.basic),
     is_preferred: Boolean(c.preferred),
-    is_extended_promotional: Boolean(c.is_extended_promotional),
+    is_extended_promotional: Boolean(c.preferred) && !c.basic,
     description: c.description,
     stock: c.stock,
     price: extractSmallQuantityPrice(c.price),
