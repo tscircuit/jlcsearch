@@ -2,7 +2,7 @@ import defaultAxios from "redaxios"
 import type { KyselyDatabaseInstance } from "lib/db/kysely-types"
 import * as Path from "node:path"
 import { createWinterSpecBundleFromDir } from "winterspec/adapters/node"
-import { getDbClient } from "lib/db/get-db-client"
+import { getDbClient, getBunDatabaseClient } from "lib/db/get-db-client"
 import { existsSync } from "node:fs"
 
 interface TestFixture {
@@ -18,7 +18,7 @@ const winterspecBundle = await createWinterSpecBundleFromDir(
   Path.join(import.meta.dir, "../../routes"),
 )
 
-// Wait for database to be ready
+// Wait for database to be ready and ensure tables exist
 const waitForDatabase = async (maxRetries = 30, delayMs = 100) => {
   const dbPath = Path.join(import.meta.dir, "../../db.sqlite3")
   
@@ -28,7 +28,18 @@ const waitForDatabase = async (maxRetries = 30, delayMs = 100) => {
         const db = getDbClient()
         // Test database connection
         await db.executeQuery({ sql: "SELECT 1" })
-        return db
+        
+        // Check if components table exists (critical for our tests)
+        const tableCheck = await db.executeQuery({
+          sql: "SELECT name FROM sqlite_master WHERE type='table' AND name='components'"
+        })
+        
+        if (tableCheck.rows && tableCheck.rows.length > 0) {
+          return db
+        }
+        
+        // Table doesn't exist, database not ready yet
+        await db.destroy()
       } catch (e) {
         // Database not ready yet, wait and retry
       }
@@ -36,7 +47,7 @@ const waitForDatabase = async (maxRetries = 30, delayMs = 100) => {
     await new Promise(resolve => setTimeout(resolve, delayMs))
   }
   
-  throw new Error(`Database not ready after ${maxRetries * delayMs}ms. Path: ${dbPath}`)
+  throw new Error(`Database not ready after ${maxRetries * delayMs}ms. Path: ${dbPath}. Make sure CI has run database initialization.`)
 }
 
 export const getTestServer = async (
