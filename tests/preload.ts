@@ -7,8 +7,6 @@ declare global {
 }
 
 globalThis.deferredCleanupFns ??= []
-
-// Setup derived tables
 globalThis.derivedTablesSetupPromise ??= setupDerivedTables({ populate: false })
 
 await globalThis.derivedTablesSetupPromise
