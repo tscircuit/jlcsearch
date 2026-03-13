@@ -4,6 +4,7 @@ import * as Path from "node:path"
 import { createWinterSpecBundleFromDir } from "winterspec/adapters/node"
 import { getDbClient, getBunDatabaseClient } from "lib/db/get-db-client"
 import { existsSync } from "node:fs"
+import { sql } from "kysely"
 
 interface TestFixture {
   url: string
@@ -27,15 +28,10 @@ const waitForDatabase = async (maxRetries = 30, delayMs = 100) => {
       try {
         const db = getDbClient()
         // Check if components table exists (critical for our tests)
-        // Use Kysely's query builder for type safety
-        const tableCheck = await db
-          .selectFrom("sqlite_master")
-          .select("name")
-          .where("type", "=", "table")
-          .where("name", "=", "components")
-          .execute()
+        // Use Kysely's sql template literal for type-safe raw SQL
+        const result = await sql<{ name: string }>`SELECT name FROM sqlite_master WHERE type='table' AND name='components'`.execute(db)
 
-        if (tableCheck && tableCheck.length > 0) {
+        if (result.rows && result.rows.length > 0) {
           return db
         }
 
