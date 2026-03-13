@@ -29,10 +29,10 @@ const waitForDatabase = async (maxRetries = 30, delayMs = 100) => {
         // Check if components table exists (critical for our tests)
         // Use Kysely's query builder for type safety
         const tableCheck = await db
-          .selectFrom("sqlite_master as m")
-          .select("m.name")
-          .where("m.type", "=", "table")
-          .where("m.name", "=", "components")
+          .selectFrom("sqlite_master")
+          .select("name")
+          .where("type", "=", "table")
+          .where("name", "=", "components")
           .execute()
 
         if (tableCheck && tableCheck.length > 0) {
