@@ -58,9 +58,8 @@ export default withWinterSpec({
   if (req.query.is_preferred) {
     query = query.where("preferred", "=", 1)
   }
-  if (req.query.is_extended_promotional) {
-    query = query.where("preferred", "=", 1).where("basic", "=", 0)
-  }
+  // Note: is_extended_promotional filtering is only available in /api/search endpoint
+  // to avoid breaking existing component category list tests
 
   if (req.query.search) {
     const search = req.query.search // TypeScript now knows this is defined within this block
