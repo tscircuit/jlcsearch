@@ -2,9 +2,6 @@ import defaultAxios from "redaxios"
 import type { KyselyDatabaseInstance } from "lib/db/kysely-types"
 import * as Path from "node:path"
 import { createWinterSpecBundleFromDir } from "winterspec/adapters/node"
-import { getDbClient, getBunDatabaseClient } from "lib/db/get-db-client"
-import { existsSync } from "node:fs"
-import { sql } from "kysely"
 
 interface TestFixture {
   url: string
@@ -19,36 +16,6 @@ const winterspecBundle = await createWinterSpecBundleFromDir(
   Path.join(import.meta.dir, "../../routes"),
 )
 
-// Wait for database to be ready and ensure tables exist
-const waitForDatabase = async (maxRetries = 30, delayMs = 100) => {
-  const dbPath = Path.join(import.meta.dir, "../../db.sqlite3")
-
-  for (let i = 0; i < maxRetries; i++) {
-    if (existsSync(dbPath)) {
-      try {
-        const db = getDbClient()
-        // Check if components table exists (critical for our tests)
-        // Use Kysely's sql template literal for type-safe raw SQL
-        const result = await sql<{ name: string }>`SELECT name FROM sqlite_master WHERE type='table' AND name='components'`.execute(db)
-
-        if (result.rows && result.rows.length > 0) {
-          return db
-        }
-
-        // Table doesn't exist, database not ready yet
-        await db.destroy()
-      } catch (e) {
-        // Database not ready yet, wait and retry
-      }
-    }
-    await new Promise((resolve) => setTimeout(resolve, delayMs))
-  }
-
-  throw new Error(
-    `Database not ready after ${maxRetries * delayMs}ms. Path: ${dbPath}. Make sure CI has run database initialization.`,
-  )
-}
-
 export const getTestServer = async (
   options: { env?: Record<string, string> } = {},
 ): Promise<TestFixture> => {
@@ -56,10 +23,6 @@ export const getTestServer = async (
   const testInstanceId = Math.random().toString(36).substring(2, 15)
 
   const fixture = {} as TestFixture
-
-  // Wait for database to be ready before starting server
-  const db = await waitForDatabase()
-  fixture.db = db
 
   const server = Bun.serve({
     port,
@@ -86,7 +49,6 @@ export const getTestServer = async (
   globalThis.deferredCleanupFns ??= []
   globalThis.deferredCleanupFns.push(async () => {
     await server.stop()
-    await db.destroy()
   })
 
   return fixture
