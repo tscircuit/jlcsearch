@@ -26,15 +26,16 @@ const waitForDatabase = async (maxRetries = 30, delayMs = 100) => {
     if (existsSync(dbPath)) {
       try {
         const db = getDbClient()
-        // Test database connection
-        await db.executeQuery({ sql: "SELECT 1" })
-
         // Check if components table exists (critical for our tests)
-        const tableCheck = await db.executeQuery({
-          sql: "SELECT name FROM sqlite_master WHERE type='table' AND name='components'",
-        })
+        // Use Kysely's query builder for type safety
+        const tableCheck = await db
+          .selectFrom("sqlite_master as m")
+          .select("m.name")
+          .where("m.type", "=", "table")
+          .where("m.name", "=", "components")
+          .execute()
 
-        if (tableCheck.rows && tableCheck.rows.length > 0) {
+        if (tableCheck && tableCheck.length > 0) {
           return db
         }
 
