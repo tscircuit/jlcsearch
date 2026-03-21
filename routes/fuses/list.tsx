@@ -122,6 +122,7 @@ export default withWinterSpec({
           description: c.description ?? "",
           stock: c.stock ?? 0,
           price1: c.price1 ?? 0,
+          is_extended_promotional: Boolean(c.is_extended_promotional),
           current_rating: c.current_rating ?? 0,
           voltage_rating: c.voltage_rating ?? 0,
           response_time: c.response_time ?? "",

@@ -82,6 +82,7 @@ export default withWinterSpec({
         has_usb: m.has_usb === 1,
         stock: m.stock,
         price1: m.price1,
+          is_extended_promotional: Boolean(m.is_extended_promotional),
       })),
     })
   }

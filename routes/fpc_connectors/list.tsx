@@ -75,6 +75,7 @@ export default withWinterSpec({
           locking_feature: c.locking_feature ?? undefined,
           stock: c.stock ?? undefined,
           price1: c.price1 ?? undefined,
+          is_extended_promotional: Boolean(c.is_extended_promotional),
         }))
         .filter((c) => c.lcsc !== 0),
     })

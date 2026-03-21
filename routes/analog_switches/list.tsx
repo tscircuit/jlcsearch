@@ -60,6 +60,7 @@ export default withWinterSpec({
         channel_type: m.channel_type,
         stock: m.stock,
         price1: m.price1,
+          is_extended_promotional: Boolean(m.is_extended_promotional),
       })),
     })
   }

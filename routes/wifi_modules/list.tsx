@@ -115,6 +115,7 @@ export default withWinterSpec({
           has_pwm: m.has_pwm ?? undefined,
           stock: m.stock ?? undefined,
           price1: m.price1 ?? undefined,
+          is_extended_promotional: Boolean(m.is_extended_promotional),
         }))
         .filter((m) => m.lcsc !== 0 && m.package !== ""),
     })
