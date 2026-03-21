@@ -105,6 +105,7 @@ export default withWinterSpec({
           description: c.description ?? "",
           stock: c.stock ?? 0,
           price1: c.price1 ?? 0,
+          is_extended_promotional: Boolean(c.is_extended_promotional),
           display_size: c.display_size ?? undefined,
           resolution: c.resolution ?? undefined,
           display_type: c.display_type ?? undefined,

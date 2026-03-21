@@ -112,6 +112,7 @@ export default withWinterSpec({
           description: c.description ?? "",
           stock: c.stock ?? 0,
           price1: c.price1 ?? 0,
+          is_extended_promotional: Boolean(c.is_extended_promotional),
           positions: c.positions ?? undefined,
           type: c.type ?? undefined,
           size: c.size ?? undefined,

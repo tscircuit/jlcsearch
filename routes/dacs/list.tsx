@@ -112,6 +112,7 @@ export default withWinterSpec({
           supply_voltage_max: d.supply_voltage_max ?? undefined,
           stock: d.stock ?? undefined,
           price1: d.price1 ?? undefined,
+          is_extended_promotional: Boolean(d.is_extended_promotional),
         }))
         .filter((d) => d.lcsc !== 0 && d.package !== ""),
     })

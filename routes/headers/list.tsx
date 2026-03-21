@@ -96,6 +96,7 @@ export default withWinterSpec({
           current_rating: h.current_rating_amp ?? undefined,
           stock: h.stock ?? undefined,
           price1: h.price1 ?? undefined,
+          is_extended_promotional: Boolean(h.is_extended_promotional),
         }))
         .filter((h) => h.lcsc !== 0 && h.package !== ""),
     })

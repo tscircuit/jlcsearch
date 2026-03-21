@@ -96,6 +96,7 @@ export default withWinterSpec({
           is_smd: Boolean(c.is_smd ?? undefined),
           stock: c.stock ?? undefined,
           price1: c.price1 ?? undefined,
+          is_extended_promotional: Boolean(c.is_extended_promotional),
         }))
         .filter((c) => c.lcsc !== 0 && c.package !== ""),
     })

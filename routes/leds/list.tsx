@@ -80,6 +80,7 @@ export default withWinterSpec({
           luminous_intensity_mcd: led.luminous_intensity_mcd ?? undefined,
           stock: led.stock ?? undefined,
           price1: led.price1 ?? undefined,
+          is_extended_promotional: Boolean(led.is_extended_promotional),
         }))
         .filter((led) => led.lcsc !== 0 && led.package !== ""),
     })
