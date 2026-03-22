@@ -13,6 +13,7 @@ export default withWinterSpec({
     package: z.string().optional(),
     is_basic: z.boolean().optional(),
     is_preferred: z.boolean().optional(),
+    is_extended_promotional: z.boolean().optional(),
     capacitance: z
       .string()
       .optional()
@@ -62,6 +63,9 @@ export default withWinterSpec({
   }
   if (params.is_preferred) {
     query = query.where("is_preferred", "=", 1)
+  }
+  if (params.is_extended_promotional) {
+    query = query.where("is_extended_promotional", "=", 1)
   }
 
   // Apply capacitance filter with a small tolerance for rounding errors
@@ -142,6 +146,18 @@ export default withWinterSpec({
               name="is_preferred"
               value="true"
               checked={params.is_preferred}
+            />
+          </label>
+        </div>
+
+        <div>
+          <label>
+            Extended Promotional:
+            <input
+              type="checkbox"
+              name="is_extended_promotional"
+              value="true"
+              checked={params.is_extended_promotional}
             />
           </label>
         </div>

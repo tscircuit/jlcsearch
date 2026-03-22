@@ -46,6 +46,7 @@ export default withWinterSpec({
       .transform((val) => normalizeTopologyParam(val)),
     is_basic: z.boolean().optional(),
     is_preferred: z.boolean().optional(),
+    is_extended_promotional: z.boolean().optional(),
     resistance: z
       .string()
       .optional()
@@ -97,6 +98,9 @@ export default withWinterSpec({
   }
   if (params.is_preferred) {
     query = query.where("is_preferred", "=", 1)
+  }
+  if (params.is_extended_promotional) {
+    query = query.where("is_extended_promotional", "=", 1)
   }
 
   if (params.number_of_resistors != null) {
@@ -236,6 +240,18 @@ export default withWinterSpec({
               name="is_preferred"
               value="true"
               checked={params.is_preferred}
+            />
+          </label>
+        </div>
+
+        <div>
+          <label>
+            Extended Promotional:
+            <input
+              type="checkbox"
+              name="is_extended_promotional"
+              value="true"
+              checked={params.is_extended_promotional}
             />
           </label>
         </div>
