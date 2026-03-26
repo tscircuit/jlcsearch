@@ -39,9 +39,17 @@ export const createTestEnv = () => ({
 })
 
 export const createSelf = (env: ReturnType<typeof createTestEnv>) => ({
-  fetch: (input: RequestInfo | URL, init?: RequestInit) =>
-    worker.fetch(new Request(input, init), env, {
-      waitUntil: () => {},
+  pending: [] as Promise<unknown>[],
+  fetch(input: RequestInfo | URL, init?: RequestInit) {
+    return worker.fetch(new Request(input, init), env, {
+      waitUntil: (promise: Promise<unknown>) => {
+        this.pending.push(promise)
+      },
       passThroughOnException: () => {},
-    } as ExecutionContext),
+    } as ExecutionContext)
+  },
+  async flushWaitUntil() {
+    await Promise.allSettled(this.pending)
+    this.pending.length = 0
+  },
 })

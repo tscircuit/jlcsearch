@@ -10,6 +10,20 @@ export interface Env {
 }
 
 const ORIGIN_TIMEOUT_MS = 10_000
+const BLOCKED_REQUEST_HEADERS = new Set([
+  "cookie",
+  "cf-connecting-ip",
+  "cf-ipcountry",
+  "cf-ray",
+  "cf-visitor",
+  "x-forwarded-for",
+  "x-forwarded-host",
+  "x-forwarded-proto",
+  "x-real-ip",
+  "host",
+  "connection",
+  "content-length",
+])
 
 export default {
   async fetch(
@@ -51,8 +65,12 @@ export default {
       return cache.buildResponse(cacheResult.entry, "HIT", origin)
     }
 
-    // Stale or miss - try to fetch from origin
+    // If stale entry exists, serve it immediately and refresh in background
     const staleEntry = cacheResult.type === "stale" ? cacheResult.entry : null
+    if (staleEntry) {
+      ctx.waitUntil(refreshStaleEntry(url, request, env, cache))
+      return cache.buildResponse(staleEntry, "STALE", origin)
+    }
 
     try {
       const originResponse = await fetchFromOrigin(url, request, env)
@@ -100,6 +118,22 @@ export default {
       )
     }
   },
+}
+
+async function refreshStaleEntry(
+  url: URL,
+  request: Request,
+  env: Env,
+  cache: CacheService,
+): Promise<void> {
+  try {
+    const originResponse = await fetchFromOrigin(url, request, env)
+    if (originResponse.ok) {
+      await cache.put(url, originResponse)
+    }
+  } catch (error) {
+    console.warn("Background stale refresh failed:", error)
+  }
 }
 
 /**
@@ -201,6 +235,7 @@ async function fetchFromOrigin(
   env: Env,
 ): Promise<Response> {
   const originUrl = new URL(url.pathname + url.search, env.ORIGIN_URL)
+  const headers = sanitizeRequestHeaders(request.headers)
 
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), ORIGIN_TIMEOUT_MS)
@@ -208,7 +243,7 @@ async function fetchFromOrigin(
   try {
     const response = await fetch(originUrl.toString(), {
       method: request.method,
-      headers: request.headers,
+      headers,
       signal: controller.signal,
     })
     return response
@@ -227,19 +262,20 @@ async function proxyToOrigin(
   origin: string | null,
 ): Promise<Response> {
   const originUrl = new URL(url.pathname + url.search, env.ORIGIN_URL)
+  const headers = sanitizeRequestHeaders(request.headers)
 
   const response = await fetch(originUrl.toString(), {
     method: request.method,
-    headers: request.headers,
+    headers,
     body: request.body,
   })
 
   // Clone response and add CORS headers
-  const headers = new Headers(response.headers)
-  addCorsHeaders(headers, origin)
+  const responseHeaders = new Headers(response.headers)
+  addCorsHeaders(responseHeaders, origin)
   return new Response(response.body, {
     status: response.status,
-    headers,
+    headers: responseHeaders,
   })
 }
 
@@ -250,4 +286,22 @@ function handleOptions(origin: string | null): Response {
   const headers = new Headers()
   addCorsHeaders(headers, origin)
   return new Response(null, { status: 204, headers })
+}
+
+function sanitizeRequestHeaders(headers: Headers): Headers {
+  const sanitized = new Headers()
+
+  for (const [name, value] of headers.entries()) {
+    const lowerName = name.toLowerCase()
+    if (
+      BLOCKED_REQUEST_HEADERS.has(lowerName) ||
+      lowerName.startsWith("cf-") ||
+      lowerName.startsWith("x-forwarded-")
+    ) {
+      continue
+    }
+    sanitized.set(name, value)
+  }
+
+  return sanitized
 }
