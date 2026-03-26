@@ -71,18 +71,70 @@ describe("Worker integration", () => {
 
     await env.CACHE_KV.put(cacheKey, testBody, { metadata })
 
-    // This should return stale cache since origin will timeout/fail
     const response = await SELF.fetch(
       "https://example.com/nonexistent-path-that-will-timeout",
       { signal: AbortSignal.timeout(15000) },
     )
 
-    // In test environment, origin might respond (MISS) or fail (STALE)
-    // Both are valid - we're testing that the worker handles both cases
-    const cacheHeader = response.headers.get("x-cache")
-    expect(["MISS", "STALE"]).toContain(cacheHeader)
+    expect(response.headers.get("x-cache")).toBe("STALE")
     expect(response.status).toBe(200)
   }, 20000)
+
+  it("refreshes stale cache in background while serving stale response", async () => {
+    let fetchCount = 0
+    globalThis.fetch = (async () => {
+      fetchCount += 1
+      return new Response('{"fresh":"data"}', {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      })
+    }) as typeof fetch
+
+    const staleAt = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
+    const url = new URL("https://example.com/api/search?q=abc")
+    const cacheKey = await generateCacheKey(url)
+    await env.CACHE_KV.put(cacheKey, '{"cached":"data"}', {
+      metadata: {
+        cachedAt: staleAt.toISOString(),
+        status: 200,
+        headers: { "content-type": "application/json" },
+      },
+    })
+
+    const staleResponse = await SELF.fetch(url.toString())
+    expect(staleResponse.headers.get("x-cache")).toBe("STALE")
+    expect(await staleResponse.text()).toBe('{"cached":"data"}')
+    expect(fetchCount).toBe(1)
+
+    await SELF.flushWaitUntil()
+
+    const refreshedResponse = await SELF.fetch(url.toString())
+    expect(refreshedResponse.headers.get("x-cache")).toBe("HIT")
+    expect(await refreshedResponse.text()).toBe('{"fresh":"data"}')
+  })
+
+  it("strips cookie header before forwarding request to origin", async () => {
+    let forwardedCookie: string | null = null
+
+    globalThis.fetch = (async (
+      _input: RequestInfo | URL,
+      init?: RequestInit,
+    ) => {
+      const headers = new Headers(init?.headers)
+      forwardedCookie = headers.get("cookie")
+      return new Response('{"status":"ok"}', {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      })
+    }) as typeof fetch
+
+    const response = await SELF.fetch("https://example.com/api/search?q=test", {
+      headers: { cookie: "session=abc123", accept: "application/json" },
+    })
+
+    expect(response.status).toBe(200)
+    expect(forwardedCookie).toBeNull()
+  })
 
   it("preserves content-type header from cached response", async () => {
     const url = new URL("https://example.com/api/data")
