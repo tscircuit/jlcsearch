@@ -3,7 +3,7 @@
 [Search for Parts](https://jlcsearch.tscircuit.com) ⋅ [tscircuit](https://github.com/tscircuit/tscircuit) ⋅ [discord](https://tscircuit.com/join)
 
 This is an in-stock parts search engine for JLCPCB parts. It also
-features an easy-to-use API (just add ".json")
+features an easy-to-use API (just add ".json" to your URL on any page)
 
 Play with it at [jlcsearch.tscircuit.com](https://jlcsearch.tscircuit.com)
 
