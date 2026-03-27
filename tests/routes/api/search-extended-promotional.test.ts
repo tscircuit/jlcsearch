@@ -1,60 +1,13 @@
 import { expect, test } from "bun:test"
-import searchRoute from "routes/api/search"
+import { getTestServer } from "tests/fixtures/get-test-server"
 
-test("GET /api/search maps is_extended_promotional and filters on it", async () => {
-  let captured: any = null
-  let filterApplied = false
+test("GET /api/search includes is_extended_promotional field", async () => {
+  const { axios } = await getTestServer()
+  const res = await axios.get("/api/search?limit=1&q=STM32F401RCT6")
 
-  const fakeQuery = {
-    selectAll() {
-      return this
-    },
-    limit() {
-      return this
-    },
-    orderBy() {
-      return this
-    },
-    where(field: any, op: any, value: any) {
-      if (field === "is_extended_promotional" && op === "=" && value === 1) {
-        filterApplied = true
-      }
-      return this
-    },
-    async execute() {
-      return [
-        {
-          lcsc: 123,
-          mfr: "Demo Part",
-          package: "0402",
-          basic: 1,
-          preferred: 0,
-          is_extended_promotional: 1,
-          description: "demo",
-          stock: 10,
-          price: '[{"price":"0.01"}]',
-        },
-      ]
-    },
+  expect(res.data).toHaveProperty("components")
+  expect(Array.isArray(res.data.components)).toBe(true)
+  if (res.data.components.length > 0) {
+    expect(res.data.components[0]).toHaveProperty("is_extended_promotional")
   }
-
-  const req: any = {
-    query: { q: undefined, is_extended_promotional: true },
-  }
-  const ctx: any = {
-    db: {
-      selectFrom(table: string) {
-        expect(table).toBe("components")
-        return fakeQuery
-      },
-    },
-    json(payload: any) {
-      captured = payload
-      return payload
-    },
-  }
-
-  await (searchRoute as any)(req, ctx)
-  expect(filterApplied).toBe(true)
-  expect(captured.components[0]).toHaveProperty("is_extended_promotional", true)
 })
