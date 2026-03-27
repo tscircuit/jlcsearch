@@ -4,6 +4,7 @@ import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import { BaseComponent } from "./component-base"
 
 export interface Fuse extends BaseComponent {
+  is_extended_promotional: boolean
   current_rating: number // in Amperes
   voltage_rating: number // in Volts
   response_time: string // "fast", "medium", "slow"
@@ -25,6 +26,7 @@ export const fuseTableSpec: DerivedTableSpec<Fuse> = {
     { name: "is_resettable", type: "boolean" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   listCandidateComponents(db: KyselyDatabaseInstance) {
     return db
@@ -90,6 +92,9 @@ export const fuseTableSpec: DerivedTableSpec<Fuse> = {
           in_stock: Boolean((c.stock || 0) > 0),
           is_basic: Boolean(c.basic),
           is_preferred: Boolean(c.preferred),
+          is_extended_promotional: Boolean(
+            c.extra && JSON.parse(c.extra).promotional,
+          ),
           current_rating: current_rating as number,
           voltage_rating: voltage_rating as number,
           response_time,

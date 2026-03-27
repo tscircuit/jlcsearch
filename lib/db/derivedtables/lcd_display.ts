@@ -4,6 +4,7 @@ import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import { BaseComponent } from "./component-base"
 
 export interface LCDDisplay extends BaseComponent {
+  is_extended_promotional: boolean
   package?: string
   display_size?: string
   resolution?: string
@@ -19,6 +20,7 @@ export const lcdDisplayTableSpec: DerivedTableSpec<LCDDisplay> = {
     { name: "display_type", type: "text" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   listCandidateComponents(db: KyselyDatabaseInstance) {
     return db
@@ -64,6 +66,9 @@ export const lcdDisplayTableSpec: DerivedTableSpec<LCDDisplay> = {
           in_stock: Boolean((c.stock || 0) > 0),
           is_basic: Boolean(c.basic),
           is_preferred: Boolean(c.preferred),
+          is_extended_promotional: Boolean(
+            c.extra && JSON.parse(c.extra).promotional,
+          ),
           package: String(c.package || ""),
           display_size,
           resolution,
