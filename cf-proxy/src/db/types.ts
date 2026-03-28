@@ -156,6 +156,20 @@ export interface BuckBoostConverter {
   topology: string | null
 }
 
+export interface ComponentCatalog {
+  basic: number | null
+  category: string | null
+  description: string | null
+  extra: string | null
+  lcsc: Generated<number | null>
+  mfr: string | null
+  package: string | null
+  preferred: number | null
+  price: string | null
+  stock: number | null
+  subcategory: string | null
+}
+
 export interface Capacitor {
   attributes: string | null
   capacitance_farads: number | null
@@ -641,6 +655,16 @@ export interface Relay {
   stock: number | null
 }
 
+export interface SearchIndex {
+  description: string | null
+  lcsc: Generated<number | null>
+  mfr: string | null
+  package: string | null
+  price1: number | null
+  source_table: string | null
+  stock: number | null
+}
+
 export interface Resistor {
   attributes: string | null
   description: string | null
@@ -812,6 +836,7 @@ export interface DB {
   boost_converter: BoostConverter
   buck_boost_converter: BuckBoostConverter
   capacitor: Capacitor
+  component_catalog: ComponentCatalog
   dac: Dac
   diode: Diode
   fpc_connector: FpcConnector
@@ -837,6 +862,7 @@ export interface DB {
   relay: Relay
   resistor: Resistor
   resistor_array: ResistorArray
+  search_index: SearchIndex
   switch: Switch
   usb_c_connector: UsbCConnector
   voltage_regulator: VoltageRegulator

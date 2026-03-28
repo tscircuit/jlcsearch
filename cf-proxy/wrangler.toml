@@ -24,3 +24,20 @@ binding = "DB"
 database_name = "jlcsearch"
 database_id = "dbd51802-2175-4e82-b1a9-8f129e46ec26"
 
+[env.staging]
+name = "jlcsearch-proxy-staging"
+workers_dev = true
+routes = []
+
+[env.staging.vars]
+ORIGIN_URL = "https://jlcsearch.fly.dev"
+USE_D1 = "true"
+
+[[env.staging.kv_namespaces]]
+binding = "CACHE_KV"
+id = "4fe1b99f0b90468bb4684a5b6822b10a"
+
+[[env.staging.d1_databases]]
+binding = "DB"
+database_name = "jlcsearch"
+database_id = "dbd51802-2175-4e82-b1a9-8f129e46ec26"

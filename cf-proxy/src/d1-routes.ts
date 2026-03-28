@@ -2,15 +2,18 @@ import type { Kysely } from "kysely"
 import type { DB } from "./db/types"
 import {
   queryTable,
+  queryFilterOptions,
   ROUTE_TO_TABLE,
   TABLE_CONFIGS,
   TABLE_RESPONSE_KEY,
   type QueryParams,
+  type FilterOptions,
 } from "./handlers"
 
 export interface D1QueryResult {
   data: Record<string, unknown[]>
   tableName: string
+  filterOptions?: FilterOptions
 }
 
 /**
@@ -39,10 +42,12 @@ export function getD1Handler(
 
   return async (db, params) => {
     const results = await queryTable(db, tableName, params, config)
+    const filterOptions = await queryFilterOptions(db, tableName, config)
     const responseKey = TABLE_RESPONSE_KEY[tableName] || tableName + "s"
     return {
       data: { [responseKey]: results },
       tableName,
+      filterOptions,
     }
   }
 }
