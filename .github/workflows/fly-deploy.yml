@@ -8,6 +8,7 @@ on:
 jobs:
   deploy:
     name: Deploy app
+    if: false
     runs-on: ubuntu-latest
     concurrency: deploy-group    # optional: ensure only one action runs at a time
     steps:
