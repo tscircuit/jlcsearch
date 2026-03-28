@@ -187,3 +187,4 @@ db.backup.sqlite3
 #MANUAL folder gets created on build, ignore it 
 /MANUAL
 cf-proxy/.db-sync-temp/
+cf-proxy/.wrangler

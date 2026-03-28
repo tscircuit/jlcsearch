@@ -194,7 +194,13 @@ async function tryD1Route(
       addCorsHeaders(headers, origin)
 
       return new Response(
-        renderD1TablePage(pathname, result.data, params, url.toString()),
+        renderD1TablePage(
+          pathname,
+          result.data,
+          params,
+          url.toString(),
+          result.filterOptions,
+        ),
         {
           status: 200,
           headers,
@@ -233,7 +239,13 @@ async function tryD1Route(
 
     headers.set("content-type", "text/html; charset=utf-8")
     return new Response(
-      renderD1TablePage(pathname, result.data, params, url.toString()),
+      renderD1TablePage(
+        pathname,
+        result.data,
+        params,
+        url.toString(),
+        result.filterOptions,
+      ),
       {
         status: 200,
         headers,

@@ -3,6 +3,7 @@ import {
   TABLE_CONFIGS,
   TABLE_RESPONSE_KEY,
   type QueryParams,
+  type FilterOptions,
 } from "./handlers"
 
 const escapeHtml = (value: unknown): string =>
@@ -136,7 +137,24 @@ const renderTable = (rows: unknown[]): string => {
   return `<table class="border border-gray-300 text-xs border-collapse p-1"><thead><tr>${headerHtml}</tr></thead><tbody>${bodyHtml}</tbody></table>`
 }
 
-const renderGenericFilters = (pathname: string, params: QueryParams): string => {
+const renderFilterSuggestions = (
+  pathname: string,
+  paramName: string,
+  options: string[],
+): string => {
+  if (options.length === 0) return ""
+
+  const listId = `${pathname.replaceAll("/", "-")}-${paramName}-options`
+  return `<datalist id="${escapeHtml(listId)}">${options
+    .map((option) => `<option value="${escapeHtml(option)}"></option>`)
+    .join("")}</datalist>`
+}
+
+const renderGenericFilters = (
+  pathname: string,
+  params: QueryParams,
+  filterOptions: FilterOptions = {},
+): string => {
   const tableName = ROUTE_TO_TABLE[pathname]
   if (!tableName) return ""
   const config = TABLE_CONFIGS[tableName]
@@ -149,7 +167,12 @@ const renderGenericFilters = (pathname: string, params: QueryParams): string => 
       }
       const inputType = fieldConfig.type === "number" ? "number" : "text"
       const step = fieldConfig.type === "number" ? ' step="any"' : ""
-      return `<div><label>${escapeHtml(paramName)}:</label><input type="${inputType}" name="${escapeHtml(paramName)}" value="${escapeHtml(params[paramName] ?? "")}"${step} /></div>`
+      const suggestions = filterOptions[paramName] ?? []
+      const listId =
+        suggestions.length > 0
+          ? `${pathname.replaceAll("/", "-")}-${paramName}-options`
+          : ""
+      return `<div><label>${escapeHtml(paramName)}:</label><input type="${inputType}" name="${escapeHtml(paramName)}" value="${escapeHtml(params[paramName] ?? "")}"${step}${listId ? ` list="${escapeHtml(listId)}"` : ""} autocomplete="on" />${renderFilterSuggestions(pathname, paramName, suggestions)}</div>`
     })
     .join("")
 
@@ -232,7 +255,7 @@ posthog.init('phc_htd8AQjSfVEsFCLQMAiUooG4Q0DKBCjqYuQglc9V3Wo', { api_host:'http
         </div>
         <div class="flex flex-row items-center gap-2">
           <form action="/components/list" method="GET" class="flex flex-row border-none py-0 my-0">
-            <input type="text" name="search" placeholder="Search Description, MFR, or LCSC" class="border m-0 mr-2" />
+            <input type="text" name="search" placeholder="Search Description, MFR, or LCSC" class="border m-0 mr-2" autocomplete="on" />
             <button type="submit" class="border px-3 py-1 m-0">Search</button>
           </form>
           <a href="https://github.com/tscircuit/jlcsearch">
@@ -268,6 +291,7 @@ export const renderD1TablePage = (
   data: Record<string, unknown[]>,
   params: QueryParams,
   requestUrl?: string,
+  filterOptions?: FilterOptions,
 ): string => {
   const responseKey =
     TABLE_RESPONSE_KEY[ROUTE_TO_TABLE[pathname] ?? ""] ||
@@ -285,7 +309,7 @@ export const renderD1TablePage = (
   } else if (pathname === "/categories/list") {
     pageBody += "<div>Click for subcategories</div>"
   } else {
-    pageBody += renderGenericFilters(pathname, params)
+    pageBody += renderGenericFilters(pathname, params, filterOptions)
   }
 
   if (rows.length > 0) {

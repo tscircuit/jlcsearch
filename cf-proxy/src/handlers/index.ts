@@ -13,8 +13,28 @@ interface TableConfig {
   filters: Record<string, FilterConfig>
 }
 
+export type FilterOptions = Record<string, string[]>
+
 // Allowed operators for sanitization
 const ALLOWED_OPERATORS = new Set(["=", ">=", "<=", ">", "<"])
+
+const isBooleanLikeField = (field: string): boolean =>
+  field === "in_stock" ||
+  field.startsWith("is_") ||
+  field.startsWith("has_") ||
+  field.startsWith("measures_")
+
+const normalizeJsonRow = (
+  row: Record<string, unknown>,
+): Record<string, unknown> =>
+  Object.fromEntries(
+    Object.entries(row).map(([key, value]) => {
+      if (isBooleanLikeField(key) && (value === 0 || value === 1)) {
+        return [key, Boolean(value)]
+      }
+      return [key, value]
+    }),
+  )
 
 /**
  * Generic query handler that builds a query based on table name and params.
@@ -99,7 +119,40 @@ export async function queryTable(
   }
 
   const result = await query.execute(db)
-  return result.rows as unknown[]
+  return (result.rows as Array<Record<string, unknown>>).map(normalizeJsonRow)
+}
+
+export async function queryFilterOptions(
+  db: Kysely<DB>,
+  tableName: string,
+  config: TableConfig,
+): Promise<FilterOptions> {
+  const options: FilterOptions = {}
+
+  for (const [paramName, fieldConfig] of Object.entries(config.filters)) {
+    if (fieldConfig.type === "boolean") continue
+
+    const field = sql.id(fieldConfig.field)
+    const table = sql.id(tableName)
+    const orderExpression =
+      fieldConfig.type === "string" ? sql`${field}` : sql`CAST(${field} AS REAL)`
+    const query = sql`
+      SELECT CAST(${field} AS TEXT) AS value
+      FROM ${table}
+      WHERE ${field} IS NOT NULL
+        AND TRIM(CAST(${field} AS TEXT)) != ''
+      GROUP BY ${field}
+      ORDER BY COUNT(*) DESC, ${orderExpression} ASC
+      LIMIT 100
+    `
+
+    const result = await query.execute(db)
+    options[paramName] = (result.rows as Array<{ value: string | null }>)
+      .map((row) => row.value?.trim() ?? "")
+      .filter(Boolean)
+  }
+
+  return options
 }
 
 // Configuration for all derived tables
@@ -380,6 +433,7 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
     filters: {
       package: { field: "package", type: "string" },
       mounting_style: { field: "mounting_style", type: "string" },
+      gender: { field: "gender", type: "string" },
     },
   },
   voltage_regulator: {
@@ -459,7 +513,7 @@ export const TABLE_RESPONSE_KEY: Record<string, string> = {
   header: "headers",
   accelerometer: "accelerometers",
   adc: "adcs",
-  analog_multiplexer: "analog_multiplexers",
+  analog_multiplexer: "multiplexers",
   battery_holder: "battery_holders",
   bjt_transistor: "bjt_transistors",
   boost_converter: "boost_converters",
@@ -476,14 +530,14 @@ export const TABLE_RESPONSE_KEY: Record<string, string> = {
   led_dot_matrix_display: "led_dot_matrix_displays",
   led_driver: "led_drivers",
   led_segment_display: "led_segment_displays",
-  led_with_ic: "led_with_ics",
+  led_with_ic: "leds_with_ic",
   oled_display: "oled_displays",
   pcie_m2_connector: "pcie_m2_connectors",
   potentiometer: "potentiometers",
   relay: "relays",
   resistor_array: "resistor_arrays",
   usb_c_connector: "usb_c_connectors",
-  voltage_regulator: "voltage_regulators",
+  voltage_regulator: "regulators",
   wifi_module: "wifi_modules",
   wire_to_board_connector: "wire_to_board_connectors",
 }
