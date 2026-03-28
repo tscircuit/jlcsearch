@@ -192,6 +192,7 @@ export interface Component {
   description: string;
   extra: string | null;
   flag: Generated<number>;
+  is_extended_promotional: Generated<number>;
   joints: number;
   last_on_stock: Generated<number>;
   last_update: number;
@@ -802,6 +803,7 @@ export interface VComponent {
   datasheet: string | null;
   description: string | null;
   extra: string | null;
+  is_extended_promotional: number | null;
   joints: number | null;
   last_on_stock: number | null;
   lcsc: number | null;
