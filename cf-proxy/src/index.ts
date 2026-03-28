@@ -47,7 +47,11 @@ export default {
       return handleD1Health(env, origin)
     }
 
-    if (env.USE_D1 === "true" && request.method === "GET" && url.pathname === "/") {
+    if (
+      env.USE_D1 === "true" &&
+      request.method === "GET" &&
+      url.pathname === "/"
+    ) {
       const headers = new Headers({
         "content-type": "text/html; charset=utf-8",
         "x-data-source": "d1",

@@ -5,7 +5,8 @@ const runtimeConfig = globalThis as typeof globalThis & {
 export const BASE_URL =
   runtimeConfig.CF_TEST_BASE_URL ?? "https://jlcsearch.tscircuit.com"
 
-export const buildUrl = (path: string): string => new URL(path, BASE_URL).toString()
+export const buildUrl = (path: string): string =>
+  new URL(path, BASE_URL).toString()
 
 export async function fetchJson(path: string): Promise<{
   response: Response

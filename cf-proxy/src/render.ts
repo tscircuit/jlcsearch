@@ -61,6 +61,22 @@ const routeLabels: Record<string, string> = {
   "/bjt_transistors/list": "BJT Transistors",
 }
 
+const FALLBACK_FILTER_OPTIONS: FilterOptions = {
+  color: [
+    "RGB",
+    "red",
+    "green",
+    "blue",
+    "white",
+    "yellow",
+    "orange",
+    "amber",
+    "pink",
+    "purple",
+    "emerald",
+  ],
+}
+
 const routeHeadings: Record<string, string> = {
   "/categories/list": "Categories",
   "/components/list": "Components",
@@ -361,24 +377,31 @@ const renderGenericFilters = (
   const inputs = Object.entries(config.filters)
     .map(([paramName, fieldConfig]) => {
       const label = getColumnLabel(paramName)
+      const mergedSuggestions = Array.from(
+        new Set([
+          ...(filterOptions[paramName] ?? []),
+          ...(FALLBACK_FILTER_OPTIONS[paramName] ?? []),
+        ]),
+      )
       if (fieldConfig.type === "boolean") {
         return `<div><label>${escapeHtml(label)}:</label><select name="${escapeHtml(paramName)}"><option value="">All</option><option value="true"${params[paramName] === "true" ? " selected" : ""}>Yes</option><option value="false"${params[paramName] === "false" ? " selected" : ""}>No</option></select></div>`
       }
       const inputType = fieldConfig.type === "number" ? "number" : "text"
       const step = fieldConfig.type === "number" ? ' step="any"' : ""
-      const suggestions = filterOptions[paramName] ?? []
       const listId =
-        suggestions.length > 0
+        mergedSuggestions.length > 0
           ? `${pathname.replaceAll("/", "-")}-${paramName}-options`
           : ""
-      return `<div><label>${escapeHtml(label)}:</label><input type="${inputType}" name="${escapeHtml(paramName)}" value="${escapeHtml(params[paramName] ?? "")}"${step}${listId ? ` list="${escapeHtml(listId)}"` : ""} autocomplete="on" />${renderFilterSuggestions(pathname, paramName, suggestions)}</div>`
+      return `<div><label>${escapeHtml(label)}:</label><input type="${inputType}" name="${escapeHtml(paramName)}" value="${escapeHtml(params[paramName] ?? "")}"${step}${listId ? ` list="${escapeHtml(listId)}"` : ""} autocomplete="on" />${renderFilterSuggestions(pathname, paramName, mergedSuggestions)}</div>`
     })
     .join("")
 
   return `<form method="GET" class="flex flex-row gap-4">${inputs}<button type="submit">Filter</button></form>`
 }
 
-const renderComponentsFilters = (params: QueryParams): string => `<form method="GET" class="flex flex-row gap-4">
+const renderComponentsFilters = (
+  params: QueryParams,
+): string => `<form method="GET" class="flex flex-row gap-4">
   <input type="hidden" name="subcategory_name" value="${escapeHtml(params.subcategory_name ?? "")}" />
   <input type="hidden" name="package" value="${escapeHtml(params.package ?? "")}" />
   <input type="hidden" name="search" value="${escapeHtml(params.search ?? "")}" />

@@ -6,8 +6,8 @@ describe("render helpers", () => {
     const html = renderHomePage()
 
     expect(html).toContain("JLCPCB In-Stock Parts Engine (Unofficial)")
-    expect(html).toContain('/led_with_ic/list')
-    expect(html).toContain('/resistors/list')
+    expect(html).toContain("/led_with_ic/list")
+    expect(html).toContain("/resistors/list")
   })
 
   it("renders an HTML table page for a supported D1 route", () => {
@@ -28,9 +28,11 @@ describe("render helpers", () => {
     )
 
     expect(html).toContain("<h2>LEDs with Built-in IC</h2>")
-    expect(html).toContain("name=\"protocol\"")
-    expect(html).toContain("value=\"WS2812B\"")
-    expect(html).toContain("<table class=\"border border-gray-300 text-xs border-collapse p-1\">")
+    expect(html).toContain('name="protocol"')
+    expect(html).toContain('value="WS2812B"')
+    expect(html).toContain(
+      '<table class="border border-gray-300 text-xs border-collapse p-1">',
+    )
     expect(html).toContain("SMD5050-4P")
     expect(html).toContain("/led_with_ic/list.json?protocol=WS2812B")
   })

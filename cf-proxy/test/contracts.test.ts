@@ -35,14 +35,18 @@ const getFieldLabel = (alias: FieldAlias): string =>
 
 const expectRowHasFields = (row: any, fields: FieldAlias[]) => {
   for (const field of fields) {
-    expect(getFieldValue(row, field), `expected row to include ${getFieldLabel(field)}`).not.toBeUndefined()
+    expect(
+      getFieldValue(row, field),
+      `expected row to include ${getFieldLabel(field)}`,
+    ).not.toBeUndefined()
   }
 }
 
 const stringEquals = (field: string): FilterCase => ({
   param: field,
   rowField: field,
-  pick: (rows) => rows.find((row) => typeof row[field] === "string" && row[field]),
+  pick: (rows) =>
+    rows.find((row) => typeof row[field] === "string" && row[field]),
   serialize: (value) => String(value),
   assert: (row, value) => {
     expect(row[field]).toBe(value)
@@ -53,7 +57,10 @@ const numberEquals = (param: string, rowField: string): FilterCase => ({
   param,
   rowField,
   pick: (rows) =>
-    rows.find((row) => typeof row[rowField] === "number" && Number.isFinite(row[rowField])),
+    rows.find(
+      (row) =>
+        typeof row[rowField] === "number" && Number.isFinite(row[rowField]),
+    ),
   serialize: (value) => String(value),
   assert: (row, value) => {
     expect(Number(row[rowField])).toBe(Number(value))
@@ -64,7 +71,10 @@ const numberTolerance = (param: string, rowField: string): FilterCase => ({
   param,
   rowField,
   pick: (rows) =>
-    rows.find((row) => typeof row[rowField] === "number" && Number.isFinite(row[rowField])),
+    rows.find(
+      (row) =>
+        typeof row[rowField] === "number" && Number.isFinite(row[rowField]),
+    ),
   serialize: (value) => String(value),
   assert: (row, value) => {
     const expected = Number(value)
@@ -131,14 +141,28 @@ const routeCases: RouteCase[] = [
     name: "capacitors",
     path: "/capacitors/list?json=true",
     responseKey: "capacitors",
-    requiredFields: ["lcsc", "mfr", "package", ["capacitance", "capacitance_farads"]],
-    filters: [stringEquals("package"), numberTolerance("capacitance", "capacitance_farads")],
+    requiredFields: [
+      "lcsc",
+      "mfr",
+      "package",
+      ["capacitance", "capacitance_farads"],
+    ],
+    filters: [
+      stringEquals("package"),
+      numberTolerance("capacitance", "capacitance_farads"),
+    ],
   },
   {
     name: "components",
     path: "/components/list?json=true",
     responseKey: "components",
-    requiredFields: ["lcsc", "mfr", "package", "description", ["price", "price1"]],
+    requiredFields: [
+      "lcsc",
+      "mfr",
+      "package",
+      "description",
+      ["price", "price1"],
+    ],
   },
   {
     name: "diodes",
@@ -163,9 +187,18 @@ const routeCases: RouteCase[] = [
     name: "fuses",
     path: "/fuses/list.json?json=true",
     responseKey: "fuses",
-    requiredFields: ["lcsc", "mfr", "package", "current_rating", "response_time"],
+    requiredFields: [
+      "lcsc",
+      "mfr",
+      "package",
+      "current_rating",
+      "response_time",
+    ],
     booleanFields: ["is_surface_mount", "is_glass_encased", "is_resettable"],
-    filters: [stringEquals("package"), numberEquals("current_rating", "current_rating")],
+    filters: [
+      stringEquals("package"),
+      numberEquals("current_rating", "current_rating"),
+    ],
   },
   {
     name: "gas_sensors",
@@ -230,7 +263,11 @@ const routeCases: RouteCase[] = [
     path: "/led_with_ic/list.json?json=true",
     responseKey: "leds_with_ic",
     requiredFields: ["lcsc", "mfr", "package", "stock", ["price", "price1"]],
-    filters: [stringEquals("package"), stringEquals("color"), stringEquals("protocol")],
+    filters: [
+      stringEquals("package"),
+      stringEquals("color"),
+      stringEquals("protocol"),
+    ],
   },
   {
     name: "leds",
@@ -288,7 +325,10 @@ const routeCases: RouteCase[] = [
     path: "/resistors/list?json=true",
     responseKey: "resistors",
     requiredFields: ["lcsc", "mfr", "package", "resistance"],
-    filters: [stringEquals("package"), numberTolerance("resistance", "resistance")],
+    filters: [
+      stringEquals("package"),
+      numberTolerance("resistance", "resistance"),
+    ],
   },
   {
     name: "switches",
@@ -296,7 +336,11 @@ const routeCases: RouteCase[] = [
     responseKey: "switches",
     requiredFields: ["lcsc", "mfr", "package", "pin_count", "switch_type"],
     booleanFields: ["is_latching"],
-    filters: [stringEquals("package"), stringEquals("circuit"), numberEquals("pin_count", "pin_count")],
+    filters: [
+      stringEquals("package"),
+      stringEquals("circuit"),
+      numberEquals("pin_count", "pin_count"),
+    ],
   },
   {
     name: "usb_c_connectors",
@@ -388,7 +432,12 @@ describe("Cloudflare route contracts", () => {
 
         const picked =
           filter.pick?.(rows) ??
-          rows.find((row) => row[filter.rowField] !== null && row[filter.rowField] !== undefined && row[filter.rowField] !== "")
+          rows.find(
+            (row) =>
+              row[filter.rowField] !== null &&
+              row[filter.rowField] !== undefined &&
+              row[filter.rowField] !== "",
+          )
 
         if (!picked) return
 
@@ -397,7 +446,8 @@ describe("Cloudflare route contracts", () => {
             ? picked[filter.rowField]
             : picked
 
-        if (rawValue === null || rawValue === undefined || rawValue === "") return
+        if (rawValue === null || rawValue === undefined || rawValue === "")
+          return
 
         const serialized = encodeURIComponent(
           filter.serialize ? filter.serialize(rawValue) : String(rawValue),

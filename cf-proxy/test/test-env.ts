@@ -20,18 +20,20 @@ export class MemoryKV {
     _typeOrOptions?: any,
   ): Promise<any> {
     if (Array.isArray(key)) {
-      return key.reduce<Record<string, { value: string | null; metadata: T | null; cacheStatus: null }>>(
-        (acc, item) => {
-          const entry = this.store.get(item)
-          acc[item] = {
-            value: entry?.value ?? null,
-            metadata: (entry?.metadata as T) ?? null,
-            cacheStatus: null,
-          }
-          return acc
-        },
-        {},
-      )
+      return key.reduce<
+        Record<
+          string,
+          { value: string | null; metadata: T | null; cacheStatus: null }
+        >
+      >((acc, item) => {
+        const entry = this.store.get(item)
+        acc[item] = {
+          value: entry?.value ?? null,
+          metadata: (entry?.metadata as T) ?? null,
+          cacheStatus: null,
+        }
+        return acc
+      }, {})
     }
     const entry = this.store.get(key)
     if (!entry) {

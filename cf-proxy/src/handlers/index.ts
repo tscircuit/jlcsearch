@@ -135,7 +135,9 @@ export async function queryFilterOptions(
     const field = sql.id(fieldConfig.field)
     const table = sql.id(tableName)
     const orderExpression =
-      fieldConfig.type === "string" ? sql`${field}` : sql`CAST(${field} AS REAL)`
+      fieldConfig.type === "string"
+        ? sql`${field}`
+        : sql`CAST(${field} AS REAL)`
     const query = sql`
       SELECT CAST(${field} AS TEXT) AS value
       FROM ${table}
