@@ -13,6 +13,8 @@ let kyselyImportError: unknown
 let BunSqliteDialectCtor: typeof BunSqliteDialect | undefined
 let bunSqliteImportError: unknown
 
+let dbClientSingleton: Kysely<DB> | undefined
+
 if (process.env.WINTERSPEC_CODEGEN !== "true") {
   try {
     const sqliteModule = await import("bun:sqlite")
@@ -46,6 +48,10 @@ const getDatabaseCtor = (): typeof BunDatabase => {
 }
 
 export const getDbClient = () => {
+  if (dbClientSingleton) {
+    return dbClientSingleton
+  }
+
   const Database = getDatabaseCtor()
   const KyselyCtorRef = KyselyCtor
   const BunSqliteDialectRef = BunSqliteDialectCtor
@@ -58,11 +64,13 @@ export const getDbClient = () => {
     )
   }
 
-  return new KyselyCtorRef<DB>({
+  dbClientSingleton = new KyselyCtorRef<DB>({
     dialect: new BunSqliteDialectRef({
       database: new Database(Path.join(import.meta.dir, "../../db.sqlite3")),
     }),
   })
+
+  return dbClientSingleton
 }
 
 export const getBunDatabaseClient = () => {
