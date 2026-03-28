@@ -14,7 +14,7 @@ describe("render helpers", () => {
     const html = renderD1TablePage(
       "/led_with_ic/list",
       {
-        led_with_ics: [
+        leds_with_ic: [
           {
             lcsc: 123,
             mfr: "WS2812B",

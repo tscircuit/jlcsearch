@@ -95,6 +95,125 @@ const formatPrice = (value: unknown): string => {
   })
 }
 
+const SI_PREFIXES = [
+  { value: 1e12, symbol: "T" },
+  { value: 1e9, symbol: "G" },
+  { value: 1e6, symbol: "M" },
+  { value: 1e3, symbol: "k" },
+  { value: 1, symbol: "" },
+  { value: 1e-3, symbol: "m" },
+  { value: 1e-6, symbol: "u" },
+  { value: 1e-9, symbol: "n" },
+  { value: 1e-12, symbol: "p" },
+]
+
+const formatSiUnit = (value: unknown): string => {
+  const num = typeof value === "number" ? value : Number(value)
+  if (!Number.isFinite(num)) return ""
+  if (num === 0) return "0"
+
+  const prefix =
+    SI_PREFIXES.find((candidate) => Math.abs(num) >= candidate.value) ||
+    SI_PREFIXES[SI_PREFIXES.length - 1]
+  const scaled = num / prefix.value
+  const formatted = scaled
+    .toPrecision(3)
+    .replace(/\.0+$/, "")
+    .replace(/(\.\d*?)0+$/, "$1")
+
+  return `${formatted}${prefix.symbol}`
+}
+
+const COLUMN_LABELS: Record<string, string> = {
+  lcsc: "LCSC",
+  mfr: "MFR",
+  price1: "Price",
+  in_stock: "In Stock",
+  is_basic: "Basic",
+  is_preferred: "Preferred",
+  capacitance_farads: "Capacitance",
+  tolerance_fraction: "Tolerance",
+  voltage_rating: "Voltage",
+  current_rating: "Current",
+  resistance: "Resistance",
+  power_watts: "Power",
+  supply_voltage_min: "Min Voltage",
+  supply_voltage_max: "Max Voltage",
+  output_voltage_min: "Min Output Voltage",
+  output_voltage_max: "Max Output Voltage",
+  input_voltage_min: "Min Input Voltage",
+  input_voltage_max: "Max Input Voltage",
+  output_current_max: "Max Output Current",
+  operating_temp_min: "Min Temp",
+  operating_temp_max: "Max Temp",
+  pitch_mm: "Pitch",
+}
+
+const getColumnLabel = (column: string): string => {
+  if (COLUMN_LABELS[column]) return COLUMN_LABELS[column]
+  return titleCase(column)
+}
+
+const withUnit = (value: unknown, unit: string): string => {
+  const num = typeof value === "number" ? value : Number(value)
+  if (!Number.isFinite(num)) return ""
+  return `${num}${unit}`
+}
+
+const formatDisplayValue = (column: string, value: unknown): string | null => {
+  switch (column) {
+    case "capacitance_farads":
+      return `${formatSiUnit(value)}F`
+    case "resistance":
+      return `${formatSiUnit(value)}Ω`
+    case "tolerance_fraction": {
+      const num = typeof value === "number" ? value : Number(value)
+      if (!Number.isFinite(num)) return ""
+      return `±${num * 100}%`
+    }
+    case "power_watts":
+      return `${formatSiUnit(value)}W`
+    case "current_rating":
+    case "forward_current":
+    case "collector_current":
+    case "continuous_drain_current":
+    case "output_current_max":
+    case "ripple_current_amps":
+      return `${formatSiUnit(value)}A`
+    case "voltage_rating":
+    case "forward_voltage":
+    case "reverse_voltage":
+    case "collector_emitter_voltage":
+    case "drain_source_voltage":
+    case "gate_threshold_voltage":
+    case "supply_voltage_min":
+    case "supply_voltage_max":
+    case "input_voltage_min":
+    case "input_voltage_max":
+    case "output_voltage_min":
+    case "output_voltage_max":
+    case "dropout_voltage":
+    case "coil_voltage":
+      return withUnit(value, "V")
+    case "pitch_mm":
+    case "display_size":
+    case "pin_length_mm":
+    case "row_spacing_mm":
+    case "insulation_height_mm":
+    case "width_mm":
+    case "length_mm":
+    case "switch_height_mm":
+      return withUnit(value, "mm")
+    case "operating_temp_min":
+    case "operating_temp_max":
+    case "operating_temperature_min":
+    case "operating_temperature_max":
+      return withUnit(value, "°C")
+    default:
+      return null
+  }
+}
+
 const renderCell = (
   row: Record<string, unknown>,
   column: string,
@@ -108,7 +227,11 @@ const renderCell = (
     return escapeHtml(formatPrice(value))
   }
   if (typeof value === "boolean") {
-    return value ? "true" : "false"
+    return value ? "✓" : ""
+  }
+  const formatted = formatDisplayValue(column, value)
+  if (formatted !== null) {
+    return escapeHtml(formatted)
   }
   return escapeHtml(value)
 }
@@ -118,7 +241,10 @@ const renderTable = (rows: unknown[]): string => {
   const firstRow = rows[0] as Record<string, unknown>
   const columns = Object.keys(firstRow)
   const headerHtml = columns
-    .map((column) => `<th class="p-1 border border-gray-300">${escapeHtml(column)}</th>`)
+    .map(
+      (column) =>
+        `<th class="p-1 border border-gray-300">${escapeHtml(getColumnLabel(column))}</th>`,
+    )
     .join("")
 
   const bodyHtml = rows
