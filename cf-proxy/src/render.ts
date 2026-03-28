@@ -137,6 +137,35 @@ const COLUMN_LABELS: Record<string, string> = {
   current_rating: "Current",
   resistance: "Resistance",
   power_watts: "Power",
+  current_rating_a: "Current",
+  current_rating_amp: "Current",
+  voltage_rating_volt: "Voltage",
+  wavelength_nm: "Wavelength",
+  luminous_intensity_mcd: "Intensity",
+  number_of_contacts: "Contacts",
+  num_channels: "Channels",
+  num_bits: "Bits",
+  num_pins: "Pins",
+  num_pins_per_row: "Pins / Row",
+  num_rows: "Rows",
+  pin_count: "Pins",
+  channel_count: "Channels",
+  relay_type: "Relay Type",
+  switch_type: "Switch Type",
+  contact_type: "Contact Type",
+  output_type: "Output Type",
+  mounting_style: "Mounting",
+  cpu_core: "Core",
+  cpu_speed_hz: "CPU Speed",
+  flash_size_bytes: "Flash",
+  ram_size_bytes: "RAM",
+  gpio_count: "GPIO",
+  clock_frequency_hz: "Clock",
+  frequency_ghz: "Frequency",
+  display_type: "Display Type",
+  matrix_size: "Matrix Size",
+  forward_current: "Forward Current",
+  forward_voltage: "Forward Voltage",
   supply_voltage_min: "Min Voltage",
   supply_voltage_max: "Max Voltage",
   output_voltage_min: "Min Output Voltage",
@@ -160,6 +189,20 @@ const withUnit = (value: unknown, unit: string): string => {
   return `${num}${unit}`
 }
 
+const formatByteSize = (value: unknown): string => {
+  const num = typeof value === "number" ? value : Number(value)
+  if (!Number.isFinite(num)) return ""
+  if (num >= 1024 * 1024) return `${(num / (1024 * 1024)).toFixed(1)}MB`
+  if (num >= 1024) return `${(num / 1024).toFixed(1)}KB`
+  return `${num}B`
+}
+
+const formatCount = (value: unknown): string => {
+  const num = typeof value === "number" ? value : Number(value)
+  if (!Number.isFinite(num)) return ""
+  return Number.isInteger(num) ? num.toLocaleString("en-US") : String(num)
+}
+
 const formatDisplayValue = (column: string, value: unknown): string | null => {
   switch (column) {
     case "capacitance_farads":
@@ -173,7 +216,36 @@ const formatDisplayValue = (column: string, value: unknown): string | null => {
     }
     case "power_watts":
       return `${formatSiUnit(value)}W`
+    case "stock":
+      return formatCount(value)
+    case "cpu_speed_hz":
+    case "sampling_rate_hz":
+    case "clock_frequency_hz":
+      return `${formatSiUnit(value)}Hz`
+    case "frequency_ghz":
+      return withUnit(value, "GHz")
+    case "wavelength_nm":
+      return withUnit(value, "nm")
+    case "luminous_intensity_mcd":
+      return withUnit(value, "mcd")
+    case "flash_size_bytes":
+    case "ram_size_bytes":
+    case "eeprom_size_bytes":
+    case "embedded_ram_bits":
+      return formatByteSize(value)
+    case "num_channels":
+    case "num_bits":
+    case "num_pins":
+    case "num_pins_per_row":
+    case "num_rows":
+    case "pin_count":
+    case "channel_count":
+    case "number_of_contacts":
+    case "gpio_count":
+      return formatCount(value)
     case "current_rating":
+    case "current_rating_a":
+    case "current_rating_amp":
     case "forward_current":
     case "collector_current":
     case "continuous_drain_current":
@@ -288,8 +360,9 @@ const renderGenericFilters = (
 
   const inputs = Object.entries(config.filters)
     .map(([paramName, fieldConfig]) => {
+      const label = getColumnLabel(paramName)
       if (fieldConfig.type === "boolean") {
-        return `<div><label>${escapeHtml(paramName)}:</label><select name="${escapeHtml(paramName)}"><option value="">All</option><option value="true"${params[paramName] === "true" ? " selected" : ""}>true</option><option value="false"${params[paramName] === "false" ? " selected" : ""}>false</option></select></div>`
+        return `<div><label>${escapeHtml(label)}:</label><select name="${escapeHtml(paramName)}"><option value="">All</option><option value="true"${params[paramName] === "true" ? " selected" : ""}>Yes</option><option value="false"${params[paramName] === "false" ? " selected" : ""}>No</option></select></div>`
       }
       const inputType = fieldConfig.type === "number" ? "number" : "text"
       const step = fieldConfig.type === "number" ? ' step="any"' : ""
@@ -298,7 +371,7 @@ const renderGenericFilters = (
         suggestions.length > 0
           ? `${pathname.replaceAll("/", "-")}-${paramName}-options`
           : ""
-      return `<div><label>${escapeHtml(paramName)}:</label><input type="${inputType}" name="${escapeHtml(paramName)}" value="${escapeHtml(params[paramName] ?? "")}"${step}${listId ? ` list="${escapeHtml(listId)}"` : ""} autocomplete="on" />${renderFilterSuggestions(pathname, paramName, suggestions)}</div>`
+      return `<div><label>${escapeHtml(label)}:</label><input type="${inputType}" name="${escapeHtml(paramName)}" value="${escapeHtml(params[paramName] ?? "")}"${step}${listId ? ` list="${escapeHtml(listId)}"` : ""} autocomplete="on" />${renderFilterSuggestions(pathname, paramName, suggestions)}</div>`
     })
     .join("")
 
