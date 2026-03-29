@@ -13,6 +13,7 @@ export default withWinterSpec({
     package: z.string().optional(),
     is_basic: z.boolean().optional(),
     is_preferred: z.boolean().optional(),
+    is_extended_promotional: z.boolean().optional(),
     resistance: z
       .string()
       .optional()
@@ -62,6 +63,9 @@ export default withWinterSpec({
   if (params.is_preferred) {
     query = query.where("is_preferred", "=", 1)
   }
+  if (params.is_extended_promotional) {
+    query = query.where("is_preferred", "=", 1).where("is_basic", "=", 0)
+  }
 
   // Apply resistance filter with a small tolerance for rounding errors
   if (params.resistance != null) {
@@ -88,6 +92,8 @@ export default withWinterSpec({
           package: r.package ?? "",
           is_basic: Boolean(r.is_basic),
           is_preferred: Boolean(r.is_preferred),
+          is_extended_promotional:
+            Boolean(r.is_preferred) && !Boolean(r.is_basic),
           resistance: r.resistance ?? 0,
           tolerance_fraction: r.tolerance_fraction ?? undefined,
           power_watts: r.power_watts ?? undefined,
@@ -144,6 +150,18 @@ export default withWinterSpec({
         </div>
 
         <div>
+          <label>
+            Extended Promotional:
+            <input
+              type="checkbox"
+              name="is_extended_promotional"
+              value="true"
+              checked={params.is_extended_promotional}
+            />
+          </label>
+        </div>
+
+        <div>
           <label>Resistance:</label>
           <input
             type="text"
@@ -163,6 +181,7 @@ export default withWinterSpec({
           package: r.package,
           is_basic: r.is_basic ? "✓" : "",
           is_preferred: r.is_preferred ? "✓" : "",
+          is_extended_promotional: r.is_preferred && !r.is_basic ? "✓" : "",
           resistance: (
             <span className="tabular-nums">{formatSiUnit(r.resistance)}Ω</span>
           ),
