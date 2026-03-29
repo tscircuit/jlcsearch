@@ -1,58 +1,67 @@
 import { z } from "zod"
 import { publicProcedure } from "../../lib/trpc"
-import { db } from "../../lib/db"
+import { getDb } from "../../lib/db/get-db"
 
 export const listComponents = publicProcedure
   .input(
     z.object({
       // Pagination
-      limit: z.number().int().min(1).max(100).default(50),
+      limit: z.number().int().min(1).max(100).default(20),
       offset: z.number().int().min(0).default(0),
-
       // Filters
+      keyword: z.string().optional(),
       package: z.string().optional(),
-      manufacturer: z.string().optional(),
-      description: z.string().optional(),
-      basic: z.boolean().optional(),
-      preferred: z.boolean().optional(),
-      is_extended_promotional: z.boolean().optional(),
       in_stock: z.boolean().optional(),
-
+      is_basic: z.boolean().optional(),
+      is_preferred: z.boolean().optional(),
+      is_extended_promotional: z.boolean().optional(),
+      // Stock / price
+      stock_gte: z.number().int().optional(),
       // Sort
-      sort_by: z
+      order_by: z
         .enum([
-          "price1",
-          "price10",
-          "price100",
-          "stock",
-          "lcsc",
-          "last_updated",
+          "stock_desc",
+          "stock_asc",
+          "price_asc",
+          "price_desc",
+          "lcsc_asc",
+          "lcsc_desc",
         ])
-        .optional(),
-      sort_order: z.enum(["asc", "desc"]).default("asc"),
+        .optional()
+        .default("stock_desc"),
     }),
   )
   .query(async ({ input }) => {
+    const db = getDb()
+
     let query = db.selectFrom("components").selectAll()
+
+    // Text search
+    if (input.keyword) {
+      const kw = `%${input.keyword}%`
+      query = query.where((eb) =>
+        eb.or([
+          eb("description", "like", kw),
+          eb("mfr", "like", kw),
+          eb(eb.cast(eb.ref("lcsc"), "text"), "like", kw),
+        ]),
+      )
+    }
 
     if (input.package) {
       query = query.where("package", "=", input.package)
     }
 
-    if (input.manufacturer) {
-      query = query.where("manufacturer", "ilike", `%${input.manufacturer}%`)
+    if (input.in_stock !== undefined) {
+      query = query.where("in_stock", "=", input.in_stock ? 1 : 0)
     }
 
-    if (input.description) {
-      query = query.where("description", "ilike", `%${input.description}%`)
+    if (input.is_basic !== undefined) {
+      query = query.where("is_basic", "=", input.is_basic ? 1 : 0)
     }
 
-    if (input.basic !== undefined) {
-      query = query.where("basic", "=", input.basic ? 1 : 0)
-    }
-
-    if (input.preferred !== undefined) {
-      query = query.where("preferred", "=", input.preferred ? 1 : 0)
+    if (input.is_preferred !== undefined) {
+      query = query.where("is_preferred", "=", input.is_preferred ? 1 : 0)
     }
 
     if (input.is_extended_promotional !== undefined) {
@@ -63,24 +72,42 @@ export const listComponents = publicProcedure
       )
     }
 
-    if (input.in_stock) {
-      query = query.where("stock", ">", 0)
+    if (input.stock_gte !== undefined) {
+      query = query.where("stock", ">=", input.stock_gte)
     }
 
-    if (input.sort_by) {
-      query = query.orderBy(input.sort_by, input.sort_order)
+    // Sorting
+    switch (input.order_by) {
+      case "stock_asc":
+        query = query.orderBy("stock", "asc")
+        break
+      case "price_asc":
+        query = query.orderBy("price1", "asc")
+        break
+      case "price_desc":
+        query = query.orderBy("price1", "desc")
+        break
+      case "lcsc_asc":
+        query = query.orderBy("lcsc", "asc")
+        break
+      case "lcsc_desc":
+        query = query.orderBy("lcsc", "desc")
+        break
+      case "stock_desc":
+      default:
+        query = query.orderBy("stock", "desc")
+        break
     }
 
-    query = query.limit(input.limit).offset(input.offset)
-
-    const components = await query.execute()
+    const rows = await query.limit(input.limit).offset(input.offset).execute()
 
     return {
-      components: components.map((c) => ({
-        ...c,
-        basic: c.basic === 1,
-        preferred: c.preferred === 1,
-        is_extended_promotional: c.is_extended_promotional === 1,
+      components: rows.map((r) => ({
+        ...r,
+        is_basic: Boolean(r.is_basic),
+        is_preferred: Boolean(r.is_preferred),
+        is_extended_promotional: Boolean(r.is_extended_promotional),
+        in_stock: Boolean(r.in_stock),
       })),
     }
   })
