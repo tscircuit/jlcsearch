@@ -1,165 +1,187 @@
 /**
- * Populates the `components` table from the JLCPCB component data source.
+ * Populate the components table from the JLCPCB CSV data file.
  *
- * The source JSON uses the field `componentLibraryType` (or similar) to
- * indicate component tier:
- *   - "base"          → basic = 1
- *   - "expand"        → basic = 0  (standard extended)
- *   - "expand_special"→ is_extended_promotional = 1  (extended promotional)
+ * Usage:
+ *   bun scripts/populate-components.ts --file ./component_data.csv
  *
- * Run: bun scripts/populate-components.ts
+ * The CSV file is available from JLCPCB's parts library export.
+ *
+ * Column mapping from JLCPCB CSV:
+ *   LCSC Part      -> lcsc
+ *   First Category -> (used for category lookup)
+ *   Second Category-> (used for category lookup)
+ *   MFR.Part#      -> mfr
+ *   Package        -> package
+ *   Solder Joint   -> joints
+ *   Library Type   -> is_basic / is_preferred / is_extended_promotional
+ *   Description    -> description
+ *   Stock          -> stock
+ *   Price          -> price
  */
 
-import { createDb } from "../lib/db"
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
+import { parse } from "csv-parse/sync"
+import { readFileSync } from "fs"
+import { getDb } from "../lib/db/get-db"
 
-const DATA_PATH =
-  process.env.JLCPCB_PARTS_JSON ?? join(process.cwd(), "data", "parts.json")
-
-interface RawComponent {
-  componentCode?: string
-  lcscPartNumber?: string
-  /** e.g. "base" | "expand" | "expand_special" */
-  componentLibraryType?: string
-  componentTypeEn?: string
-  stockCount?: number
-  price?: string | { quantity: number; price: number }[]
-  describe?: string
-  encapStandard?: string
-  solderJoint?: number
-  brandNameEn?: string
-  minPacketUnit?: number
-  // ... other fields
-  [key: string]: unknown
-}
-
-function parsePrices(
-  price: RawComponent["price"],
-): { price1: number | null; price10: number | null; price100: number | null } {
-  if (!price) return { price1: null, price10: null, price100: null }
-
-  let tiers: { quantity: number; price: number }[] = []
-
-  if (typeof price === "string") {
-    try {
-      tiers = JSON.parse(price)
-    } catch {
-      return { price1: null, price10: null, price100: null }
-    }
-  } else if (Array.isArray(price)) {
-    tiers = price
-  }
-
-  const get = (minQty: number) => {
-    // Find the tier whose minimum quantity is <= minQty, take the last such tier
-    const matching = tiers
-      .filter((t) => t.quantity <= minQty)
-      .sort((a, b) => b.quantity - a.quantity)
-    return matching[0]?.price ?? null
-  }
-
-  return {
-    price1: get(1),
-    price10: get(10),
-    price100: get(100),
-  }
+interface CsvRow {
+  "LCSC Part": string
+  "First Category": string
+  "Second Category": string
+  "MFR.Part#": string
+  Package: string
+  "Solder Joint": string
+  "Library Type": string
+  Description: string
+  Stock: string
+  Price: string
+  Images: string
+  Datasheet: string
+  Extra?: string
+  [key: string]: string | undefined
 }
 
 async function main() {
-  const db = createDb()
-
-  // Ensure column exists (idempotent guard for fresh runs before migration)
-  try {
-    await db.schema
-      .alterTable("components")
-      .addColumn("is_extended_promotional", "integer", (col) =>
-        col.defaultTo(0).notNull(),
-      )
-      .execute()
-    console.log("Added is_extended_promotional column")
-  } catch {
-    // Column already exists — that's fine
+  const args = process.argv.slice(2)
+  const fileIdx = args.indexOf("--file")
+  if (fileIdx === -1 || !args[fileIdx + 1]) {
+    console.error("Usage: bun scripts/populate-components.ts --file <path>")
+    process.exit(1)
   }
+  const filePath = args[fileIdx + 1]
 
-  const raw = readFileSync(DATA_PATH, "utf-8")
-  const parts: RawComponent[] = JSON.parse(raw)
+  console.log(`Reading CSV from ${filePath}...`)
+  const content = readFileSync(filePath, "utf-8")
+  const rows: CsvRow[] = parse(content, {
+    columns: true,
+    skip_empty_lines: true,
+  })
 
-  console.log(`Loaded ${parts.length} parts from ${DATA_PATH}`)
+  console.log(`Parsed ${rows.length} rows`)
 
-  const BATCH = 500
-  let inserted = 0
+  const db = getDb()
 
-  for (let i = 0; i < parts.length; i += BATCH) {
-    const batch = parts.slice(i, i + BATCH)
+  // Ensure the table has the is_extended_promotional column
+  // (migration is handled in get-db, but run here too for safety)
 
-    const rows = batch
-      .map((p) => {
-        const lcsc = Number(
-          (p.lcscPartNumber ?? p.componentCode ?? "").replace(/\D/g, ""),
-        )
-        if (!lcsc) return null
+  // Build category map
+  const categoryMap = new Map<string, number>()
 
-        const libraryType = (p.componentLibraryType ?? "").toLowerCase()
-        const basic = libraryType === "base" ? 1 : 0
-        const preferred = libraryType === "preferred" ? 1 : 0
-        const isExtendedPromotional =
-          libraryType === "expand_special" ? 1 : 0
+  // Upsert categories
+  for (const row of rows) {
+    const key = `${row["First Category"]}||${row["Second Category"]}`
+    if (!categoryMap.has(key)) {
+      const existing = await db
+        .selectFrom("categories")
+        .select("id")
+        .where("category", "=", row["First Category"])
+        .where("subcategory", "=", row["Second Category"])
+        .executeTakeFirst()
 
-        const { price1, price10, price100 } = parsePrices(p.price)
-
-        return {
-          lcsc,
-          mfr: String(p.componentCode ?? p.lcscPartNumber ?? ""),
-          description: String(p.describe ?? ""),
-          package: p.encapStandard ? String(p.encapStandard) : null,
-          joints: p.solderJoint ? Number(p.solderJoint) : null,
-          manufacturer: p.brandNameEn ? String(p.brandNameEn) : null,
-          basic,
-          preferred,
-          is_extended_promotional: isExtendedPromotional,
-          stock: p.stockCount ? Number(p.stockCount) : null,
-          price1,
-          price10,
-          price100,
-          last_updated: new Date().toISOString(),
+      if (existing) {
+        categoryMap.set(key, existing.id)
+      } else {
+        const inserted = await db
+          .insertInto("categories")
+          .values({
+            category: row["First Category"],
+            subcategory: row["Second Category"],
+            component_count: 0,
+          })
+          .returning("id")
+          .executeTakeFirst()
+        if (inserted) {
+          categoryMap.set(key, inserted.id)
         }
-      })
-      .filter(Boolean) as object[]
-
-    if (rows.length === 0) continue
-
-    await db
-      .insertInto("components")
-      .values(rows as any)
-      .onConflict((oc) =>
-        oc.column("lcsc").doUpdateSet((eb) => ({
-          description: eb.ref("excluded.description"),
-          package: eb.ref("excluded.package"),
-          joints: eb.ref("excluded.joints"),
-          manufacturer: eb.ref("excluded.manufacturer"),
-          basic: eb.ref("excluded.basic"),
-          preferred: eb.ref("excluded.preferred"),
-          is_extended_promotional: eb.ref(
-            "excluded.is_extended_promotional",
-          ),
-          stock: eb.ref("excluded.stock"),
-          price1: eb.ref("excluded.price1"),
-          price10: eb.ref("excluded.price10"),
-          price100: eb.ref("excluded.price100"),
-          last_updated: eb.ref("excluded.last_updated"),
-        })),
-      )
-      .execute()
-
-    inserted += rows.length
-    if (inserted % 10_000 === 0) {
-      console.log(`  ${inserted} / ${parts.length} upserted…`)
+      }
     }
   }
 
-  console.log(`Done. Upserted ${inserted} components.`)
-  await db.destroy()
+  console.log(`Populated ${categoryMap.size} categories`)
+
+  let inserted = 0
+  let updated = 0
+  const BATCH = 500
+
+  for (let i = 0; i < rows.length; i += BATCH) {
+    const batch = rows.slice(i, i + BATCH)
+    for (const row of batch) {
+      const lcsc = parseInt(row["LCSC Part"].replace(/^C/, ""), 10)
+      if (isNaN(lcsc)) continue
+
+      const libraryType = (row["Library Type"] ?? "").toLowerCase()
+      const is_basic = libraryType === "basic" ? 1 : 0
+      const is_preferred = libraryType === "preferred" ? 1 : 0
+      const is_extended_promotional =
+        libraryType === "extended promotional" ||
+        libraryType === "promotional" ||
+        libraryType.includes("extended promotional")
+          ? 1
+          : 0
+
+      const categoryKey = `${row["First Category"]}||${row["Second Category"]}`
+      const category_id = categoryMap.get(categoryKey) ?? 0
+
+      const joints = parseInt(row["Solder Joint"], 10) || 0
+      const stock = parseInt(row["Stock"].replace(/,/g, ""), 10) || 0
+
+      // Parse price: take the lowest price tier
+      let price: number | null = null
+      const priceStr = row["Price"]
+      if (priceStr) {
+        const firstPrice = priceStr.split(",")[0]
+        const match = firstPrice.match(/[\d.]+/)
+        if (match) price = parseFloat(match[0])
+      }
+
+      const component = {
+        lcsc,
+        category_id,
+        mfr: row["MFR.Part#"] ?? "",
+        package: row["Package"] ?? "",
+        joints,
+        description: row["Description"] ?? "",
+        stock,
+        price,
+        last_update: new Date().toISOString(),
+        extra: row["Extra"] ?? null,
+        in_stock: stock > 0 ? 1 : 0,
+        is_basic,
+        is_preferred,
+        is_extended_promotional,
+        images: row["Images"] ?? null,
+        datasheet: row["Datasheet"] ?? null,
+      }
+
+      // Check if exists
+      const existing = await db
+        .selectFrom("components")
+        .select("lcsc")
+        .where("lcsc", "=", lcsc)
+        .executeTakeFirst()
+
+      if (existing) {
+        await db
+          .updateTable("components")
+          .set(component)
+          .where("lcsc", "=", lcsc)
+          .execute()
+        updated++
+      } else {
+        await db.insertInto("components").values(component).execute()
+        inserted++
+      }
+    }
+
+    if ((i / BATCH) % 10 === 0) {
+      console.log(
+        `Progress: ${Math.min(i + BATCH, rows.length)}/${rows.length} (inserted: ${inserted}, updated: ${updated})`
+      )
+    }
+  }
+
+  console.log(
+    `Done! Inserted: ${inserted}, Updated: ${updated}, Total: ${rows.length}`
+  )
 }
 
 main().catch((err) => {
