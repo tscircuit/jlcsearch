@@ -1,30 +1,36 @@
-import type { Generated } from "kysely"
+import { ColumnType, Generated } from "kysely"
 
 export interface ComponentsTable {
-  id: Generated<number>
   lcsc: number
+  category_id: number
   mfr: string
+  package: string
+  joints: number
   description: string
-  package: string | null
   stock: number
-  price1: number | null
-  in_stock: number
-  is_basic: number
-  is_preferred: number
-  is_extended_promotional: number
-  voltage_rating: number | null
-  current_rating: number | null
-  power_rating: number | null
-  resistance: number | null
-  capacitance: number | null
-  inductance: number | null
-  tolerance: number | null
-  frequency: number | null
+  price: number | null
+  last_update: string
   extra: string | null
-  datasheet_url: string | null
-  mfr_img_url: string | null
+  in_stock: ColumnType<boolean, boolean | number, boolean | number>
+  is_basic: ColumnType<boolean, boolean | number, boolean | number>
+  is_preferred: ColumnType<boolean, boolean | number, boolean | number>
+  is_extended_promotional: ColumnType<
+    boolean,
+    boolean | number,
+    boolean | number
+  >
+  images: string | null
+  datasheet: string | null
+}
+
+export interface CategoriesTable {
+  id: Generated<number>
+  category: string
+  subcategory: string
+  component_count: number | null
 }
 
 export interface Database {
   components: ComponentsTable
+  categories: CategoriesTable
 }
