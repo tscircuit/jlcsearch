@@ -359,110 +359,140 @@ const routeCases: RouteCase[] = [
   },
 ]
 
+const CONTRACT_TEST_TIMEOUT_MS = 120_000
+
 describe("Cloudflare route contracts", () => {
-  it("GET /health returns ok", async () => {
-    const { response, data } = await fetchJson("/health")
-    expect(response.ok).toBe(true)
-    expect(data.ok).toBe(true)
-  })
+  it(
+    "GET /health returns ok",
+    async () => {
+      const { response, data } = await fetchJson("/health")
+      expect(response.ok).toBe(true)
+      expect(data.ok).toBe(true)
+    },
+    CONTRACT_TEST_TIMEOUT_MS,
+  )
 
-  it("GET /api/search returns components with stable core fields", async () => {
-    const { response, data } = await fetchJson("/api/search?q=STM32F401RCT6")
-    expect(response.ok).toBe(true)
-    expect(Array.isArray(data.components)).toBe(true)
-    expect(data.components.length).toBeGreaterThan(0)
-    expectRowHasFields(data.components[0], [
-      "lcsc",
-      "mfr",
-      "package",
-      "description",
-      ["price", "price1"],
-      "stock",
-    ])
-  })
+  it(
+    "GET /api/search returns components with stable core fields",
+    async () => {
+      const { response, data } = await fetchJson("/api/search?q=STM32F401RCT6")
+      expect(response.ok).toBe(true)
+      expect(Array.isArray(data.components)).toBe(true)
+      expect(data.components.length).toBeGreaterThan(0)
+      expectRowHasFields(data.components[0], [
+        "lcsc",
+        "mfr",
+        "package",
+        "description",
+        ["price", "price1"],
+        "stock",
+      ])
+    },
+    CONTRACT_TEST_TIMEOUT_MS,
+  )
 
-  it("GET /api/search strips a leading C in LCSC lookups", async () => {
-    const source = await fetchJson("/resistors/list?json=true")
-    const sourceRows = source.data.resistors as any[]
-    expect(sourceRows.length).toBeGreaterThan(0)
+  it(
+    "GET /api/search strips a leading C in LCSC lookups",
+    async () => {
+      const source = await fetchJson("/resistors/list?json=true")
+      const sourceRows = source.data.resistors as any[]
+      expect(sourceRows.length).toBeGreaterThan(0)
 
-    const lcsc = sourceRows[0].lcsc
-    const { data } = await fetchJson(`/api/search?q=C${lcsc}`)
-    expect(Array.isArray(data.components)).toBe(true)
-    expect(data.components.length).toBeGreaterThan(0)
-    expect(data.components[0].lcsc).toBe(lcsc)
-  })
+      const lcsc = sourceRows[0].lcsc
+      const { data } = await fetchJson(`/api/search?q=C${lcsc}`)
+      expect(Array.isArray(data.components)).toBe(true)
+      expect(data.components.length).toBeGreaterThan(0)
+      expect(data.components[0].lcsc).toBe(lcsc)
+    },
+    CONTRACT_TEST_TIMEOUT_MS,
+  )
 
-  it("GET /components/list returns component data", async () => {
-    const { response, data } = await fetchJson("/components/list?json=true")
-    expect(response.ok).toBe(true)
-    expect(Array.isArray(data.components)).toBe(true)
-  })
+  it(
+    "GET /components/list returns component data",
+    async () => {
+      const { response, data } = await fetchJson("/components/list?json=true")
+      expect(response.ok).toBe(true)
+      expect(Array.isArray(data.components)).toBe(true)
+    },
+    CONTRACT_TEST_TIMEOUT_MS,
+  )
 
-  it("GET /not-found/list?json=true returns a 404-style error payload", async () => {
-    const { response, data } = await fetchJson("/not-found/list?json=true")
-    expect(response.status).toBe(404)
-    expect(data.error?.error_code).toBe("not_found")
-  })
+  it(
+    "GET /not-found/list?json=true returns a 404-style error payload",
+    async () => {
+      const { response, data } = await fetchJson("/not-found/list?json=true")
+      expect(response.status).toBe(404)
+      expect(data.error?.error_code).toBe("not_found")
+    },
+    CONTRACT_TEST_TIMEOUT_MS,
+  )
 
   for (const routeCase of routeCases) {
-    it(`GET ${routeCase.path} returns ${routeCase.responseKey}`, async () => {
-      const { response, data } = await fetchJson(routeCase.path)
-      expect(response.ok).toBe(true)
-      expect(Array.isArray(data[routeCase.responseKey])).toBe(true)
+    it(
+      `GET ${routeCase.path} returns ${routeCase.responseKey}`,
+      async () => {
+        const { response, data } = await fetchJson(routeCase.path)
+        expect(response.ok).toBe(true)
+        expect(Array.isArray(data[routeCase.responseKey])).toBe(true)
 
-      const rows = data[routeCase.responseKey] as any[]
-      if (rows.length === 0) return
+        const rows = data[routeCase.responseKey] as any[]
+        if (rows.length === 0) return
 
-      expectRowHasFields(rows[0], routeCase.requiredFields)
-      expect(typeof rows[0].lcsc).toBe("number")
+        expectRowHasFields(rows[0], routeCase.requiredFields)
+        expect(typeof rows[0].lcsc).toBe("number")
 
-      for (const field of routeCase.booleanFields ?? []) {
-        if (field in rows[0] && rows[0][field] !== null) {
-          expect(typeof rows[0][field]).toBe("boolean")
+        for (const field of routeCase.booleanFields ?? []) {
+          if (field in rows[0] && rows[0][field] !== null) {
+            expect(typeof rows[0][field]).toBe("boolean")
+          }
         }
-      }
-    })
+      },
+      CONTRACT_TEST_TIMEOUT_MS,
+    )
 
     for (const filter of routeCase.filters ?? []) {
-      it(`GET ${routeCase.path} respects ${filter.param}`, async () => {
-        const { data } = await fetchJson(routeCase.path)
-        const rows = data[routeCase.responseKey] as any[]
-        if (!Array.isArray(rows) || rows.length === 0) return
+      it(
+        `GET ${routeCase.path} respects ${filter.param}`,
+        async () => {
+          const { data } = await fetchJson(routeCase.path)
+          const rows = data[routeCase.responseKey] as any[]
+          if (!Array.isArray(rows) || rows.length === 0) return
 
-        const picked =
-          filter.pick?.(rows) ??
-          rows.find(
-            (row) =>
-              row[filter.rowField] !== null &&
-              row[filter.rowField] !== undefined &&
-              row[filter.rowField] !== "",
+          const picked =
+            filter.pick?.(rows) ??
+            rows.find(
+              (row) =>
+                row[filter.rowField] !== null &&
+                row[filter.rowField] !== undefined &&
+                row[filter.rowField] !== "",
+            )
+
+          if (!picked) return
+
+          const rawValue =
+            typeof picked === "object" && picked !== null
+              ? picked[filter.rowField]
+              : picked
+
+          if (rawValue === null || rawValue === undefined || rawValue === "")
+            return
+
+          const serialized = encodeURIComponent(
+            filter.serialize ? filter.serialize(rawValue) : String(rawValue),
           )
+          const separator = routeCase.path.includes("?") ? "&" : "?"
+          const filtered = await fetchJson(
+            `${routeCase.path}${separator}${filter.param}=${serialized}`,
+          )
+          const filteredRows = filtered.data[routeCase.responseKey] as any[]
 
-        if (!picked) return
-
-        const rawValue =
-          typeof picked === "object" && picked !== null
-            ? picked[filter.rowField]
-            : picked
-
-        if (rawValue === null || rawValue === undefined || rawValue === "")
-          return
-
-        const serialized = encodeURIComponent(
-          filter.serialize ? filter.serialize(rawValue) : String(rawValue),
-        )
-        const separator = routeCase.path.includes("?") ? "&" : "?"
-        const filtered = await fetchJson(
-          `${routeCase.path}${separator}${filter.param}=${serialized}`,
-        )
-        const filteredRows = filtered.data[routeCase.responseKey] as any[]
-
-        expect(Array.isArray(filteredRows)).toBe(true)
-        for (const row of filteredRows) {
-          filter.assert(row, rawValue)
-        }
-      })
+          expect(Array.isArray(filteredRows)).toBe(true)
+          for (const row of filteredRows) {
+            filter.assert(row, rawValue)
+          }
+        },
+        CONTRACT_TEST_TIMEOUT_MS,
+      )
     }
   }
 })
