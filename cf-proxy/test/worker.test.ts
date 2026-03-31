@@ -157,6 +157,57 @@ describe("Worker integration", () => {
     expect(response.headers.get("x-cache")).toBe("HIT")
   })
 
+  it("serves cached D1 components HTML from KV", async () => {
+    env.USE_D1 = "true"
+
+    const url = new URL("https://example.com/components/list?search=TYPEC")
+    url.searchParams.set("__format", "html")
+    const cacheKey = await generateCacheKey(url)
+
+    const metadata = {
+      cachedAt: new Date().toISOString(),
+      status: 200,
+      headers: { "content-type": "text/html; charset=utf-8" },
+    }
+    const testBody = "<html><body>cached components page</body></html>"
+
+    await env.CACHE_KV.put(cacheKey, testBody, { metadata })
+
+    const response = await SELF.fetch(
+      "https://example.com/components/list?search=TYPEC",
+    )
+
+    expect(response.headers.get("x-cache")).toBe("HIT")
+    expect(response.headers.get("content-type")).toContain("text/html")
+    expect(await response.text()).toBe(testBody)
+  })
+
+  it("serves cached D1 components JSON from KV", async () => {
+    env.USE_D1 = "true"
+
+    const url = new URL("https://example.com/components/list?search=TYPEC")
+    url.searchParams.set("__format", "json")
+    const cacheKey = await generateCacheKey(url)
+
+    const metadata = {
+      cachedAt: new Date().toISOString(),
+      status: 200,
+      headers: { "content-type": "application/json" },
+    }
+    const testBody = '{"components":[{"lcsc":1}]}'
+
+    await env.CACHE_KV.put(cacheKey, testBody, { metadata })
+
+    const response = await SELF.fetch(
+      "https://example.com/components/list?search=TYPEC",
+      { headers: { accept: "application/json" } },
+    )
+
+    expect(response.headers.get("x-cache")).toBe("HIT")
+    expect(response.headers.get("content-type")).toContain("application/json")
+    expect(await response.text()).toBe(testBody)
+  })
+
   it("handles different cache key for different query params", async () => {
     const url1 = new URL("https://example.com/search?q=test")
     const url2 = new URL("https://example.com/search?q=other")
