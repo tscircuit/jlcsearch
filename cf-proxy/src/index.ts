@@ -65,15 +65,16 @@ export default {
       return proxyToOrigin(url, request, env, origin)
     }
 
+    const cache = new CacheService(env.CACHE_KV)
+
     // Check if this is a JSON API request that can be handled by D1
     if (env.USE_D1 === "true") {
-      const d1Response = await tryD1Route(url, request, env, origin)
+      const d1Response = await tryD1Route(url, request, env, origin, ctx, cache)
       if (d1Response) {
         return d1Response
       }
     }
 
-    const cache = new CacheService(env.CACHE_KV)
     const cacheResult = await cache.get(url)
 
     // Fresh cache hit - return immediately
@@ -161,6 +162,8 @@ async function tryD1Route(
   request: Request,
   env: Env,
   origin: string | null,
+  ctx: ExecutionContext,
+  cache: CacheService,
 ): Promise<Response | null> {
   const hasJsonSuffix = url.pathname.endsWith(".json")
   // Check if this is a JSON request
@@ -177,7 +180,14 @@ async function tryD1Route(
   }
 
   if (pathname === "/components/list") {
-    return handleD1ComponentsList(url, isJsonRequest, env, origin)
+    return handleD1ComponentsListWithCache(
+      url,
+      isJsonRequest,
+      env,
+      origin,
+      ctx,
+      cache,
+    )
   }
 
   if (!isJsonRequest) {
@@ -296,6 +306,70 @@ async function handleD1Search(
     console.error("D1 search failed:", error)
     return null
   }
+}
+
+const getD1RepresentationCacheUrl = (url: URL, isJsonRequest: boolean): URL => {
+  const cacheUrl = new URL(url.toString())
+  cacheUrl.searchParams.set("__format", isJsonRequest ? "json" : "html")
+  return cacheUrl
+}
+
+async function refreshStaleD1ComponentsEntry(
+  url: URL,
+  isJsonRequest: boolean,
+  env: Env,
+  origin: string | null,
+  cache: CacheService,
+): Promise<void> {
+  try {
+    const response = await handleD1ComponentsList(
+      url,
+      isJsonRequest,
+      env,
+      origin,
+    )
+    if (response?.ok) {
+      await cache.put(getD1RepresentationCacheUrl(url, isJsonRequest), response)
+    }
+  } catch (error) {
+    console.warn("Background D1 components cache refresh failed:", error)
+  }
+}
+
+async function handleD1ComponentsListWithCache(
+  url: URL,
+  isJsonRequest: boolean,
+  env: Env,
+  origin: string | null,
+  ctx: ExecutionContext,
+  cache: CacheService,
+): Promise<Response | null> {
+  const cacheUrl = getD1RepresentationCacheUrl(url, isJsonRequest)
+  const cacheResult = await cache.get(cacheUrl)
+
+  if (cacheResult.type === "fresh") {
+    return cache.buildResponse(cacheResult.entry, "HIT", origin)
+  }
+
+  const staleEntry = cacheResult.type === "stale" ? cacheResult.entry : null
+  if (staleEntry) {
+    ctx.waitUntil(
+      refreshStaleD1ComponentsEntry(url, isJsonRequest, env, origin, cache),
+    )
+    return cache.buildResponse(staleEntry, "STALE", origin)
+  }
+
+  const response = await handleD1ComponentsList(url, isJsonRequest, env, origin)
+  if (!response) {
+    return null
+  }
+
+  if (!response.ok) {
+    return response
+  }
+
+  const entry = await cache.put(cacheUrl, response)
+  return cache.buildResponse(entry, "MISS", origin)
 }
 
 async function handleD1ComponentsList(
