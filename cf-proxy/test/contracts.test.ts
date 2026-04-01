@@ -362,17 +362,16 @@ const routeCases: RouteCase[] = [
 const CONTRACT_TEST_TIMEOUT_MS = 120_000
 
 describe("Cloudflare route contracts", () => {
-  it(
-    "GET /health returns ok",
-    async () => {
-      const { response, data } = await fetchJson("/health")
-      expect(response.ok).toBe(true)
-      expect(data.ok).toBe(true)
-    },
-    CONTRACT_TEST_TIMEOUT_MS,
-  )
+  const longIt = (name: string, fn: () => unknown) =>
+    it(name, fn, CONTRACT_TEST_TIMEOUT_MS)
 
-  it(
+  longIt("GET /health returns ok", async () => {
+    const { response, data } = await fetchJson("/health")
+    expect(response.ok).toBe(true)
+    expect(data.ok).toBe(true)
+  })
+
+  longIt(
     "GET /api/search returns components with stable core fields",
     async () => {
       const { response, data } = await fetchJson("/api/search?q=STM32F401RCT6")
@@ -388,47 +387,37 @@ describe("Cloudflare route contracts", () => {
         "stock",
       ])
     },
-    CONTRACT_TEST_TIMEOUT_MS,
   )
 
-  it(
-    "GET /api/search strips a leading C in LCSC lookups",
-    async () => {
-      const source = await fetchJson("/resistors/list?json=true")
-      const sourceRows = source.data.resistors as any[]
-      expect(sourceRows.length).toBeGreaterThan(0)
+  longIt("GET /api/search strips a leading C in LCSC lookups", async () => {
+    const source = await fetchJson("/resistors/list?json=true")
+    const sourceRows = source.data.resistors as any[]
+    expect(sourceRows.length).toBeGreaterThan(0)
 
-      const lcsc = sourceRows[0].lcsc
-      const { data } = await fetchJson(`/api/search?q=C${lcsc}`)
-      expect(Array.isArray(data.components)).toBe(true)
-      expect(data.components.length).toBeGreaterThan(0)
-      expect(data.components[0].lcsc).toBe(lcsc)
-    },
-    CONTRACT_TEST_TIMEOUT_MS,
-  )
+    const lcsc = sourceRows[0].lcsc
+    const { data } = await fetchJson(`/api/search?q=C${lcsc}`)
+    expect(Array.isArray(data.components)).toBe(true)
+    expect(data.components.length).toBeGreaterThan(0)
+    expect(data.components[0].lcsc).toBe(lcsc)
+  })
 
-  it(
-    "GET /components/list returns component data",
-    async () => {
-      const { response, data } = await fetchJson("/components/list?json=true")
-      expect(response.ok).toBe(true)
-      expect(Array.isArray(data.components)).toBe(true)
-    },
-    CONTRACT_TEST_TIMEOUT_MS,
-  )
+  longIt("GET /components/list returns component data", async () => {
+    const { response, data } = await fetchJson("/components/list?json=true")
+    expect(response.ok).toBe(true)
+    expect(Array.isArray(data.components)).toBe(true)
+  })
 
-  it(
+  longIt(
     "GET /not-found/list?json=true returns a 404-style error payload",
     async () => {
       const { response, data } = await fetchJson("/not-found/list?json=true")
       expect(response.status).toBe(404)
       expect(data.error?.error_code).toBe("not_found")
     },
-    CONTRACT_TEST_TIMEOUT_MS,
   )
 
   for (const routeCase of routeCases) {
-    it(
+    longIt(
       `GET ${routeCase.path} returns ${routeCase.responseKey}`,
       async () => {
         const { response, data } = await fetchJson(routeCase.path)
@@ -447,11 +436,10 @@ describe("Cloudflare route contracts", () => {
           }
         }
       },
-      CONTRACT_TEST_TIMEOUT_MS,
     )
 
     for (const filter of routeCase.filters ?? []) {
-      it(
+      longIt(
         `GET ${routeCase.path} respects ${filter.param}`,
         async () => {
           const { data } = await fetchJson(routeCase.path)
