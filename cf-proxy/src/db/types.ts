@@ -656,13 +656,22 @@ export interface Relay {
 }
 
 export interface SearchIndex {
+  attributes: string | null
+  basic: number | null
+  category: string | null
   description: string | null
   lcsc: Generated<number | null>
   mfr: string | null
+  manufacturer_name: string | null
+  mpn: string | null
   package: string | null
+  preferred: number | null
+  price: string | null
   price1: number | null
-  source_table: string | null
+  search_text: string | null
   stock: number | null
+  subcategory: string | null
+  title: string | null
 }
 
 export interface Resistor {

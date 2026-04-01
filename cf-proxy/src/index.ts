@@ -12,6 +12,71 @@ export interface Env {
   USE_D1: string
 }
 
+const extractSmallQuantityPrice = (price: string | null): string | number => {
+  if (!price) return ""
+  try {
+    const priceObj = JSON.parse(price)
+    return priceObj[0]?.price || ""
+  } catch {
+    return ""
+  }
+}
+
+const buildD1ErrorResponse = (
+  origin: string | null,
+  message: string,
+  contentType:
+    | "application/json"
+    | "text/html; charset=utf-8" = "application/json",
+): Response => {
+  const headers = new Headers({
+    "content-type": contentType,
+    "x-data-source": "d1",
+    "x-cache": "D1-ERROR",
+  })
+  addCorsHeaders(headers, origin)
+
+  const body =
+    contentType === "application/json"
+      ? JSON.stringify({ error: "D1 query failed", message })
+      : `<h1>D1 query failed</h1><p>${message}</p>`
+
+  return new Response(body, {
+    status: 500,
+    headers,
+  })
+}
+
+const buildD1NotFoundResponse = (
+  origin: string | null,
+  contentType:
+    | "application/json"
+    | "text/html; charset=utf-8" = "application/json",
+): Response => {
+  const headers = new Headers({
+    "content-type": contentType,
+    "x-data-source": "d1",
+    "x-cache": "D1",
+  })
+  addCorsHeaders(headers, origin)
+
+  const body =
+    contentType === "application/json"
+      ? JSON.stringify({
+          ok: false,
+          error: {
+            error_code: "not_found",
+            message: "Not Found",
+          },
+        })
+      : "<h1>404 - Not Found</h1><p>The requested page could not be found.</p>"
+
+  return new Response(body, {
+    status: 404,
+    headers,
+  })
+}
+
 const ORIGIN_TIMEOUT_MS = 10_000
 const BLOCKED_REQUEST_HEADERS = new Set([
   "cookie",
@@ -222,13 +287,23 @@ async function tryD1Route(
       )
     } catch (error) {
       console.error("D1 query failed:", error)
-      return null
+      return buildD1ErrorResponse(
+        origin,
+        error instanceof Error ? error.message : "Unknown D1 query error",
+        "text/html; charset=utf-8",
+      )
     }
   }
 
   // Get handler for this route
   const handler = getD1Handler(pathname)
   if (!handler) {
+    if (pathname.endsWith("/list")) {
+      return buildD1NotFoundResponse(
+        origin,
+        isJsonRequest ? "application/json" : "text/html; charset=utf-8",
+      )
+    }
     return null
   }
 
@@ -266,9 +341,11 @@ async function tryD1Route(
       },
     )
   } catch (error) {
-    // Log error and fall through to origin proxy
     console.error("D1 query failed:", error)
-    return null
+    return buildD1ErrorResponse(
+      origin,
+      error instanceof Error ? error.message : "Unknown D1 query error",
+    )
   }
 }
 
@@ -285,10 +362,11 @@ async function handleD1Search(
       lcsc: row.lcsc ?? 0,
       mfr: row.mfr ?? "",
       package: row.package ?? "",
+      is_basic: Boolean(row.basic),
+      is_preferred: Boolean(row.preferred),
       description: row.description ?? "",
       stock: row.stock ?? 0,
-      price1: row.price1 ?? 0,
-      source_table: row.source_table ?? "",
+      price: row.price1 ?? extractSmallQuantityPrice(row.price),
     }))
 
     const headers = new Headers({
@@ -304,7 +382,10 @@ async function handleD1Search(
     })
   } catch (error) {
     console.error("D1 search failed:", error)
-    return null
+    return buildD1ErrorResponse(
+      origin,
+      error instanceof Error ? error.message : "Unknown D1 search error",
+    )
   }
 }
 
@@ -422,7 +503,11 @@ async function handleD1ComponentsList(
     )
   } catch (error) {
     console.error("D1 components list failed:", error)
-    return null
+    return buildD1ErrorResponse(
+      origin,
+      error instanceof Error ? error.message : "Unknown D1 components error",
+      isJsonRequest ? "application/json" : "text/html; charset=utf-8",
+    )
   }
 }
 

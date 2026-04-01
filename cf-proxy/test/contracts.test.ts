@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it as vitestIt } from "vitest"
 import { fetchJson } from "./cloudflare-http"
 
 type FieldAlias = string | string[]
@@ -19,6 +19,10 @@ interface RouteCase {
   booleanFields?: string[]
   filters?: FilterCase[]
 }
+
+const REMOTE_TEST_TIMEOUT_MS = 15_000
+const it = (name: string, fn: () => Promise<unknown> | unknown) =>
+  vitestIt(name, fn, REMOTE_TEST_TIMEOUT_MS)
 
 const getFieldValue = (row: any, alias: FieldAlias): unknown => {
   if (Array.isArray(alias)) {
@@ -391,6 +395,21 @@ describe("Cloudflare route contracts", () => {
     expect(Array.isArray(data.components)).toBe(true)
     expect(data.components.length).toBeGreaterThan(0)
     expect(data.components[0].lcsc).toBe(lcsc)
+  })
+
+  it("GET /api/search finds crystal parts by category text in the catalog", async () => {
+    const { response, data } = await fetchJson(
+      "/api/search?limit=10&q=12MHz%20crystal",
+    )
+    expect(response.ok).toBe(true)
+    expect(Array.isArray(data.components)).toBe(true)
+    expect(data.components.length).toBeGreaterThan(0)
+    expect(
+      data.components.some(
+        (component: any) =>
+          component.lcsc === 9002 && component.is_basic === true,
+      ),
+    ).toBe(true)
   })
 
   it("GET /components/list returns component data", async () => {
