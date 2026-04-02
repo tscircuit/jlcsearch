@@ -24,11 +24,12 @@ export default withWinterSpec({
         z.object({
           lcsc: z.number(),
           mfr: z.string(),
+          package: z.string(),
+          is_extended_promotional: z.boolean(),
           description: z.string(),
           stock: z.number(),
           price1: z.number().nullable(),
           in_stock: z.boolean(),
-          package: z.string(),
           current_gain: z.number().nullable(),
           collector_current: z.number(),
           collector_emitter_voltage: z.number().nullable(),
@@ -135,6 +136,7 @@ export default withWinterSpec({
         price1: c.price1,
         in_stock: Boolean((c.stock || 0) > 0),
         package: String(c.package || ""),
+        is_extended_promotional: Boolean(c.is_extended_promotional),
         current_gain: c.current_gain,
         collector_current: c.collector_current ?? 0,
         collector_emitter_voltage: c.collector_emitter_voltage,
@@ -199,6 +201,7 @@ export default withWinterSpec({
           ) : null,
           MFR: c.mfr || null,
           Package: c.package || null,
+          "Extended Promotional": c.is_extended_promotional ? "✓" : "",
           "Current Gain (hFE)": c.current_gain ? (
             <span className="tabular-nums">{c.current_gain}</span>
           ) : null,

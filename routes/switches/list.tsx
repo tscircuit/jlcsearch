@@ -20,6 +20,7 @@ export default withWinterSpec({
           lcsc: z.number().int(),
           mfr: z.string(),
           package: z.string(),
+          is_extended_promotional: z.boolean(),
           switch_type: z.string(),
           circuit: z.string().optional(),
           pin_count: z.number().optional(),
@@ -95,6 +96,7 @@ export default withWinterSpec({
           lcsc: s.lcsc ?? 0,
           mfr: s.mfr ?? "",
           package: s.package ?? "",
+          is_extended_promotional: Boolean(s.is_extended_promotional),
           pin_count: s.pin_count ?? undefined,
           switch_type: s.switch_type ?? "",
           circuit: s.circuit ?? undefined,
@@ -185,6 +187,7 @@ export default withWinterSpec({
           lcsc: s.lcsc,
           mfr: s.mfr,
           package: s.package,
+          is_extended_promotional: s.is_extended_promotional ? "✓" : "",
           type: s.switch_type,
           pins: s.pin_count,
           width: s.width_mm ? (
