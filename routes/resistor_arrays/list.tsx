@@ -46,6 +46,7 @@ export default withWinterSpec({
       .transform((val) => normalizeTopologyParam(val)),
     is_basic: z.boolean().optional(),
     is_preferred: z.boolean().optional(),
+    is_extended_promotional: z.boolean().optional(),
     resistance: z
       .string()
       .optional()
@@ -65,6 +66,7 @@ export default withWinterSpec({
           package: z.string(),
           is_basic: z.boolean(),
           is_preferred: z.boolean(),
+          is_extended_promotional: z.boolean(),
           number_of_resistors: z.number().nullable(),
           number_of_pins: z.number().nullable(),
           topology: z.string().nullable(),
