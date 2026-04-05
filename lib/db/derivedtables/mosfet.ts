@@ -69,7 +69,7 @@ export const mosfetTableSpec: DerivedTableSpec<Mosfet> = {
           in_stock: Boolean((c.stock || 0) > 0),
           is_basic: Boolean(c.basic),
           is_preferred: Boolean(c.preferred),
-        is_extended_promotional: Boolean(c.preferred) && !Boolean(c.basic),
+          is_extended_promotional: Boolean(c.preferred) && !Boolean(c.basic),
           package: String(c.package || ""),
           drain_source_voltage: parseValue(
             attrs["Drain Source Voltage (Vdss)"],
