@@ -26,6 +26,7 @@ test("GET /api/search with search query '555 Timer' returns expected components"
 
   expect(res.data).toHaveProperty("components")
   expect(Array.isArray(res.data.components)).toBe(true)
+
   if (res.data.components.length > 0) {
     // Check for required fields and some basic validation
     const component = res.data.components[0]
@@ -44,6 +45,7 @@ test("GET /api/search with search query 'red led' returns expected components", 
 
   expect(res.data).toHaveProperty("components")
   expect(Array.isArray(res.data.components)).toBe(true)
+
   if (res.data.components.length > 0) {
     // Check for required fields and some basic validation
     const component = res.data.components[0]
@@ -72,6 +74,7 @@ test("GET /api/search with part number strips leading 'C'", async () => {
 test("GET /api/search with . in query", async () => {
   const { axios } = await getTestServer()
   const res = await axios.get("/api/search?q=0.1uf")
+
   expect(res.data).toHaveProperty("components")
   expect(Array.isArray(res.data.components)).toBe(true)
 })
