@@ -26,6 +26,8 @@ export default withWinterSpec({
       "stock",
       "price",
       "subcategory",
+      "basic",
+      "preferred",
     ])
     .where("stock", ">", 0)
     .where("subcategory", "in", [...MICROPHONE_SUBCATEGORIES])
@@ -59,6 +61,7 @@ export default withWinterSpec({
       microphone_type: m.subcategory ?? "",
       description: m.description ?? "",
       stock: m.stock ?? 0,
+      is_extended_promotional: Boolean(m.preferred) && !Boolean(m.basic),
       price1: extractMinQPrice(m.price ?? ""),
     }))
     .filter((m) => m.lcsc !== 0 && m.package !== "")

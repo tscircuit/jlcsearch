@@ -97,6 +97,7 @@ export default withWinterSpec({
           recovery_time_ns: d.recovery_time_ns ?? undefined,
           stock: d.stock ?? undefined,
           price1: d.price1 ?? undefined,
+          is_extended_promotional: Boolean(d.is_extended_promotional),
         }))
         .filter((d) => d.lcsc !== 0 && d.package !== ""),
     })

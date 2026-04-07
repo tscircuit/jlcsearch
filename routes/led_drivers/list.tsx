@@ -85,6 +85,7 @@ export default withWinterSpec({
         description: String(driver.description || ""),
         stock: Number(driver.stock || 0),
         price1: driver.price1 === null ? null : Number(driver.price1),
+          is_extended_promotional: Boolean(driver.is_extended_promotional),
         in_stock: Boolean((driver.stock || 0) > 0),
         package: driver.package,
         supply_voltage_min: driver.supply_voltage_min,

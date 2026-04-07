@@ -117,6 +117,7 @@ export default withWinterSpec({
         description: String(mosfet.description || ""),
         stock: Number(mosfet.stock || 0),
         price1: mosfet.price1 === null ? null : Number(mosfet.price1),
+          is_extended_promotional: Boolean(mosfet.is_extended_promotional),
         in_stock: Boolean((mosfet.stock || 0) > 0),
         package: mosfet.package,
         drain_source_voltage: mosfet.drain_source_voltage,

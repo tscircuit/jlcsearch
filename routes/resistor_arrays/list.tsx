@@ -46,6 +46,7 @@ export default withWinterSpec({
       .transform((val) => normalizeTopologyParam(val)),
     is_basic: z.boolean().optional(),
     is_preferred: z.boolean().optional(),
+    is_extended_promotional: z.boolean().optional(),
     resistance: z
       .string()
       .optional()
@@ -65,6 +66,7 @@ export default withWinterSpec({
           package: z.string(),
           is_basic: z.boolean(),
           is_preferred: z.boolean(),
+          is_extended_promotional: z.boolean(),
           number_of_resistors: z.number().nullable(),
           number_of_pins: z.number().nullable(),
           topology: z.string().nullable(),
@@ -96,6 +98,9 @@ export default withWinterSpec({
   }
   if (params.is_preferred) {
     query = query.where("is_preferred", "=", 1)
+  }
+  if (params.is_extended_promotional) {
+    query = query.where("is_extended_promotional", "=", 1)
   }
 
   if (params.number_of_resistors != null) {
@@ -146,6 +151,7 @@ export default withWinterSpec({
         package: array.package ?? "",
         is_basic: Boolean(array.is_basic),
         is_preferred: Boolean(array.is_preferred),
+        is_extended_promotional: Boolean(array.is_extended_promotional),
         number_of_resistors: array.number_of_resistors ?? null,
         number_of_pins: array.number_of_pins ?? null,
         topology: array.topology ?? null,

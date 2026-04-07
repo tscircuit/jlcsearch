@@ -69,6 +69,7 @@ export default withWinterSpec({
         description: String(c.description || ""),
         stock: Number(c.stock || 0),
         price1: c.price1 === null ? null : Number(c.price1),
+          is_extended_promotional: Boolean(c.is_extended_promotional),
         in_stock: Boolean(c.in_stock),
         package: c.package,
         input_voltage_min: c.input_voltage_min,
