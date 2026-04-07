@@ -5,6 +5,7 @@ import { BaseComponent } from "./component-base"
 import type { KyselyDatabaseInstance } from "../kysely-types"
 
 export interface UsbCConnector extends BaseComponent {
+  is_extended_promotional: boolean
   package: string
   mounting_style: string | null
   current_rating_a: number | null
@@ -28,6 +29,7 @@ export const usbCConnectorTableSpec: DerivedTableSpec<UsbCConnector> = {
     { name: "operating_temp_max", type: "real" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   listCandidateComponents(db: KyselyDatabaseInstance) {
     return db
@@ -69,6 +71,9 @@ export const usbCConnectorTableSpec: DerivedTableSpec<UsbCConnector> = {
           in_stock: Boolean((c.stock || 0) > 0),
           is_basic: Boolean(c.basic),
           is_preferred: Boolean(c.preferred),
+          is_extended_promotional: Boolean(
+            c.extra && JSON.parse(c.extra).promotional,
+          ),
           package: String(c.package || ""),
           mounting_style: attrs["Mounting Style"] || null,
           current_rating_a: parseNum(attrs["Current Rating - Power (Max)"]),

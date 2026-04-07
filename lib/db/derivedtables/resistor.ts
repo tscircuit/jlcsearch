@@ -4,6 +4,7 @@ import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import { BaseComponent } from "./component-base"
 
 export interface Resistor extends BaseComponent {
+  is_extended_promotional: boolean
   resistance: number
   tolerance_fraction: number
   power_watts: number
@@ -31,6 +32,7 @@ export const resistorTableSpec: DerivedTableSpec<Resistor> = {
     { name: "is_multi_resistor_chip", type: "boolean" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db
@@ -82,6 +84,9 @@ export const resistorTableSpec: DerivedTableSpec<Resistor> = {
         in_stock: c.stock > 0,
         is_basic: Boolean(c.basic),
         is_preferred: Boolean(c.preferred),
+        is_extended_promotional: Boolean(
+          c.extra && JSON.parse(c.extra).promotional,
+        ),
         resistance: resistance,
         tolerance_fraction: tolerance,
         power_watts,

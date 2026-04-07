@@ -8,6 +8,7 @@ import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 
 export interface LEDWithIC extends BaseComponent {
+  is_extended_promotional: boolean
   package?: string
   forward_voltage: number | null
   forward_current: number | null
@@ -27,6 +28,7 @@ export const ledWithICTableSpec: DerivedTableSpec<LEDWithIC> = {
     { name: "protocol", type: "text" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   listCandidateComponents(db: KyselyDatabaseInstance) {
     return db
@@ -99,6 +101,9 @@ export const ledWithICTableSpec: DerivedTableSpec<LEDWithIC> = {
           in_stock: Boolean((c.stock || 0) > 0),
           is_basic: Boolean(c.basic),
           is_preferred: Boolean(c.preferred),
+          is_extended_promotional: Boolean(
+            c.extra && JSON.parse(c.extra).promotional,
+          ),
           package: String(c.package || ""),
           forward_voltage: forwardVoltage,
           forward_current: forwardCurrent,

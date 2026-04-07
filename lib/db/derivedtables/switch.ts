@@ -4,6 +4,7 @@ import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import { BaseComponent } from "./component-base"
 
 export interface Switch extends BaseComponent {
+  is_extended_promotional: boolean
   package: string
   switch_type: string
   circuit: string | null
@@ -37,6 +38,7 @@ export const switchTableSpec: DerivedTableSpec<Switch> = {
     { name: "switch_height_mm", type: "real" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   listCandidateComponents(db) {
     return db
@@ -91,6 +93,9 @@ export const switchTableSpec: DerivedTableSpec<Switch> = {
         in_stock: c.stock > 0,
         is_basic: Boolean(c.basic),
         is_preferred: Boolean(c.preferred),
+        is_extended_promotional: Boolean(
+          c.extra && JSON.parse(c.extra).promotional,
+        ),
         package: c.package || "",
         switch_type: (c as any).subcategory || "",
         circuit: attrs["Circuit"] || null,

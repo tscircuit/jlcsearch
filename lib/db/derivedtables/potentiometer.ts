@@ -4,6 +4,7 @@ import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import { BaseComponent } from "./component-base"
 
 export interface Potentiometer extends BaseComponent {
+  is_extended_promotional: boolean
   max_resistance: number
   pin_variant: "two_pin" | "three_pin"
   package: string
@@ -19,6 +20,7 @@ export const potentiometerTableSpec: DerivedTableSpec<Potentiometer> = {
     { name: "is_surface_mount", type: "boolean" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db
@@ -67,6 +69,9 @@ export const potentiometerTableSpec: DerivedTableSpec<Potentiometer> = {
         in_stock: c.stock > 0,
         is_basic: Boolean(c.basic),
         is_preferred: Boolean(c.preferred),
+        is_extended_promotional: Boolean(
+          c.extra && JSON.parse(c.extra).promotional,
+        ),
         max_resistance: maxResistance,
         pin_variant: pinVariant,
         package: c.package || "",
