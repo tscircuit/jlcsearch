@@ -18,6 +18,7 @@ test("GET /api/search with search query 'STM32F401RCT6' returns expected compone
   expect(component).toHaveProperty("package")
   expect(component).toHaveProperty("price")
   expect(component).toHaveProperty("stock")
+  expect(component).toHaveProperty("is_extended_promotional")
 })
 
 test("GET /api/search with search query '555 Timer' returns expected components", async () => {
@@ -106,4 +107,34 @@ test("GET /api/search supports '0402 LED'", async () => {
   expect(res.data.components.length).toBeGreaterThan(0)
   expect(res.data.components.every((c: any) => c.package === "0402")).toBe(true)
   expect(res.data.components.some((c: any) => c.lcsc === 965793)).toBe(true)
+})
+
+test("GET /api/search supports is_extended_promotional filter", async () => {
+  const { axios } = await getTestServer()
+  const allRes = await axios.get("/api/search?full=true&limit=200")
+  const filteredRes = await axios.get(
+    "/api/search?full=true&limit=200&is_extended_promotional=true",
+  )
+
+  const allComponents = allRes.data.components as Array<{
+    basic: number
+    preferred: number
+    is_extended_promotional: number
+  }>
+  const filteredComponents = filteredRes.data.components as Array<{
+    basic: number
+    preferred: number
+    is_extended_promotional: number
+  }>
+
+  for (const component of allComponents) {
+    const expected = component.preferred === 1 && component.basic === 0 ? 1 : 0
+    expect(component.is_extended_promotional).toBe(expected)
+  }
+
+  for (const component of filteredComponents) {
+    expect(component.is_extended_promotional).toBe(1)
+    expect(component.preferred).toBe(1)
+    expect(component.basic).toBe(0)
+  }
 })
