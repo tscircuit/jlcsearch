@@ -8,6 +8,8 @@ describe("Worker integration", () => {
   const originalFetch = globalThis.fetch
 
   beforeEach(async () => {
+    env.USE_D1 = "false"
+
     globalThis.fetch = (async (input: RequestInfo | URL) => {
       const url = typeof input === "string" ? input : input.toString()
       if (url.includes("nonexistent-path-that-will-timeout")) {
@@ -55,15 +57,15 @@ describe("Worker integration", () => {
   })
 
   it("returns stale cache with x-cache: STALE when entry is stale and origin fails", async () => {
-    // Pre-populate with stale cache (2 days old, but within 1 week)
-    const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
+    // Pre-populate with stale cache (20 days old, but within 1 month)
+    const twentyDaysAgo = new Date(Date.now() - 20 * 24 * 60 * 60 * 1000)
     const url = new URL(
       "https://example.com/nonexistent-path-that-will-timeout",
     )
     const cacheKey = await generateCacheKey(url)
 
     const metadata = {
-      cachedAt: twoDaysAgo.toISOString(),
+      cachedAt: twentyDaysAgo.toISOString(),
       status: 200,
       headers: { "content-type": "application/json" },
     }
@@ -90,7 +92,7 @@ describe("Worker integration", () => {
       })
     }) as typeof fetch
 
-    const staleAt = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
+    const staleAt = new Date(Date.now() - 20 * 24 * 60 * 60 * 1000)
     const url = new URL("https://example.com/api/search?q=abc")
     const cacheKey = await generateCacheKey(url)
     await env.CACHE_KV.put(cacheKey, '{"cached":"data"}', {
@@ -155,6 +157,72 @@ describe("Worker integration", () => {
       "text/html; charset=utf-8",
     )
     expect(response.headers.get("x-cache")).toBe("HIT")
+  })
+
+  it("serves cached D1 derived-table HTML from KV", async () => {
+    env.USE_D1 = "true"
+
+    const url = new URL("https://example.com/microcontrollers/list?package=QFN48")
+    url.searchParams.set("__format", "html")
+    const cacheKey = await generateCacheKey(url)
+
+    const metadata = {
+      cachedAt: new Date().toISOString(),
+      status: 200,
+      headers: {
+        "content-type": "text/html; charset=utf-8",
+        vary: "Accept",
+        "x-data-source": "d1",
+      },
+    }
+    const testBody = "<html><body>cached microcontrollers page</body></html>"
+
+    await env.CACHE_KV.put(cacheKey, testBody, { metadata })
+
+    const response = await SELF.fetch(
+      "https://example.com/microcontrollers/list?package=QFN48",
+    )
+
+    expect(response.headers.get("x-cache")).toBe("HIT")
+    expect(response.headers.get("x-data-source")).toBe("d1")
+    expect(response.headers.get("content-type")).toContain("text/html")
+    expect(response.headers.get("vary")).toContain("Accept")
+    expect(await response.text()).toBe(testBody)
+  })
+
+  it("serves stale cached D1 derived-table HTML when refresh fails", async () => {
+    env.USE_D1 = "true"
+
+    const staleAt = new Date(Date.now() - 20 * 24 * 60 * 60 * 1000)
+    const url = new URL("https://example.com/microcontrollers/list?package=QFN48")
+    url.searchParams.set("__format", "html")
+    const cacheKey = await generateCacheKey(url)
+
+    await env.CACHE_KV.put(
+      cacheKey,
+      "<html><body>stale microcontrollers page</body></html>",
+      {
+        metadata: {
+          cachedAt: staleAt.toISOString(),
+          status: 200,
+          headers: {
+            "content-type": "text/html; charset=utf-8",
+            vary: "Accept",
+            "x-data-source": "d1",
+          },
+        },
+      },
+    )
+
+    const response = await SELF.fetch(
+      "https://example.com/microcontrollers/list?package=QFN48",
+    )
+
+    expect(response.headers.get("x-cache")).toBe("STALE")
+    expect(response.headers.get("x-data-source")).toBe("d1")
+    expect(await response.text()).toContain("stale microcontrollers page")
+
+    await SELF.flushWaitUntil()
   })
 
   it("serves cached D1 components HTML from KV", async () => {

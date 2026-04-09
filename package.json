@@ -17,6 +17,7 @@
   },
   "scripts": {
     "start": "cd cf-proxy && bun run dev",
+    "deploy": "cd cf-proxy && bun run deploy",
     "start:origin": "bun scripts/start-server.ts",
     "start:legacy": "bun scripts/start-server.ts",
     "generate:db-types": "bunx kysely-codegen --out-file ./lib/db/generated/kysely.ts --singular --dialect bun-sqlite --url ./db.sqlite3",

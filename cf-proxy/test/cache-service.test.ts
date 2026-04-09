@@ -1,23 +1,28 @@
 import { beforeEach, describe, expect, it } from "vitest"
-import { type CacheMetadata, isFresh, isUsableStale } from "../src/cache-entry"
+import {
+  CACHE_CONTROL_HEADER_VALUE,
+  type CacheMetadata,
+  isFresh,
+  isUsableStale,
+} from "../src/cache-entry"
 import { CacheService } from "../src/cache-service"
 import { createTestEnv } from "./test-env"
 
 describe("isFresh", () => {
-  it("returns true for entries less than 1 day old", () => {
-    const now = new Date("2024-01-15T12:00:00Z")
+  it("returns true for entries less than 2 weeks old", () => {
+    const now = new Date("2024-01-15T00:00:00Z")
     const metadata: CacheMetadata = {
-      cachedAt: "2024-01-15T00:00:00Z", // 12 hours ago
+      cachedAt: "2024-01-03T12:00:00Z", // 11.5 days ago
       status: 200,
       headers: {},
     }
     expect(isFresh(metadata, now)).toBe(true)
   })
 
-  it("returns false for entries 1 day or older", () => {
-    const now = new Date("2024-01-16T12:00:00Z")
+  it("returns false for entries 2 weeks or older", () => {
+    const now = new Date("2024-01-18T00:00:00Z")
     const metadata: CacheMetadata = {
-      cachedAt: "2024-01-15T00:00:00Z", // 36 hours ago
+      cachedAt: "2024-01-03T12:00:00Z", // 14.5 days ago
       status: 200,
       headers: {},
     }
@@ -26,20 +31,20 @@ describe("isFresh", () => {
 })
 
 describe("isUsableStale", () => {
-  it("returns true for entries less than 1 week old", () => {
-    const now = new Date("2024-01-18T00:00:00Z")
+  it("returns true for entries less than 1 month old", () => {
+    const now = new Date("2024-01-23T00:00:00Z")
     const metadata: CacheMetadata = {
-      cachedAt: "2024-01-15T00:00:00Z", // 3 days ago
+      cachedAt: "2024-01-03T00:00:00Z", // 20 days ago
       status: 200,
       headers: {},
     }
     expect(isUsableStale(metadata, now)).toBe(true)
   })
 
-  it("returns false for entries 1 week or older", () => {
-    const now = new Date("2024-01-25T00:00:00Z")
+  it("returns false for entries 1 month or older", () => {
+    const now = new Date("2024-02-03T00:00:00Z")
     const metadata: CacheMetadata = {
-      cachedAt: "2024-01-15T00:00:00Z", // 10 days ago
+      cachedAt: "2024-01-03T00:00:00Z", // 31 days ago
       status: 200,
       headers: {},
     }
@@ -98,6 +103,9 @@ describe("CacheService", () => {
 
       expect(response.headers.get("x-cache")).toBe("HIT")
       expect(response.headers.get("x-cached-at")).toBe("2024-01-15T00:00:00Z")
+      expect(response.headers.get("cache-control")).toBe(
+        CACHE_CONTROL_HEADER_VALUE,
+      )
       expect(response.headers.get("content-type")).toBe("text/plain")
       expect(response.status).toBe(200)
     })

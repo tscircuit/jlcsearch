@@ -1,4 +1,5 @@
 import {
+  CACHE_CONTROL_HEADER_VALUE,
   type CacheEntry,
   type CacheMetadata,
   KV_TTL_SECONDS,
@@ -71,6 +72,7 @@ export class CacheService {
     origin: string | null,
   ): Response {
     const headers = new Headers(entry.metadata.headers)
+    headers.set("cache-control", CACHE_CONTROL_HEADER_VALUE)
     headers.set("x-cache", cacheStatus)
     headers.set("x-cached-at", entry.metadata.cachedAt)
     addCorsHeaders(headers, origin)
@@ -95,6 +97,18 @@ const ALLOWED_HEADERS = [
   "user-agent",
 ]
 
+export function addVaryHeader(headers: Headers, value: string): void {
+  const existing = headers.get("vary")
+  const varyValues = new Set(
+    existing
+      ?.split(",")
+      .map((part) => part.trim())
+      .filter(Boolean) ?? [],
+  )
+  varyValues.add(value)
+  headers.set("vary", Array.from(varyValues).join(", "))
+}
+
 /**
  * Adds CORS headers matching the Fly server implementation.
  */
@@ -104,5 +118,5 @@ export function addCorsHeaders(headers: Headers, origin: string | null): void {
   headers.set("access-control-allow-credentials", "true")
   headers.set("access-control-allow-headers", ALLOWED_HEADERS.join(", "))
   headers.set("access-control-max-age", "86400")
-  headers.set("vary", "Origin")
+  addVaryHeader(headers, "Origin")
 }

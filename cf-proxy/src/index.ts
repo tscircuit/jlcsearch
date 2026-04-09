@@ -1,4 +1,4 @@
-import { CacheService, addCorsHeaders } from "./cache-service"
+import { CacheService, addCorsHeaders, addVaryHeader } from "./cache-service"
 import { queryComponentCatalog } from "./components"
 import { getD1Client } from "./db/get-d1-client"
 import { getD1Handler } from "./d1-routes"
@@ -112,19 +112,6 @@ export default {
       return handleD1Health(env, origin)
     }
 
-    if (
-      env.USE_D1 === "true" &&
-      request.method === "GET" &&
-      url.pathname === "/"
-    ) {
-      const headers = new Headers({
-        "content-type": "text/html; charset=utf-8",
-        "x-data-source": "d1",
-      })
-      addCorsHeaders(headers, origin)
-      return new Response(renderHomePage(), { status: 200, headers })
-    }
-
     // Only cache GET requests
     if (request.method !== "GET") {
       return proxyToOrigin(url, request, env, origin)
@@ -218,6 +205,49 @@ async function refreshStaleEntry(
   }
 }
 
+async function refreshStaleD1Entry(
+  cacheUrl: URL,
+  producer: () => Promise<Response>,
+  cache: CacheService,
+): Promise<void> {
+  try {
+    const response = await producer()
+    if (response.ok) {
+      await cache.put(cacheUrl, response)
+    }
+  } catch (error) {
+    console.warn("Background D1 cache refresh failed:", error)
+  }
+}
+
+async function handleCachedD1Response(
+  cacheUrl: URL,
+  origin: string | null,
+  ctx: ExecutionContext,
+  cache: CacheService,
+  producer: () => Promise<Response>,
+): Promise<Response> {
+  const cacheResult = await cache.get(cacheUrl)
+
+  if (cacheResult.type === "fresh") {
+    return cache.buildResponse(cacheResult.entry, "HIT", origin)
+  }
+
+  const staleEntry = cacheResult.type === "stale" ? cacheResult.entry : null
+  if (staleEntry) {
+    ctx.waitUntil(refreshStaleD1Entry(cacheUrl, producer, cache))
+    return cache.buildResponse(staleEntry, "STALE", origin)
+  }
+
+  const response = await producer()
+  if (!response.ok) {
+    return response
+  }
+
+  const entry = await cache.put(cacheUrl, response)
+  return cache.buildResponse(entry, "MISS", origin)
+}
+
 /**
  * Attempts to handle the request via D1 if it's a supported JSON API route.
  * Returns null if the request should be handled by the origin.
@@ -230,6 +260,12 @@ async function tryD1Route(
   ctx: ExecutionContext,
   cache: CacheService,
 ): Promise<Response | null> {
+  if (url.pathname === "/") {
+    return handleCachedD1Response(url, origin, ctx, cache, async () =>
+      handleD1HomePage(origin),
+    )
+  }
+
   const hasJsonSuffix = url.pathname.endsWith(".json")
   // Check if this is a JSON request
   const isJsonRequest = Boolean(
@@ -241,61 +277,21 @@ async function tryD1Route(
   const pathname = url.pathname.replace(/\.json$/, "")
 
   if (pathname === "/api/search") {
-    return handleD1Search(url, env, origin)
-  }
-
-  if (pathname === "/components/list") {
-    return handleD1ComponentsListWithCache(
-      url,
-      isJsonRequest,
-      env,
-      origin,
-      ctx,
-      cache,
+    return handleCachedD1Response(url, origin, ctx, cache, async () =>
+      handleD1Search(url, env, origin),
     )
   }
 
-  if (!isJsonRequest) {
-    const db = getD1Client(env.DB)
-    const params = Object.fromEntries(url.searchParams)
-    const handler = getD1Handler(pathname)
-    if (!handler) {
-      return null
-    }
-
-    try {
-      const result = await handler(db, params)
-      const headers = new Headers({
-        "content-type": "text/html; charset=utf-8",
-        "x-data-source": "d1",
-        "x-cache": "D1",
-      })
-      addCorsHeaders(headers, origin)
-
-      return new Response(
-        renderD1TablePage(
-          pathname,
-          result.data,
-          params,
-          url.toString(),
-          result.filterOptions,
-        ),
-        {
-          status: 200,
-          headers,
-        },
-      )
-    } catch (error) {
-      console.error("D1 query failed:", error)
-      return buildD1ErrorResponse(
-        origin,
-        error instanceof Error ? error.message : "Unknown D1 query error",
-        "text/html; charset=utf-8",
-      )
-    }
+  if (pathname === "/components/list") {
+    return handleCachedD1Response(
+      getD1RepresentationCacheUrl(url, isJsonRequest),
+      origin,
+      ctx,
+      cache,
+      async () => handleD1ComponentsList(url, isJsonRequest, env, origin),
+    )
   }
 
-  // Get handler for this route
   const handler = getD1Handler(pathname)
   if (!handler) {
     if (pathname.endsWith("/list")) {
@@ -307,53 +303,20 @@ async function tryD1Route(
     return null
   }
 
-  try {
-    const db = getD1Client(env.DB)
-    const params = Object.fromEntries(url.searchParams)
-    const result = await handler(db, params)
-
-    const headers = new Headers({
-      "x-data-source": "d1",
-      "x-cache": "D1",
-    })
-    addCorsHeaders(headers, origin)
-
-    if (isJsonRequest) {
-      headers.set("content-type", "application/json")
-      return new Response(JSON.stringify(result.data), {
-        status: 200,
-        headers,
-      })
-    }
-
-    headers.set("content-type", "text/html; charset=utf-8")
-    return new Response(
-      renderD1TablePage(
-        pathname,
-        result.data,
-        params,
-        url.toString(),
-        result.filterOptions,
-      ),
-      {
-        status: 200,
-        headers,
-      },
-    )
-  } catch (error) {
-    console.error("D1 query failed:", error)
-    return buildD1ErrorResponse(
-      origin,
-      error instanceof Error ? error.message : "Unknown D1 query error",
-    )
-  }
+  return handleCachedD1Response(
+    getD1RepresentationCacheUrl(url, isJsonRequest),
+    origin,
+    ctx,
+    cache,
+    async () => handleD1TableRoute(pathname, url, isJsonRequest, env, origin),
+  )
 }
 
 async function handleD1Search(
   url: URL,
   env: Env,
   origin: string | null,
-): Promise<Response | null> {
+): Promise<Response> {
   try {
     const db = getD1Client(env.DB)
     const params = Object.fromEntries(url.searchParams)
@@ -395,62 +358,74 @@ const getD1RepresentationCacheUrl = (url: URL, isJsonRequest: boolean): URL => {
   return cacheUrl
 }
 
-async function refreshStaleD1ComponentsEntry(
-  url: URL,
-  isJsonRequest: boolean,
-  env: Env,
-  origin: string | null,
-  cache: CacheService,
-): Promise<void> {
-  try {
-    const response = await handleD1ComponentsList(
-      url,
-      isJsonRequest,
-      env,
-      origin,
-    )
-    if (response?.ok) {
-      await cache.put(getD1RepresentationCacheUrl(url, isJsonRequest), response)
-    }
-  } catch (error) {
-    console.warn("Background D1 components cache refresh failed:", error)
-  }
+function handleD1HomePage(origin: string | null): Response {
+  const headers = new Headers({
+    "content-type": "text/html; charset=utf-8",
+    "x-data-source": "d1",
+    "x-cache": "D1",
+  })
+  addCorsHeaders(headers, origin)
+
+  return new Response(renderHomePage(), { status: 200, headers })
 }
 
-async function handleD1ComponentsListWithCache(
+async function handleD1TableRoute(
+  pathname: string,
   url: URL,
   isJsonRequest: boolean,
   env: Env,
   origin: string | null,
-  ctx: ExecutionContext,
-  cache: CacheService,
-): Promise<Response | null> {
-  const cacheUrl = getD1RepresentationCacheUrl(url, isJsonRequest)
-  const cacheResult = await cache.get(cacheUrl)
+): Promise<Response> {
+  try {
+    const db = getD1Client(env.DB)
+    const params = Object.fromEntries(url.searchParams)
+    const handler = getD1Handler(pathname)
+    if (!handler) {
+      return buildD1NotFoundResponse(
+        origin,
+        isJsonRequest ? "application/json" : "text/html; charset=utf-8",
+      )
+    }
 
-  if (cacheResult.type === "fresh") {
-    return cache.buildResponse(cacheResult.entry, "HIT", origin)
-  }
+    const result = await handler(db, params)
 
-  const staleEntry = cacheResult.type === "stale" ? cacheResult.entry : null
-  if (staleEntry) {
-    ctx.waitUntil(
-      refreshStaleD1ComponentsEntry(url, isJsonRequest, env, origin, cache),
+    const headers = new Headers({
+      "x-data-source": "d1",
+      "x-cache": "D1",
+    })
+    addVaryHeader(headers, "Accept")
+    addCorsHeaders(headers, origin)
+
+    if (isJsonRequest) {
+      headers.set("content-type", "application/json")
+      return new Response(JSON.stringify(result.data), {
+        status: 200,
+        headers,
+      })
+    }
+
+    headers.set("content-type", "text/html; charset=utf-8")
+    return new Response(
+      renderD1TablePage(
+        pathname,
+        result.data,
+        params,
+        url.toString(),
+        result.filterOptions,
+      ),
+      {
+        status: 200,
+        headers,
+      },
     )
-    return cache.buildResponse(staleEntry, "STALE", origin)
+  } catch (error) {
+    console.error(`D1 route failed for ${pathname}:`, error)
+    return buildD1ErrorResponse(
+      origin,
+      error instanceof Error ? error.message : "Unknown D1 route error",
+      isJsonRequest ? "application/json" : "text/html; charset=utf-8",
+    )
   }
-
-  const response = await handleD1ComponentsList(url, isJsonRequest, env, origin)
-  if (!response) {
-    return null
-  }
-
-  if (!response.ok) {
-    return response
-  }
-
-  const entry = await cache.put(cacheUrl, response)
-  return cache.buildResponse(entry, "MISS", origin)
 }
 
 async function handleD1ComponentsList(
@@ -458,7 +433,7 @@ async function handleD1ComponentsList(
   isJsonRequest: boolean,
   env: Env,
   origin: string | null,
-): Promise<Response | null> {
+): Promise<Response> {
   const params = Object.fromEntries(url.searchParams)
 
   try {
@@ -483,6 +458,7 @@ async function handleD1ComponentsList(
       "x-data-source": "d1",
       "x-cache": "D1",
     })
+    addVaryHeader(headers, "Accept")
     addCorsHeaders(headers, origin)
 
     if (isJsonRequest) {
