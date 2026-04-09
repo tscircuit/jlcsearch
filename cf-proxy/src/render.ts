@@ -213,6 +213,16 @@ const formatByteSize = (value: unknown): string => {
   return `${num}B`
 }
 
+const ATTRIBUTES_SUMMARY_LENGTH = 20
+
+const truncateForSummary = (
+  value: string,
+  maxLength = ATTRIBUTES_SUMMARY_LENGTH,
+): string => {
+  if (value.length <= maxLength) return value
+  return `${value.slice(0, maxLength)}...`
+}
+
 const formatCount = (value: unknown): string => {
   const num = typeof value === "number" ? value : Number(value)
   if (!Number.isFinite(num)) return ""
@@ -308,6 +318,11 @@ const renderCell = (
   value: unknown,
 ): string => {
   if (value === null || value === undefined || value === "") return ""
+  if (column === "attributes") {
+    const rawValue = String(value)
+    const summary = truncateForSummary(rawValue)
+    return `<details><summary>${escapeHtml(summary)}</summary><div class="mt-1 whitespace-pre-wrap break-all">${escapeHtml(rawValue)}</div></details>`
+  }
   if (column === "lcsc") {
     return `<a href="https://jlcpcb.com/partdetail/${escapeHtml(row.mfr)}/C${escapeHtml(value)}">${escapeHtml(value)}</a>`
   }

@@ -36,4 +36,27 @@ describe("render helpers", () => {
     expect(html).toContain("SMD5050-4P")
     expect(html).toContain("/led_with_ic/list.json?protocol=WS2812B")
   })
+
+  it("renders attributes cells inside details with a truncated summary", () => {
+    const html = renderD1TablePage(
+      "/ldos/list",
+      {
+        ldos: [
+          {
+            lcsc: 347222,
+            mfr: "AMS1117-3.3",
+            attributes:
+              '{"Power Supply Rejection Ratio (PSRR)":"60dB@(120Hz)","Feature":"Overcurrent Protection(OCP)"}',
+          },
+        ],
+      },
+      {},
+      "https://example.com/ldos/list",
+    )
+
+    expect(html).toContain(
+      "<details><summary>{&quot;Power Supply Rejec...</summary>",
+    )
+    expect(html).toContain("Feature&quot;:&quot;Overcurrent Protection(OCP)&quot;")
+  })
 })
