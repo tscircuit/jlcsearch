@@ -1,162 +1,77 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest"
+import { beforeEach, describe, expect, it } from "vitest"
 import { generateCacheKey } from "../src/cache-key"
 import { createSelf, createTestEnv } from "./test-env"
 
 describe("Worker integration", () => {
   const env = createTestEnv()
   const SELF = createSelf(env)
-  const originalFetch = globalThis.fetch
 
   beforeEach(async () => {
     env.USE_D1 = "false"
 
-    globalThis.fetch = (async (input: RequestInfo | URL) => {
-      const url = typeof input === "string" ? input : input.toString()
-      if (url.includes("nonexistent-path-that-will-timeout")) {
-        throw new Error("Simulated origin failure")
-      }
-      return new Response('{"status":"ok"}', {
-        status: 200,
-        headers: { "content-type": "application/json" },
-      })
-    }) as typeof fetch
-
-    // Clear the KV store between tests
     const keys = await env.CACHE_KV.list()
     for (const key of keys.keys) {
       await env.CACHE_KV.delete(key.name)
     }
   })
 
-  afterEach(() => {
-    globalThis.fetch = originalFetch
-  })
-
-  it("returns response with x-cache: HIT when entry is in cache", async () => {
-    // Pre-populate cache with fresh entry
-    const url = new URL("https://example.com/health")
-    const cacheKey = await generateCacheKey(url)
-
-    const metadata = {
-      cachedAt: new Date().toISOString(),
-      status: 200,
-      headers: { "content-type": "application/json" },
-    }
-    const testBody = '{"status":"ok"}'
-
-    await env.CACHE_KV.put(cacheKey, testBody, { metadata })
-
+  it("serves /health directly from the worker", async () => {
     const response = await SELF.fetch("https://example.com/health")
 
-    expect(response.headers.get("x-cache")).toBe("HIT")
-    expect(response.headers.get("x-cached-at")).toBe(metadata.cachedAt)
     expect(response.status).toBe(200)
-
-    const body = await response.text()
-    expect(body).toBe(testBody)
+    expect(response.headers.get("content-type")).toContain("application/json")
+    expect(response.headers.get("x-cache")).toBeNull()
+    expect(await response.json()).toEqual({ ok: true })
   })
 
-  it("returns stale cache with x-cache: STALE when entry is stale and origin fails", async () => {
-    // Pre-populate with stale cache (20 days old, but within 1 month)
-    const twentyDaysAgo = new Date(Date.now() - 20 * 24 * 60 * 60 * 1000)
-    const url = new URL(
-      "https://example.com/nonexistent-path-that-will-timeout",
-    )
-    const cacheKey = await generateCacheKey(url)
+  it("returns 405 for unsupported non-GET methods", async () => {
+    const response = await SELF.fetch("https://example.com/components/list", {
+      method: "POST",
+      headers: { accept: "application/json" },
+    })
 
-    const metadata = {
-      cachedAt: twentyDaysAgo.toISOString(),
-      status: 200,
-      headers: { "content-type": "application/json" },
-    }
-    const testBody = '{"cached":"data"}'
-
-    await env.CACHE_KV.put(cacheKey, testBody, { metadata })
-
-    const response = await SELF.fetch(
-      "https://example.com/nonexistent-path-that-will-timeout",
-      { signal: AbortSignal.timeout(15000) },
-    )
-
-    expect(response.headers.get("x-cache")).toBe("STALE")
-    expect(response.status).toBe(200)
-  }, 20000)
-
-  it("refreshes stale cache in background while serving stale response", async () => {
-    let fetchCount = 0
-    globalThis.fetch = (async () => {
-      fetchCount += 1
-      return new Response('{"fresh":"data"}', {
-        status: 200,
-        headers: { "content-type": "application/json" },
-      })
-    }) as typeof fetch
-
-    const staleAt = new Date(Date.now() - 20 * 24 * 60 * 60 * 1000)
-    const url = new URL("https://example.com/api/search?q=abc")
-    const cacheKey = await generateCacheKey(url)
-    await env.CACHE_KV.put(cacheKey, '{"cached":"data"}', {
-      metadata: {
-        cachedAt: staleAt.toISOString(),
-        status: 200,
-        headers: { "content-type": "application/json" },
+    expect(response.status).toBe(405)
+    expect(await response.json()).toEqual({
+      error: {
+        error_code: "method_not_allowed",
+        message: "Method Not Allowed",
       },
     })
-
-    const staleResponse = await SELF.fetch(url.toString())
-    expect(staleResponse.headers.get("x-cache")).toBe("STALE")
-    expect(await staleResponse.text()).toBe('{"cached":"data"}')
-    expect(fetchCount).toBe(1)
-
-    await SELF.flushWaitUntil()
-
-    const refreshedResponse = await SELF.fetch(url.toString())
-    expect(refreshedResponse.headers.get("x-cache")).toBe("HIT")
-    expect(await refreshedResponse.text()).toBe('{"fresh":"data"}')
   })
 
-  it("strips cookie header before forwarding request to origin", async () => {
-    let forwardedCookie: string | null = null
+  it("returns worker 404 for unknown list routes", async () => {
+    env.USE_D1 = "true"
 
-    globalThis.fetch = (async (
-      _input: RequestInfo | URL,
-      init?: RequestInit,
-    ) => {
-      const headers = new Headers(init?.headers)
-      forwardedCookie = headers.get("cookie")
-      return new Response('{"status":"ok"}', {
-        status: 200,
-        headers: { "content-type": "application/json" },
-      })
-    }) as typeof fetch
-
-    const response = await SELF.fetch("https://example.com/api/search?q=test", {
-      headers: { cookie: "session=abc123", accept: "application/json" },
+    const response = await SELF.fetch("https://example.com/not-found/list", {
+      headers: { accept: "application/json" },
     })
 
-    expect(response.status).toBe(200)
-    expect(forwardedCookie).toBeNull()
+    expect(response.status).toBe(404)
+    expect(response.headers.get("x-data-source")).toBe("d1")
+    expect(await response.json()).toEqual({
+      ok: false,
+      error: {
+        error_code: "not_found",
+        message: "Not Found",
+      },
+    })
   })
 
-  it("preserves content-type header from cached response", async () => {
-    const url = new URL("https://example.com/api/data")
-    const cacheKey = await generateCacheKey(url)
+  it("returns worker 404 for unknown non-list routes", async () => {
+    env.USE_D1 = "true"
 
-    const metadata = {
-      cachedAt: new Date().toISOString(),
-      status: 200,
-      headers: { "content-type": "text/html; charset=utf-8" },
-    }
-    const testBody = "<html><body>test</body></html>"
+    const response = await SELF.fetch("https://example.com/nope", {
+      headers: { accept: "application/json" },
+    })
 
-    await env.CACHE_KV.put(cacheKey, testBody, { metadata })
-
-    const response = await SELF.fetch("https://example.com/api/data")
-
-    expect(response.headers.get("content-type")).toBe(
-      "text/html; charset=utf-8",
-    )
-    expect(response.headers.get("x-cache")).toBe("HIT")
+    expect(response.status).toBe(404)
+    expect(await response.json()).toEqual({
+      ok: false,
+      error: {
+        error_code: "not_found",
+        message: "Not Found",
+      },
+    })
   })
 
   it("serves cached D1 derived-table HTML from KV", async () => {
@@ -188,6 +103,38 @@ describe("Worker integration", () => {
     expect(response.headers.get("content-type")).toContain("text/html")
     expect(response.headers.get("vary")).toContain("Accept")
     expect(await response.text()).toBe(testBody)
+  })
+
+  it("serves cached custom D1 route HTML from KV", async () => {
+    env.USE_D1 = "true"
+
+    const url = new URL("https://example.com/risc_v_processors/list?package=QFN48")
+    url.searchParams.set("__format", "html")
+    const cacheKey = await generateCacheKey(url)
+
+    await env.CACHE_KV.put(
+      cacheKey,
+      "<html><body>cached risc-v page</body></html>",
+      {
+        metadata: {
+          cachedAt: new Date().toISOString(),
+          status: 200,
+          headers: {
+            "content-type": "text/html; charset=utf-8",
+            vary: "Accept",
+            "x-data-source": "d1",
+          },
+        },
+      },
+    )
+
+    const response = await SELF.fetch(
+      "https://example.com/risc_v_processors/list?package=QFN48",
+    )
+
+    expect(response.headers.get("x-cache")).toBe("HIT")
+    expect(response.headers.get("x-data-source")).toBe("d1")
+    expect(await response.text()).toContain("cached risc-v page")
   })
 
   it("serves stale cached D1 derived-table HTML when refresh fails", async () => {
@@ -277,28 +224,31 @@ describe("Worker integration", () => {
   })
 
   it("handles different cache key for different query params", async () => {
-    const url1 = new URL("https://example.com/search?q=test")
-    const url2 = new URL("https://example.com/search?q=other")
+    env.USE_D1 = "true"
+
+    const url1 = new URL("https://example.com/components/list?search=test")
+    url1.searchParams.set("__format", "json")
+    const url2 = new URL("https://example.com/components/list?search=other")
+    url2.searchParams.set("__format", "json")
 
     const cacheKey1 = await generateCacheKey(url1)
     const cacheKey2 = await generateCacheKey(url2)
 
-    // Cache only the first URL
-    const metadata = {
-      cachedAt: new Date().toISOString(),
-      status: 200,
-      headers: { "content-type": "application/json" },
-    }
-    await env.CACHE_KV.put(cacheKey1, '{"q":"test"}', { metadata })
+    await env.CACHE_KV.put(cacheKey1, '{"q":"test"}', {
+      metadata: {
+        cachedAt: new Date().toISOString(),
+        status: 200,
+        headers: { "content-type": "application/json" },
+      },
+    })
 
-    // First URL should hit cache
-    const response1 = await SELF.fetch("https://example.com/search?q=test")
+    const response1 = await SELF.fetch(
+      "https://example.com/components/list?search=test",
+      { headers: { accept: "application/json" } },
+    )
     expect(response1.headers.get("x-cache")).toBe("HIT")
-    const body1 = await response1.text()
-    expect(body1).toBe('{"q":"test"}')
+    expect(await response1.text()).toBe('{"q":"test"}')
 
-    // Second URL should miss cache (different key)
-    // We just verify it's not returning the first cached response
     expect(cacheKey1).not.toBe(cacheKey2)
   })
 })

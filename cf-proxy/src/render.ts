@@ -364,6 +364,122 @@ const renderFilterSuggestions = (
     .join("")}</datalist>`
 }
 
+const getSuggestionListId = (
+  pathname: string,
+  paramName: string,
+  options: string[],
+): string =>
+  options.length > 0 ? `${pathname.replaceAll("/", "-")}-${paramName}-options` : ""
+
+const renderCustomFilters = (
+  pathname: string,
+  params: QueryParams,
+  filterOptions: FilterOptions = {},
+): string => {
+  switch (pathname) {
+    case "/analog_switches/list": {
+      const packageOptions = filterOptions.package ?? []
+      const channelOptions = filterOptions.channels ?? []
+      const packageListId = getSuggestionListId(
+        pathname,
+        "package",
+        packageOptions,
+      )
+
+      return `<form method="GET" class="flex flex-row gap-4">
+        <div>
+          <label>Package:</label>
+          <input type="text" name="package" value="${escapeHtml(params.package ?? "")}"${packageListId ? ` list="${escapeHtml(packageListId)}"` : ""} autocomplete="on" />
+          ${renderFilterSuggestions(pathname, "package", packageOptions)}
+        </div>
+        <div>
+          <label>Channels:</label>
+          <select name="channels">
+            <option value="">All</option>
+            ${channelOptions
+              .map(
+                (option) =>
+                  `<option value="${escapeHtml(option)}"${params.channels === option ? " selected" : ""}>${escapeHtml(option)}</option>`,
+              )
+              .join("")}
+          </select>
+        </div>
+        <button type="submit">Filter</button>
+      </form>`
+    }
+    case "/arm_processors/list":
+    case "/risc_v_processors/list": {
+      const packageOptions = filterOptions.package ?? []
+      const packageListId = getSuggestionListId(
+        pathname,
+        "package",
+        packageOptions,
+      )
+
+      return `<form method="GET" class="flex flex-row gap-4">
+        <div>
+          <label>Package:</label>
+          <input type="text" name="package" value="${escapeHtml(params.package ?? "")}"${packageListId ? ` list="${escapeHtml(packageListId)}"` : ""} autocomplete="on" />
+          ${renderFilterSuggestions(pathname, "package", packageOptions)}
+        </div>
+        <div>
+          <label>Min Flash:</label>
+          <input type="number" name="flash_min" value="${escapeHtml(params.flash_min ?? "")}" step="any" />
+        </div>
+        <div>
+          <label>Min RAM:</label>
+          <input type="number" name="ram_min" value="${escapeHtml(params.ram_min ?? "")}" step="any" />
+        </div>
+        <div>
+          <label>Interface:</label>
+          <select name="interface">
+            <option value="">All</option>
+            ${["uart", "i2c", "spi", "can", "usb"]
+              .map(
+                (option) =>
+                  `<option value="${escapeHtml(option)}"${params.interface === option ? " selected" : ""}>${escapeHtml(option.toUpperCase())}</option>`,
+              )
+              .join("")}
+          </select>
+        </div>
+        <button type="submit">Filter</button>
+      </form>`
+    }
+    case "/microphones/list": {
+      const packageOptions = filterOptions.package ?? []
+      const typeOptions = filterOptions.microphone_type ?? ["all"]
+      const packageListId = getSuggestionListId(
+        pathname,
+        "package",
+        packageOptions,
+      )
+
+      return `<form method="GET" class="flex flex-row gap-4">
+        <div>
+          <label>Package:</label>
+          <input type="text" name="package" value="${escapeHtml(params.package ?? "")}"${packageListId ? ` list="${escapeHtml(packageListId)}"` : ""} autocomplete="on" />
+          ${renderFilterSuggestions(pathname, "package", packageOptions)}
+        </div>
+        <div>
+          <label>Type:</label>
+          <select name="microphone_type">
+            ${typeOptions
+              .map((option) => {
+                const selected =
+                  (params.microphone_type ?? "all") === option ? " selected" : ""
+                return `<option value="${escapeHtml(option)}"${selected}>${escapeHtml(option === "all" ? "All" : option)}</option>`
+              })
+              .join("")}
+          </select>
+        </div>
+        <button type="submit">Filter</button>
+      </form>`
+    }
+    default:
+      return ""
+  }
+}
+
 const renderGenericFilters = (
   pathname: string,
   params: QueryParams,
@@ -531,7 +647,9 @@ export const renderD1TablePage = (
   } else if (pathname === "/categories/list") {
     pageBody += "<div>Click for subcategories</div>"
   } else {
-    pageBody += renderGenericFilters(pathname, params, filterOptions)
+    pageBody +=
+      renderCustomFilters(pathname, params, filterOptions) ||
+      renderGenericFilters(pathname, params, filterOptions)
   }
 
   if (rows.length > 0) {

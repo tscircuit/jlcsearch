@@ -8,7 +8,6 @@ routes = [
 ]
 
 [vars]
-ORIGIN_URL = "https://jlcsearch.fly.dev"
 USE_D1 = "true"  # Feature flag for gradual D1 rollout
 
 # KV namespace binding - run `wrangler kv:namespace create CACHE_KV` to create
@@ -30,7 +29,6 @@ workers_dev = true
 routes = []
 
 [env.staging.vars]
-ORIGIN_URL = "https://jlcsearch.fly.dev"
 USE_D1 = "true"
 
 [[env.staging.kv_namespaces]]

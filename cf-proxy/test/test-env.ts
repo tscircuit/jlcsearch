@@ -73,7 +73,6 @@ export class MemoryKV {
 
 export const createTestEnv = () => ({
   CACHE_KV: new MemoryKV(),
-  ORIGIN_URL: "https://example.com",
   USE_D1: "false",
   DB: {} as D1Database,
 })

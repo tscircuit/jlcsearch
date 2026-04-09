@@ -7,9 +7,6 @@ export default defineWorkersConfig({
         wrangler: { configPath: "./wrangler.toml" },
         miniflare: {
           kvNamespaces: ["CACHE_KV"],
-          bindings: {
-            ORIGIN_URL: "https://jlcsearch.fly.dev",
-          },
         },
       },
     },

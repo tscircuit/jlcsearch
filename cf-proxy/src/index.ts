@@ -7,7 +7,6 @@ import { searchIndex } from "./search"
 
 export interface Env {
   CACHE_KV: KVNamespace
-  ORIGIN_URL: string
   DB: D1Database
   USE_D1: string
 }
@@ -77,21 +76,60 @@ const buildD1NotFoundResponse = (
   })
 }
 
-const ORIGIN_TIMEOUT_MS = 10_000
-const BLOCKED_REQUEST_HEADERS = new Set([
-  "cookie",
-  "cf-connecting-ip",
-  "cf-ipcountry",
-  "cf-ray",
-  "cf-visitor",
-  "x-forwarded-for",
-  "x-forwarded-host",
-  "x-forwarded-proto",
-  "x-real-ip",
-  "host",
-  "connection",
-  "content-length",
-])
+const getPreferredContentType = (
+  request: Request,
+  url: URL,
+):
+  | "application/json"
+  | "text/html; charset=utf-8" => {
+  if (
+    url.pathname.endsWith(".json") ||
+    url.searchParams.get("json") === "true" ||
+    request.headers.get("accept")?.includes("application/json")
+  ) {
+    return "application/json"
+  }
+
+  return "text/html; charset=utf-8"
+}
+
+const buildMethodNotAllowedResponse = (
+  origin: string | null,
+  contentType:
+    | "application/json"
+    | "text/html; charset=utf-8" = "application/json",
+): Response => {
+  const headers = new Headers({
+    "content-type": contentType,
+  })
+  addCorsHeaders(headers, origin)
+
+  const body =
+    contentType === "application/json"
+      ? JSON.stringify({
+          error: {
+            error_code: "method_not_allowed",
+            message: "Method Not Allowed",
+          },
+        })
+      : "<h1>405 - Method Not Allowed</h1><p>The requested method is not supported.</p>"
+
+  return new Response(body, {
+    status: 405,
+    headers,
+  })
+}
+
+const buildHealthResponse = (origin: string | null): Response => {
+  const headers = new Headers({
+    "content-type": "application/json",
+  })
+  addCorsHeaders(headers, origin)
+  return new Response(JSON.stringify({ ok: true }), {
+    status: 200,
+    headers,
+  })
+}
 
 export default {
   async fetch(
@@ -112,9 +150,15 @@ export default {
       return handleD1Health(env, origin)
     }
 
-    // Only cache GET requests
+    if (url.pathname === "/health") {
+      return buildHealthResponse(origin)
+    }
+
     if (request.method !== "GET") {
-      return proxyToOrigin(url, request, env, origin)
+      return buildMethodNotAllowedResponse(
+        origin,
+        getPreferredContentType(request, url),
+      )
     }
 
     const cache = new CacheService(env.CACHE_KV)
@@ -127,82 +171,8 @@ export default {
       }
     }
 
-    const cacheResult = await cache.get(url)
-
-    // Fresh cache hit - return immediately
-    if (cacheResult.type === "fresh") {
-      return cache.buildResponse(cacheResult.entry, "HIT", origin)
-    }
-
-    // If stale entry exists, serve it immediately and refresh in background
-    const staleEntry = cacheResult.type === "stale" ? cacheResult.entry : null
-    if (staleEntry) {
-      ctx.waitUntil(refreshStaleEntry(url, request, env, cache))
-      return cache.buildResponse(staleEntry, "STALE", origin)
-    }
-
-    try {
-      const originResponse = await fetchFromOrigin(url, request, env)
-
-      // Only cache successful responses
-      if (originResponse.ok) {
-        const entry = await cache.put(url, originResponse)
-        return cache.buildResponse(entry, "MISS", origin)
-      }
-
-      // Origin returned an error - use stale cache if available
-      if (staleEntry) {
-        return cache.buildResponse(staleEntry, "STALE", origin)
-      }
-
-      // Return the error response with cache header
-      const headers = new Headers(originResponse.headers)
-      headers.set("x-cache", "ERROR")
-      addCorsHeaders(headers, origin)
-      return new Response(originResponse.body, {
-        status: originResponse.status,
-        headers,
-      })
-    } catch (error) {
-      // Network error or timeout - use stale cache if available
-      if (staleEntry) {
-        return cache.buildResponse(staleEntry, "STALE", origin)
-      }
-
-      // No stale cache available - return 502
-      const errorHeaders = new Headers({
-        "content-type": "application/json",
-        "x-cache": "ERROR",
-      })
-      addCorsHeaders(errorHeaders, origin)
-      return new Response(
-        JSON.stringify({
-          error: "Bad Gateway",
-          message: "Origin server unavailable and no cached response available",
-        }),
-        {
-          status: 502,
-          headers: errorHeaders,
-        },
-      )
-    }
+    return buildD1NotFoundResponse(origin, getPreferredContentType(request, url))
   },
-}
-
-async function refreshStaleEntry(
-  url: URL,
-  request: Request,
-  env: Env,
-  cache: CacheService,
-): Promise<void> {
-  try {
-    const originResponse = await fetchFromOrigin(url, request, env)
-    if (originResponse.ok) {
-      await cache.put(url, originResponse)
-    }
-  } catch (error) {
-    console.warn("Background stale refresh failed:", error)
-  }
 }
 
 async function refreshStaleD1Entry(
@@ -249,8 +219,8 @@ async function handleCachedD1Response(
 }
 
 /**
- * Attempts to handle the request via D1 if it's a supported JSON API route.
- * Returns null if the request should be handled by the origin.
+ * Attempts to handle the request via D1 if it's a supported worker-owned route.
+ * Returns null when the worker should fall through to the generic 404 handler.
  */
 async function tryD1Route(
   url: URL,
@@ -530,81 +500,10 @@ async function handleD1Health(
 }
 
 /**
- * Fetches from the origin server with timeout.
- */
-async function fetchFromOrigin(
-  url: URL,
-  request: Request,
-  env: Env,
-): Promise<Response> {
-  const originUrl = new URL(url.pathname + url.search, env.ORIGIN_URL)
-  const headers = sanitizeRequestHeaders(request.headers)
-
-  const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), ORIGIN_TIMEOUT_MS)
-
-  try {
-    const response = await fetch(originUrl.toString(), {
-      method: request.method,
-      headers,
-      signal: controller.signal,
-    })
-    return response
-  } finally {
-    clearTimeout(timeoutId)
-  }
-}
-
-/**
- * Proxies non-GET requests directly to origin without caching.
- */
-async function proxyToOrigin(
-  url: URL,
-  request: Request,
-  env: Env,
-  origin: string | null,
-): Promise<Response> {
-  const originUrl = new URL(url.pathname + url.search, env.ORIGIN_URL)
-  const headers = sanitizeRequestHeaders(request.headers)
-
-  const response = await fetch(originUrl.toString(), {
-    method: request.method,
-    headers,
-    body: request.body,
-  })
-
-  // Clone response and add CORS headers
-  const responseHeaders = new Headers(response.headers)
-  addCorsHeaders(responseHeaders, origin)
-  return new Response(response.body, {
-    status: response.status,
-    headers: responseHeaders,
-  })
-}
-
-/**
  * Handles CORS preflight OPTIONS requests.
  */
 function handleOptions(origin: string | null): Response {
   const headers = new Headers()
   addCorsHeaders(headers, origin)
   return new Response(null, { status: 204, headers })
-}
-
-function sanitizeRequestHeaders(headers: Headers): Headers {
-  const sanitized = new Headers()
-
-  for (const [name, value] of headers.entries()) {
-    const lowerName = name.toLowerCase()
-    if (
-      BLOCKED_REQUEST_HEADERS.has(lowerName) ||
-      lowerName.startsWith("cf-") ||
-      lowerName.startsWith("x-forwarded-")
-    ) {
-      continue
-    }
-    sanitized.set(name, value)
-  }
-
-  return sanitized
 }
