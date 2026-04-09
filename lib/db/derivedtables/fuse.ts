@@ -3,6 +3,18 @@ import type { KyselyDatabaseInstance } from "../kysely-types"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import { BaseComponent } from "./component-base"
 
+const FUSE_SUBCATEGORIES = [
+  "Fuses",
+  "Disposable Fuses",
+  "Resettable Fuses",
+  "Surface Mount Fuses",
+  "PTC Resettable Fuses",
+  "Automotive Fuses",
+  "Cartridge Fuses",
+  "Thermal Fuses (TCO)",
+  "Thermal Cutoffs (TCO)",
+] as const
+
 export interface Fuse extends BaseComponent {
   current_rating: number // in Amperes
   voltage_rating: number // in Volts
@@ -31,24 +43,44 @@ export const fuseTableSpec: DerivedTableSpec<Fuse> = {
       .selectFrom("components")
       .innerJoin("categories", "components.category_id", "categories.id")
       .selectAll()
-      .where((eb) => eb("description", "like", "%fuse%"))
+      .where("categories.subcategory", "in", [...FUSE_SUBCATEGORIES])
   },
   mapToTable(components) {
     return components.map((c) => {
       try {
         const extraData = c.extra ? JSON.parse(c.extra) : {}
         const attrs = extraData.attributes || {}
+        const description = String(c.description || extraData.description || "")
+        const textForParsing = [
+          description,
+          String(extraData.title || ""),
+          String(extraData.mpn || ""),
+          String(attrs.Type || ""),
+        ].join(" ")
 
         // Extract current rating (e.g., "1A", "5A")
         let current_rating = undefined
-        const currentMatch = c.description.match(/(\d+(?:\.\d+)?)A/)
+        const currentSource =
+          attrs["Current Rating"] ||
+          attrs["Hold Current"] ||
+          attrs["Current Rating (Max)"] ||
+          textForParsing
+        const currentMatch = String(currentSource).match(/(\d+(?:\.\d+)?)\s*(mA|A)/i)
         if (currentMatch) {
-          current_rating = parseFloat(currentMatch[1])
+          current_rating =
+            currentMatch[2].toLowerCase() === "ma"
+              ? parseFloat(currentMatch[1]) / 1000
+              : parseFloat(currentMatch[1])
         }
 
         // Extract voltage rating (e.g., "250V", "500V")
         let voltage_rating = undefined
-        const voltageMatch = c.description.match(/(\d+(?:\.\d+)?)V/)
+        const voltageSource =
+          attrs["Voltage Rating (DC)"] ||
+          attrs["Voltage Rating  (AC)"] ||
+          attrs["Operating Voltage (Max)"] ||
+          textForParsing
+        const voltageMatch = String(voltageSource).match(/(\d+(?:\.\d+)?)\s*V/i)
         if (voltageMatch) {
           voltage_rating = parseFloat(voltageMatch[1])
         }
@@ -56,35 +88,38 @@ export const fuseTableSpec: DerivedTableSpec<Fuse> = {
         // Extract response time from attributes or description
         let response_time = attrs["Response Time"]?.toLowerCase() || "medium"
         if (!response_time) {
-          if (c.description.includes("fast")) response_time = "fast"
-          else if (c.description.includes("medium")) response_time = "medium"
-          else if (c.description.includes("slow")) response_time = "slow"
+          if (textForParsing.toLowerCase().includes("fast")) response_time = "fast"
+          else if (textForParsing.toLowerCase().includes("medium"))
+            response_time = "medium"
+          else if (textForParsing.toLowerCase().includes("slow"))
+            response_time = "slow"
         }
 
         // Extract package type
         let package_type = c.package || ""
         if (!package_type) {
-          if (c.description.includes("axial")) package_type = "axial"
-          else if (c.description.includes("radial")) package_type = "radial"
+          if (textForParsing.toLowerCase().includes("axial")) package_type = "axial"
+          else if (textForParsing.toLowerCase().includes("radial"))
+            package_type = "radial"
         }
 
         // Determine mount type
         const is_surface_mount =
-          c.description.toLowerCase().includes("smd") ||
-          !c.description.toLowerCase().includes("through")
+          textForParsing.toLowerCase().includes("smd") ||
+          !textForParsing.toLowerCase().includes("through")
 
         // Determine glass encased
-        const is_glass_encased = c.description.toLowerCase().includes("glass")
+        const is_glass_encased = textForParsing.toLowerCase().includes("glass")
 
         // Determine if resettable
         const is_resettable =
-          c.description.toLowerCase().includes("resettable") ||
-          c.description.toLowerCase().includes("ptc")
+          textForParsing.toLowerCase().includes("resettable") ||
+          textForParsing.toLowerCase().includes("ptc")
 
         return {
           lcsc: Number(c.lcsc),
           mfr: String(c.mfr || ""),
-          description: String(c.description || ""),
+          description,
           stock: Number(c.stock || 0),
           price1: extractMinQPrice(c.price),
           in_stock: Boolean((c.stock || 0) > 0),

@@ -3,6 +3,11 @@ import type { KyselyDatabaseInstance } from "../kysely-types"
 import { BaseComponent } from "./component-base"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 
+const LED_SEGMENT_SUBCATEGORIES = [
+  "Led Segment Display",
+  "LED Segment Displays",
+] as const
+
 export interface LEDSegmentDisplay extends BaseComponent {
   package?: string
   positions?: string
@@ -28,7 +33,7 @@ export const ledSegmentDisplayTableSpec: DerivedTableSpec<LEDSegmentDisplay> = {
       .selectFrom("components")
       .innerJoin("categories", "components.category_id", "categories.id")
       .selectAll()
-      .where((eb) => eb("description", "like", "%LED Segment Display%"))
+      .where("categories.subcategory", "in", [...LED_SEGMENT_SUBCATEGORIES])
   },
 
   mapToTable(components) {
@@ -36,35 +41,51 @@ export const ledSegmentDisplayTableSpec: DerivedTableSpec<LEDSegmentDisplay> = {
       try {
         const extraData = c.extra ? JSON.parse(c.extra) : {}
         const attrs = extraData.attributes || {}
+        const description = String(c.description || extraData.description || "")
+        const textForParsing = [
+          description,
+          String(extraData.title || ""),
+          String(extraData.mpn || ""),
+        ].join(" ")
 
         let positions = undefined
-        const posMatch = c.description.match(/(\d+)\s*[Pp]ositions?/)
+        const posMatch =
+          String(attrs["Number of Characters"] || "").match(/(\d+)\s*Bit/i) ||
+          textForParsing.match(/(\d+)\s*Bit/i) ||
+          textForParsing.match(/(\d+)\s*[Pp]ositions?/)
         if (posMatch) {
           positions = posMatch[1]
         }
 
         let type = undefined
-        if (c.description.includes("Common Cathode")) {
+        const polarity = String(attrs["LED Polarity"] || "")
+        if (
+          textForParsing.toLowerCase().includes("common cathode") ||
+          polarity.toLowerCase().includes("common cathode")
+        ) {
           type = "Common Cathode"
-        } else if (c.description.includes("Common Anode")) {
+        } else if (
+          textForParsing.toLowerCase().includes("common anode") ||
+          polarity.toLowerCase().includes("common anode")
+        ) {
           type = "Common Anode"
         }
 
-        let size = undefined
-        const sizeMatch = c.description.match(/(\d+\.\d+)/)
+        let size = attrs["Digit/Alpha Size(inch)"] || undefined
+        const sizeMatch = textForParsing.match(/(\d+\.\d+)/)
         if (sizeMatch) {
-          size = sizeMatch[1]
+          // keep attribute-derived size when present, otherwise use description
+          // fallback
+          size ??= sizeMatch[1]
         }
 
-        let color = undefined
-        if (c.description.includes("Red")) {
-          color = "Red"
-        }
+        let color = attrs["Luminous Color"] || undefined
+        if (!color && textForParsing.includes("Red")) color = "Red"
 
         return {
           lcsc: Number(c.lcsc),
           mfr: String(c.mfr || ""),
-          description: String(c.description || ""),
+          description,
           stock: Number(c.stock || 0),
           price1: extractMinQPrice(c.price),
           in_stock: Boolean((c.stock || 0) > 0),

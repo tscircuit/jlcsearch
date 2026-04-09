@@ -55,7 +55,7 @@ describe("render helpers", () => {
     )
 
     expect(html).toContain(
-      "<details><summary>{&quot;Power Supply Rejec...</summary>",
+      "<details><summary>{&quot;Power Su...</summary>",
     )
     expect(html).toContain("Feature&quot;:&quot;Overcurrent Protection(OCP)&quot;")
   })

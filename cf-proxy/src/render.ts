@@ -213,7 +213,7 @@ const formatByteSize = (value: unknown): string => {
   return `${num}B`
 }
 
-const ATTRIBUTES_SUMMARY_LENGTH = 20
+const ATTRIBUTES_SUMMARY_LENGTH = 10
 
 const truncateForSummary = (
   value: string,
