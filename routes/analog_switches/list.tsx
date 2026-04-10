@@ -50,6 +50,7 @@ export default withWinterSpec({
         lcsc: m.lcsc,
         mfr: m.mfr,
         package: m.package,
+        is_extended_promotional: Boolean(m.is_extended_promotional),
         num_channels: m.num_channels,
         on_resistance_ohms: m.on_resistance_ohms,
         supply_voltage_min: m.supply_voltage_min,
@@ -109,6 +110,7 @@ export default withWinterSpec({
           lcsc: m.lcsc,
           mfr: m.mfr,
           package: m.package,
+          is_extended_promotional: m.is_extended_promotional ? "✓" : "",
           channels: m.num_channels,
           on_resistance: m.on_resistance_ohms ? `${m.on_resistance_ohms}Ω` : "",
           voltage:
