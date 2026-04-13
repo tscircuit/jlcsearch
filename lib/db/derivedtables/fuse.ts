@@ -37,6 +37,7 @@ export const fuseTableSpec: DerivedTableSpec<Fuse> = {
     { name: "is_resettable", type: "boolean" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   listCandidateComponents(db: KyselyDatabaseInstance) {
     return db
@@ -65,7 +66,9 @@ export const fuseTableSpec: DerivedTableSpec<Fuse> = {
           attrs["Hold Current"] ||
           attrs["Current Rating (Max)"] ||
           textForParsing
-        const currentMatch = String(currentSource).match(/(\d+(?:\.\d+)?)\s*(mA|A)/i)
+        const currentMatch = String(currentSource).match(
+          /(\d+(?:\.\d+)?)\s*(mA|A)/i,
+        )
         if (currentMatch) {
           current_rating =
             currentMatch[2].toLowerCase() === "ma"
@@ -88,7 +91,8 @@ export const fuseTableSpec: DerivedTableSpec<Fuse> = {
         // Extract response time from attributes or description
         let response_time = attrs["Response Time"]?.toLowerCase() || "medium"
         if (!response_time) {
-          if (textForParsing.toLowerCase().includes("fast")) response_time = "fast"
+          if (textForParsing.toLowerCase().includes("fast"))
+            response_time = "fast"
           else if (textForParsing.toLowerCase().includes("medium"))
             response_time = "medium"
           else if (textForParsing.toLowerCase().includes("slow"))
@@ -98,7 +102,8 @@ export const fuseTableSpec: DerivedTableSpec<Fuse> = {
         // Extract package type
         let package_type = c.package || ""
         if (!package_type) {
-          if (textForParsing.toLowerCase().includes("axial")) package_type = "axial"
+          if (textForParsing.toLowerCase().includes("axial"))
+            package_type = "axial"
           else if (textForParsing.toLowerCase().includes("radial"))
             package_type = "radial"
         }
@@ -125,6 +130,7 @@ export const fuseTableSpec: DerivedTableSpec<Fuse> = {
           in_stock: Boolean((c.stock || 0) > 0),
           is_basic: Boolean(c.basic),
           is_preferred: Boolean(c.preferred),
+          is_extended_promotional: Boolean(c.preferred) && !Boolean(c.basic),
           current_rating: current_rating as number,
           voltage_rating: voltage_rating as number,
           response_time,
