@@ -70,7 +70,7 @@ export const jstConnectorTableSpec: DerivedTableSpec<JstConnector> = {
           in_stock: Boolean((c.stock || 0) > 0),
           is_basic: Boolean(c.basic),
           is_preferred: Boolean(c.preferred),
-        is_extended_promotional: Boolean(c.preferred) && !Boolean(c.basic),
+          is_extended_promotional: Boolean(c.preferred) && !Boolean(c.basic),
           package: String(c.package || ""),
           pitch_mm: parseNum(attrs["Pitch"]),
           num_rows: isNaN(numRows) ? null : numRows,
