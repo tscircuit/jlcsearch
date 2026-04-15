@@ -77,7 +77,9 @@ describe("Worker integration", () => {
   it("serves cached D1 derived-table HTML from KV", async () => {
     env.USE_D1 = "true"
 
-    const url = new URL("https://example.com/microcontrollers/list?package=QFN48")
+    const url = new URL(
+      "https://example.com/microcontrollers/list?package=QFN48",
+    )
     url.searchParams.set("__format", "html")
     const cacheKey = await generateCacheKey(url)
 
@@ -108,7 +110,9 @@ describe("Worker integration", () => {
   it("serves cached custom D1 route HTML from KV", async () => {
     env.USE_D1 = "true"
 
-    const url = new URL("https://example.com/risc_v_processors/list?package=QFN48")
+    const url = new URL(
+      "https://example.com/risc_v_processors/list?package=QFN48",
+    )
     url.searchParams.set("__format", "html")
     const cacheKey = await generateCacheKey(url)
 
@@ -141,7 +145,9 @@ describe("Worker integration", () => {
     env.USE_D1 = "true"
 
     const staleAt = new Date(Date.now() - 20 * 24 * 60 * 60 * 1000)
-    const url = new URL("https://example.com/microcontrollers/list?package=QFN48")
+    const url = new URL(
+      "https://example.com/microcontrollers/list?package=QFN48",
+    )
     url.searchParams.set("__format", "html")
     const cacheKey = await generateCacheKey(url)
 

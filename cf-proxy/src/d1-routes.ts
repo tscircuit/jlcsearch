@@ -16,10 +16,7 @@ export interface D1QueryResult {
   filterOptions?: FilterOptions
 }
 
-type D1Handler = (
-  db: Kysely<DB>,
-  params: QueryParams,
-) => Promise<D1QueryResult>
+type D1Handler = (db: Kysely<DB>, params: QueryParams) => Promise<D1QueryResult>
 
 const PROCESSOR_INTERFACES = ["uart", "i2c", "spi", "can", "usb"] as const
 const MICROPHONE_SUBCATEGORIES = ["Microphones", "MEMS Microphones"] as const
@@ -43,10 +40,7 @@ const extractSmallQuantityPrice = (price: string | null): number => {
 const getNonEmptyStrings = (
   rows: Array<Record<string, string | null>>,
   key: string,
-): string[] =>
-  rows
-    .map((row) => row[key]?.trim() ?? "")
-    .filter(Boolean)
+): string[] => rows.map((row) => row[key]?.trim() ?? "").filter(Boolean)
 
 const getMicrocontrollerListHandler = (
   tableName: "arm_processor" | "risc_v_processor",
@@ -311,18 +305,22 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
     const categories = params.category_name
       ? normalizedRows
       : Array.from(
-          normalizedRows.reduce((acc, row) => {
-            if (!acc.has(row.category)) {
-              acc.set(row.category, row.subcategory)
-            }
-            return acc
-          }, new Map<string, string>()).entries(),
+          normalizedRows
+            .reduce((acc, row) => {
+              if (!acc.has(row.category)) {
+                acc.set(row.category, row.subcategory)
+              }
+              return acc
+            }, new Map<string, string>())
+            .entries(),
         ).map(([category, subcategory]) => ({ category, subcategory }))
 
     return {
       tableName: "category",
       filterOptions: {
-        category_name: Array.from(new Set(normalizedRows.map((row) => row.category))),
+        category_name: Array.from(
+          new Set(normalizedRows.map((row) => row.category)),
+        ),
       },
       data: { categories },
     }

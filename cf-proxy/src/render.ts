@@ -384,7 +384,9 @@ const getSuggestionListId = (
   paramName: string,
   options: string[],
 ): string =>
-  options.length > 0 ? `${pathname.replaceAll("/", "-")}-${paramName}-options` : ""
+  options.length > 0
+    ? `${pathname.replaceAll("/", "-")}-${paramName}-options`
+    : ""
 
 const renderCustomFilters = (
   pathname: string,
@@ -481,7 +483,9 @@ const renderCustomFilters = (
             ${typeOptions
               .map((option) => {
                 const selected =
-                  (params.microphone_type ?? "all") === option ? " selected" : ""
+                  (params.microphone_type ?? "all") === option
+                    ? " selected"
+                    : ""
                 return `<option value="${escapeHtml(option)}"${selected}>${escapeHtml(option === "all" ? "All" : option)}</option>`
               })
               .join("")}
