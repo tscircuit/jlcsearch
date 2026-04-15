@@ -5,12 +5,10 @@
     "target": "ESNext",
     "module": "ESNext",
     "moduleDetection": "force",
-    "jsx": "react-jsx",
     "allowJs": true,
 
     "paths": {
-      "lib/*": ["./lib/*"],
-      "tests/*": ["./tests/*"]
+      "lib/*": ["./lib/*"]
     },
 
     // Bundler mode
@@ -29,5 +27,6 @@
     "noUnusedParameters": false,
     "noPropertyAccessFromIndexSignature": false
   },
+  "include": ["lib/**/*.ts", "scripts/**/*.ts"],
   "exclude": ["cf-proxy"]
 }

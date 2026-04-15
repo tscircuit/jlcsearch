@@ -54,9 +54,9 @@ describe("render helpers", () => {
       "https://example.com/ldos/list",
     )
 
+    expect(html).toContain("<details><summary>{&quot;Power Su...</summary>")
     expect(html).toContain(
-      "<details><summary>{&quot;Power Su...</summary>",
+      "Feature&quot;:&quot;Overcurrent Protection(OCP)&quot;",
     )
-    expect(html).toContain("Feature&quot;:&quot;Overcurrent Protection(OCP)&quot;")
   })
 })

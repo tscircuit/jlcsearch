@@ -2,10 +2,9 @@
 -- Note: D1 may have limited FTS5 support. This script is optional.
 
 -- Create FTS5 virtual table for component search
--- This mirrors the main app's components_fts table but only for derived tables
+-- This would only be needed if search moves beyond the materialized search_index table
 
--- For now, skip FTS5 as it may not be needed for the D1 JSON API
--- The main search functionality is on the Fly.io server
+-- For now, skip FTS5 because the Worker already queries the materialized search_index table
 
 -- If FTS5 is needed in the future, uncomment and adapt:
 /*

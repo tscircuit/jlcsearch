@@ -79,9 +79,7 @@ const buildD1NotFoundResponse = (
 const getPreferredContentType = (
   request: Request,
   url: URL,
-):
-  | "application/json"
-  | "text/html; charset=utf-8" => {
+): "application/json" | "text/html; charset=utf-8" => {
   if (
     url.pathname.endsWith(".json") ||
     url.searchParams.get("json") === "true" ||
@@ -171,7 +169,10 @@ export default {
       }
     }
 
-    return buildD1NotFoundResponse(origin, getPreferredContentType(request, url))
+    return buildD1NotFoundResponse(
+      origin,
+      getPreferredContentType(request, url),
+    )
   },
 }
 

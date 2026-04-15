@@ -3,7 +3,7 @@ set -e
 
 # Sync SQLite database to Cloudflare D1
 # By default this uses the local workspace database.
-# Set SOURCE_DB_PATH to override, or set DATABASE_DOWNLOAD_TOKEN to pull from Fly.
+# Set SOURCE_DB_PATH to override the source file.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TEMP_DIR="${SCRIPT_DIR}/../.db-sync-temp"
@@ -29,12 +29,9 @@ if [ -n "${SOURCE_DB_PATH}" ]; then
 elif [ -f "${DEFAULT_LOCAL_DB}" ]; then
   echo "Copying local database from ${DEFAULT_LOCAL_DB}..."
   cp "${DEFAULT_LOCAL_DB}" db.sqlite3
-elif [ -n "${DATABASE_DOWNLOAD_TOKEN}" ]; then
-  echo "Downloading database from Fly..."
-  curl -f -o db.sqlite3 "https://jlcsearch.fly.dev/database/${DATABASE_DOWNLOAD_TOKEN}"
 else
   echo "No database source available."
-  echo "Set SOURCE_DB_PATH, ensure ${DEFAULT_LOCAL_DB} exists, or set DATABASE_DOWNLOAD_TOKEN."
+  echo "Set SOURCE_DB_PATH or ensure ${DEFAULT_LOCAL_DB} exists."
   exit 1
 fi
 

@@ -384,7 +384,9 @@ const getSuggestionListId = (
   paramName: string,
   options: string[],
 ): string =>
-  options.length > 0 ? `${pathname.replaceAll("/", "-")}-${paramName}-options` : ""
+  options.length > 0
+    ? `${pathname.replaceAll("/", "-")}-${paramName}-options`
+    : ""
 
 const renderCustomFilters = (
   pathname: string,
@@ -481,7 +483,9 @@ const renderCustomFilters = (
             ${typeOptions
               .map((option) => {
                 const selected =
-                  (params.microphone_type ?? "all") === option ? " selected" : ""
+                  (params.microphone_type ?? "all") === option
+                    ? " selected"
+                    : ""
                 return `<option value="${escapeHtml(option)}"${selected}>${escapeHtml(option === "all" ? "All" : option)}</option>`
               })
               .join("")}
@@ -615,7 +619,6 @@ posthog.init('phc_htd8AQjSfVEsFCLQMAiUooG4Q0DKBCjqYuQglc9V3Wo', { api_host:'http
             <img src="https://img.shields.io/github/stars/tscircuit/jlcsearch?style=social" alt="GitHub stars" class="inline-block" />
           </a>
           ${pathname.includes("/list") ? `<a href="${escapeHtml((requestUrl || pathname).replace("/list", "/list.json"))}">json</a>` : ""}
-          <a href="https://raw.githubusercontent.com/tscircuit/jlcsearch/refs/heads/main/docs/openapi.json">OpenAPI</a>
           <a href="https://tscircuit.com">tscircuit</a>
         </div>
       </div>

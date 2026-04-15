@@ -19,8 +19,14 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Install dependencies
-        run: bun i
+      - name: Install root dependencies
+        run: bun install
 
-      - name: Run type check
-        run: bunx tsc --noEmit
+      - name: Install worker dependencies
+        run: cd cf-proxy && bun install
+
+      - name: Type check root data pipeline
+        run: bun run typecheck
+
+      - name: Type check worker
+        run: bun run typecheck:cf-proxy

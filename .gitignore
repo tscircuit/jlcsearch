@@ -178,10 +178,8 @@ dist
 .aider*
 db.sqlite3
 .buildtmp
-.winterspec
 db.backup.sqlite3
 .bin
-.fly.toml.swp
 
 
 #MANUAL folder gets created on build, ignore it 

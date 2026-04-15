@@ -1,25 +1,19 @@
 {
   "name": "jlcpcb-parts-engine",
-  "module": "index.ts",
+  "private": true,
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
-    "@flydotio/dockerfile": "^0.5.9",
     "@types/bun": "^1.2.19",
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
-    "better-sqlite3": "^11.7.0",
     "kysely": "^0.28.3",
     "kysely-codegen": "^0.17.0",
-    "winterspec": "^0.0.96"
-  },
-  "peerDependencies": {
     "typescript": "^5.0.0"
   },
   "scripts": {
     "start": "cd cf-proxy && bun run dev",
     "deploy": "cd cf-proxy && bun run deploy",
-    "start:origin": "bun scripts/start-server.ts",
-    "start:legacy": "bun scripts/start-server.ts",
+    "test": "cd cf-proxy && bun run test",
+    "typecheck": "bunx tsc --noEmit",
+    "typecheck:cf-proxy": "cd cf-proxy && bunx tsc --noEmit",
     "generate:db-types": "bunx kysely-codegen --out-file ./lib/db/generated/kysely.ts --singular --dialect bun-sqlite --url ./db.sqlite3",
     "setup": "bun run setup:7z && bun run setup:download-cache-fragments && bun run setup:extract-db && bun run setup:replace-db-file && bun run setup:optimize-db && bun run setup:derived-tables",
     "setup:7z": "bun run scripts/setup-7z.ts",
@@ -28,17 +22,11 @@
     "setup:replace-db-file": "rm -f ./db.sqlite3 && mv ./cache.sqlite3 ./db.sqlite3",
     "setup:optimize-db": "bun run scripts/setup-db-optimizations.ts",
     "setup:derived-tables": "bun run scripts/setup-derived-tables.ts",
-    "setup:download": "curl -o db.sqlite \"https://jlcsearch.fly.dev/database/$DATABASE_DOWNLOAD_TOKEN\"",
-    "generate:openapi": "mkdir -p .tmp && TMPDIR=$(pwd)/.tmp WINTERSPEC_CODEGEN=true bunx winterspec codegen openapi --root . --routes-directory ./routes --platform node --tsconfig tsconfig.json --output docs/openapi.json",
     "format": "biome format --write .",
     "format:check": "biome format ."
   },
   "type": "module",
   "dependencies": {
-    "@tscircuit/footprinter": "^0.0.143",
-    "kysely-bun-sqlite": "^0.3.2",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "redaxios": "^0.5.1"
+    "kysely-bun-sqlite": "^0.3.2"
   }
 }
