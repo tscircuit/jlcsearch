@@ -190,6 +190,7 @@ export interface Component {
   category_id: number;
   datasheet: string;
   description: string;
+  extended_promotional: Generated<number>;
   extra: string | null;
   flag: Generated<number>;
   joints: number;

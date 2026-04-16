@@ -46,6 +46,10 @@ export async function queryComponentCatalog(
     query = query.where("basic", "=", 1)
   }
 
+  if (params.is_extended_promotional === "true") {
+    query = query.where("extended_promotional", "=", 1)
+  }
+
   if (params.is_preferred === "true") {
     query = query.where("preferred", "=", 1)
   }
