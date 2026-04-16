@@ -492,7 +492,7 @@ async function handleD1ComponentsList(
         subcategory: row.subcategory ?? "",
         is_basic: Boolean(row.basic),
         is_preferred: Boolean(row.preferred),
-      is_extended_promotional: Boolean(row.extended_promotional),
+        is_extended_promotional: Boolean(row.extended_promotional),
       })),
     }
 
