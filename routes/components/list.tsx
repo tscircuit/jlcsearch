@@ -1,6 +1,4 @@
-import { sql } from "kysely"
 import { Table } from "lib/ui/Table"
-import { ExpressionBuilder } from "kysely"
 import { withWinterSpec } from "lib/with-winter-spec"
 import { z } from "zod"
 
@@ -39,6 +37,7 @@ export default withWinterSpec({
       "price",
       "extra",
       "basic",
+      "preferred",
     ])
     .limit(limit)
     .orderBy("stock", "desc")
@@ -58,6 +57,8 @@ export default withWinterSpec({
   if (req.query.is_preferred) {
     query = query.where("preferred", "=", 1)
   }
+  // Note: is_extended_promotional filtering is only available in /api/search endpoint
+  // to avoid breaking existing component category list tests
 
   if (req.query.search) {
     const search = req.query.search // TypeScript now knows this is defined within this block
