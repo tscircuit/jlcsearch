@@ -7,6 +7,7 @@ export interface SearchQueryParams {
   limit?: string
   is_basic?: string
   is_preferred?: string
+  is_extended_promotional?: string
 }
 
 interface SearchRow {
@@ -19,6 +20,7 @@ interface SearchRow {
   price1: number | null
   basic: number | null
   preferred: number | null
+  extended_promotional: number | null
 }
 
 const tokenizeSearchTerm = (term: string): string[] =>
@@ -44,6 +46,10 @@ export async function searchIndex(
 
   if (params.is_preferred === "true" || params.is_preferred === "1") {
     conditions.push(sql`preferred = 1`)
+  }
+
+  if (params.is_extended_promotional === "true" || params.is_extended_promotional === "1") {
+    conditions.push(sql`extended_promotional = 1`)
   }
 
   const raw = params.q?.trim()
@@ -90,7 +96,8 @@ export async function searchIndex(
       price,
       price1,
       basic,
-      preferred
+      preferred,
+      extended_promotional
     FROM search_index
     WHERE ${buildWhereClause(conditions)}
     ORDER BY stock DESC
