@@ -5,7 +5,10 @@ import type { KyselyDatabaseInstance } from "../kysely-types"
 export const componentExtendedPromotionalColumn: DbOptimizationSpec = {
   name: "add_components_extended_promotional_column",
   description:
-    "Adds extended_promotional column to components table for tracking extended promotional parts",
+    "Adds extended_promotional column to components table for tracking extended promotional parts. " +
+    "Default 0 is a SQL migration default for existing rows — the actual data is populated " +
+    "by scripts/pull-extended-promotional.ts + scripts/update-extended-promotional.ts, " +
+    "which sources real data from the JLCPCB API. The script ERRORS if no data is found.",
 
   async checkIfAdded(db: KyselyDatabaseInstance) {
     const {

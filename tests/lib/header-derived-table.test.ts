@@ -9,6 +9,7 @@ const makeComponent = (overrides: Record<string, unknown> = {}) =>
     stock: 100,
     basic: 0,
     preferred: 0,
+    extended_promotional: 0,
     price: JSON.stringify([{ qFrom: 1, qTo: null, price: 0.1 }]),
     package: "TH",
     extra: JSON.stringify({
