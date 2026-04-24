@@ -168,6 +168,7 @@ export interface ComponentCatalog {
   price: string | null
   stock: number | null
   subcategory: string | null
+  is_extended_promotional: number | null
 }
 
 export interface Capacitor {
@@ -672,6 +673,7 @@ export interface SearchIndex {
   stock: number | null
   subcategory: string | null
   title: string | null
+  is_extended_promotional: number | null
 }
 
 export interface Resistor {

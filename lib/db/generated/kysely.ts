@@ -812,6 +812,7 @@ export interface VComponent {
   price: string | null;
   stock: number | null;
   subcategory: string | null;
+  is_extended_promotional: number | null;
 }
 
 export interface VoltageRegulator {
