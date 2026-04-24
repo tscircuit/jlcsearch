@@ -7,6 +7,7 @@ export interface ComponentCatalogQueryParams {
   search?: string
   is_basic?: string
   is_preferred?: string
+  is_extended_promotional?: string
 }
 
 export async function queryComponentCatalog(
@@ -25,6 +26,7 @@ export async function queryComponentCatalog(
     stock: number | null
     price: string | null
     extra: string | null
+    is_extended_promotional: number | null
   }>
 > {
   let query = db
@@ -48,6 +50,10 @@ export async function queryComponentCatalog(
 
   if (params.is_preferred === "true") {
     query = query.where("preferred", "=", 1)
+  }
+
+  if (params.is_extended_promotional === "true") {
+    query = query.where("is_extended_promotional", "=", 1)
   }
 
   if (params.search) {
