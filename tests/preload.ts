@@ -1,4 +1,5 @@
 import { afterEach } from "bun:test"
+import { getDbClient } from "lib/db/get-db-client"
 import { setupDerivedTables } from "lib/db/derivedtables/setup-derived-tables"
 
 declare global {
@@ -7,7 +8,13 @@ declare global {
 }
 
 globalThis.deferredCleanupFns ??= []
-globalThis.derivedTablesSetupPromise ??= setupDerivedTables({ populate: false })
+// Pass the shared db client explicitly so setupDerivedTables does not destroy
+// the singleton after creating the derived-table schema (it only destroys when
+// no `db` argument is provided).
+globalThis.derivedTablesSetupPromise ??= setupDerivedTables({
+  populate: false,
+  db: getDbClient(),
+})
 
 await globalThis.derivedTablesSetupPromise
 
