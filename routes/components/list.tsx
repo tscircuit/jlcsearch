@@ -56,9 +56,7 @@ export default withWinterSpec({
   }
 
   if (req.query.is_basic) {
-    query = query.where("basic",
-      "preferred",
-      "is_extended_promotional", "=", 1)
+    query = query.where("basic", "=", 1)
   }
   if (req.query.is_preferred) {
     query = query.where("preferred", "=", 1)
@@ -159,4 +157,3 @@ export default withWinterSpec({
       : "JLCPCB Component Search",
   )
 })
-
