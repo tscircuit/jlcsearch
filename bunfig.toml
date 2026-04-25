@@ -1,7 +1,5 @@
 [test]
 preload = ["./tests/preload.ts"]
-# cf-proxy tests use Cloudflare's vitest-pool-workers and cannot run under bun:test
-exclude = ["cf-proxy/**"]
 
 [install.lockfile]
 save = false
