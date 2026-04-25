@@ -35,4 +35,4 @@ jobs:
       - name: Run tests
         # Exclude cf-proxy/ — those tests use @cloudflare/vitest-pool-workers
         # (Cloudflare Worker runtime) and cannot run under bun:test.
-        run: bun test --ignore cf-proxy
+        run: bun test --path-ignore-patterns=cf-proxy
