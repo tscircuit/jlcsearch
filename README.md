@@ -78,3 +78,11 @@ To recap:
 
 None of this would be possible without [JLCPCB](https://jlcpcb.com) and the work
 [jlcparts](https://github.com/yaqwsx/jlcparts) project.
+
+## 💰 Bounty Contribution
+
+- **Task:** Add `is_extended_promotional ` column to components (from data source)
+- **Reward:** $75
+- **Source:** GitHub-Bounty
+- **Date:** 2026-04-27
+
