@@ -260,6 +260,7 @@ SELECT
   package,
   basic,
   preferred,
+  is_extended_promotional,
   description,
   stock,
   price,
@@ -270,6 +271,7 @@ CREATE INDEX IF NOT EXISTS idx_component_catalog_subcategory ON component_catalo
 CREATE INDEX IF NOT EXISTS idx_component_catalog_package ON component_catalog(package);
 CREATE INDEX IF NOT EXISTS idx_component_catalog_basic ON component_catalog(basic);
 CREATE INDEX IF NOT EXISTS idx_component_catalog_preferred ON component_catalog(preferred);
+CREATE INDEX IF NOT EXISTS idx_component_catalog_is_extended_promotional ON component_catalog(is_extended_promotional);
 CREATE INDEX IF NOT EXISTS idx_component_catalog_stock ON component_catalog(stock DESC);
 COMPONENT_CATALOG_SCHEMA
 
@@ -283,6 +285,7 @@ CREATE TABLE component_catalog (
   package TEXT,
   basic INTEGER,
   preferred INTEGER,
+  is_extended_promotional INTEGER,
   description TEXT,
   stock INTEGER,
   price TEXT,
@@ -292,6 +295,7 @@ CREATE INDEX IF NOT EXISTS idx_component_catalog_subcategory ON component_catalo
 CREATE INDEX IF NOT EXISTS idx_component_catalog_package ON component_catalog(package);
 CREATE INDEX IF NOT EXISTS idx_component_catalog_basic ON component_catalog(basic);
 CREATE INDEX IF NOT EXISTS idx_component_catalog_preferred ON component_catalog(preferred);
+CREATE INDEX IF NOT EXISTS idx_component_catalog_is_extended_promotional ON component_catalog(is_extended_promotional);
 CREATE INDEX IF NOT EXISTS idx_component_catalog_stock ON component_catalog(stock DESC);
 COMPONENT_CATALOG_SCHEMA_EXPORT
 }
@@ -314,6 +318,7 @@ SELECT
   END AS price1,
   basic,
   preferred,
+  is_extended_promotional,
   category,
   subcategory,
   CASE
@@ -351,6 +356,7 @@ CREATE INDEX IF NOT EXISTS idx_search_index_lcsc ON search_index(lcsc);
 CREATE INDEX IF NOT EXISTS idx_search_index_package ON search_index(package);
 CREATE INDEX IF NOT EXISTS idx_search_index_basic ON search_index(basic);
 CREATE INDEX IF NOT EXISTS idx_search_index_preferred ON search_index(preferred);
+CREATE INDEX IF NOT EXISTS idx_search_index_is_extended_promotional ON search_index(is_extended_promotional);
 SEARCH_INDEX_SCHEMA
 
   cat > search_index_schema.sql <<'SEARCH_INDEX_SCHEMA_EXPORT'
@@ -365,6 +371,7 @@ CREATE TABLE search_index (
   price1 REAL,
   basic INTEGER,
   preferred INTEGER,
+  is_extended_promotional INTEGER,
   category TEXT,
   subcategory TEXT,
   manufacturer_name TEXT,
@@ -378,6 +385,7 @@ CREATE INDEX IF NOT EXISTS idx_search_index_lcsc ON search_index(lcsc);
 CREATE INDEX IF NOT EXISTS idx_search_index_package ON search_index(package);
 CREATE INDEX IF NOT EXISTS idx_search_index_basic ON search_index(basic);
 CREATE INDEX IF NOT EXISTS idx_search_index_preferred ON search_index(preferred);
+CREATE INDEX IF NOT EXISTS idx_search_index_is_extended_promotional ON search_index(is_extended_promotional);
 SEARCH_INDEX_SCHEMA_EXPORT
 }
 
