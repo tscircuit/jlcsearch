@@ -1,3 +1,5 @@
+// File: lib/db/optimizations/component-extended-promotional-column.ts
+
 export const componentExtendedPromotionalColumn: DbOptimizationSpec = {
   name: "add_components_is_extended_promotional_column",
   description:
@@ -9,6 +11,11 @@ export const componentExtendedPromotionalColumn: DbOptimizationSpec = {
     } = await sql<any>`
       SELECT * FROM components LIMIT 1
     `.execute(db)
+
+    // Add null check
+    if (!ex) {
+      return false
+    }
 
     return "is_extended_promotional" in ex
   },
