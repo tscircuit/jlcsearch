@@ -23,7 +23,6 @@ export const GET = async () => {
         SELECT * FROM components WHERE id = ${component.id} LIMIT 1
       `.execute(db)
 
-      // Add null check
       if (!ex) {
         return false
       }
