@@ -27,7 +27,11 @@ export const GET = async () => {
         return false
       }
 
-      return "is_extended_promotional" in ex
+      if (!("is_extended_promotional" in ex)) {
+        return false
+      }
+
+      return true
     })
   )
 
