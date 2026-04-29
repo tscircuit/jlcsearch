@@ -23,15 +23,12 @@ export const GET = async () => {
         SELECT * FROM components WHERE id = ${component.id} LIMIT 1
       `.execute(db)
 
+      // Add null check
       if (!ex) {
         return false
       }
 
-      if (!("is_extended_promotional" in ex)) {
-        return false
-      }
-
-      return true
+      return "is_extended_promotional" in ex
     })
   )
 
