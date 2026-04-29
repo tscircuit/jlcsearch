@@ -5,6 +5,7 @@ import { componentInStockColumn } from "lib/db/optimizations/component-in-stock-
 import { componentBasicIndex } from "lib/db/optimizations/component-basic-index"
 import { removeStaleComponents } from "lib/db/optimizations/remove-stale-components"
 import { db } from "lib/db/db"
+import { sql } from "kysely-sql-tag"
 import { json } from "itty-router"
 
 export const GET = async () => {
