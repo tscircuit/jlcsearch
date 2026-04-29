@@ -1,3 +1,5 @@
+// File: routes/components/list.json.tsx
+
 import { componentExtendedPromotionalColumn } from "lib/db/optimizations/component-extended-promotional-column"
 import { componentInStockColumn } from "lib/db/optimizations/component-in-stock-column"
 import { componentBasicIndex } from "lib/db/optimizations/component-basic-index"
@@ -12,5 +14,21 @@ export const GET = async () => {
     .orderBy("id", "asc")
     .execute()
 
-  return json({ components })
+  const hasExtendedPromotionalColumn = await Promise.all(
+    components.map(async (component) => {
+      const {
+        rows: [ex],
+      } = await sql<any>`
+        SELECT * FROM components WHERE id = ${component.id} LIMIT 1
+      `.execute(db)
+
+      if (!ex) {
+        return false
+      }
+
+      return "is_extended_promotional" in ex
+    })
+  )
+
+  return json({ components, hasExtendedPromotionalColumn })
 }
