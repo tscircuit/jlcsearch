@@ -1,4 +1,9 @@
 import { sql } from "kysely"
+import {
+  buildSearchTokenGroups,
+  type SearchTokenGroup,
+  tokenizeSearchTerm,
+} from "lib/util/search-token-groups"
 import { withWinterSpec } from "lib/with-winter-spec"
 import { z } from "zod"
 
@@ -16,10 +21,6 @@ const escapeFts5SearchTerm = (term: string): string => {
   return `"${term.replace(/"/g, '""')}"`
 }
 
-const tokenizeSearchTerm = (term: string): string[] => {
-  return term.toLowerCase().match(/[a-z0-9]+/g) ?? []
-}
-
 const broadSearchTokens = new Set([
   "usb",
   "type",
@@ -31,6 +32,13 @@ const broadSearchTokens = new Set([
   "mount",
   "chip",
 ])
+
+const ftsGroupQuery = (group: SearchTokenGroup): string => {
+  const tokenQueries = group.map((token) => `${escapeFts5SearchTerm(token)}*`)
+  return tokenQueries.length === 1
+    ? tokenQueries[0]
+    : `(${tokenQueries.join(" OR ")})`
+}
 
 export default withWinterSpec({
   auth: "none",
@@ -81,55 +89,47 @@ export default withWinterSpec({
       }
     } else {
       const searchTokens = tokenizeSearchTerm(searchTerm)
-      const tokensForFtsRaw =
-        searchTokens.length > 0 ? searchTokens : [searchTerm]
-      const filteredFtsTokens = tokensForFtsRaw.filter(
-        (token) => token.length > 1,
+      const searchTokenGroups = buildSearchTokenGroups(searchTerm)
+      const tokenGroupsForFtsRaw =
+        searchTokenGroups.length > 0 ? searchTokenGroups : [[searchTerm]]
+      const filteredFtsGroups = tokenGroupsForFtsRaw
+        .map((group) => group.filter((token) => token.length > 1))
+        .filter((group) => group.length > 0)
+      const focusedFtsGroups = filteredFtsGroups.filter(
+        (group) => !group.every((token) => broadSearchTokens.has(token)),
       )
-      const focusedFtsTokens = filteredFtsTokens.filter(
-        (token) => !broadSearchTokens.has(token),
-      )
-      const qualifierFtsTokens = filteredFtsTokens.filter((token) =>
-        broadSearchTokens.has(token),
+      const qualifierFtsGroups = filteredFtsGroups.filter((group) =>
+        group.every((token) => broadSearchTokens.has(token)),
       )
       const tokenQueries: string[] = []
 
-      if (focusedFtsTokens.length > 0) {
-        tokenQueries.push(
-          ...focusedFtsTokens.map((token) => {
-            const quotedToken = escapeFts5SearchTerm(token)
-            return `${quotedToken}*`
-          }),
-        )
+      if (focusedFtsGroups.length > 0) {
+        tokenQueries.push(...focusedFtsGroups.map(ftsGroupQuery))
 
-        if (qualifierFtsTokens.length > 0) {
+        if (qualifierFtsGroups.length > 0) {
           tokenQueries.push(
-            `(${qualifierFtsTokens
-              .map((token) => `${escapeFts5SearchTerm(token)}*`)
-              .join(" OR ")})`,
+            `(${qualifierFtsGroups.map(ftsGroupQuery).join(" OR ")})`,
           )
         }
       } else {
         tokenQueries.push(
-          ...(filteredFtsTokens.length > 0
-            ? filteredFtsTokens
-            : tokensForFtsRaw
-          ).map((token) => {
-            const quotedToken = escapeFts5SearchTerm(token)
-            return `${quotedToken}*`
-          }),
+          ...(filteredFtsGroups.length > 0
+            ? filteredFtsGroups
+            : tokenGroupsForFtsRaw
+          ).map(ftsGroupQuery),
         )
       }
 
       const combinedFtsQuery = tokenQueries.join(" AND ")
 
-      const tokensForLike =
-        searchTokens.length > 0 ? searchTokens : [searchTerm]
-      const filteredLikeTokens = tokensForLike.filter(
-        (token) => token.length > 1,
-      )
-      fallbackLikeTokens =
-        filteredLikeTokens.length > 0 ? filteredLikeTokens : tokensForLike
+      const tokenGroupsForLike =
+        searchTokenGroups.length > 0 ? searchTokenGroups : [[searchTerm]]
+      const filteredLikeGroups = tokenGroupsForLike
+        .map((group) => group.filter((token) => token.length > 1))
+        .filter((group) => group.length > 0)
+      fallbackLikeTokens = (
+        filteredLikeGroups.length > 0 ? filteredLikeGroups : tokenGroupsForLike
+      ).map((group) => group.join("\0"))
 
       query = query.where(
         sql`lcsc`,
@@ -160,15 +160,19 @@ export default withWinterSpec({
       )
     }
 
-    for (const token of fallbackLikeTokens) {
-      const pattern = `%${token}%`
-      fallbackQuery = fallbackQuery.where(
-        sql<boolean>`(
+    for (const groupValue of fallbackLikeTokens) {
+      const group = groupValue.split("\0")
+      const groupConditions = group.map((token) => {
+        const pattern = `%${token}%`
+        return sql<boolean>`(
           LOWER(COALESCE(mfr, '')) LIKE ${pattern}
           OR LOWER(COALESCE(description, '')) LIKE ${pattern}
           OR LOWER(COALESCE(extra, '')) LIKE ${pattern}
           OR LOWER(COALESCE(package, '')) LIKE ${pattern}
-        )`,
+        )`
+      })
+      fallbackQuery = fallbackQuery.where(
+        sql<boolean>`(${sql.join(groupConditions, sql` OR `)})`,
       )
     }
 

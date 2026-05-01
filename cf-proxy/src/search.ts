@@ -1,5 +1,6 @@
 import { sql, type Kysely, type RawBuilder } from "kysely"
 import type { DB } from "./db/types"
+import { buildSearchTokenGroups } from "./search-query"
 
 export interface SearchQueryParams {
   q?: string
@@ -23,9 +24,6 @@ interface SearchRow {
   category: string | null
   subcategory: string | null
 }
-
-const tokenizeSearchTerm = (term: string): string[] =>
-  term.toLowerCase().match(/[a-z0-9]+/g) ?? []
 
 const buildWhereClause = (conditions: RawBuilder<unknown>[]) =>
   conditions.length > 0 ? sql.join(conditions, sql` AND `) : sql`1 = 1`
@@ -54,14 +52,29 @@ async function isFtsSearchReady(db: Kysely<DB>): Promise<boolean> {
   }
 }
 
-const buildTokenConditions = (
-  tokens: string[],
+const getSearchTokenGroups = (raw: string): string[][] => {
+  const tokenGroups = buildSearchTokenGroups(raw)
+  const searchTokenGroups =
+    tokenGroups.length > 0 ? tokenGroups : [[raw.toLowerCase()]]
+  const filteredTokenGroups = searchTokenGroups
+    .map((group) => group.filter((token) => token.length > 1))
+    .filter((group) => group.length > 0)
+
+  return filteredTokenGroups.length > 0
+    ? filteredTokenGroups
+    : searchTokenGroups
+}
+
+const buildTokenGroupConditions = (
+  tokenGroups: string[][],
   column: RawBuilder<unknown>,
 ): RawBuilder<unknown>[] =>
-  tokens.map((token) => {
+  tokenGroups.map((group) => {
     const alternatives = Array.from(
       new Set(
-        token.endsWith("mhz") ? [token, token.replace(/mhz$/, "m")] : [token],
+        group.flatMap((token) =>
+          token.endsWith("mhz") ? [token, token.replace(/mhz$/, "m")] : [token],
+        ),
       ),
     )
 
@@ -71,13 +84,6 @@ const buildTokenConditions = (
 
     return sql`(${sql.join(tokenConditions, sql` OR `)})`
   })
-
-export const getSearchTokens = (raw: string): string[] => {
-  const tokens = tokenizeSearchTerm(raw)
-  const searchTokens = tokens.length > 0 ? tokens : [raw.toLowerCase()]
-  const filteredTokens = searchTokens.filter((token) => token.length > 1)
-  return filteredTokens.length > 0 ? filteredTokens : searchTokens
-}
 
 export async function searchIndex(
   db: Kysely<DB>,
@@ -114,12 +120,18 @@ export async function searchIndex(
         conditions.push(sql`search_index.lcsc = ${lcsc}`)
       }
     } else {
-      const likeTokens = getSearchTokens(raw)
+      const likeTokenGroups = getSearchTokenGroups(raw)
       fallbackSearchConditions.push(
-        ...buildTokenConditions(likeTokens, sql`search_index.search_text`),
+        ...buildTokenGroupConditions(
+          likeTokenGroups,
+          sql`search_index.search_text`,
+        ),
       )
       ftsSearchConditions.push(
-        ...buildTokenConditions(likeTokens, sql`search_index_fts.search_text`),
+        ...buildTokenGroupConditions(
+          likeTokenGroups,
+          sql`search_index_fts.search_text`,
+        ),
       )
     }
   }

@@ -1,6 +1,7 @@
 import { sql } from "kysely"
 import { Table } from "lib/ui/Table"
 import { ExpressionBuilder } from "kysely"
+import { buildSearchTokenGroups } from "lib/util/search-token-groups"
 import { withWinterSpec } from "lib/with-winter-spec"
 import { z } from "zod"
 
@@ -11,6 +12,17 @@ const extractSmallQuantityPrice = (price: string | null) => {
   } catch (e) {
     return ""
   }
+}
+
+const escapeFts5SearchTerm = (term: string): string => {
+  return `"${term.replace(/"/g, '""')}"`
+}
+
+const ftsGroupQuery = (group: string[]): string => {
+  const tokenQueries = group.map((token) => `${escapeFts5SearchTerm(token)}*`)
+  return tokenQueries.length === 1
+    ? tokenQueries[0]
+    : `(${tokenQueries.join(" OR ")})`
 }
 
 export default withWinterSpec({
@@ -60,18 +72,35 @@ export default withWinterSpec({
   }
 
   if (req.query.search) {
-    const search = req.query.search // TypeScript now knows this is defined within this block
-    const searchPattern = `%${search}%`
-    query = query.where((eb) =>
-      eb("description", "like", searchPattern)
-        .or("mfr", "like", searchPattern)
-        // For lcsc, we'll search it as a number if it's numeric, otherwise skip it
-        .or(
-          search.match(/^\d+$/)
-            ? eb("lcsc", "=", parseInt(search))
-            : eb("description", "like", searchPattern), // Fallback to description if not numeric
-        ),
-    )
+    const search = req.query.search
+
+    if (search.match(/^\d+$/)) {
+      query = query.where("lcsc", "=", parseInt(search))
+    } else {
+      const tokenGroups = buildSearchTokenGroups(search)
+      const searchTokenGroups =
+        tokenGroups.length > 0 ? tokenGroups : [[search.toLowerCase()]]
+      const filteredTokenGroups = searchTokenGroups
+        .map((group) => group.filter((token) => token.length > 1))
+        .filter((group) => group.length > 0)
+      const likeTokenGroups =
+        filteredTokenGroups.length > 0 ? filteredTokenGroups : searchTokenGroups
+
+      query = query.where(
+        sql`lcsc`,
+        "in",
+        sql`(SELECT CAST(lcsc AS INTEGER) FROM components_fts WHERE components_fts MATCH ${likeTokenGroups
+          .map(ftsGroupQuery)
+          .join(" AND ")})`,
+      )
+
+      const packageTokens = buildSearchTokenGroups(search)
+        .flat()
+        .filter((token) => /^\d{4}$/.test(token))
+      if (packageTokens.length > 0) {
+        query = query.where("package", "in", packageTokens)
+      }
+    }
   }
 
   const fullComponents = await query.execute()
