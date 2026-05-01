@@ -13,6 +13,7 @@ SELECT
     ELSE NULL
   END AS price1,
   basic,
+  extended_promotional,
   preferred,
   category,
   subcategory,
@@ -50,4 +51,5 @@ CREATE INDEX IF NOT EXISTS idx_search_index_stock ON search_index(stock DESC);
 CREATE INDEX IF NOT EXISTS idx_search_index_lcsc ON search_index(lcsc);
 CREATE INDEX IF NOT EXISTS idx_search_index_package ON search_index(package);
 CREATE INDEX IF NOT EXISTS idx_search_index_basic ON search_index(basic);
+CREATE INDEX IF NOT EXISTS idx_search_index_extended_promotional ON search_index(extended_promotional);
 CREATE INDEX IF NOT EXISTS idx_search_index_preferred ON search_index(preferred);

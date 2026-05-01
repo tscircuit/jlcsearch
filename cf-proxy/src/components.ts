@@ -6,6 +6,7 @@ export interface ComponentCatalogQueryParams {
   package?: string
   search?: string
   is_basic?: string
+  is_extended_promotional?: string
   is_preferred?: string
 }
 
@@ -44,6 +45,10 @@ export async function queryComponentCatalog(
 
   if (params.is_basic === "true") {
     query = query.where("basic", "=", 1)
+  }
+
+  if (params.is_extended_promotional === "true") {
+    query = query.where("extended_promotional", "=", 1)
   }
 
   if (params.is_preferred === "true") {
