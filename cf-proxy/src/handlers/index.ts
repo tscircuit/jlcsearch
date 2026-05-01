@@ -163,6 +163,10 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
     filters: {
       package: { field: "package", type: "string" },
       is_basic: { field: "is_basic", type: "boolean" },
+      is_extended_promotional: {
+        field: "is_extended_promotional",
+        type: "boolean",
+      },
       is_preferred: { field: "is_preferred", type: "boolean" },
       resistance: { field: "resistance", type: "number_tolerance" },
     },
@@ -171,6 +175,10 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
     filters: {
       package: { field: "package", type: "string" },
       is_basic: { field: "is_basic", type: "boolean" },
+      is_extended_promotional: {
+        field: "is_extended_promotional",
+        type: "boolean",
+      },
       is_preferred: { field: "is_preferred", type: "boolean" },
       capacitance: { field: "capacitance_farads", type: "number_tolerance" },
     },
