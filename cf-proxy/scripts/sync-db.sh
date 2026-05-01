@@ -13,6 +13,7 @@ DB_NAME="${DB_NAME:-jlcsearch}"
 BATCH_ROWS="${BATCH_ROWS:-250}"
 COMPONENT_CATALOG_BATCH_ROWS="${COMPONENT_CATALOG_BATCH_ROWS:-${BATCH_ROWS}}"
 SEARCH_INDEX_BATCH_ROWS="${SEARCH_INDEX_BATCH_ROWS:-${BATCH_ROWS}}"
+FTS_BATCH_ROWS="${FTS_BATCH_ROWS:-25000}"
 SYNC_DERIVED_TABLES="${SYNC_DERIVED_TABLES:-1}"
 SYNC_COMPONENT_CATALOG="${SYNC_COMPONENT_CATALOG:-0}"
 SYNC_SEARCH_INDEX="${SYNC_SEARCH_INDEX:-0}"
@@ -68,6 +69,41 @@ fi
 
 run_wrangler() {
   "${WRANGLER_CMD[@]}" "$@"
+}
+
+rebuild_remote_search_fts_index() {
+  local row_count start end
+
+  row_count="$(sqlite3 db.sqlite3 "SELECT MAX(rowid) FROM search_index;")"
+  if [[ -z "${row_count}" || "${row_count}" == "0" ]]; then
+    echo "Skipping FTS5 setup: search_index is empty."
+    return
+  fi
+
+  echo "Initializing search_index_fts..."
+  run_wrangler d1 execute "${DB_NAME}" --remote --file="${SCRIPT_DIR}/setup-fts5.sql"
+
+  for ((start=1; start<=row_count; start+=FTS_BATCH_ROWS)); do
+    end=$((start + FTS_BATCH_ROWS - 1))
+    if (( end > row_count )); then
+      end=${row_count}
+    fi
+
+    echo "  importing FTS rowids ${start}-${end}"
+    run_wrangler d1 execute "${DB_NAME}" --remote --command "
+      INSERT INTO search_index_fts(rowid, search_text)
+      SELECT rowid, search_text
+      FROM search_index
+      WHERE rowid BETWEEN ${start} AND ${end}
+        AND search_text IS NOT NULL
+        AND search_text != '';
+    "
+  done
+
+  run_wrangler d1 execute "${DB_NAME}" --remote --command "
+    INSERT INTO search_index_fts(search_index_fts) VALUES('optimize');
+    UPDATE search_index_fts_meta SET value = '1' WHERE key = 'ready';
+  "
 }
 
 cleanup() {
@@ -349,8 +385,12 @@ WHERE lcsc IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_search_index_stock ON search_index(stock DESC);
 CREATE INDEX IF NOT EXISTS idx_search_index_lcsc ON search_index(lcsc);
 CREATE INDEX IF NOT EXISTS idx_search_index_package ON search_index(package);
+CREATE INDEX IF NOT EXISTS idx_search_index_package_stock ON search_index(package, stock DESC);
+CREATE INDEX IF NOT EXISTS idx_search_index_subcategory_stock ON search_index(subcategory, stock DESC);
 CREATE INDEX IF NOT EXISTS idx_search_index_basic ON search_index(basic);
+CREATE INDEX IF NOT EXISTS idx_search_index_basic_stock ON search_index(basic, stock DESC);
 CREATE INDEX IF NOT EXISTS idx_search_index_preferred ON search_index(preferred);
+CREATE INDEX IF NOT EXISTS idx_search_index_preferred_stock ON search_index(preferred, stock DESC);
 SEARCH_INDEX_SCHEMA
 
   cat > search_index_schema.sql <<'SEARCH_INDEX_SCHEMA_EXPORT'
@@ -376,8 +416,12 @@ CREATE TABLE search_index (
 CREATE INDEX IF NOT EXISTS idx_search_index_stock ON search_index(stock DESC);
 CREATE INDEX IF NOT EXISTS idx_search_index_lcsc ON search_index(lcsc);
 CREATE INDEX IF NOT EXISTS idx_search_index_package ON search_index(package);
+CREATE INDEX IF NOT EXISTS idx_search_index_package_stock ON search_index(package, stock DESC);
+CREATE INDEX IF NOT EXISTS idx_search_index_subcategory_stock ON search_index(subcategory, stock DESC);
 CREATE INDEX IF NOT EXISTS idx_search_index_basic ON search_index(basic);
+CREATE INDEX IF NOT EXISTS idx_search_index_basic_stock ON search_index(basic, stock DESC);
 CREATE INDEX IF NOT EXISTS idx_search_index_preferred ON search_index(preferred);
+CREATE INDEX IF NOT EXISTS idx_search_index_preferred_stock ON search_index(preferred, stock DESC);
 SEARCH_INDEX_SCHEMA_EXPORT
 }
 
@@ -428,7 +472,7 @@ main() {
 
   if [[ -f "${SCRIPT_DIR}/setup-fts5.sql" ]]; then
     echo "Setting up FTS5..."
-    run_wrangler d1 execute "${DB_NAME}" --remote --file="${SCRIPT_DIR}/setup-fts5.sql"
+    rebuild_remote_search_fts_index
   fi
 
   echo "Sync complete!"

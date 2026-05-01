@@ -1,5 +1,6 @@
 import type { Kysely } from "kysely"
 import type { DB } from "./db/types"
+import { searchIndex } from "./search"
 
 export interface ComponentCatalogQueryParams {
   subcategory_name?: string
@@ -27,39 +28,17 @@ export async function queryComponentCatalog(
     extra: string | null
   }>
 > {
-  let query = db
-    .selectFrom("component_catalog")
-    .selectAll()
-    .where("stock", ">", 0)
-    .orderBy("stock", "desc")
-    .limit(100)
+  const rows = await searchIndex(db, {
+    q: params.search,
+    package: params.package,
+    subcategory_name: params.subcategory_name,
+    is_basic: params.is_basic,
+    is_preferred: params.is_preferred,
+    limit: "100",
+  })
 
-  if (params.subcategory_name) {
-    query = query.where("subcategory", "=", params.subcategory_name)
-  }
-
-  if (params.package) {
-    query = query.where("package", "=", params.package)
-  }
-
-  if (params.is_basic === "true") {
-    query = query.where("basic", "=", 1)
-  }
-
-  if (params.is_preferred === "true") {
-    query = query.where("preferred", "=", 1)
-  }
-
-  if (params.search) {
-    const raw = params.search.trim()
-    const pattern = `%${raw.toLowerCase()}%`
-
-    query = query.where((eb) =>
-      eb("description", "like", pattern)
-        .or("mfr", "like", pattern)
-        .or("package", "like", pattern),
-    )
-  }
-
-  return await query.execute()
+  return rows.map((row) => ({
+    ...row,
+    extra: null,
+  }))
 }
