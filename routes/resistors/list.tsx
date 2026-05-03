@@ -12,6 +12,7 @@ export default withWinterSpec({
     json: z.boolean().optional(),
     package: z.string().optional(),
     is_basic: z.boolean().optional(),
+    is_extended_promotional: z.boolean().optional(),
     is_preferred: z.boolean().optional(),
     resistance: z
       .string()
@@ -31,6 +32,7 @@ export default withWinterSpec({
           mfr: z.string(),
           package: z.string(),
           is_basic: z.boolean(),
+          is_extended_promotional: z.boolean(),
           is_preferred: z.boolean(),
           resistance: z.number(),
           tolerance_fraction: z.number().optional(),
@@ -58,6 +60,9 @@ export default withWinterSpec({
 
   if (params.is_basic) {
     query = query.where("is_basic", "=", 1)
+  }
+  if (params.is_extended_promotional) {
+    query = query.where("is_extended_promotional", "=", 1)
   }
   if (params.is_preferred) {
     query = query.where("is_preferred", "=", 1)
@@ -87,6 +92,7 @@ export default withWinterSpec({
           mfr: r.mfr ?? "",
           package: r.package ?? "",
           is_basic: Boolean(r.is_basic),
+          is_extended_promotional: Boolean((r as any).is_extended_promotional),
           is_preferred: Boolean(r.is_preferred),
           resistance: r.resistance ?? 0,
           tolerance_fraction: r.tolerance_fraction ?? undefined,
@@ -133,6 +139,18 @@ export default withWinterSpec({
 
         <div>
           <label>
+            Extended Promotional:
+            <input
+              type="checkbox"
+              name="is_extended_promotional"
+              value="true"
+              checked={params.is_extended_promotional}
+            />
+          </label>
+        </div>
+
+        <div>
+          <label>
             Preferred Part:
             <input
               type="checkbox"
@@ -162,6 +180,9 @@ export default withWinterSpec({
           mfr: r.mfr,
           package: r.package,
           is_basic: r.is_basic ? "✓" : "",
+          is_extended_promotional: (r as any).is_extended_promotional
+            ? "✓"
+            : "",
           is_preferred: r.is_preferred ? "✓" : "",
           resistance: (
             <span className="tabular-nums">{formatSiUnit(r.resistance)}Ω</span>
