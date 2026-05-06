@@ -205,6 +205,7 @@ export interface Component {
   mfr: string;
   package: string;
   preferred: Generated<number>;
+  extended_promotional: Generated<number>;
   price: string;
   stock: number;
 }

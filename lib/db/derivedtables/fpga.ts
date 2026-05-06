@@ -100,7 +100,7 @@ export const fpgaTableSpec: DerivedTableSpec<FPGA> = {
           in_stock: Boolean((c.stock ?? 0) > 0),
           is_basic: Boolean(c.basic),
           is_preferred: Boolean(c.preferred),
-        is_extended_promotional: Boolean(c.extended_promotional),
+          is_extended_promotional: Boolean(c.extended_promotional),
           package: extra?.package ?? c.package ?? "",
           type: attrs["Type"] ?? null,
           logic_array_blocks: parseNumericValue(attrs["Logic Array Blocks"]),
