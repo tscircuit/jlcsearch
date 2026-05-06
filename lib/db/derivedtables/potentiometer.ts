@@ -68,7 +68,7 @@ export const potentiometerTableSpec: DerivedTableSpec<Potentiometer> = {
         in_stock: c.stock > 0,
         is_basic: Boolean(c.basic),
         is_preferred: Boolean(c.preferred),
-          is_extended_promotional: Boolean(c.extended_promotional),
+        is_extended_promotional: Boolean(c.extended_promotional),
         max_resistance: maxResistance,
         pin_variant: pinVariant,
         package: c.package || "",

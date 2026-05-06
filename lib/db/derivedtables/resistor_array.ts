@@ -15,6 +15,7 @@ export interface ResistorArray extends BaseComponent {
   is_surface_mount: boolean
   is_basic: boolean
   is_preferred: boolean
+  is_extended_promotional: boolean
 }
 
 const computeTopology = (
@@ -125,6 +126,7 @@ export const resistorArrayTableSpec: DerivedTableSpec<ResistorArray> = {
         in_stock: component.stock > 0,
         is_basic: Boolean(component.basic),
         is_preferred: Boolean(component.preferred),
+        is_extended_promotional: Boolean(component.extended_promotional),
         package: component.package ?? "",
         resistance,
         tolerance_fraction: tolerance,
