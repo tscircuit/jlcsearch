@@ -1,5 +1,6 @@
 [test]
 preload = ["./tests/preload.ts"]
+exclude = ["cf-proxy/**"]
 
 [install.lockfile]
 save = false
