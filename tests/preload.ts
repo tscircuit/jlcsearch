@@ -1,6 +1,7 @@
 import { afterEach } from "bun:test"
 import { setupDerivedTables } from "lib/db/derivedtables/setup-derived-tables"
 import { setupTestTables } from "lib/db/setup-test-tables"
+import { getDbClient } from "lib/db/get-db-client"
 
 declare global {
   var deferredCleanupFns: Array<() => void | Promise<void>>
@@ -8,9 +9,11 @@ declare global {
 }
 
 globalThis.deferredCleanupFns ??= []
+// Pass the singleton explicitly so setupDerivedTables doesn't destroy it
+const sharedDb = getDbClient()
 globalThis.derivedTablesSetupPromise ??= Promise.all([
-  setupDerivedTables({ populate: false }),
-  setupTestTables(),
+  setupDerivedTables({ populate: false, db: sharedDb }),
+  setupTestTables(sharedDb),
 ]).then(() => undefined)
 
 await globalThis.derivedTablesSetupPromise
