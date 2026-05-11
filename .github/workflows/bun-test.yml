@@ -27,6 +27,8 @@ jobs:
         with:
           path: ./db.sqlite3
           key: db-sqlite3-${{ hashFiles('scripts/setup-*.ts') }}
+          restore-keys: |
+            db-sqlite3-
 
       - name: Run setup if cache miss
         if: steps.cache-setup.outputs.cache-hit != 'true'
