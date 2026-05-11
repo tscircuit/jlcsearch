@@ -9,12 +9,12 @@ export const componentExtendedPromotionalColumn: DbOptimizationSpec = {
 
   async checkIfAdded(db: KyselyDatabaseInstance) {
     const {
-      rows: [ex],
+      rows: [colCheck],
     } = await sql<any>`
-      SELECT * FROM components LIMIT 1
+      SELECT COUNT(*) as cnt FROM pragma_table_info('components') WHERE name='is_extended_promotional'
     `.execute(db)
 
-    return "is_extended_promotional" in ex
+    return colCheck.cnt > 0
   },
 
   async execute(db: KyselyDatabaseInstance) {
