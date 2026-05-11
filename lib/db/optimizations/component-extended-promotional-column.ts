@@ -11,7 +11,7 @@ export const componentExtendedPromotionalColumn: DbOptimizationSpec = {
     const {
       rows: [colCheck],
     } = await sql<any>`
-      SELECT COUNT(*) as cnt FROM pragma_table_info('components') WHERE name='is_extended_promotional'
+      SELECT COUNT(*) as cnt FROM pragma_table_xinfo('components') WHERE name='is_extended_promotional'
     `.execute(db)
 
     return colCheck.cnt > 0
