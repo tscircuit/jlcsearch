@@ -7,10 +7,10 @@ const BINARY_NAME = "7zz"
 
 // Map of platform-arch combinations to download URLs
 const BINARY_URLS: Record<string, string> = {
-  "linux-x64": "https://7-zip.org/a/7z2409-linux-x64.tar.xz",
-  "linux-arm64": "https://7-zip.org/a/7z2409-linux-arm64.tar.xz",
-  "darwin-x64": "https://7-zip.org/a/7z2409-mac.tar.xz",
-  "darwin-arm64": "https://7-zip.org/a/7z2409-mac.tar.xz",
+  "linux-x64": "https://7-zip.org/a/7z2600-linux-x64.tar.xz",
+  "linux-arm64": "https://7-zip.org/a/7z2600-linux-arm64.tar.xz",
+  "darwin-x64": "https://7-zip.org/a/7z2600-mac.tar.xz",
+  "darwin-arm64": "https://7-zip.org/a/7z2600-mac.tar.xz",
 }
 
 async function downloadAndExtract7z() {
