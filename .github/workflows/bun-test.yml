@@ -30,6 +30,8 @@ jobs:
 
       - name: Run setup if cache miss
         if: steps.cache-setup.outputs.cache-hit != 'true'
+        env:
+          JLCSEARCH_SKIP_VACUUM: "true"
         run: bun run setup
 
       - name: Run tests
