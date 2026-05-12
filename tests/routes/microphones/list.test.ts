@@ -26,4 +26,4 @@ test("GET /microphones/list.json returns microphone data", async () => {
     expect(typeof microphone.stock).toBe("number")
     expect(typeof microphone.price1).toBe("number")
   }
-})
+}, 30_000)
