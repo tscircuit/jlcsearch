@@ -35,6 +35,7 @@ export default withWinterSpec({
     search: z.string().optional(),
     is_basic: z.boolean().optional(),
     is_preferred: z.boolean().optional(),
+    is_extended_promotional: z.boolean().optional(),
   }),
   jsonResponse: z.any(),
 } as const)(async (req, ctx) => {
@@ -51,6 +52,7 @@ export default withWinterSpec({
       "price",
       "extra",
       "basic",
+      "preferred",
     ])
     .limit(limit)
     .orderBy("stock", "desc")
@@ -69,6 +71,9 @@ export default withWinterSpec({
   }
   if (req.query.is_preferred) {
     query = query.where("preferred", "=", 1)
+  }
+  if (req.query.is_extended_promotional) {
+    query = query.where("preferred", "=", 1).where("basic", "=", 0)
   }
 
   if (req.query.search) {
@@ -105,12 +110,18 @@ export default withWinterSpec({
 
   const fullComponents = await query.execute()
 
-  const components = fullComponents.map((c: any) => ({
+  const fullComponentsWithExtended = fullComponents.map((c: any) => ({
+    ...c,
+    is_extended_promotional: Boolean(c.preferred) && !Boolean(c.basic),
+  }))
+
+  const components = fullComponentsWithExtended.map((c: any) => ({
     lcsc: c.lcsc,
     mfr: c.mfr,
     package: c.package,
     is_basic: Boolean(c.basic),
     is_preferred: Boolean(c.preferred),
+    is_extended_promotional: c.is_extended_promotional,
     description: c.description,
     stock: c.stock,
     price: extractSmallQuantityPrice(c.price),
@@ -118,7 +129,7 @@ export default withWinterSpec({
 
   if (ctx.isApiRequest) {
     return ctx.json({
-      components: req.query.full ? fullComponents : components,
+      components: req.query.full ? fullComponentsWithExtended : components,
     })
   }
 
@@ -155,13 +166,24 @@ export default withWinterSpec({
             />
           </label>
         </div>
+        <div>
+          <label>
+            Extended Promotional:
+            <input
+              type="checkbox"
+              name="is_extended_promotional"
+              value="true"
+              checked={req.query.is_extended_promotional}
+            />
+          </label>
+        </div>
         <button type="submit">Filter</button>
       </form>
 
       {req.query.subcategory_name && (
         <div>Filtering by subcategory: {req.query.subcategory_name}</div>
       )}
-      <Table rows={req.query.full ? fullComponents : components} />
+      <Table rows={req.query.full ? fullComponentsWithExtended : components} />
     </div>,
     req.query.search
       ? `${req.query.search} - JLCPCB Component Search`
