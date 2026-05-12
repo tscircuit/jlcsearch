@@ -7,7 +7,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 60
 
     steps:
       - name: Checkout code
@@ -27,6 +27,7 @@ jobs:
         with:
           path: ./db.sqlite3
           key: db-sqlite3-${{ hashFiles('scripts/setup-*.ts') }}
+          save-always: true
 
       - name: Run setup if cache miss
         if: steps.cache-setup.outputs.cache-hit != 'true'
