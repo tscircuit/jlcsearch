@@ -31,6 +31,7 @@ jobs:
       - name: Run setup if cache miss
         if: steps.cache-setup.outputs.cache-hit != 'true'
         env:
+          JLCSEARCH_SKIP_DERIVED_TABLE_POPULATE: "true"
           JLCSEARCH_SKIP_VACUUM: "true"
         run: bun run setup
 
