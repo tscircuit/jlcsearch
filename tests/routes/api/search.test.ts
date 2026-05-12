@@ -16,8 +16,28 @@ test("GET /api/search with search query 'STM32F401RCT6' returns expected compone
   expect(component).toHaveProperty("mfr")
   expect(component.mfr).toContain("STM32F401RCT6") // More specific check
   expect(component).toHaveProperty("package")
+  expect(component).toHaveProperty("is_extended_promotional")
   expect(component).toHaveProperty("price")
   expect(component).toHaveProperty("stock")
+})
+
+test("GET /api/search supports extended promotional filtering", async () => {
+  const { axios } = await getTestServer()
+  const res = await axios.get(
+    "/api/search?limit=20&is_extended_promotional=true",
+  )
+
+  expect(res.data).toHaveProperty("components")
+  expect(Array.isArray(res.data.components)).toBe(true)
+  expect(res.data.components.length).toBeGreaterThan(0)
+  expect(
+    res.data.components.every(
+      (component: any) =>
+        component.is_preferred === true &&
+        component.is_basic === false &&
+        component.is_extended_promotional === true,
+    ),
+  ).toBe(true)
 })
 
 test("GET /api/search with search query '555 Timer' returns expected components", async () => {

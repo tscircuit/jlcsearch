@@ -1,7 +1,8 @@
 import { sql } from "kysely"
+import { isExtendedPromotionalPart } from "lib/util/part-flags"
 import {
-  buildSearchTokenGroups,
   type SearchTokenGroup,
+  buildSearchTokenGroups,
   tokenizeSearchTerm,
 } from "lib/util/search-token-groups"
 import { withWinterSpec } from "lib/with-winter-spec"
@@ -50,6 +51,7 @@ export default withWinterSpec({
     limit: z.string().optional(),
     is_basic: z.boolean().optional(),
     is_preferred: z.boolean().optional(),
+    is_extended_promotional: z.boolean().optional(),
   }),
   jsonResponse: z.any(),
 } as const)(async (req, ctx) => {
@@ -71,6 +73,10 @@ export default withWinterSpec({
   }
   if (req.query.is_preferred) {
     query = query.where("preferred", "=", 1)
+  }
+  if (req.query.is_extended_promotional) {
+    query = query.where("preferred", "=", 1)
+    query = query.where(sql<boolean>`COALESCE(basic, 0) = 0`)
   }
 
   const baseQuery = query
@@ -193,6 +199,7 @@ export default withWinterSpec({
     package: c.package,
     is_basic: Boolean(c.basic),
     is_preferred: Boolean(c.preferred),
+    is_extended_promotional: isExtendedPromotionalPart(c.preferred, c.basic),
     description: c.description,
     stock: c.stock,
     price: extractSmallQuantityPrice(c.price),
