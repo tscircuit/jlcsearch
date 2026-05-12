@@ -35,7 +35,12 @@ jobs:
         env:
           JLCSEARCH_SKIP_DERIVED_TABLE_POPULATE: "true"
           JLCSEARCH_SKIP_VACUUM: "true"
-        run: bun run setup
+        run: |
+          if [ -f db.sqlite3 ]; then
+            echo "Using restored db.sqlite3 cache"
+          else
+            bun run setup
+          fi
 
       - name: Run tests
         run: bun test
