@@ -72,7 +72,12 @@ export default withWinterSpec({
     query = query.where("preferred", "=", 1)
   }
   if (req.query.is_extended_promotional) {
-    query = query.where("is_extended_promotional", "=", 1)
+    query = query.where("lcsc", "in", (eb) =>
+      eb
+        .selectFrom("components")
+        .select("lcsc")
+        .where("is_extended_promotional", "=", 1),
+    )
   }
 
   if (req.query.search) {

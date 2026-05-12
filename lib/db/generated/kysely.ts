@@ -804,7 +804,6 @@ export interface VComponent {
   datasheet: string | null;
   description: string | null;
   extra: string | null;
-  is_extended_promotional: number | null;
   joints: number | null;
   last_on_stock: number | null;
   lcsc: number | null;
