@@ -1,8 +1,9 @@
-import { mkdir } from "node:fs/promises"
 import { existsSync } from "node:fs"
+import { mkdir } from "node:fs/promises"
 
 const BASE_URL = "https://yaqwsx.github.io/jlcparts/data"
 const OUTPUT_DIR = ".buildtmp"
+const CONCURRENT_FRAGMENT_DOWNLOADS = 8
 
 async function downloadFile(url: string, outputPath: string): Promise<boolean> {
   try {
@@ -33,20 +34,33 @@ async function main() {
   // Download initial cache.zip
   await downloadFile(`${BASE_URL}/cache.zip`, `${OUTPUT_DIR}/cache.zip`)
 
-  // Download fragments until we get a 404
+  // Download fragments until we get a 404. These files are large, so fetch
+  // them in small batches to keep CI setup under the workflow timeout.
   let index = 1
   while (true) {
-    const paddedIndex = index.toString().padStart(2, "0")
-    const success = await downloadFile(
-      `${BASE_URL}/cache.z${paddedIndex}`,
-      `${OUTPUT_DIR}/cache.z${paddedIndex}`,
+    const fragmentIndexes = Array.from(
+      { length: CONCURRENT_FRAGMENT_DOWNLOADS },
+      (_, offset) => index + offset,
+    )
+    const results = await Promise.all(
+      fragmentIndexes.map(async (fragmentIndex) => {
+        const paddedIndex = fragmentIndex.toString().padStart(2, "0")
+        const success = await downloadFile(
+          `${BASE_URL}/cache.z${paddedIndex}`,
+          `${OUTPUT_DIR}/cache.z${paddedIndex}`,
+        )
+        return { paddedIndex, success }
+      }),
     )
 
-    if (!success) {
-      console.log(`Stopped at index ${paddedIndex} (404 encountered)`)
+    const firstMissingFragment = results.find((result) => !result.success)
+    if (firstMissingFragment) {
+      console.log(
+        `Stopped at index ${firstMissingFragment.paddedIndex} (404 encountered)`,
+      )
       break
     }
-    index++
+    index += CONCURRENT_FRAGMENT_DOWNLOADS
   }
 }
 
