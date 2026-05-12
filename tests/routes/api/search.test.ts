@@ -111,7 +111,9 @@ test("GET /api/search supports '0402 LED'", async () => {
 
 test("GET /api/search supports is_extended_promotional filter", async () => {
   const { axios } = await getTestServer()
-  const res = await axios.get("/api/search?limit=200&is_extended_promotional=true")
+  const res = await axios.get(
+    "/api/search?limit=200&is_extended_promotional=true",
+  )
 
   expect(res.data).toHaveProperty("components")
   expect(Array.isArray(res.data.components)).toBe(true)
