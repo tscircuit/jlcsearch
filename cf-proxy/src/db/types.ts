@@ -158,6 +158,7 @@ export interface BuckBoostConverter {
 
 export interface ComponentCatalog {
   basic: number | null
+  is_extended_promotional: number | null
   category: string | null
   description: string | null
   extra: string | null
