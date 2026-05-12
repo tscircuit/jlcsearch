@@ -21,6 +21,10 @@ jobs:
       - name: Install dependencies
         run: bun install
 
+      - name: Install Cloudflare proxy dependencies
+        working-directory: cf-proxy
+        run: bun install
+
       - name: Cache setup artifacts
         id: cache-setup
         uses: actions/cache@v4

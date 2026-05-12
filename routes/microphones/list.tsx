@@ -42,15 +42,6 @@ export default withWinterSpec({
 
   const microphones = await query.execute()
 
-  const packages = await ctx.db
-    .selectFrom("v_components")
-    .select("package")
-    .distinct()
-    .where("subcategory", "in", [...MICROPHONE_SUBCATEGORIES])
-    .where("package", "is not", null)
-    .orderBy("package")
-    .execute()
-
   const normalizedMicrophones = microphones
     .map((m) => ({
       lcsc: m.lcsc ?? 0,
@@ -66,6 +57,15 @@ export default withWinterSpec({
   if (ctx.isApiRequest) {
     return ctx.json({ microphones: normalizedMicrophones })
   }
+
+  const packages = await ctx.db
+    .selectFrom("v_components")
+    .select("package")
+    .distinct()
+    .where("subcategory", "in", [...MICROPHONE_SUBCATEGORIES])
+    .where("package", "is not", null)
+    .orderBy("package")
+    .execute()
 
   return ctx.react(
     <div>
