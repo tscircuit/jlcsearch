@@ -107,3 +107,41 @@ test("GET /api/search supports '0402 LED'", async () => {
   expect(res.data.components.every((c: any) => c.package === "0402")).toBe(true)
   expect(res.data.components.some((c: any) => c.lcsc === 965793)).toBe(true)
 })
+
+test("GET /api/search includes is_extended_promotional in response", async () => {
+  const { axios } = await getTestServer()
+  const res = await axios.get("/api/search?q=resistor&limit=5")
+
+  expect(res.data).toHaveProperty("components")
+  expect(Array.isArray(res.data.components)).toBe(true)
+  expect(res.data.components.length).toBeGreaterThan(0)
+  expect(res.data.components[0]).toHaveProperty("is_extended_promotional")
+  expect(typeof res.data.components[0].is_extended_promotional).toBe("boolean")
+})
+
+test("GET /api/search includes is_extended_promotional in full response", async () => {
+  const { axios } = await getTestServer()
+  const res = await axios.get("/api/search?q=resistor&limit=5&full=true")
+
+  expect(res.data).toHaveProperty("components")
+  expect(Array.isArray(res.data.components)).toBe(true)
+  expect(res.data.components.length).toBeGreaterThan(0)
+  expect(res.data.components[0]).toHaveProperty("is_extended_promotional")
+  expect(typeof res.data.components[0].is_extended_promotional).toBe("boolean")
+})
+
+test("GET /api/search filters by is_extended_promotional=true", async () => {
+  const { axios } = await getTestServer()
+  const res = await axios.get(
+    "/api/search?is_extended_promotional=true&limit=5",
+  )
+
+  expect(res.data).toHaveProperty("components")
+  expect(Array.isArray(res.data.components)).toBe(true)
+  expect(res.data.components.length).toBeGreaterThan(0)
+  for (const c of res.data.components) {
+    expect(c.is_extended_promotional).toBe(true)
+    expect(c.is_basic).toBe(false)
+    expect(c.is_preferred).toBe(true)
+  }
+})
