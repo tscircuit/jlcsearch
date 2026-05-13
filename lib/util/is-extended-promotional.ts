@@ -64,3 +64,15 @@ export const isExtendedPromotionalFromExtra = (
     return hasExtendedPromotionalMarker(extra)
   }
 }
+
+export const isExtendedPromotionalComponent = ({
+  extra,
+  preferred,
+  basic,
+}: {
+  extra: string | null
+  preferred?: number | boolean | null
+  basic?: number | boolean | null
+}): boolean =>
+  isExtendedPromotionalFromExtra(extra) ||
+  (Boolean(preferred) && !Boolean(basic))
