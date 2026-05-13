@@ -58,6 +58,7 @@ build/Release
 
 node_modules/
 jspm_packages/
+__pycache__/
 
 # Snowpack dependency directory (https://snowpack.dev/)
 

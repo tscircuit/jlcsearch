@@ -28,6 +28,7 @@ export const usbCConnectorTableSpec: DerivedTableSpec<UsbCConnector> = {
     { name: "operating_temp_max", type: "real" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   listCandidateComponents(db: KyselyDatabaseInstance) {
     return db

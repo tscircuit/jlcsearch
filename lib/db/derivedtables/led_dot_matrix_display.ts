@@ -16,9 +16,10 @@ export const ledDotMatrixDisplayTableSpec: DerivedTableSpec<LEDDotMatrixDisplay>
       { name: "package", type: "text" },
       { name: "matrix_size", type: "text" },
       { name: "color", type: "text" },
-      { name: "is_basic", type: "boolean" },
-      { name: "is_preferred", type: "boolean" },
-    ],
+    { name: "is_basic", type: "boolean" },
+    { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
+  ],
     listCandidateComponents(db: KyselyDatabaseInstance) {
       return db
         .selectFrom("components")

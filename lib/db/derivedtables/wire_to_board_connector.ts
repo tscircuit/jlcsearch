@@ -59,9 +59,10 @@ export const wireToBoardConnectorTableSpec: DerivedTableSpec<WireToBoardConnecto
       { name: "mounting_style", type: "text" },
       { name: "gender", type: "text" },
       { name: "is_smd", type: "boolean" },
-      { name: "is_basic", type: "boolean" },
-      { name: "is_preferred", type: "boolean" },
-    ],
+    { name: "is_basic", type: "boolean" },
+    { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
+  ],
     listCandidateComponents(db: KyselyDatabaseInstance) {
       return db
         .selectFrom("components")
