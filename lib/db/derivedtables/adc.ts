@@ -17,6 +17,7 @@ export interface Adc extends BaseComponent {
   has_serial_interface: boolean
   has_uart: boolean
   is_differential: boolean
+  is_extended_promotional: boolean
   operating_temp_min: number | null
   operating_temp_max: number | null
 }
@@ -40,6 +41,7 @@ export const adcTableSpec: DerivedTableSpec<Adc> = {
     { name: "operating_temp_max", type: "real" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db
@@ -115,6 +117,7 @@ export const adcTableSpec: DerivedTableSpec<Adc> = {
         in_stock: c.stock > 0,
         is_basic: Boolean(c.basic),
         is_preferred: Boolean(c.preferred),
+        is_extended_promotional: Boolean(c.preferred && !c.basic),
         package: c.package || "",
         resolution_bits: resolution,
         sampling_rate_hz: samplingRate,

@@ -11,7 +11,8 @@ export interface BoostConverter extends BaseComponent {
   output_voltage_max: number | null
   output_current_max: number | null
   switching_frequency: number | null
-  is_synchronous: boolean | null
+  is_synchronous: boolean
+  is_extended_promotional: boolean | null
   topology: string | null
   number_of_outputs: number | null
 }
@@ -31,6 +32,7 @@ export const boostConverterTableSpec: DerivedTableSpec<BoostConverter> = {
     { name: "number_of_outputs", type: "integer" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db
@@ -117,6 +119,7 @@ export const boostConverterTableSpec: DerivedTableSpec<BoostConverter> = {
           in_stock: c.stock > 0,
           is_basic: Boolean(c.basic),
           is_preferred: Boolean(c.preferred),
+        is_extended_promotional: Boolean(c.preferred && !c.basic),
           package: c.package || "",
           input_voltage_min: inputMin,
           input_voltage_max: inputMax,

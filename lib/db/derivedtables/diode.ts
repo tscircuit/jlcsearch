@@ -13,6 +13,7 @@ export interface Diode extends BaseComponent {
   recovery_time_ns: number | null
   diode_type: string
   is_schottky: boolean
+  is_extended_promotional: boolean
   is_zener: boolean
   is_tvs: boolean
   operating_temp_min: number | null
@@ -40,6 +41,7 @@ export const diodeTableSpec: DerivedTableSpec<Diode> = {
     { name: "configuration", type: "text" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db
@@ -159,6 +161,7 @@ export const diodeTableSpec: DerivedTableSpec<Diode> = {
         in_stock: c.stock > 0,
         is_basic: Boolean(c.basic),
         is_preferred: Boolean(c.preferred),
+        is_extended_promotional: Boolean(c.preferred && !c.basic),
         package: c.package || "",
         forward_voltage: forwardVoltage,
         reverse_voltage: reverseVoltage,

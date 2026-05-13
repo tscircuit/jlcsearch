@@ -12,6 +12,7 @@ export interface Resistor extends BaseComponent {
   number_of_resistors: number | null
   number_of_pins: number | null
   is_potentiometer: boolean
+  is_extended_promotional: boolean
   is_surface_mount: boolean
   is_multi_resistor_chip: boolean
 }
@@ -31,6 +32,7 @@ export const resistorTableSpec: DerivedTableSpec<Resistor> = {
     { name: "is_multi_resistor_chip", type: "boolean" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db
@@ -82,6 +84,7 @@ export const resistorTableSpec: DerivedTableSpec<Resistor> = {
         in_stock: c.stock > 0,
         is_basic: Boolean(c.basic),
         is_preferred: Boolean(c.preferred),
+        is_extended_promotional: Boolean(c.preferred && !c.basic),
         resistance: resistance,
         tolerance_fraction: tolerance,
         power_watts,
