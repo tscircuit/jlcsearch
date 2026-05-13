@@ -10,7 +10,7 @@ export interface Switch extends BaseComponent {
   current_rating_a: number | null
   voltage_rating_v: number | null
   mounting_style: string | null
-  is_latching: boolean
+  is_latching: boolean | null
   is_extended_promotional: boolean | null
   operating_temp_min: number | null
   operating_temp_max: number | null
