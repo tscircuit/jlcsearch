@@ -94,6 +94,7 @@ export default withWinterSpec({
           package: c.package ?? "",
           is_basic: Boolean(c.is_basic),
           is_preferred: Boolean(c.is_preferred),
+          is_extended_promotional: Boolean(c.is_extended_promotional),
           capacitance: c.capacitance_farads ?? 0,
           voltage: c.voltage_rating ?? undefined,
           type: c.capacitor_type ?? undefined,

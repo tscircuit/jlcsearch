@@ -151,6 +151,7 @@ export default withWinterSpec({
         package: array.package ?? "",
         is_basic: Boolean(array.is_basic),
         is_preferred: Boolean(array.is_preferred),
+        is_extended_promotional: Boolean(array.is_extended_promotional),
         number_of_resistors: array.number_of_resistors ?? null,
         number_of_pins: array.number_of_pins ?? null,
         topology: array.topology ?? null,

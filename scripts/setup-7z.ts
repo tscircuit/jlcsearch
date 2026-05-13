@@ -58,8 +58,14 @@ async function downloadAndExtract7z() {
   await Bun.spawn(["mv", "7zz", binaryPath]).exited
 
   // Clean up any extra extracted files from the tarball
-  await Bun.spawn(["rm", "-f", "7zzs", "History.txt", "License.txt", "readme.txt"])
-    .exited
+  await Bun.spawn([
+    "rm",
+    "-f",
+    "7zzs",
+    "History.txt",
+    "License.txt",
+    "readme.txt",
+  ]).exited
 
   // Make the binary executable
   await chmod(binaryPath, 0o755)

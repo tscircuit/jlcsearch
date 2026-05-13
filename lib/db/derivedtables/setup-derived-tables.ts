@@ -165,7 +165,10 @@ const createTable = async (
       candidateQuery = candidateQuery.where("components.stock", ">", 0)
     }
 
-    const components = await candidateQuery.offset(offset).limit(BATCH_SIZE).execute()
+    const components = await candidateQuery
+      .offset(offset)
+      .limit(BATCH_SIZE)
+      .execute()
 
     if (components.length === 0) break
 
@@ -179,7 +182,10 @@ const createTable = async (
     )
 
     const rowsToInsert = mappedComponents
-      .filter((component): component is NonNullable<typeof component> => component !== null)
+      .filter(
+        (component): component is NonNullable<typeof component> =>
+          component !== null,
+      )
       .map((component) => ({
         ...component,
         attributes: JSON.stringify(component.attributes ?? {}),
@@ -188,7 +194,10 @@ const createTable = async (
     if (rowsToInsert.length > 0) {
       for (let i = 0; i < rowsToInsert.length; i += INSERT_CHUNK_SIZE) {
         const chunk = rowsToInsert.slice(i, i + INSERT_CHUNK_SIZE)
-        await db.insertInto(spec.tableName as any).values(chunk as any).execute()
+        await db
+          .insertInto(spec.tableName as any)
+          .values(chunk as any)
+          .execute()
       }
     }
 
