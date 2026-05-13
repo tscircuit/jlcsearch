@@ -15,9 +15,18 @@ export default withWinterSpec({
   jsonResponse: z.any(),
 } as const)(async (req, ctx) => {
   const selectedType = req.query.microphone_type
+  const categories = await ctx.db
+    .selectFrom("categories")
+    .select(["id", "subcategory"])
+    .where("subcategory", "in", [...MICROPHONE_SUBCATEGORIES])
+    .execute()
+  const categoryIds = categories.map((category) => category.id)
+  const subcategoryById = new Map(
+    categories.map((category) => [category.id, category.subcategory]),
+  )
 
   let query = ctx.db
-    .selectFrom("v_components")
+    .selectFrom("components")
     .select([
       "lcsc",
       "mfr",
@@ -25,10 +34,10 @@ export default withWinterSpec({
       "description",
       "stock",
       "price",
-      "subcategory",
+      "category_id",
     ])
     .where("stock", ">", 0)
-    .where("subcategory", "in", [...MICROPHONE_SUBCATEGORIES])
+    .where("category_id", "in", categoryIds)
     .orderBy("stock", "desc")
     .limit(100)
 
@@ -37,26 +46,20 @@ export default withWinterSpec({
   }
 
   if (selectedType && selectedType !== "all") {
-    query = query.where("subcategory", "=", selectedType)
+    const selectedCategoryIds = categories
+      .filter((category) => category.subcategory === selectedType)
+      .map((category) => category.id)
+    query = query.where("category_id", "in", selectedCategoryIds)
   }
 
   const microphones = await query.execute()
-
-  const packages = await ctx.db
-    .selectFrom("v_components")
-    .select("package")
-    .distinct()
-    .where("subcategory", "in", [...MICROPHONE_SUBCATEGORIES])
-    .where("package", "is not", null)
-    .orderBy("package")
-    .execute()
 
   const normalizedMicrophones = microphones
     .map((m) => ({
       lcsc: m.lcsc ?? 0,
       mfr: m.mfr ?? "",
       package: m.package ?? "",
-      microphone_type: m.subcategory ?? "",
+      microphone_type: subcategoryById.get(m.category_id ?? 0) ?? "",
       description: m.description ?? "",
       stock: m.stock ?? 0,
       price1: extractMinQPrice(m.price ?? ""),
@@ -66,6 +69,15 @@ export default withWinterSpec({
   if (ctx.isApiRequest) {
     return ctx.json({ microphones: normalizedMicrophones })
   }
+
+  const packages = await ctx.db
+    .selectFrom("components")
+    .select("package")
+    .distinct()
+    .where("category_id", "in", categoryIds)
+    .where("package", "is not", null)
+    .orderBy("package")
+    .execute()
 
   return ctx.react(
     <div>

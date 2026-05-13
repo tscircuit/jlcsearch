@@ -92,6 +92,14 @@ const jsonParseOrNull = (strObject: string) => {
   }
 }
 
+const replaceUndefinedWithNull = <T extends Record<string, unknown>>(row: T) =>
+  Object.fromEntries(
+    Object.entries(row).map(([key, value]) => [
+      key,
+      value === undefined ? null : value,
+    ]),
+  ) as T
+
 const createTable = async (
   db: KyselyDatabaseInstance,
   spec: DerivedTableSpec<any>,
@@ -190,6 +198,7 @@ const createTable = async (
         ...component,
         attributes: JSON.stringify(component.attributes ?? {}),
       }))
+      .map(replaceUndefinedWithNull)
 
     if (rowsToInsert.length > 0) {
       for (let i = 0; i < rowsToInsert.length; i += INSERT_CHUNK_SIZE) {
