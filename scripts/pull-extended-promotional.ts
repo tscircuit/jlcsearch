@@ -27,24 +27,42 @@ interface ComponentResult {
 interface PageInfo {
   total: number
   list: ComponentResult[]
-  hasNextPage: boolean
+  // Pagination fields returned by the API (inconsistent across calls)
+  hasNextPage?: boolean
+  pages?: number
+  pageNum?: number
+  nextPage?: number
+  isLastPage?: boolean
 }
 
-async function getXsrfToken(): Promise<string> {
+type JlcpcbSession = {
+  xsrfToken: string
+  cookieHeader: string
+}
+
+async function getSession(): Promise<JlcpcbSession> {
   const resp = await fetch(
     "https://jlcpcb.com/api/overseas-pcb-order/v1/getAll",
   )
   const setCookie = resp.headers.get("set-cookie") ?? ""
-  const match = setCookie.match(/XSRF-TOKEN=([^;]+)/)
-  if (!match) {
+
+  const xsrfMatch = setCookie.match(/XSRF-TOKEN=([^;]+)/)
+  const sessionMatch = setCookie.match(/JLCPCB_SESSION_ID=([^;]+)/)
+  if (!xsrfMatch) {
     throw new Error("Failed to get XSRF-TOKEN from JLCPCB")
   }
-  return decodeURIComponent(match[1])
+  const xsrfToken = decodeURIComponent(xsrfMatch[1])
+  const cookies = [`XSRF-TOKEN=${xsrfToken}`]
+  if (sessionMatch) {
+    cookies.push(`JLCPCB_SESSION_ID=${decodeURIComponent(sessionMatch[1])}`)
+  }
+
+  return { xsrfToken, cookieHeader: cookies.join("; ") }
 }
 
 async function fetchPage(
   page: number,
-  xsrfToken: string,
+  session: JlcpcbSession,
 ): Promise<PageInfo> {
   const body = {
     currentPage: page,
@@ -62,40 +80,69 @@ async function fetchPage(
     searchSource: "search",
   }
 
-  const resp = await fetch(API_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "User-Agent":
-        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-      Origin: "https://jlcpcb.com",
-      Referer: "https://jlcpcb.com/parts/basic_parts",
-      "X-XSRF-TOKEN": xsrfToken,
-    },
-    body: JSON.stringify(body),
-  })
+  let lastError: unknown
+  for (let attempt = 1; attempt <= 5; attempt++) {
+    const resp = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "User-Agent":
+          "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        Accept: "application/json, text/plain, */*",
+        Origin: "https://jlcpcb.com",
+        Referer: "https://jlcpcb.com/parts/basic_parts",
+        Cookie: session.cookieHeader,
+        "X-XSRF-TOKEN": session.xsrfToken,
+      },
+      body: JSON.stringify(body),
+    })
 
-  if (!resp.ok) {
-    throw new Error(`JLCPCB API returned status ${resp.status}`)
+    let data: any
+    try {
+      data = await resp.json()
+    } catch (err) {
+      lastError = err
+      const delayMs = 500 * 2 ** (attempt - 1)
+      console.error(
+        `Failed to parse JSON response, retrying in ${delayMs}ms (attempt ${attempt}/5)...`,
+      )
+      await new Promise((resolve) => setTimeout(resolve, delayMs))
+      continue
+    }
+
+    // Handle both response formats (with and without "data" wrapper)
+    const cpi = data.componentPageInfo ?? data.data?.componentPageInfo
+    if (!cpi) {
+      lastError = new Error(
+        `Unexpected API response format: ${Object.keys(data).join(", ")}`,
+      )
+      const delayMs = 500 * 2 ** (attempt - 1)
+      console.error(
+        `Unexpected API response format, retrying in ${delayMs}ms (attempt ${attempt}/5)...`,
+      )
+      await new Promise((resolve) => setTimeout(resolve, delayMs))
+      continue
+    }
+
+    // Some JLCPCB API responses appear to return HTTP 5xx while still
+    // containing valid payloads. Treat presence of componentPageInfo as
+    // authoritative.
+    if (!resp.ok) {
+      console.error(
+        `Warning: JLCPCB API returned status ${resp.status} but provided componentPageInfo payload. Continuing...`,
+      )
+    }
+
+    return cpi as PageInfo
   }
 
-  const data = await resp.json()
-
-  // Handle both response formats (with and without "data" wrapper)
-  const cpi = data.componentPageInfo ?? data.data?.componentPageInfo
-  if (!cpi) {
-    throw new Error(
-      `Unexpected API response format: ${Object.keys(data).join(", ")}`,
-    )
-  }
-
-  return cpi as PageInfo
+  throw lastError ?? new Error("Failed to fetch JLCPCB page after retries")
 }
 
 async function main() {
   console.error("Fetching XSRF token from JLCPCB...")
-  const xsrfToken = await getXsrfToken()
-  console.error("Got XSRF token")
+  const session = await getSession()
+  console.error("Got XSRF token/session")
 
   const extendedPromotionalCodes: string[] = []
   let page = 1
@@ -103,7 +150,7 @@ async function main() {
 
   while (true) {
     console.error(`Fetching page ${page}...`)
-    const cpi = await fetchPage(page, xsrfToken)
+    const cpi = await fetchPage(page, session)
     const parts = cpi.list ?? []
     totalFetched += parts.length
 
@@ -120,10 +167,25 @@ async function main() {
         `extended promotional so far: ${extendedPromotionalCodes.length}`,
     )
 
-    if (!cpi.hasNextPage || parts.length === 0) {
+    const isLastPage =
+      cpi.isLastPage === true ||
+      (typeof cpi.pages === "number" &&
+        typeof cpi.pageNum === "number" &&
+        cpi.pageNum >= cpi.pages)
+
+    if (parts.length === 0 || isLastPage) {
       break
     }
-    page++
+
+    if (
+      typeof cpi.nextPage === "number" &&
+      typeof cpi.pageNum === "number" &&
+      cpi.nextPage > cpi.pageNum
+    ) {
+      page = cpi.nextPage
+    } else {
+      page++
+    }
 
     // Small delay to avoid rate limiting
     await new Promise((resolve) => setTimeout(resolve, 300))

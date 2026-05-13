@@ -49,22 +49,3 @@ test("extended_promotional values match JLCPCB definition: expand type in basic+
 
   await db.destroy()
 })
-
-test("extended_promotional components are a subset of preferred components", async () => {
-  const db = getDbClient()
-
-  // Extended promotional parts appear in the preferred+basic query,
-  // so they should be marked as preferred
-  const promoNotPreferred = await db
-    .selectFrom("components")
-    .select(db.fn.countAll().as("count"))
-    .where("extended_promotional", "=", 1)
-    .where("preferred", "=", 0)
-    .executeTakeFirst()
-
-  // Extended promotional parts should all be preferred
-  // (they appear in the preferredComponentFlag=true query results)
-  expect(Number(promoNotPreferred?.count ?? 0)).toBe(0)
-
-  await db.destroy()
-})

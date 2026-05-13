@@ -34,7 +34,7 @@ async function main() {
   // Read LCSC codes from file or stdin
   let codesText: string
   if (inputFile === "-") {
-    codesText = readFileSync("/dev/stdin", "utf-8")
+    codesText = await new Response(Bun.stdin).text()
   } else {
     codesText = readFileSync(inputFile, "utf-8")
   }
@@ -68,11 +68,24 @@ async function main() {
   }
 
   const db = getDbClient()
+  const resetAll =
+    process.env.JLCSEARCH_EXTENDED_PROMO_RESET_ALL === "true" ||
+    process.argv.includes("--reset-all")
 
   try {
-    // First, reset all extended_promotional to 0
-    await db.updateTable("components").set({ extended_promotional: 0 }).execute()
-    console.error("Reset all extended_promotional to 0")
+    if (resetAll) {
+      // Resetting the entire table can be expensive. It's useful when updating an
+      // existing DB where the promotional set may have changed.
+      await db
+        .updateTable("components")
+        .set({ extended_promotional: 0 })
+        .execute()
+      console.error("Reset all extended_promotional to 0")
+    } else {
+      console.error(
+        "Skipping full-table reset (set JLCSEARCH_EXTENDED_PROMO_RESET_ALL=true or pass --reset-all to enable).",
+      )
+    }
 
     // Then, set extended_promotional=1 for the codes we found
     // Process in batches of 500 to avoid SQL query size limits

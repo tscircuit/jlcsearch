@@ -1,10 +1,21 @@
 import { mkdir } from "node:fs/promises"
-import { existsSync } from "node:fs"
+import { existsSync, statSync } from "node:fs"
 
 const BASE_URL = "https://yaqwsx.github.io/jlcparts/data"
 const OUTPUT_DIR = ".buildtmp"
 
 async function downloadFile(url: string, outputPath: string): Promise<boolean> {
+  if (existsSync(outputPath)) {
+    try {
+      const stat = statSync(outputPath)
+      if (stat.size > 0) {
+        console.log(`Already downloaded: ${outputPath}`)
+        return true
+      }
+    } catch {
+      // fall through to re-download
+    }
+  }
   try {
     const response = await fetch(url)
     if (!response.ok) {
