@@ -7,3 +7,16 @@ test("GET /components/list with json param returns component data", async () => 
   expect(res.data).toHaveProperty("components")
   expect(Array.isArray(res.data.components)).toBe(true)
 })
+
+test("GET /components/list filters by extended promotional parts", async () => {
+  const { axios } = await getTestServer()
+  const res = await axios.get(
+    "/components/list?json=true&is_extended_promotional=true",
+  )
+
+  expect(res.data).toHaveProperty("components")
+  expect(Array.isArray(res.data.components)).toBe(true)
+  for (const component of res.data.components) {
+    expect(component.is_extended_promotional).toBe(true)
+  }
+})
