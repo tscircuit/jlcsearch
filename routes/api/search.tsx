@@ -40,6 +40,20 @@ const ftsGroupQuery = (group: SearchTokenGroup): string => {
     : `(${tokenQueries.join(" OR ")})`
 }
 
+const getIsExtendedPromotional = (extra: string | null): boolean => {
+  if (!extra) return false
+  try {
+    const parsed = JSON.parse(extra)
+    return Boolean(
+      parsed?.is_extended_promotional ??
+        parsed?.isExtendedPromotional ??
+        parsed?.extended_promotional,
+    )
+  } catch {
+    return false
+  }
+}
+
 export default withWinterSpec({
   auth: "none",
   methods: ["GET"],
@@ -50,6 +64,7 @@ export default withWinterSpec({
     limit: z.string().optional(),
     is_basic: z.boolean().optional(),
     is_preferred: z.boolean().optional(),
+    is_extended_promotional: z.boolean().optional(),
   }),
   jsonResponse: z.any(),
 } as const)(async (req, ctx) => {
@@ -71,6 +86,14 @@ export default withWinterSpec({
   }
   if (req.query.is_preferred) {
     query = query.where("preferred", "=", 1)
+  }
+
+  if (req.query.is_extended_promotional !== undefined) {
+    query = query.where(
+      sql<number>`CAST(COALESCE(json_extract(extra, '$.is_extended_promotional'), 0) AS INTEGER)`,
+      "=",
+      req.query.is_extended_promotional ? 1 : 0,
+    )
   }
 
   const baseQuery = query
@@ -193,6 +216,7 @@ export default withWinterSpec({
     package: c.package,
     is_basic: Boolean(c.basic),
     is_preferred: Boolean(c.preferred),
+    is_extended_promotional: getIsExtendedPromotional(c.extra),
     description: c.description,
     stock: c.stock,
     price: extractSmallQuantityPrice(c.price),
