@@ -32,7 +32,9 @@ const downloadFromCandidates = async (urls: string[]) => {
       console.log(`Trying 7z download URL: ${url}`)
       const response = await fetch(url)
       if (!response.ok) {
-        throw new Error(`Failed to download from ${url}: ${response.statusText}`)
+        throw new Error(
+          `Failed to download from ${url}: ${response.statusText}`,
+        )
       }
       return await response.arrayBuffer()
     } catch (err) {
@@ -40,9 +42,7 @@ const downloadFromCandidates = async (urls: string[]) => {
     }
   }
 
-  throw (
-    lastError ?? new Error("Failed to download 7z from all candidate URLs")
-  )
+  throw lastError ?? new Error("Failed to download 7z from all candidate URLs")
 }
 
 async function downloadAndExtract7z() {
