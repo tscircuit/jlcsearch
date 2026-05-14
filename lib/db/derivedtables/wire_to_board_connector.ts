@@ -59,10 +59,10 @@ export const wireToBoardConnectorTableSpec: DerivedTableSpec<WireToBoardConnecto
       { name: "mounting_style", type: "text" },
       { name: "gender", type: "text" },
       { name: "is_smd", type: "boolean" },
-    { name: "is_basic", type: "boolean" },
-    { name: "is_preferred", type: "boolean" },
-    { name: "is_extended_promotional", type: "boolean" },
-  ],
+      { name: "is_basic", type: "boolean" },
+      { name: "is_preferred", type: "boolean" },
+      { name: "is_extended_promotional", type: "boolean" },
+    ],
     listCandidateComponents(db: KyselyDatabaseInstance) {
       return db
         .selectFrom("components")
@@ -101,6 +101,7 @@ export const wireToBoardConnectorTableSpec: DerivedTableSpec<WireToBoardConnecto
             in_stock: Boolean((c.stock || 0) > 0),
             is_basic: Boolean(c.basic),
             is_preferred: Boolean(c.preferred),
+            is_extended_promotional: Boolean(c.preferred && !c.basic),
             package: String(c.package || ""),
             pitch_mm: pitchMm,
             num_rows: numRows,

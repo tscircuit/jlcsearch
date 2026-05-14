@@ -228,6 +228,7 @@ export const headerTableSpec: DerivedTableSpec<Header> = {
         in_stock: c.stock > 0,
         is_basic: Boolean(c.basic),
         is_preferred: Boolean(c.preferred),
+        is_extended_promotional: Boolean(c.preferred && !c.basic),
         price1: extractMinQPrice(c.price)!,
         package: c.package || "",
         pitch_mm: pitch,

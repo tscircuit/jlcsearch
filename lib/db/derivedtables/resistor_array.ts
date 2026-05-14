@@ -134,6 +134,7 @@ export const resistorArrayTableSpec: DerivedTableSpec<ResistorArray> = {
         number_of_pins: numberOfPins,
         topology,
         is_surface_mount: Boolean(isSurfaceMount),
+        is_extended_promotional: Boolean(component.preferred) && !Boolean(component.basic),
         attributes,
       }
     }),

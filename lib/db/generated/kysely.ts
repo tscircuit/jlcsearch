@@ -164,6 +164,7 @@ export interface Capacitor {
   esr_ohms: number | null;
   in_stock: number | null;
   is_basic: number | null;
+  is_extended_promotional: number | null;
   is_polarized: number | null;
   is_preferred: number | null;
   is_surface_mount: number | null;
@@ -712,6 +713,7 @@ export interface Resistor {
   description: string | null;
   in_stock: number | null;
   is_basic: number | null;
+  is_extended_promotional: number | null;
   is_multi_resistor_chip: number | null;
   is_potentiometer: number | null;
   is_preferred: number | null;
@@ -734,6 +736,7 @@ export interface ResistorArray {
   description: string | null;
   in_stock: number | null;
   is_basic: number | null;
+  is_extended_promotional: number | null;
   is_preferred: number | null;
   is_surface_mount: number | null;
   lcsc: Generated<number | null>;
