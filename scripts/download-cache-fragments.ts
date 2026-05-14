@@ -3,8 +3,6 @@ import { existsSync } from "node:fs"
 
 const BASE_URL = "https://yaqwsx.github.io/jlcparts/data"
 const OUTPUT_DIR = ".buildtmp"
-const MAX_FRAGMENTS = 99
-const CONCURRENCY = 8
 
 async function downloadFile(url: string, outputPath: string): Promise<boolean> {
   try {
@@ -25,59 +23,31 @@ async function downloadFile(url: string, outputPath: string): Promise<boolean> {
   }
 }
 
-async function downloadWithConcurrency(
-  tasks: Array<() => Promise<void>>,
-  concurrency: number,
-): Promise<void> {
-  let index = 0
-  const run = async () => {
-    while (index < tasks.length) {
-      const task = tasks[index++]
-      await task()
-    }
-  }
-  await Promise.all(Array.from({ length: concurrency }, run))
-}
-
 async function main() {
+  // Create output directory if it doesn't exist
   if (!existsSync(OUTPUT_DIR)) {
     await mkdir(OUTPUT_DIR)
   }
 
   console.log(`Downloading into ${OUTPUT_DIR}`)
+  // Download initial cache.zip
+  await downloadFile(`${BASE_URL}/cache.zip`, `${OUTPUT_DIR}/cache.zip`)
 
-  // Probe sequentially to find fragment count (cheap HEAD requests)
-  let fragmentCount = 0
-  for (let i = 1; i <= MAX_FRAGMENTS; i++) {
-    const paddedIndex = i.toString().padStart(2, "0")
-    const url = `${BASE_URL}/cache.z${paddedIndex}`
-    try {
-      const res = await fetch(url, { method: "HEAD" })
-      if (!res.ok) break
-      fragmentCount = i
-    } catch {
+  // Download fragments until we get a 404
+  let index = 1
+  while (true) {
+    const paddedIndex = index.toString().padStart(2, "0")
+    const success = await downloadFile(
+      `${BASE_URL}/cache.z${paddedIndex}`,
+      `${OUTPUT_DIR}/cache.z${paddedIndex}`,
+    )
+
+    if (!success) {
+      console.log(`Stopped at index ${paddedIndex} (404 encountered)`)
       break
     }
+    index++
   }
-  console.log(`Found ${fragmentCount} fragment(s)`)
-
-  // Build download tasks: cache.zip + all fragments
-  const tasks: Array<() => Promise<void>> = [
-    async () => {
-      await downloadFile(`${BASE_URL}/cache.zip`, `${OUTPUT_DIR}/cache.zip`)
-    },
-    ...Array.from({ length: fragmentCount }, (_, i) => {
-      const paddedIndex = (i + 1).toString().padStart(2, "0")
-      return async () => {
-        await downloadFile(
-          `${BASE_URL}/cache.z${paddedIndex}`,
-          `${OUTPUT_DIR}/cache.z${paddedIndex}`,
-        )
-      }
-    }),
-  ]
-
-  await downloadWithConcurrency(tasks, CONCURRENCY)
 }
 
 main().catch(console.error)
