@@ -1,6 +1,7 @@
 import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import { BaseComponent } from "./component-base"
+import { isExtendedPromotional } from "lib/util/is-extended-promotional"
 import type { DerivedTableSpec } from "./types"
 
 export interface BuckBoostConverter extends BaseComponent {
@@ -32,6 +33,7 @@ export const buckBoostConverterTableSpec: DerivedTableSpec<BuckBoostConverter> =
       { name: "number_of_outputs", type: "integer" },
       { name: "is_basic", type: "boolean" },
       { name: "is_preferred", type: "boolean" },
+      { name: "is_extended_promotional", type: "boolean" },
     ],
     listCandidateComponents: (db) =>
       db
@@ -121,6 +123,7 @@ export const buckBoostConverterTableSpec: DerivedTableSpec<BuckBoostConverter> =
             in_stock: c.stock > 0,
             is_basic: Boolean(c.basic),
             is_preferred: Boolean(c.preferred),
+            is_extended_promotional: isExtendedPromotional(c),
             package: c.package || "",
             input_voltage_min: inputMin,
             input_voltage_max: inputMax,

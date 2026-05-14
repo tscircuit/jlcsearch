@@ -2,6 +2,7 @@ import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
 import type { DerivedTableSpec } from "./types"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import { BaseComponent } from "./component-base"
+import { isExtendedPromotional } from "lib/util/is-extended-promotional"
 
 export interface IoExpander extends BaseComponent {
   // Extra columns
@@ -40,6 +41,7 @@ export const ioExpanderTableSpec: DerivedTableSpec<IoExpander> = {
     { name: "source_current_ma", type: "real" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db
@@ -139,6 +141,7 @@ export const ioExpanderTableSpec: DerivedTableSpec<IoExpander> = {
         in_stock: c.stock > 0,
         is_basic: Boolean(c.basic),
         is_preferred: Boolean(c.preferred),
+        is_extended_promotional: isExtendedPromotional(c),
         package: c.package || "",
         num_gpios: numGpios,
         supply_voltage_min: voltageMin,

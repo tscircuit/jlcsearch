@@ -2,6 +2,7 @@ import type { DerivedTableSpec } from "./types"
 import type { KyselyDatabaseInstance } from "../kysely-types"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import { BaseComponent } from "./component-base"
+import { isExtendedPromotional } from "lib/util/is-extended-promotional"
 
 export interface LCDDisplay extends BaseComponent {
   package?: string
@@ -19,6 +20,7 @@ export const lcdDisplayTableSpec: DerivedTableSpec<LCDDisplay> = {
     { name: "display_type", type: "text" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   listCandidateComponents(db: KyselyDatabaseInstance) {
     return db
@@ -64,6 +66,7 @@ export const lcdDisplayTableSpec: DerivedTableSpec<LCDDisplay> = {
           in_stock: Boolean((c.stock || 0) > 0),
           is_basic: Boolean(c.basic),
           is_preferred: Boolean(c.preferred),
+          is_extended_promotional: isExtendedPromotional(c),
           package: String(c.package || ""),
           display_size,
           resolution,
