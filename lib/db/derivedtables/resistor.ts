@@ -31,7 +31,7 @@ export const resistorTableSpec: DerivedTableSpec<Resistor> = {
     { name: "is_multi_resistor_chip", type: "boolean" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
-      { name: "is_extended_promotional", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db
