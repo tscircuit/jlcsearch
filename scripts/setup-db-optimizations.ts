@@ -42,6 +42,11 @@ async function main() {
 
   await db.destroy()
 
+  if (process.env.SKIP_DB_VACUUM === "true") {
+    console.log("Skipping VACUUM because SKIP_DB_VACUUM=true")
+    return
+  }
+
   const bunDb = getBunDatabaseClient()
   console.log("Running VACUUM to optimize database...")
   await bunDb.exec("VACUUM")

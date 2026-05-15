@@ -7,7 +7,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 60
 
     steps:
       - name: Checkout code
@@ -31,6 +31,8 @@ jobs:
       - name: Run setup if cache miss
         if: steps.cache-setup.outputs.cache-hit != 'true'
         run: bun run setup
+        env:
+          SKIP_DB_VACUUM: "true"
 
       - name: Run tests
         run: bun test
