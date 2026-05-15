@@ -35,8 +35,6 @@ jobs:
 
       - name: Run setup if cache miss
         if: steps.cache-setup.outputs.cache-hit != 'true'
-        env:
-          SKIP_DB_VACUUM: "true"
         run: bun run setup
 
       - name: Run root Bun tests
