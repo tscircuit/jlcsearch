@@ -1,7 +1,7 @@
 import { sql } from "kysely"
 import {
-  buildSearchTokenGroups,
   type SearchTokenGroup,
+  buildSearchTokenGroups,
   tokenizeSearchTerm,
 } from "lib/util/search-token-groups"
 import { withWinterSpec } from "lib/with-winter-spec"
@@ -40,6 +40,17 @@ const ftsGroupQuery = (group: SearchTokenGroup): string => {
     : `(${tokenQueries.join(" OR ")})`
 }
 
+const isExtendedPromotionalSql = sql<number>`
+  CASE
+    WHEN json_valid(extra)
+      AND json_extract(extra, '$.componentLibraryType') IN ('expand', 'expandPrefer')
+    THEN 1
+    WHEN preferred = 1 AND basic = 0
+    THEN 1
+    ELSE 0
+  END
+`
+
 export default withWinterSpec({
   auth: "none",
   methods: ["GET"],
@@ -50,6 +61,7 @@ export default withWinterSpec({
     limit: z.string().optional(),
     is_basic: z.boolean().optional(),
     is_preferred: z.boolean().optional(),
+    is_extended_promotional: z.boolean().optional(),
   }),
   jsonResponse: z.any(),
 } as const)(async (req, ctx) => {
@@ -58,6 +70,7 @@ export default withWinterSpec({
   let query = ctx.db
     .selectFrom("components")
     .selectAll()
+    .select(isExtendedPromotionalSql.as("is_extended_promotional"))
     .limit(limit)
     .orderBy("stock", "desc")
     .where("stock", ">", 0)
@@ -71,6 +84,9 @@ export default withWinterSpec({
   }
   if (req.query.is_preferred) {
     query = query.where("preferred", "=", 1)
+  }
+  if (req.query.is_extended_promotional) {
+    query = query.where(sql<boolean>`${isExtendedPromotionalSql} = 1`)
   }
 
   const baseQuery = query
@@ -193,6 +209,7 @@ export default withWinterSpec({
     package: c.package,
     is_basic: Boolean(c.basic),
     is_preferred: Boolean(c.preferred),
+    is_extended_promotional: Boolean(c.is_extended_promotional),
     description: c.description,
     stock: c.stock,
     price: extractSmallQuantityPrice(c.price),

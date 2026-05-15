@@ -1,7 +1,7 @@
-import type { DerivedTableSpec } from "./types"
-import type { KyselyDatabaseInstance } from "../kysely-types"
-import { BaseComponent } from "./component-base"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
+import type { KyselyDatabaseInstance } from "../kysely-types"
+import { BaseComponent, isExtendedPromotional } from "./component-base"
+import type { DerivedTableSpec } from "./types"
 
 export interface LEDDotMatrixDisplay extends BaseComponent {
   package?: string
@@ -57,6 +57,7 @@ export const ledDotMatrixDisplayTableSpec: DerivedTableSpec<LEDDotMatrixDisplay>
             in_stock: Boolean((c.stock || 0) > 0),
             is_basic: Boolean(c.basic),
             is_preferred: Boolean(c.preferred),
+            is_extended_promotional: isExtendedPromotional(c),
             package: String(c.package || ""),
             matrix_size,
             color,

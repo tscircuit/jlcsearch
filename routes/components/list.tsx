@@ -1,6 +1,6 @@
 import { sql } from "kysely"
-import { Table } from "lib/ui/Table"
 import { ExpressionBuilder } from "kysely"
+import { Table } from "lib/ui/Table"
 import { buildSearchTokenGroups } from "lib/util/search-token-groups"
 import { withWinterSpec } from "lib/with-winter-spec"
 import { z } from "zod"
@@ -25,6 +25,17 @@ const ftsGroupQuery = (group: string[]): string => {
     : `(${tokenQueries.join(" OR ")})`
 }
 
+const isExtendedPromotionalSql = sql<number>`
+  CASE
+    WHEN json_valid(extra)
+      AND json_extract(extra, '$.componentLibraryType') IN ('expand', 'expandPrefer')
+    THEN 1
+    WHEN preferred = 1 AND basic = 0
+    THEN 1
+    ELSE 0
+  END
+`
+
 export default withWinterSpec({
   auth: "none",
   methods: ["GET"],
@@ -35,6 +46,7 @@ export default withWinterSpec({
     search: z.string().optional(),
     is_basic: z.boolean().optional(),
     is_preferred: z.boolean().optional(),
+    is_extended_promotional: z.boolean().optional(),
   }),
   jsonResponse: z.any(),
 } as const)(async (req, ctx) => {
@@ -51,6 +63,8 @@ export default withWinterSpec({
       "price",
       "extra",
       "basic",
+      "preferred",
+      isExtendedPromotionalSql.as("is_extended_promotional"),
     ])
     .limit(limit)
     .orderBy("stock", "desc")
@@ -69,6 +83,9 @@ export default withWinterSpec({
   }
   if (req.query.is_preferred) {
     query = query.where("preferred", "=", 1)
+  }
+  if (req.query.is_extended_promotional) {
+    query = query.where(sql<boolean>`${isExtendedPromotionalSql} = 1`)
   }
 
   if (req.query.search) {
@@ -111,6 +128,7 @@ export default withWinterSpec({
     package: c.package,
     is_basic: Boolean(c.basic),
     is_preferred: Boolean(c.preferred),
+    is_extended_promotional: Boolean(c.is_extended_promotional),
     description: c.description,
     stock: c.stock,
     price: extractSmallQuantityPrice(c.price),
@@ -152,6 +170,17 @@ export default withWinterSpec({
               name="is_preferred"
               value="true"
               checked={req.query.is_preferred}
+            />
+          </label>
+        </div>
+        <div>
+          <label>
+            Extended Promotional:
+            <input
+              type="checkbox"
+              name="is_extended_promotional"
+              value="true"
+              checked={req.query.is_extended_promotional}
             />
           </label>
         </div>
