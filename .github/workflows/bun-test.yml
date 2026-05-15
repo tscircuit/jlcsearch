@@ -17,13 +17,14 @@ jobs:
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
+
+      - name: Free runner disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          df -h
       
       - name: Install dependencies
         run: bun install
-
-      - name: Install cf-proxy dependencies
-        run: bun install
-        working-directory: ./cf-proxy
 
       - name: Cache setup artifacts
         id: cache-setup
@@ -31,7 +32,6 @@ jobs:
         with:
           path: ./db.sqlite3
           key: db-sqlite3-${{ hashFiles('scripts/setup-*.ts') }}
-          save-always: true
 
       - name: Run setup if cache miss
         if: steps.cache-setup.outputs.cache-hit != 'true'
@@ -41,6 +41,10 @@ jobs:
 
       - name: Run root Bun tests
         run: bun test tests
+
+      - name: Install cf-proxy dependencies
+        run: bun install
+        working-directory: ./cf-proxy
 
       - name: Run cf-proxy tests
         run: bun run test
