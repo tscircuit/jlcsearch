@@ -39,5 +39,9 @@ jobs:
           SKIP_DB_VACUUM: "true"
         run: bun run setup
 
-      - name: Run tests
-        run: bun test
+      - name: Run root Bun tests
+        run: bun test tests
+
+      - name: Run cf-proxy tests
+        run: bun run test
+        working-directory: ./cf-proxy
