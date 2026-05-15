@@ -27,10 +27,18 @@ jobs:
         with:
           path: ./db.sqlite3
           key: db-sqlite3-${{ hashFiles('scripts/setup-*.ts') }}
+          restore-keys: |
+            db-sqlite3-
+          save-always: true
 
       - name: Run setup if cache miss
         if: steps.cache-setup.outputs.cache-hit != 'true'
-        run: bun run setup
+        run: |
+          if [ -f ./db.sqlite3 ]; then
+            echo "Using restored db.sqlite3"
+          else
+            bun run setup
+          fi
         env:
           SKIP_DB_VACUUM: "true"
 
