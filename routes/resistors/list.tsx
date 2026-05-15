@@ -1,9 +1,9 @@
 import { Table } from "lib/ui/Table"
+import { formatPrice } from "lib/util/format-price"
+import { formatSiUnit } from "lib/util/format-si-unit"
+import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
 import { withWinterSpec } from "lib/with-winter-spec"
 import { z } from "zod"
-import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
-import { formatSiUnit } from "lib/util/format-si-unit"
-import { formatPrice } from "lib/util/format-price"
 
 export default withWinterSpec({
   auth: "none",
@@ -13,6 +13,7 @@ export default withWinterSpec({
     package: z.string().optional(),
     is_basic: z.boolean().optional(),
     is_preferred: z.boolean().optional(),
+    is_extended_promotional: z.boolean().optional(),
     resistance: z
       .string()
       .optional()
@@ -32,6 +33,7 @@ export default withWinterSpec({
           package: z.string(),
           is_basic: z.boolean(),
           is_preferred: z.boolean(),
+          is_extended_promotional: z.boolean(),
           resistance: z.number(),
           tolerance_fraction: z.number().optional(),
           power_watts: z.number().optional(),
@@ -62,6 +64,9 @@ export default withWinterSpec({
   if (params.is_preferred) {
     query = query.where("is_preferred", "=", 1)
   }
+  if (params.is_extended_promotional) {
+    query = query.where("is_extended_promotional", "=", 1)
+  }
 
   // Apply resistance filter with a small tolerance for rounding errors
   if (params.resistance != null) {
@@ -88,6 +93,7 @@ export default withWinterSpec({
           package: r.package ?? "",
           is_basic: Boolean(r.is_basic),
           is_preferred: Boolean(r.is_preferred),
+          is_extended_promotional: Boolean(r.is_extended_promotional),
           resistance: r.resistance ?? 0,
           tolerance_fraction: r.tolerance_fraction ?? undefined,
           power_watts: r.power_watts ?? undefined,
@@ -144,6 +150,18 @@ export default withWinterSpec({
         </div>
 
         <div>
+          <label>
+            Extended Promotional Part:
+            <input
+              type="checkbox"
+              name="is_extended_promotional"
+              value="true"
+              checked={params.is_extended_promotional}
+            />
+          </label>
+        </div>
+
+        <div>
           <label>Resistance:</label>
           <input
             type="text"
@@ -163,6 +181,7 @@ export default withWinterSpec({
           package: r.package,
           is_basic: r.is_basic ? "✓" : "",
           is_preferred: r.is_preferred ? "✓" : "",
+          is_extended_promotional: r.is_extended_promotional ? "✓" : "",
           resistance: (
             <span className="tabular-nums">{formatSiUnit(r.resistance)}Ω</span>
           ),
