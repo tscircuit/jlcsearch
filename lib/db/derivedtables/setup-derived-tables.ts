@@ -92,6 +92,8 @@ const jsonParseOrNull = (strObject: string) => {
   }
 }
 
+const INSERT_BATCH_SIZE = 100
+
 const createTable = async (
   db: KyselyDatabaseInstance,
   spec: DerivedTableSpec<any>,
@@ -168,15 +170,19 @@ const createTable = async (
           },
     )
 
-    for (const component of mappedComponents) {
-      if (component === null) continue
-      const attrStringified = JSON.stringify(component.attributes ?? {})
+    const rows = mappedComponents
+      .filter((component) => component !== null)
+      .map((component) => ({
+        ...component,
+        attributes: JSON.stringify(component.attributes ?? {}),
+      }))
+
+    for (let i = 0; i < rows.length; i += INSERT_BATCH_SIZE) {
+      const rowBatch = rows.slice(i, i + INSERT_BATCH_SIZE)
+      if (rowBatch.length === 0) continue
       await db
         .insertInto(spec.tableName as any)
-        .values({
-          ...component,
-          attributes: attrStringified,
-        })
+        .values(rowBatch as any)
         .execute()
     }
 
