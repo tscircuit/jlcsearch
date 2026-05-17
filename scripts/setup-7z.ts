@@ -37,14 +37,22 @@ async function downloadAndExtract7z() {
   }
 
   console.log("Downloading 7z...")
-  const response = await fetch(downloadUrl)
-  if (!response.ok) {
-    throw new Error(`Failed to download: ${response.statusText}`)
-  }
-
   // Save the tar.xz file
   const tempFile = "7z-temp.tar.xz"
-  await Bun.write(tempFile, await response.arrayBuffer())
+  const curl = Bun.spawn([
+    "curl",
+    "--fail",
+    "--location",
+    "--max-time",
+    "60",
+    "--output",
+    tempFile,
+    downloadUrl,
+  ])
+  const curlExitCode = await curl.exited
+  if (curlExitCode !== 0) {
+    throw new Error(`Failed to download 7z: curl exited ${curlExitCode}`)
+  }
 
   // Extract the tar.xz file
   console.log("Extracting 7z binary...")
