@@ -20,6 +20,7 @@ const ALLOWED_OPERATORS = new Set(["=", ">=", "<=", ">", "<"])
 
 const isBooleanLikeField = (field: string): boolean =>
   field === "in_stock" ||
+  field === "is_extended_promotional" ||
   field.startsWith("is_") ||
   field.startsWith("has_") ||
   field.startsWith("measures_")
