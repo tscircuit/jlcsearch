@@ -18,7 +18,7 @@ export const componentExtendedPromotionalColumn: DbOptimizationSpec = {
   },
 
   async execute(db: KyselyDatabaseInstance) {
-    // Add the column. We use a regular column because SQLite GENERATED ALWAYS AS 
+    // Add the column. We use a regular column because SQLite GENERATED ALWAYS AS
     // doesn't support JSON_EXTRACT in older versions, and it's safer to just populate it.
     await sql`
       ALTER TABLE components 
