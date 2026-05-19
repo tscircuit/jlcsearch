@@ -1,5 +1,4 @@
 import { sql } from "kysely"
-import { getDbClient } from "lib/db/get-db-client"
 import { accelerometerTableSpec } from "lib/db/derivedtables/accelerometer"
 import { adcTableSpec } from "lib/db/derivedtables/adc"
 import { analogMultiplexerTableSpec } from "lib/db/derivedtables/analog_multiplexer"
@@ -10,8 +9,8 @@ import { buckBoostConverterTableSpec } from "lib/db/derivedtables/buck_boost_con
 import { capacitorTableSpec } from "lib/db/derivedtables/capacitor"
 import { dacTableSpec } from "lib/db/derivedtables/dac"
 import { diodeTableSpec } from "lib/db/derivedtables/diode"
-import { fpgaTableSpec } from "lib/db/derivedtables/fpga"
 import { fpcConnectorTableSpec } from "lib/db/derivedtables/fpc_connector"
+import { fpgaTableSpec } from "lib/db/derivedtables/fpga"
 import { fuseTableSpec } from "lib/db/derivedtables/fuse"
 import { gasSensorTableSpec } from "lib/db/derivedtables/gas_sensor"
 import { gyroscopeTableSpec } from "lib/db/derivedtables/gyroscope"
@@ -19,26 +18,27 @@ import { headerTableSpec } from "lib/db/derivedtables/header"
 import { ioExpanderTableSpec } from "lib/db/derivedtables/io_expander"
 import { jstConnectorTableSpec } from "lib/db/derivedtables/jst_connector"
 import { lcdDisplayTableSpec } from "lib/db/derivedtables/lcd_display"
+import { ldoTableSpec } from "lib/db/derivedtables/ldo"
+import { ledTableSpec } from "lib/db/derivedtables/led"
 import { ledDotMatrixDisplayTableSpec } from "lib/db/derivedtables/led_dot_matrix_display"
 import { ledDriverTableSpec } from "lib/db/derivedtables/led_driver"
 import { ledSegmentDisplayTableSpec } from "lib/db/derivedtables/led_segment_display"
-import { ledTableSpec } from "lib/db/derivedtables/led"
 import { ledWithICTableSpec } from "lib/db/derivedtables/led_with_ic"
-import { ldoTableSpec } from "lib/db/derivedtables/ldo"
 import { microcontrollerTableSpec } from "lib/db/derivedtables/microcontroller"
 import { mosfetTableSpec } from "lib/db/derivedtables/mosfet"
 import { oledDisplayTableSpec } from "lib/db/derivedtables/oled_display"
 import { pcieM2ConnectorTableSpec } from "lib/db/derivedtables/pcie_m2_connector"
 import { potentiometerTableSpec } from "lib/db/derivedtables/potentiometer"
 import { relayTableSpec } from "lib/db/derivedtables/relay"
-import { resistorArrayTableSpec } from "lib/db/derivedtables/resistor_array"
 import { resistorTableSpec } from "lib/db/derivedtables/resistor"
+import { resistorArrayTableSpec } from "lib/db/derivedtables/resistor_array"
 import { switchTableSpec } from "lib/db/derivedtables/switch"
 import type { DerivedTableSpec } from "lib/db/derivedtables/types"
 import { usbCConnectorTableSpec } from "lib/db/derivedtables/usb_c_connector"
 import { voltageRegulatorTableSpec } from "lib/db/derivedtables/voltage_regulator"
 import { wifiModuleTableSpec } from "lib/db/derivedtables/wifi_module"
 import { wireToBoardConnectorTableSpec } from "lib/db/derivedtables/wire_to_board_connector"
+import { getDbClient } from "lib/db/get-db-client"
 import type { KyselyDatabaseInstance } from "lib/db/kysely-types"
 
 export const DERIVED_TABLES: DerivedTableSpec<any>[] = [
@@ -130,6 +130,7 @@ const createTable = async (
     { name: "stock", type: "integer" },
     { name: "price1", type: "real" },
     { name: "in_stock", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ].concat(spec.extraColumns as any, [{ name: "attributes", type: "text" }])) {
     tableCreator = tableCreator.addColumn(
       col.name as string,
@@ -164,6 +165,8 @@ const createTable = async (
         ? null
         : {
             ...c,
+            is_extended_promotional:
+              Boolean(components[i].preferred) && !components[i].basic,
             attributes: jsonParseOrNull(components[i].extra)?.attributes,
           },
     )
