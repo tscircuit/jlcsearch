@@ -6,22 +6,15 @@ import Path from "node:path"
 import { getBunDatabaseClient, getResolvedDbPath } from "lib/db/get-db-client"
 
 let tempDir: string | undefined
-let previousDbPath = process.env.JLCSEARCH_DB_PATH
 
 afterEach(() => {
-  if (previousDbPath === undefined) {
-    delete process.env.JLCSEARCH_DB_PATH
-  } else {
-    process.env.JLCSEARCH_DB_PATH = previousDbPath
-  }
-
   if (tempDir) {
     rmSync(tempDir, { recursive: true, force: true })
     tempDir = undefined
   }
 })
 
-test("getBunDatabaseClient respects JLCSEARCH_DB_PATH", () => {
+test("getBunDatabaseClient opens a configured database path", () => {
   tempDir = mkdtempSync(Path.join(tmpdir(), "jlcsearch-db-"))
   const dbPath = Path.join(tempDir, "custom.sqlite3")
 
@@ -32,12 +25,9 @@ test("getBunDatabaseClient respects JLCSEARCH_DB_PATH", () => {
   `)
   seedDb.close()
 
-  previousDbPath = process.env.JLCSEARCH_DB_PATH
-  process.env.JLCSEARCH_DB_PATH = dbPath
+  expect(getResolvedDbPath(dbPath)).toBe(dbPath)
 
-  expect(getResolvedDbPath()).toBe(dbPath)
-
-  const db = getBunDatabaseClient()
+  const db = getBunDatabaseClient(dbPath)
   const row = db.query("SELECT value FROM probe").get() as {
     value: string
   } | null
