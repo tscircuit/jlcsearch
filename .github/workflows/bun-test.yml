@@ -21,16 +21,8 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: Cache setup artifacts
-        id: cache-setup
-        uses: actions/cache@v4
-        with:
-          path: ./db.sqlite3
-          key: db-sqlite3-${{ hashFiles('scripts/setup-*.ts') }}
-
-      - name: Run setup if cache miss
-        if: steps.cache-setup.outputs.cache-hit != 'true'
-        run: bun run setup
+      - name: Install cf-proxy dependencies
+        run: cd cf-proxy && bun install
 
       - name: Run tests
         run: bun test
