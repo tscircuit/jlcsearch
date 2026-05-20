@@ -2,18 +2,22 @@ import { sql } from "kysely"
 import type { KyselyDatabaseInstance } from "../kysely-types"
 import type { DbOptimizationSpec } from "./types"
 
-const extendedPromotionalWhereSql = sql`
-  COALESCE(basic, 0) = 0
-    AND COALESCE(preferred, 0) = 0
-    AND extra IS NOT NULL
-    AND (
-      extra LIKE '%extended promotional%' COLLATE NOCASE
-      OR extra LIKE '%promotional extended%' COLLATE NOCASE
-      OR extra LIKE '%extended_promotional%' COLLATE NOCASE
-      OR extra LIKE '%promotional_extended%' COLLATE NOCASE
-      OR extra LIKE '%extended-promotional%' COLLATE NOCASE
-      OR extra LIKE '%promotional-extended%' COLLATE NOCASE
-    )
+const extendedPromotionalSql = sql`
+  CASE
+    WHEN COALESCE(basic, 0) = 0
+      AND COALESCE(preferred, 0) = 0
+      AND extra IS NOT NULL
+      AND (
+        extra LIKE '%extended promotional%' COLLATE NOCASE
+        OR extra LIKE '%promotional extended%' COLLATE NOCASE
+        OR extra LIKE '%extended_promotional%' COLLATE NOCASE
+        OR extra LIKE '%promotional_extended%' COLLATE NOCASE
+        OR extra LIKE '%extended-promotional%' COLLATE NOCASE
+        OR extra LIKE '%promotional-extended%' COLLATE NOCASE
+      )
+    THEN 1
+    ELSE 0
+  END
 `
 
 export const componentExtendedPromotionalColumn: DbOptimizationSpec = {
@@ -23,7 +27,7 @@ export const componentExtendedPromotionalColumn: DbOptimizationSpec = {
 
   async checkIfAdded(db: KyselyDatabaseInstance) {
     const result = await sql`
-      SELECT name FROM pragma_table_info('components')
+      SELECT name FROM pragma_table_xinfo('components')
       WHERE name = 'is_extended_promotional'
     `.execute(db)
 
@@ -33,19 +37,8 @@ export const componentExtendedPromotionalColumn: DbOptimizationSpec = {
   async execute(db: KyselyDatabaseInstance) {
     await sql`
       ALTER TABLE components
-      ADD COLUMN is_extended_promotional INTEGER NOT NULL DEFAULT 0
+      ADD COLUMN is_extended_promotional INTEGER
+        GENERATED ALWAYS AS (${extendedPromotionalSql}) VIRTUAL
     `.execute(db)
-
-    await sql`
-      UPDATE components
-      SET is_extended_promotional = 1
-      WHERE ${extendedPromotionalWhereSql}
-    `.execute(db)
-
-    await db.schema
-      .createIndex("idx_components_is_extended_promotional")
-      .on("components")
-      .column("is_extended_promotional")
-      .execute()
   },
 }
