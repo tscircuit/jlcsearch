@@ -2,22 +2,18 @@ import { sql } from "kysely"
 import type { KyselyDatabaseInstance } from "../kysely-types"
 import type { DbOptimizationSpec } from "./types"
 
-const extendedPromotionalSql = sql`
-  CASE
-    WHEN COALESCE(basic, 0) = 0
-      AND COALESCE(preferred, 0) = 0
-      AND extra IS NOT NULL
-      AND (
-        LOWER(extra) LIKE '%extended promotional%'
-        OR LOWER(extra) LIKE '%promotional extended%'
-        OR LOWER(extra) LIKE '%extended_promotional%'
-        OR LOWER(extra) LIKE '%promotional_extended%'
-        OR LOWER(extra) LIKE '%extended-promotional%'
-        OR LOWER(extra) LIKE '%promotional-extended%'
-      )
-    THEN 1
-    ELSE 0
-  END
+const extendedPromotionalWhereSql = sql`
+  COALESCE(basic, 0) = 0
+    AND COALESCE(preferred, 0) = 0
+    AND extra IS NOT NULL
+    AND (
+      extra LIKE '%extended promotional%' COLLATE NOCASE
+      OR extra LIKE '%promotional extended%' COLLATE NOCASE
+      OR extra LIKE '%extended_promotional%' COLLATE NOCASE
+      OR extra LIKE '%promotional_extended%' COLLATE NOCASE
+      OR extra LIKE '%extended-promotional%' COLLATE NOCASE
+      OR extra LIKE '%promotional-extended%' COLLATE NOCASE
+    )
 `
 
 export const componentExtendedPromotionalColumn: DbOptimizationSpec = {
@@ -42,7 +38,8 @@ export const componentExtendedPromotionalColumn: DbOptimizationSpec = {
 
     await sql`
       UPDATE components
-      SET is_extended_promotional = ${extendedPromotionalSql}
+      SET is_extended_promotional = 1
+      WHERE ${extendedPromotionalWhereSql}
     `.execute(db)
 
     await db.schema
