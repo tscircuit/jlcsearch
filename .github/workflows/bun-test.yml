@@ -21,6 +21,10 @@ jobs:
       - name: Install dependencies
         run: bun install
 
+      - name: Install Cloudflare proxy dependencies
+        working-directory: cf-proxy
+        run: bun install
+
       - name: Prepare test database
         run: JLCSEARCH_DB_PATH=.tmp/test-db.sqlite3 bun run scripts/setup-test-db.ts
 
