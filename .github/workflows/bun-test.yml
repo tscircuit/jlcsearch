@@ -33,8 +33,16 @@ jobs:
           restore-keys: |
             db-sqlite3-
 
-      - name: Run setup if cache miss
-        if: steps.cache-setup.outputs.cache-hit != 'true'
+      - name: Report restored database
+        run: |
+          if [ -f db.sqlite3 ]; then
+            ls -lh db.sqlite3
+          else
+            echo "No db.sqlite3 restored from cache"
+          fi
+
+      - name: Run setup if database is missing
+        if: hashFiles('db.sqlite3') == ''
         run: bun run setup
 
       - name: Run tests
