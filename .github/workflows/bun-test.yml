@@ -30,19 +30,17 @@ jobs:
         with:
           path: ./db.sqlite3
           key: db-sqlite3-${{ hashFiles('scripts/setup-*.ts') }}
-          restore-keys: |
-            db-sqlite3-
 
       - name: Report restored database
         run: |
-          if [ -f db.sqlite3 ]; then
+          if [ "${{ steps.cache-setup.outputs.cache-hit }}" = "true" ] && [ -f db.sqlite3 ]; then
             ls -lh db.sqlite3
           else
-            echo "No db.sqlite3 restored from cache"
+            echo "No exact db.sqlite3 cache hit; setup will rebuild the database"
           fi
 
-      - name: Run setup if database is missing
-        if: hashFiles('db.sqlite3') == ''
+      - name: Run setup if cache miss
+        if: steps.cache-setup.outputs.cache-hit != 'true'
         run: bun run setup
 
       - name: Run tests
