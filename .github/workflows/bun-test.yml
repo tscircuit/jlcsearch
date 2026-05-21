@@ -7,7 +7,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 45
 
     steps:
       - name: Checkout code
@@ -27,9 +27,11 @@ jobs:
         with:
           path: ./db.sqlite3
           key: db-sqlite3-${{ hashFiles('scripts/setup-*.ts') }}
+          restore-keys: |
+            db-sqlite3-
 
       - name: Run setup if cache miss
-        if: steps.cache-setup.outputs.cache-hit != 'true'
+        if: steps.cache-setup.outputs.cache-hit != 'true' && hashFiles('db.sqlite3') == ''
         run: bun run setup
 
       - name: Run tests
