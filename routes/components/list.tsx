@@ -1,7 +1,7 @@
 import { sql } from "kysely"
 import { ExpressionBuilder } from "kysely"
 import { Table } from "lib/ui/Table"
-import { isExtendedPromotionalComponent } from "lib/util/is-extended-promotional"
+import { extendedPromotionalSql } from "lib/util/extended-promotional-sql"
 import { buildSearchTokenGroups } from "lib/util/search-token-groups"
 import { withWinterSpec } from "lib/with-winter-spec"
 import { z } from "zod"
@@ -54,7 +54,7 @@ export default withWinterSpec({
       "extra",
       "basic",
       "preferred",
-      "is_extended_promotional",
+      extendedPromotionalSql.as("is_extended_promotional"),
     ])
     .limit(limit)
     .orderBy("stock", "desc")
@@ -75,7 +75,7 @@ export default withWinterSpec({
     query = query.where("preferred", "=", 1)
   }
   if (req.query.is_extended_promotional) {
-    query = query.where("is_extended_promotional", "=", 1)
+    query = query.where(sql<boolean>`(${extendedPromotionalSql}) = 1`)
   }
 
   if (req.query.search) {
@@ -118,10 +118,7 @@ export default withWinterSpec({
     package: c.package,
     is_basic: Boolean(c.basic),
     is_preferred: Boolean(c.preferred),
-    is_extended_promotional:
-      "is_extended_promotional" in c
-        ? Boolean(c.is_extended_promotional)
-        : isExtendedPromotionalComponent(c.extra, c.basic, c.preferred),
+    is_extended_promotional: Boolean(c.is_extended_promotional),
     description: c.description,
     stock: c.stock,
     price: extractSmallQuantityPrice(c.price),

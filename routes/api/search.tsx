@@ -1,4 +1,5 @@
 import { sql } from "kysely"
+import { extendedPromotionalSql } from "lib/util/extended-promotional-sql"
 import {
   type SearchTokenGroup,
   buildSearchTokenGroups,
@@ -59,6 +60,7 @@ export default withWinterSpec({
   let query = ctx.db
     .selectFrom("components")
     .selectAll()
+    .select(extendedPromotionalSql.as("is_extended_promotional"))
     .limit(limit)
     .orderBy("stock", "desc")
     .where("stock", ">", 0)
@@ -74,7 +76,7 @@ export default withWinterSpec({
     query = query.where("preferred", "=", 1)
   }
   if (req.query.is_extended_promotional) {
-    query = query.where("is_extended_promotional", "=", 1)
+    query = query.where(sql<boolean>`(${extendedPromotionalSql}) = 1`)
   }
 
   const baseQuery = query
