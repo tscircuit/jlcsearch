@@ -33,10 +33,12 @@ jobs:
         with:
           path: ./db.sqlite3
           key: db-sqlite3-${{ hashFiles('scripts/setup-*.ts') }}
+          restore-keys: |
+            db-sqlite3-
 
       - name: Run setup if cache miss
-        if: steps.cache-setup.outputs.cache-hit != 'true'
-        run: bun run setup
+        if: steps.cache-setup.outputs.cache-hit != 'true' && hashFiles('db.sqlite3') == ''
+        run: bun run setup:ci-test-db
 
       - name: Run tests
         run: bun test
