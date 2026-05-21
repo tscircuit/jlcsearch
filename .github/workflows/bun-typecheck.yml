@@ -25,5 +25,8 @@ jobs:
       - name: Install dependencies
         run: bun i
 
+      - name: Install cf-proxy dependencies
+        run: cd cf-proxy && bun i
+
       - name: Run type check
         run: bunx tsc --noEmit
