@@ -34,7 +34,10 @@ describe("render helpers", () => {
       '<table class="border border-gray-300 text-xs border-collapse p-1">',
     )
     expect(html).toContain("SMD5050-4P")
-    expect(html).toContain("/led_with_ic/list.json?protocol=WS2812B")
+    expect(html).toContain('href="/led_with_ic/list.json?protocol=WS2812B"')
+    expect(html).not.toContain(
+      'href="https://jlcsearch-proxy-staging.seve.workers.dev/led_with_ic/list.json',
+    )
   })
 
   it("renders attributes cells inside details with a truncated summary", () => {

@@ -7,7 +7,11 @@ export const withCtxReact: Middleware<
   { react: (component: ReactNode, title?: string) => Response }
 > = async (req, ctx, next) => {
   ctx.react = (component: ReactNode, title?: string) => {
-    const pathComponents = new URL(req.url).pathname.split("/").filter(Boolean)
+    const requestUrl = new URL(req.url)
+    const pathComponents = requestUrl.pathname.split("/").filter(Boolean)
+    const jsonHref = requestUrl.pathname.includes("/list")
+      ? `${requestUrl.pathname.replace("/list", "/list.json")}${requestUrl.search}`
+      : null
     const timezone = req.headers.get("X-Timezone") || "UTC"
 
     return new Response(
@@ -116,11 +120,7 @@ button {
                       className="inline-block"
                     />
                   </a>
-                  {req.url.includes("/list") && (
-                    <a href={`${req.url.replace("/list", "/list.json")}`}>
-                      json
-                    </a>
-                  )}
+                  {jsonHref && <a href={jsonHref}>json</a>}
                   <a href="https://raw.githubusercontent.com/tscircuit/jlcsearch/refs/heads/main/docs/openapi.json">
                     OpenAPI
                   </a>
