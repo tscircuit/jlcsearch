@@ -21,23 +21,12 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: Cache setup artifacts
-        id: cache-setup
-        uses: actions/cache@v4
-        with:
-          path: ./db.sqlite3
-          key: db-sqlite3-${{ hashFiles('scripts/setup-db-optimizations.ts', 'scripts/setup-derived-tables.ts', 'lib/db/optimizations/**/*.ts', 'lib/db/derivedtables/**/*.ts') }}
-          restore-keys: |
-            db-sqlite3-
-
-      - name: Run setup if cache miss
-        if: steps.cache-setup.outputs.cache-hit != 'true'
-        run: |
-          if [ -f db.sqlite3 ]; then
-            echo "Using restored db.sqlite3 cache"
-          else
-            bun run setup
-          fi
+      - name: Set up test database
+        env:
+          JLCSEARCH_DB_PATH: .tmp/test-db.sqlite3
+        run: bun run scripts/setup-test-db.ts
 
       - name: Run tests
+        env:
+          JLCSEARCH_DB_PATH: .tmp/test-db.sqlite3
         run: bun test
