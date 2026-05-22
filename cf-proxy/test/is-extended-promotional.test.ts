@@ -1,0 +1,10 @@
+import { describe, expect, it } from "vitest"
+import { isExtendedPromotional } from "../src/is-extended-promotional"
+
+describe("isExtendedPromotional", () => {
+  it("derives the flag from preferred non-basic parts", () => {
+    expect(isExtendedPromotional({ preferred: 1, basic: 0 })).toBe(true)
+    expect(isExtendedPromotional({ preferred: 1, basic: 1 })).toBe(false)
+    expect(isExtendedPromotional({ preferred: 0, basic: 0 })).toBe(false)
+  })
+})
