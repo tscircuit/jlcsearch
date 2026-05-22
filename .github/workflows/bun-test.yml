@@ -21,6 +21,9 @@ jobs:
       - name: Install dependencies
         run: bun install
 
+      - name: Install cf-proxy dependencies
+        run: cd cf-proxy && bun install
+
       - name: Set up test database
         env:
           JLCSEARCH_DB_PATH: .tmp/test-db.sqlite3
