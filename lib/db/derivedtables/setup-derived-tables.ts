@@ -199,7 +199,7 @@ export const setupDerivedTables = async ({
   logger?: Logger
 } = {}) => {
   const activeDb = db ?? getDbClient()
-  const shouldDestroy = !db
+  const shouldDestroy = false // Never destroy the singleton - scripts exit their own process; preload must not destroy routes' connection
 
   try {
     for (const tableSpec of DERIVED_TABLES) {
