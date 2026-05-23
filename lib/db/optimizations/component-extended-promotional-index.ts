@@ -8,27 +8,25 @@ export const componentExtendedPromotionalIndex: DbOptimizationSpec = {
     "Index on components.is_extended_promotional for faster filtering of extended promotional components",
 
   async checkIfAdded(db: KyselyDatabaseInstance) {
-    const result = await sql`
-      SELECT name FROM sqlite_master
-      WHERE type='index' AND name=${this.name}
+    const {
+      rows: [ex],
+    } = await sql<any>`
+      SELECT * FROM components LIMIT 1
     `.execute(db)
 
-    return result.rows.length > 0
+    return "is_extended_promotional" in ex
   },
 
   async execute(db: KyselyDatabaseInstance) {
-    // Add the column if it does not already exist (SQLite ALTER TABLE)
-    const colResult = await sql`PRAGMA table_info(components)`.execute(db)
-    const cols = colResult.rows as Array<{ name: string }>
-    const hasCol = cols.some((r) => r.name === "is_extended_promotional")
-    if (!hasCol) {
-      await sql`ALTER TABLE components ADD COLUMN is_extended_promotional INTEGER DEFAULT 0`.execute(
-        db,
-      )
-    }
+    // Add the column to the components table
+    await sql`
+      ALTER TABLE components
+      ADD COLUMN is_extended_promotional INTEGER DEFAULT 0
+    `.execute(db)
 
+    // Create an index on the new column
     await db.schema
-      .createIndex(this.name)
+      .createIndex("idx_components_is_extended_promotional")
       .on("components")
       .column("is_extended_promotional")
       .execute()
