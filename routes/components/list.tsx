@@ -1,6 +1,5 @@
 import { sql } from "kysely"
 import { Table } from "lib/ui/Table"
-import { ExpressionBuilder } from "kysely"
 import { buildSearchTokenGroups } from "lib/util/search-token-groups"
 import { withWinterSpec } from "lib/with-winter-spec"
 import { z } from "zod"
@@ -52,7 +51,6 @@ export default withWinterSpec({
       "price",
       "extra",
       "basic",
-      "preferred",
     ])
     .limit(limit)
     .orderBy("stock", "desc")
@@ -73,11 +71,7 @@ export default withWinterSpec({
     query = query.where("preferred", "=", 1)
   }
   if (req.query.is_extended_promotional) {
-    query = query.where(
-      sql`is_extended_promotional`,
-      "=",
-      1,
-    )
+    query = query.where(sql`is_extended_promotional`, "=", 1)
   }
 
   if (req.query.search) {
