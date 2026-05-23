@@ -84,7 +84,8 @@ db.exec(`
     basic INTEGER,
     preferred INTEGER,
     category_id INTEGER,
-    last_on_stock INTEGER
+    last_on_stock INTEGER,
+    is_extended_promotional INTEGER DEFAULT 0
   );
 
   CREATE VIEW v_components AS
