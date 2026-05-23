@@ -17,17 +17,20 @@ import { sql } from "kysely"
     },
 
     async execute(db: KyselyDatabaseInstance) {
-      const cols = await sql`PRAGMA table_info(components)`.execute(db)
-      const hasCol = (cols.rows as any[]).some((r: any) => r.name === "is_extended_promotional")
+      // Add the column if it doesn't already exist (SQLite ALTER TABLE)
+      const colResult = await sql`PRAGMA table_info(components)`.execute(db)
+      const cols = colResult.rows as Array<{ name: string }>
+      const hasCol = cols.some((r) => r.name === "is_extended_promotional")
       if (!hasCol) {
-        await sql`ALTER TABLE components ADD COLUMN is_extended_promotional INTEGER DEFAULT 0`.execute(db)
+        await sql`ALTER TABLE components ADD COLUMN is_extended_promotional INTEGER DEFAULT 0`.execute(
+          db,
+        )
       }
 
       await db.schema
         .createIndex(this.name)
         .on("components")
         .column("is_extended_promotional")
-        .ifNotExists()
         .execute()
     },
   }
