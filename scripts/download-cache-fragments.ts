@@ -1,26 +1,45 @@
-import { mkdir } from "node:fs/promises"
 import { existsSync } from "node:fs"
+import { mkdir, rm } from "node:fs/promises"
 
 const BASE_URL = "https://yaqwsx.github.io/jlcparts/data"
 const OUTPUT_DIR = ".buildtmp"
 
 async function downloadFile(url: string, outputPath: string): Promise<boolean> {
-  try {
-    const response = await fetch(url)
-    if (!response.ok) {
-      if (response.status === 404) {
-        return false
-      }
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    const fileData = await response.arrayBuffer()
-    await Bun.write(outputPath, fileData)
-    console.log(`Downloaded: ${url}`)
-    return true
-  } catch (error) {
-    console.error(`Error downloading ${url}:`, error)
+  const proc = Bun.spawn([
+    "curl",
+    "-L",
+    "--retry",
+    "3",
+    "--retry-delay",
+    "2",
+    "--silent",
+    "--show-error",
+    "--output",
+    outputPath,
+    "--write-out",
+    "%{http_code}",
+    url,
+  ])
+  const statusText = await new Response(proc.stdout).text()
+  const exitCode = await proc.exited
+  if (exitCode !== 0) {
+    await rm(outputPath, { force: true })
+    throw new Error(`Failed to download ${url}`)
+  }
+
+  const statusCode = Number(statusText)
+  if (statusCode === 404) {
+    await rm(outputPath, { force: true })
     return false
   }
+
+  if (statusCode < 200 || statusCode >= 300) {
+    await rm(outputPath, { force: true })
+    throw new Error(`Failed to download ${url}: HTTP ${statusCode}`)
+  }
+
+  console.log(`Downloaded: ${url}`)
+  return true
 }
 
 async function main() {
@@ -31,7 +50,13 @@ async function main() {
 
   console.log(`Downloading into ${OUTPUT_DIR}`)
   // Download initial cache.zip
-  await downloadFile(`${BASE_URL}/cache.zip`, `${OUTPUT_DIR}/cache.zip`)
+  const downloadedCache = await downloadFile(
+    `${BASE_URL}/cache.zip`,
+    `${OUTPUT_DIR}/cache.zip`,
+  )
+  if (!downloadedCache) {
+    throw new Error("Missing required cache.zip")
+  }
 
   // Download fragments until we get a 404
   let index = 1
@@ -50,4 +75,7 @@ async function main() {
   }
 }
 
-main().catch(console.error)
+main().catch((error) => {
+  console.error(error)
+  process.exit(1)
+})
