@@ -46,7 +46,7 @@ describe("render helpers", () => {
     )
 
     expect(html).toContain('name="is_extended_promotional"')
-    expect(html).toContain("Extended promotional")
+    expect(html).toContain("Extended promotional part")
     expect(html).toContain("checked")
   })
 
