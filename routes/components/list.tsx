@@ -73,7 +73,9 @@ export default withWinterSpec({
     query = query.where("preferred", "=", 1)
   }
   if (req.query.is_extended_promotional) {
-    query = query.where("preferred", "=", 1).where("basic", "=", 0)
+    query = query
+      .where("preferred", "=", 1)
+      .where(sql<boolean>`COALESCE(basic, 0) = 0`)
   }
 
   if (req.query.search) {
