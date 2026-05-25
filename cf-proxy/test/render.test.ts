@@ -59,4 +59,27 @@ describe("render helpers", () => {
       "Feature&quot;:&quot;Overcurrent Protection(OCP)&quot;",
     )
   })
+
+  it("renders the components extended promotional filter and label", () => {
+    const html = renderD1TablePage(
+      "/components/list",
+      {
+        components: [
+          {
+            lcsc: 123,
+            mfr: "ABC",
+            is_extended_promotional: true,
+          },
+        ],
+      },
+      { is_extended_promotional: "true" },
+      "https://example.com/components/list?is_extended_promotional=true",
+    )
+
+    expect(html).toContain('name="is_extended_promotional"')
+    expect(html).toContain(
+      'name="is_extended_promotional" value="true" checked',
+    )
+    expect(html).toContain("Extended Promotional")
+  })
 })
