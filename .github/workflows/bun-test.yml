@@ -21,6 +21,10 @@ jobs:
       - name: Install dependencies
         run: bun install
 
+      - name: Install cf-proxy dependencies
+        run: bun install
+        working-directory: cf-proxy
+
       - name: Cache setup artifacts
         id: cache-setup
         uses: actions/cache@v4
