@@ -191,15 +191,17 @@ export const setupDerivedTables = async ({
   resetAll = false,
   resetTable = null,
   logger = () => {},
+  destroyOnComplete = false,
 }: {
   db?: KyselyDatabaseInstance
   populate?: boolean
   resetAll?: boolean
   resetTable?: string | null
   logger?: Logger
+  destroyOnComplete?: boolean
 } = {}) => {
   const activeDb = db ?? getDbClient()
-  const shouldDestroy = !db
+  const shouldDestroy = destroyOnComplete
 
   try {
     for (const tableSpec of DERIVED_TABLES) {
