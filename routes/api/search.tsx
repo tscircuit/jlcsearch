@@ -50,6 +50,7 @@ export default withWinterSpec({
     limit: z.string().optional(),
     is_basic: z.boolean().optional(),
     is_preferred: z.boolean().optional(),
+    is_extended_promotional: z.boolean().optional(),
   }),
   jsonResponse: z.any(),
 } as const)(async (req, ctx) => {
@@ -71,6 +72,14 @@ export default withWinterSpec({
   }
   if (req.query.is_preferred) {
     query = query.where("preferred", "=", 1)
+  }
+  if (typeof req.query.is_extended_promotional === "boolean") {
+    query =
+      req.query.is_extended_promotional === true
+        ? query.where("preferred", "=", 1).where("basic", "=", 0)
+        : query.where((eb) =>
+            eb.or([eb("preferred", "!=", 1), eb("basic", "=", 1)]),
+          )
   }
 
   const baseQuery = query
@@ -193,6 +202,7 @@ export default withWinterSpec({
     package: c.package,
     is_basic: Boolean(c.basic),
     is_preferred: Boolean(c.preferred),
+    is_extended_promotional: Boolean(c.preferred) && !Boolean(c.basic),
     description: c.description,
     stock: c.stock,
     price: extractSmallQuantityPrice(c.price),
