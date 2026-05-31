@@ -18,6 +18,7 @@ export interface Accelerometer {
   has_uart: number | null
   in_stock: number | null
   is_basic: number | null
+  is_extended_promotional: number | null
   is_preferred: number | null
   lcsc: Generated<number | null>
   mfr: string | null
@@ -85,6 +86,7 @@ export interface BatteryHolder {
   description: string | null
   in_stock: number | null
   is_basic: number | null
+  is_extended_promotional: number | null
   is_preferred: number | null
   lcsc: Generated<number | null>
   mfr: string | null
@@ -119,6 +121,7 @@ export interface BoostConverter {
   input_voltage_max: number | null
   input_voltage_min: number | null
   is_basic: number | null
+  is_extended_promotional: number | null
   is_preferred: number | null
   is_synchronous: number | null
   lcsc: Generated<number | null>
@@ -141,6 +144,7 @@ export interface BuckBoostConverter {
   input_voltage_max: number | null
   input_voltage_min: number | null
   is_basic: number | null
+  is_extended_promotional: number | null
   is_preferred: number | null
   is_synchronous: number | null
   lcsc: Generated<number | null>
@@ -161,6 +165,7 @@ export interface ComponentCatalog {
   category: string | null
   description: string | null
   extra: string | null
+  is_extended_promotional: number | null
   lcsc: Generated<number | null>
   mfr: string | null
   package: string | null
@@ -178,6 +183,7 @@ export interface Capacitor {
   esr_ohms: number | null
   in_stock: number | null
   is_basic: number | null
+  is_extended_promotional: number | null
   is_polarized: number | null
   is_preferred: number | null
   is_surface_mount: number | null
@@ -246,6 +252,7 @@ export interface FpcConnector {
   description: string | null
   in_stock: number | null
   is_basic: number | null
+  is_extended_promotional: number | null
   is_preferred: number | null
   lcsc: Generated<number | null>
   locking_feature: string | null
@@ -262,6 +269,7 @@ export interface Fpga {
   embedded_ram_bits: number | null
   in_stock: number | null
   is_basic: number | null
+  is_extended_promotional: number | null
   is_preferred: number | null
   lcsc: Generated<number | null>
   logic_array_blocks: number | null
@@ -301,6 +309,7 @@ export interface GasSensor {
   description: string | null
   in_stock: number | null
   is_basic: number | null
+  is_extended_promotional: number | null
   is_preferred: number | null
   lcsc: Generated<number | null>
   measures_air_quality: number | null
@@ -330,6 +339,7 @@ export interface Gyroscope {
   has_uart: number | null
   in_stock: number | null
   is_basic: number | null
+  is_extended_promotional: number | null
   is_preferred: number | null
   lcsc: Generated<number | null>
   mfr: string | null
@@ -399,6 +409,7 @@ export interface JstConnector {
   description: string | null
   in_stock: number | null
   is_basic: number | null
+  is_extended_promotional: number | null
   is_preferred: number | null
   lcsc: Generated<number | null>
   mfr: string | null
@@ -612,6 +623,7 @@ export interface PcieM2Connector {
   description: string | null
   in_stock: number | null
   is_basic: number | null
+  is_extended_promotional: number | null
   is_preferred: number | null
   is_right_angle: number | null
   key: string | null
@@ -643,6 +655,7 @@ export interface Relay {
   description: string | null
   in_stock: number | null
   is_basic: number | null
+  is_extended_promotional: number | null
   is_preferred: number | null
   lcsc: Generated<number | null>
   max_switching_current: number | null
@@ -679,6 +692,7 @@ export interface Resistor {
   description: string | null
   in_stock: number | null
   is_basic: number | null
+  is_extended_promotional: number | null
   is_multi_resistor_chip: number | null
   is_potentiometer: number | null
   is_preferred: number | null
@@ -701,6 +715,7 @@ export interface ResistorArray {
   description: string | null
   in_stock: number | null
   is_basic: number | null
+  is_extended_promotional: number | null
   is_preferred: number | null
   is_surface_mount: number | null
   lcsc: Generated<number | null>
@@ -724,6 +739,7 @@ export interface Switch {
   description: string | null
   in_stock: number | null
   is_basic: number | null
+  is_extended_promotional: number | null
   is_latching: number | null
   is_preferred: number | null
   lcsc: Generated<number | null>
@@ -749,6 +765,7 @@ export interface UsbCConnector {
   gender: string | null
   in_stock: number | null
   is_basic: number | null
+  is_extended_promotional: number | null
   is_preferred: number | null
   lcsc: Generated<number | null>
   mfr: string | null
@@ -821,6 +838,7 @@ export interface WireToBoardConnector {
   gender: string | null
   in_stock: number | null
   is_basic: number | null
+  is_extended_promotional: number | null
   is_preferred: number | null
   is_smd: number | null
   lcsc: Generated<number | null>
