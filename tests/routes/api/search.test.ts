@@ -107,3 +107,32 @@ test("GET /api/search supports '0402 LED'", async () => {
   expect(res.data.components.every((c: any) => c.package === "0402")).toBe(true)
   expect(res.data.components.some((c: any) => c.lcsc === 965793)).toBe(true)
 })
+
+test("GET /api/search returns is_extended_promotional field in each component", async () => {
+  const { axios } = await getTestServer()
+  const res = await axios.get("/api/search?limit=10")
+
+  expect(res.data).toHaveProperty("components")
+  expect(Array.isArray(res.data.components)).toBe(true)
+  expect(res.data.components.length).toBeGreaterThan(0)
+
+  for (const component of res.data.components) {
+    expect(component).toHaveProperty("is_extended_promotional")
+    expect(typeof component.is_extended_promotional).toBe("boolean")
+  }
+})
+
+test("GET /api/search with is_extended_promotional=true only returns extended promotional components", async () => {
+  const { axios } = await getTestServer()
+  const res = await axios.get("/api/search?limit=50&is_extended_promotional=true")
+
+  expect(res.data).toHaveProperty("components")
+  expect(Array.isArray(res.data.components)).toBe(true)
+
+  for (const component of res.data.components) {
+    // Extended promotional: preferred=true AND basic=false
+    expect(component.is_extended_promotional).toBe(true)
+    expect(component.is_basic).toBe(false)
+    expect(component.is_preferred).toBe(true)
+  }
+})
