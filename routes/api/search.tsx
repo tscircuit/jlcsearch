@@ -1,7 +1,7 @@
 import { sql } from "kysely"
 import {
-  buildSearchTokenGroups,
   type SearchTokenGroup,
+  buildSearchTokenGroups,
   tokenizeSearchTerm,
 } from "lib/util/search-token-groups"
 import { withWinterSpec } from "lib/with-winter-spec"
@@ -40,6 +40,11 @@ const ftsGroupQuery = (group: SearchTokenGroup): string => {
     : `(${tokenQueries.join(" OR ")})`
 }
 
+const isExtendedPromotional = (component: {
+  basic?: number | null
+  preferred?: number | null
+}) => Boolean(component.preferred) && !component.basic
+
 export default withWinterSpec({
   auth: "none",
   methods: ["GET"],
@@ -50,6 +55,7 @@ export default withWinterSpec({
     limit: z.string().optional(),
     is_basic: z.boolean().optional(),
     is_preferred: z.boolean().optional(),
+    is_extended_promotional: z.boolean().optional(),
   }),
   jsonResponse: z.any(),
 } as const)(async (req, ctx) => {
@@ -71,6 +77,15 @@ export default withWinterSpec({
   }
   if (req.query.is_preferred) {
     query = query.where("preferred", "=", 1)
+  }
+  if (req.query.is_extended_promotional !== undefined) {
+    query = req.query.is_extended_promotional
+      ? query
+          .where(sql<number>`COALESCE(preferred, 0)`, "=", 1)
+          .where(sql<number>`COALESCE(basic, 0)`, "=", 0)
+      : query.where(
+          sql<boolean>`NOT (COALESCE(preferred, 0) = 1 AND COALESCE(basic, 0) = 0)`,
+        )
   }
 
   const baseQuery = query
@@ -147,9 +162,9 @@ export default withWinterSpec({
     }
   }
 
-  const fullComponents = await query.execute()
+  const rawComponents = await query.execute()
 
-  if (fallbackLikeTokens.length > 0 && fullComponents.length === 0) {
+  if (fallbackLikeTokens.length > 0 && rawComponents.length === 0) {
     let fallbackQuery = baseQuery
 
     if (fallbackPackageTokens.length > 0) {
@@ -177,15 +192,20 @@ export default withWinterSpec({
     }
 
     const fallbackComponents = await fallbackQuery.execute()
-    const seenLcsc = new Set(fullComponents.map((component) => component.lcsc))
+    const seenLcsc = new Set(rawComponents.map((component) => component.lcsc))
 
     for (const component of fallbackComponents) {
       if (seenLcsc.has(component.lcsc)) continue
-      fullComponents.push(component)
+      rawComponents.push(component)
       seenLcsc.add(component.lcsc)
-      if (fullComponents.length >= limit) break
+      if (rawComponents.length >= limit) break
     }
   }
+
+  const fullComponents = rawComponents.map((component) => ({
+    ...component,
+    is_extended_promotional: isExtendedPromotional(component),
+  }))
 
   const components = fullComponents.map((c) => ({
     lcsc: c.lcsc,
@@ -193,6 +213,7 @@ export default withWinterSpec({
     package: c.package,
     is_basic: Boolean(c.basic),
     is_preferred: Boolean(c.preferred),
+    is_extended_promotional: c.is_extended_promotional,
     description: c.description,
     stock: c.stock,
     price: extractSmallQuantityPrice(c.price),

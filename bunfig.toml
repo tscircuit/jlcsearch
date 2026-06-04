@@ -1,5 +1,6 @@
 [test]
 preload = ["./tests/preload.ts"]
+pathIgnorePatterns = ["cf-proxy/**"]
 
 [install.lockfile]
 save = false
