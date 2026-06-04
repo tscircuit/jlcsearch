@@ -1,5 +1,4 @@
 import { sql } from "kysely"
-import { ExpressionBuilder } from "kysely"
 import { Table } from "lib/ui/Table"
 import { buildSearchTokenGroups } from "lib/util/search-token-groups"
 import { withWinterSpec } from "lib/with-winter-spec"
@@ -24,6 +23,11 @@ const ftsGroupQuery = (group: string[]): string => {
     ? tokenQueries[0]
     : `(${tokenQueries.join(" OR ")})`
 }
+
+const isExtendedPromotional = (component: {
+  basic?: number | null
+  preferred?: number | null
+}) => Boolean(component.preferred) && !component.basic
 
 export default withWinterSpec({
   auth: "none",
@@ -53,9 +57,6 @@ export default withWinterSpec({
       "extra",
       "basic",
       "preferred",
-      sql<number>`CASE WHEN preferred = 1 AND basic = 0 THEN 1 ELSE 0 END`.as(
-        "is_extended_promotional",
-      ),
     ])
     .limit(limit)
     .orderBy("stock", "desc")
@@ -75,8 +76,14 @@ export default withWinterSpec({
   if (req.query.is_preferred) {
     query = query.where("preferred", "=", 1)
   }
-  if (req.query.is_extended_promotional) {
-    query = query.where("preferred", "=", 1).where("basic", "=", 0)
+  if (req.query.is_extended_promotional !== undefined) {
+    query = req.query.is_extended_promotional
+      ? query
+          .where(sql<number>`COALESCE(preferred, 0)`, "=", 1)
+          .where(sql<number>`COALESCE(basic, 0)`, "=", 0)
+      : query.where(
+          sql<boolean>`NOT (COALESCE(preferred, 0) = 1 AND COALESCE(basic, 0) = 0)`,
+        )
   }
 
   if (req.query.search) {
@@ -111,7 +118,10 @@ export default withWinterSpec({
     }
   }
 
-  const fullComponents = await query.execute()
+  const fullComponents = (await query.execute()).map((component) => ({
+    ...component,
+    is_extended_promotional: isExtendedPromotional(component),
+  }))
 
   const components = fullComponents.map((c: any) => ({
     lcsc: c.lcsc,
@@ -119,7 +129,7 @@ export default withWinterSpec({
     package: c.package,
     is_basic: Boolean(c.basic),
     is_preferred: Boolean(c.preferred),
-    is_extended_promotional: Boolean(c.is_extended_promotional),
+    is_extended_promotional: c.is_extended_promotional,
     description: c.description,
     stock: c.stock,
     price: extractSmallQuantityPrice(c.price),

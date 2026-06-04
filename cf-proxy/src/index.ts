@@ -23,6 +23,51 @@ const extractSmallQuantityPrice = (price: string | null): string | number => {
   }
 }
 
+const isExtendedPromotional = (row: {
+  basic?: number | null
+  preferred?: number | null
+}) => Boolean(row.preferred) && !row.basic
+
+interface D1ComponentRow {
+  lcsc?: number | null
+  mfr?: string | null
+  package?: string | null
+  description?: string | null
+  stock?: number | null
+  price?: string | null
+  price1?: number | null
+  category?: string | null
+  subcategory?: string | null
+  basic?: number | null
+  preferred?: number | null
+}
+
+export const mapD1SearchComponent = (row: D1ComponentRow) => ({
+  lcsc: row.lcsc ?? 0,
+  mfr: row.mfr ?? "",
+  package: row.package ?? "",
+  is_basic: Boolean(row.basic),
+  is_preferred: Boolean(row.preferred),
+  is_extended_promotional: isExtendedPromotional(row),
+  description: row.description ?? "",
+  stock: row.stock ?? 0,
+  price: row.price1 ?? extractSmallQuantityPrice(row.price ?? null),
+})
+
+export const mapD1CatalogComponent = (row: D1ComponentRow) => ({
+  lcsc: row.lcsc ?? 0,
+  mfr: row.mfr ?? "",
+  package: row.package ?? "",
+  description: row.description ?? "",
+  stock: row.stock ?? 0,
+  price: row.price ?? "",
+  category: row.category ?? "",
+  subcategory: row.subcategory ?? "",
+  is_basic: Boolean(row.basic),
+  is_preferred: Boolean(row.preferred),
+  is_extended_promotional: isExtendedPromotional(row),
+})
+
 const buildD1ErrorResponse = (
   origin: string | null,
   message: string,
@@ -361,17 +406,7 @@ async function handleD1Search(
     const db = getD1Client(env.DB)
     const params = Object.fromEntries(url.searchParams)
     const rows = await searchIndex(db, params)
-    const components = rows.map((row) => ({
-      lcsc: row.lcsc ?? 0,
-      mfr: row.mfr ?? "",
-      package: row.package ?? "",
-      is_basic: Boolean(row.basic),
-      is_preferred: Boolean(row.preferred),
-      is_extended_promotional: Boolean(row.is_extended_promotional),
-      description: row.description ?? "",
-      stock: row.stock ?? 0,
-      price: row.price1 ?? extractSmallQuantityPrice(row.price),
-    }))
+    const components = rows.map(mapD1SearchComponent)
 
     const headers = new Headers({
       "content-type": "application/json",
@@ -481,19 +516,7 @@ async function handleD1ComponentsList(
     const db = getD1Client(env.DB)
     const rows = await queryComponentCatalog(db, params)
     const data = {
-      components: rows.map((row) => ({
-        lcsc: row.lcsc ?? 0,
-        mfr: row.mfr ?? "",
-        package: row.package ?? "",
-        description: row.description ?? "",
-        stock: row.stock ?? 0,
-        price: row.price ?? "",
-        category: row.category ?? "",
-        subcategory: row.subcategory ?? "",
-        is_basic: Boolean(row.basic),
-        is_preferred: Boolean(row.preferred),
-        is_extended_promotional: Boolean(row.is_extended_promotional),
-      })),
+      components: rows.map(mapD1CatalogComponent),
     }
 
     const headers = new Headers({

@@ -18,6 +18,31 @@ test("GET /api/search with search query 'STM32F401RCT6' returns expected compone
   expect(component).toHaveProperty("package")
   expect(component).toHaveProperty("price")
   expect(component).toHaveProperty("stock")
+  expect(component).toHaveProperty("is_basic")
+  expect(component).toHaveProperty("is_preferred")
+  expect(component).toHaveProperty("is_extended_promotional")
+})
+
+test("GET /api/search exposes and filters extended promotional parts", async () => {
+  const { axios } = await getTestServer()
+  const res = await axios.get(
+    "/api/search?limit=25&is_extended_promotional=true",
+  )
+
+  expect(res.data).toHaveProperty("components")
+  expect(Array.isArray(res.data.components)).toBe(true)
+
+  for (const component of res.data.components) {
+    expect(component).toHaveProperty("is_extended_promotional", true)
+    expect(component).toHaveProperty("is_preferred", true)
+    expect(component).toHaveProperty("is_basic", false)
+    expect(component).toHaveProperty("description")
+    expect(component).toHaveProperty("lcsc")
+    expect(component).toHaveProperty("mfr")
+    expect(component).toHaveProperty("package")
+    expect(component).toHaveProperty("price")
+    expect(component).toHaveProperty("stock")
+  }
 })
 
 test("GET /api/search with search query '555 Timer' returns expected components", async () => {
@@ -108,21 +133,20 @@ test("GET /api/search supports '0402 LED'", async () => {
   expect(res.data.components.some((c: any) => c.lcsc === 965793)).toBe(true)
 })
 
-test("GET /api/search filters extended promotional components", async () => {
+test("GET /api/search can filter out extended promotional parts", async () => {
   const { axios } = await getTestServer()
   const res = await axios.get(
-    "/api/search?limit=25&is_extended_promotional=true",
+    "/api/search?limit=25&is_extended_promotional=false",
   )
 
   expect(res.data).toHaveProperty("components")
   expect(Array.isArray(res.data.components)).toBe(true)
-  expect(res.data.components.length).toBeGreaterThan(0)
-  expect(
-    res.data.components.every(
-      (c: any) =>
-        c.is_extended_promotional === true &&
-        c.is_preferred === true &&
-        c.is_basic === false,
-    ),
-  ).toBe(true)
+
+  for (const component of res.data.components) {
+    expect(component).toHaveProperty("is_extended_promotional")
+    expect(component.is_extended_promotional).toBe(false)
+    expect(
+      component.is_preferred === true && component.is_basic === false,
+    ).toBe(false)
+  }
 })

@@ -23,7 +23,6 @@ export async function queryComponentCatalog(
     package: string | null
     basic: number | null
     preferred: number | null
-    is_extended_promotional: number | null
     description: string | null
     stock: number | null
     price: string | null

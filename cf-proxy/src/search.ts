@@ -22,7 +22,6 @@ interface SearchRow {
   price1: number | null
   basic: number | null
   preferred: number | null
-  is_extended_promotional: number | null
   category: string | null
   subcategory: string | null
 }
@@ -37,6 +36,14 @@ const canFallbackToLikeSearch = (error: unknown): boolean =>
 const isMissingFtsReadinessTable = (error: unknown): boolean =>
   error instanceof Error &&
   /no such table: search_index_fts_meta/i.test(error.message)
+
+const parseBooleanParam = (value: string | undefined): boolean | null => {
+  if (value === undefined) return null
+  const normalized = value.toLowerCase()
+  if (normalized === "true" || normalized === "1") return true
+  if (normalized === "false" || normalized === "0") return false
+  return null
+}
 
 async function isFtsSearchReady(db: Kysely<DB>): Promise<boolean> {
   try {
@@ -112,12 +119,17 @@ export async function searchIndex(
     conditions.push(sql`search_index.preferred = 1`)
   }
 
-  if (
-    params.is_extended_promotional === "true" ||
-    params.is_extended_promotional === "1"
-  ) {
-    conditions.push(sql`search_index.preferred = 1`)
-    conditions.push(sql`search_index.basic = 0`)
+  const isExtendedPromotional = parseBooleanParam(
+    params.is_extended_promotional,
+  )
+  if (isExtendedPromotional === true) {
+    conditions.push(
+      sql`(COALESCE(search_index.preferred, 0) = 1 AND COALESCE(search_index.basic, 0) = 0)`,
+    )
+  } else if (isExtendedPromotional === false) {
+    conditions.push(
+      sql`NOT (COALESCE(search_index.preferred, 0) = 1 AND COALESCE(search_index.basic, 0) = 0)`,
+    )
   }
 
   const raw = params.q?.trim()
@@ -161,10 +173,6 @@ export async function searchIndex(
       search_index.price1,
       search_index.basic,
       search_index.preferred,
-      CASE
-        WHEN search_index.preferred = 1 AND search_index.basic = 0 THEN 1
-        ELSE 0
-      END AS is_extended_promotional,
       search_index.category,
       search_index.subcategory
     FROM search_index
