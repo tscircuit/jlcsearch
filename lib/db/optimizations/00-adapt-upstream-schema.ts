@@ -55,9 +55,10 @@ export const adaptUpstreamSchema: DbOptimizationSpec = {
         jlc.description as description,
         jlc.datasheet as datasheet,
         jlc.stock as stock,
+        jlc.last_on_stock as last_on_stock,
         jlc.price as price,
         jlc.fetched_at as last_update,
-        jlc.attributes as extra,
+        '{"attributes":' || jlc.attributes || '}' as extra,
         0 as flag,
         0 as is_extended_promotional
       FROM jlc_components jlc
