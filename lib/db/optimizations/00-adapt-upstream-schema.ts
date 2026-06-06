@@ -81,16 +81,17 @@ export const adaptUpstreamSchema: DbOptimizationSpec = {
     `.execute(db)
 
     // 4. Create v_components view
-    // Since jlc_components already has manufacturer, we can just use it directly in the view.
+    // Use LEFT JOIN instead of correlated subquery to prevent full table scans in SQLite query planner
     await sql`
       CREATE VIEW v_components AS
       SELECT 
         components.*, 
         categories.category, 
         categories.subcategory, 
-        (SELECT manufacturer FROM jlc_components WHERE jlc_components.lcsc = components.lcsc) as manufacturer
+        jlc.manufacturer
       FROM components
       LEFT JOIN categories ON components.category_id = categories.id
+      LEFT JOIN jlc_components jlc ON jlc.lcsc = components.lcsc
     `.execute(db)
 
     console.log(
