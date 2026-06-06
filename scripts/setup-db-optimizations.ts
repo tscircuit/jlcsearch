@@ -1,4 +1,5 @@
 import { getBunDatabaseClient, getDbClient } from "lib/db/get-db-client"
+import { sql } from "kysely"
 import { componentStockIndex } from "lib/db/optimizations/component-stock-index"
 import { componentInStockColumn } from "lib/db/optimizations/component-in-stock-column"
 import { removeStaleComponents } from "lib/db/optimizations/remove-stale-components"
