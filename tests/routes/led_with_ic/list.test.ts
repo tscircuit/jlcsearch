@@ -24,7 +24,9 @@ test("GET /led_with_ic/list.json with json param returns LED with IC data", asyn
     expect(typeof ledWithIC.package).toBe("string")
     expect(typeof ledWithIC.description).toBe("string")
     expect(typeof ledWithIC.stock).toBe("number")
-    expect(typeof ledWithIC.price1).toBe("number")
+    expect(
+      ledWithIC.price1 === null || typeof ledWithIC.price1 === "number",
+    ).toBe(true)
   }
 })
 

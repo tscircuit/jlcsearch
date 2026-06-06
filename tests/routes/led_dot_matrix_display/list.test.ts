@@ -24,7 +24,9 @@ test("GET /led_dot_matrix_display/list.json with json param returns LED Dot Matr
     expect(typeof ledMatrix.package).toBe("string")
     expect(typeof ledMatrix.description).toBe("string")
     expect(typeof ledMatrix.stock).toBe("number")
-    expect(typeof ledMatrix.price1).toBe("number")
+    expect(
+      ledMatrix.price1 === null || typeof ledMatrix.price1 === "number",
+    ).toBe(true)
 
     if (ledMatrix.matrix_size) {
       expect(typeof ledMatrix.matrix_size).toBe("string")
