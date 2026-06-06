@@ -68,8 +68,33 @@ export const adaptUpstreamSchema: DbOptimizationSpec = {
       LEFT JOIN categories cat ON jlc.category = cat.category AND jlc.subcategory = cat.subcategory
     `.execute(db)
 
+    // 3. Create manufacturers table (dummy since we put manufacturer directly in the view)
+    await sql`
+      CREATE TABLE manufacturers (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        manufacturer TEXT NOT NULL
+      )
+    `.execute(db)
+
+    await sql`
+      INSERT INTO manufacturers (id, manufacturer) VALUES (1, 'Unknown')
+    `.execute(db)
+
+    // 4. Create v_components view
+    // Since jlc_components already has manufacturer, we can just use it directly in the view.
+    await sql`
+      CREATE VIEW v_components AS
+      SELECT 
+        components.*, 
+        categories.category, 
+        categories.subcategory, 
+        (SELECT manufacturer FROM jlc_components WHERE jlc_components.lcsc = components.lcsc) as manufacturer
+      FROM components
+      LEFT JOIN categories ON components.category_id = categories.id
+    `.execute(db)
+
     console.log(
-      "Successfully created legacy components table from jlc_components.",
+      "Successfully created legacy components table and v_components view from jlc_components.",
     )
   },
 }
