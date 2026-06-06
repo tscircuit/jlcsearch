@@ -4,7 +4,8 @@ import type { KyselyDatabaseInstance } from "../kysely-types"
 
 export const adaptUpstreamSchema: DbOptimizationSpec = {
   name: "adapt_upstream_schema",
-  description: "Adapt new upstream jlc_components schema to legacy components table if needed",
+  description:
+    "Adapt new upstream jlc_components schema to legacy components table if needed",
 
   async checkIfAdded(db: KyselyDatabaseInstance) {
     const result = await sql`
@@ -19,7 +20,9 @@ export const adaptUpstreamSchema: DbOptimizationSpec = {
     `.execute(db)
 
     if (hasNewSchema.rows.length === 0) {
-      console.log("No jlc_components found, upstream schema is already legacy or empty. Skipping adapter.")
+      console.log(
+        "No jlc_components found, upstream schema is already legacy or empty. Skipping adapter.",
+      )
       return
     }
 
@@ -65,6 +68,8 @@ export const adaptUpstreamSchema: DbOptimizationSpec = {
       LEFT JOIN categories cat ON jlc.category = cat.category AND jlc.subcategory = cat.subcategory
     `.execute(db)
 
-    console.log("Successfully created legacy components table from jlc_components.")
+    console.log(
+      "Successfully created legacy components table from jlc_components.",
+    )
   },
 }
