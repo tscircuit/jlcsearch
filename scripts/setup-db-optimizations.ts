@@ -27,6 +27,21 @@ const OPTIMIZATIONS: DbOptimizationSpec[] = [
 async function main() {
   const db = getDbClient()
 
+  console.log("=== BEGIN SCHEMA DUMP ===")
+  const tables = await sql`SELECT name FROM sqlite_master WHERE type='table'`.execute(db)
+  console.log("TABLES:", tables.rows)
+
+  if (tables.rows.some((r: any) => r.name === "jlc_components")) {
+    const jlc_sample = await sql`SELECT * FROM jlc_components LIMIT 1`.execute(db)
+    console.log("JLC_SAMPLE:", jlc_sample.rows)
+  }
+  if (tables.rows.some((r: any) => r.name === "lcsc_components")) {
+    const lcsc_sample = await sql`SELECT * FROM lcsc_components LIMIT 1`.execute(db)
+    console.log("LCSC_SAMPLE:", lcsc_sample.rows)
+  }
+  console.log("=== END SCHEMA DUMP ===")
+
+
   for (const optimization of OPTIMIZATIONS) {
     const isAdded = await optimization.checkIfAdded(db)
 
