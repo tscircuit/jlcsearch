@@ -1,16 +1,28 @@
-import { mkdir, chmod } from "node:fs/promises"
 import { existsSync } from "node:fs"
-import { platform, arch } from "node:os"
+import { chmod, mkdir } from "node:fs/promises"
+import { arch, platform } from "node:os"
 
 const BINARY_DIR = ".bin"
 const BINARY_NAME = "7zz"
 
 // Map of platform-arch combinations to download URLs
-const BINARY_URLS: Record<string, string> = {
-  "linux-x64": "https://7-zip.org/a/7z2408-linux-x64.tar.xz",
-  "linux-arm64": "https://7-zip.org/a/7z2408-linux-arm64.tar.xz",
-  "darwin-x64": "https://7-zip.org/a/7z2408-mac.tar.xz",
-  "darwin-arm64": "https://7-zip.org/a/7z2408-mac.tar.xz",
+const BINARY_URLS: Record<string, string[]> = {
+  "linux-x64": [
+    "https://7-zip.org/a/7z2601-linux-x64.tar.xz",
+    "https://github.com/ip7z/7zip/releases/download/26.01/7z2601-linux-x64.tar.xz",
+  ],
+  "linux-arm64": [
+    "https://7-zip.org/a/7z2601-linux-arm64.tar.xz",
+    "https://github.com/ip7z/7zip/releases/download/26.01/7z2601-linux-arm64.tar.xz",
+  ],
+  "darwin-x64": [
+    "https://7-zip.org/a/7z2601-mac.tar.xz",
+    "https://github.com/ip7z/7zip/releases/download/26.01/7z2601-mac.tar.xz",
+  ],
+  "darwin-arm64": [
+    "https://7-zip.org/a/7z2601-mac.tar.xz",
+    "https://github.com/ip7z/7zip/releases/download/26.01/7z2601-mac.tar.xz",
+  ],
 }
 
 async function downloadAndExtract7z() {
@@ -18,8 +30,8 @@ async function downloadAndExtract7z() {
   const currentArch = arch()
   const platformKey = `${currentPlatform}-${currentArch}`
 
-  const downloadUrl = BINARY_URLS[platformKey]
-  if (!downloadUrl) {
+  const downloadUrls = BINARY_URLS[platformKey]
+  if (!downloadUrls) {
     throw new Error(`Unsupported platform: ${platformKey}`)
   }
 
@@ -37,9 +49,20 @@ async function downloadAndExtract7z() {
   }
 
   console.log("Downloading 7z...")
-  const response = await fetch(downloadUrl)
-  if (!response.ok) {
-    throw new Error(`Failed to download: ${response.statusText}`)
+  let response: Response | null = null
+  const downloadErrors: string[] = []
+
+  for (const downloadUrl of downloadUrls) {
+    response = await fetch(downloadUrl)
+    if (response.ok) break
+    downloadErrors.push(
+      `${downloadUrl}: ${response.status} ${response.statusText}`,
+    )
+    response = null
+  }
+
+  if (!response) {
+    throw new Error(`Failed to download 7z: ${downloadErrors.join("; ")}`)
   }
 
   // Save the tar.xz file
