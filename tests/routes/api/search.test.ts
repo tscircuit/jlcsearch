@@ -18,6 +18,21 @@ test("GET /api/search with search query 'STM32F401RCT6' returns expected compone
   expect(component).toHaveProperty("package")
   expect(component).toHaveProperty("price")
   expect(component).toHaveProperty("stock")
+  expect(component).toHaveProperty("is_extended_promotional")
+})
+
+test("GET /api/search filters extended promotional parts", async () => {
+  const { axios } = await getTestServer()
+  const res = await axios.get("/api/search?is_extended_promotional=true")
+
+  expect(res.data).toHaveProperty("components")
+  expect(Array.isArray(res.data.components)).toBe(true)
+
+  for (const component of res.data.components) {
+    expect(component).toHaveProperty("is_extended_promotional", true)
+    expect(component).toHaveProperty("is_preferred", true)
+    expect(component).toHaveProperty("is_basic", false)
+  }
 })
 
 test("GET /api/search with search query '555 Timer' returns expected components", async () => {
