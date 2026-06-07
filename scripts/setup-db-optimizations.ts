@@ -9,9 +9,11 @@ import { componentPreferredIndex } from "lib/db/optimizations/component-preferre
 import { componentSearchFTS } from "lib/db/optimizations/component-search-fts"
 import { componentStockIndex } from "lib/db/optimizations/component-stock-index"
 import { removeStaleComponents } from "lib/db/optimizations/remove-stale-components"
+import { sourceDbV2Compat } from "lib/db/optimizations/source-db-v2-compat"
 import type { DbOptimizationSpec } from "lib/db/optimizations/types"
 
 const OPTIMIZATIONS: DbOptimizationSpec[] = [
+  sourceDbV2Compat,
   componentSearchFTS,
   componentPackageIndex,
   componentBasicIndex,
@@ -49,4 +51,7 @@ async function main() {
   bunDb.close()
 }
 
-main().catch(console.error)
+main().catch((error) => {
+  console.error(error)
+  process.exit(1)
+})
