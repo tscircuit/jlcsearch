@@ -1,4 +1,4 @@
-import { sql, type Kysely, type RawBuilder } from "kysely"
+import { type Kysely, type RawBuilder, sql } from "kysely"
 import type { DB } from "./db/types"
 import { buildSearchTokenGroups } from "./search-query"
 
@@ -8,6 +8,7 @@ export interface SearchQueryParams {
   subcategory_name?: string
   limit?: string
   is_basic?: string
+  is_extended_promotional?: string
   is_preferred?: string
 }
 
@@ -20,6 +21,7 @@ interface SearchRow {
   price: string | null
   price1: number | null
   basic: number | null
+  is_extended_promotional: number | null
   preferred: number | null
   category: string | null
   subcategory: string | null
@@ -106,6 +108,13 @@ export async function searchIndex(
     conditions.push(sql`search_index.basic = 1`)
   }
 
+  if (
+    params.is_extended_promotional === "true" ||
+    params.is_extended_promotional === "1"
+  ) {
+    conditions.push(sql`search_index.is_extended_promotional = 1`)
+  }
+
   if (params.is_preferred === "true" || params.is_preferred === "1") {
     conditions.push(sql`search_index.preferred = 1`)
   }
@@ -150,6 +159,7 @@ export async function searchIndex(
       search_index.price,
       search_index.price1,
       search_index.basic,
+      search_index.is_extended_promotional,
       search_index.preferred,
       search_index.category,
       search_index.subcategory

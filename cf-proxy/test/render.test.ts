@@ -37,6 +37,31 @@ describe("render helpers", () => {
     expect(html).toContain("/led_with_ic/list.json?protocol=WS2812B")
   })
 
+  it("renders extended promotional filters and table headers for components", () => {
+    const html = renderD1TablePage(
+      "/components/list",
+      {
+        components: [
+          {
+            lcsc: 456,
+            mfr: "TEST-PART",
+            is_basic: false,
+            is_extended_promotional: true,
+            is_preferred: true,
+          },
+        ],
+      },
+      { is_extended_promotional: "true" },
+      "https://jlcsearch-proxy-staging.seve.workers.dev/components/list?is_extended_promotional=true",
+    )
+
+    expect(html).toContain('name="is_extended_promotional"')
+    expect(html).toContain("Extended Promotional")
+    expect(html).toContain(
+      'name="is_extended_promotional" value="true" checked',
+    )
+  })
+
   it("renders attributes cells inside details with a truncated summary", () => {
     const html = renderD1TablePage(
       "/ldos/list",
