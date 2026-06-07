@@ -39,5 +39,31 @@ export const componentIsExtendedPromotionalColumn: DbOptimizationSpec = {
       .on("components")
       .column("is_extended_promotional")
       .execute()
+
+    // Recreate v_components to include the new column
+    await sql`DROP VIEW IF EXISTS v_components`.execute(db)
+    await sql`
+      CREATE VIEW v_components AS
+      SELECT 
+        c.basic,
+        cat.category,
+        c.category_id,
+        c.datasheet,
+        c.description,
+        c.extra,
+        c.joints,
+        c.last_on_stock,
+        c.lcsc,
+        c.manufacturer,
+        c.mfr,
+        c.package,
+        c.preferred,
+        c.price,
+        c.stock,
+        cat.subcategory,
+        c.is_extended_promotional
+      FROM components c
+      LEFT JOIN categories cat ON c.category_id = cat.id
+    `.execute(db)
   },
 }
