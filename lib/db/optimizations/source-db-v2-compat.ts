@@ -46,6 +46,8 @@ export const sourceDbV2Compat: DbOptimizationSpec = {
         SELECT DISTINCT category, subcategory
         FROM jlc_components
         WHERE present = 1
+          AND category != ''
+          AND subcategory != ''
       )
     `.execute(db)
 
@@ -68,6 +70,8 @@ export const sourceDbV2Compat: DbOptimizationSpec = {
         FROM jlc_components j
         LEFT JOIN lcsc_components l ON l.lcsc = j.lcsc
         WHERE j.present = 1
+          AND j.category != ''
+          AND j.subcategory != ''
       )
     `.execute(db)
 
@@ -128,7 +132,7 @@ export const sourceDbV2Compat: DbOptimizationSpec = {
           END AS first_price
         FROM jlc_components j
         LEFT JOIN lcsc_components l ON l.lcsc = j.lcsc
-        LEFT JOIN categories c
+        INNER JOIN categories c
           ON c.category = j.category AND c.subcategory = j.subcategory
         LEFT JOIN manufacturers m
           ON m.name = COALESCE(NULLIF(l.manufacturer, ''), NULLIF(j.manufacturer, ''), '')
