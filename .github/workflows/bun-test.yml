@@ -32,5 +32,8 @@ jobs:
         if: steps.cache-setup.outputs.cache-hit != 'true'
         run: bun run setup
 
+      - name: Ensure compatibility views
+        run: bun scripts/ensure-test-db-views.ts
+
       - name: Run tests
         run: bun test
