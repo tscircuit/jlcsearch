@@ -1,5 +1,5 @@
 import { sql } from "kysely"
-import { destroyDbClient, getDbClient } from "lib/db/get-db-client"
+import { getDbClient } from "lib/db/get-db-client"
 import { accelerometerTableSpec } from "lib/db/derivedtables/accelerometer"
 import { adcTableSpec } from "lib/db/derivedtables/adc"
 import { analogMultiplexerTableSpec } from "lib/db/derivedtables/analog_multiplexer"
@@ -199,7 +199,7 @@ export const setupDerivedTables = async ({
   logger?: Logger
 } = {}) => {
   const activeDb = db ?? getDbClient()
-  const shouldDestroy = !db
+  const shouldDestroy = !db && populate
 
   try {
     for (const tableSpec of DERIVED_TABLES) {
@@ -214,7 +214,7 @@ export const setupDerivedTables = async ({
     }
   } finally {
     if (shouldDestroy) {
-      await destroyDbClient()
+      await activeDb.destroy()
     }
   }
 }
