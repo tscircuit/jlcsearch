@@ -79,8 +79,8 @@ if (!tableExists("components") && tableExists("jlc_components")) {
   )
 }
 
-if (dbObjectType("v_components") === "view" && tableExists("components")) {
-  db.exec("DROP VIEW v_components")
+if (tableExists("v_components") && tableExists("components")) {
+  db.exec(`DROP ${dbObjectType("v_components")?.toUpperCase()} v_components`)
 }
 
 if (!tableExists("v_components") && tableExists("components")) {
@@ -88,7 +88,7 @@ if (!tableExists("v_components") && tableExists("components")) {
   const hasManufacturers = tableExists("manufacturers")
 
   db.exec(`
-    CREATE VIEW v_components AS
+    CREATE TABLE v_components AS
     SELECT
       c.lcsc,
       c.category_id,
@@ -110,6 +110,15 @@ if (!tableExists("v_components") && tableExists("components")) {
     ${hasCategories ? "LEFT JOIN categories cat ON cat.id = c.category_id" : ""}
     ${hasManufacturers ? "LEFT JOIN manufacturers m ON m.id = c.manufacturer_id" : ""}
   `)
+  db.exec(
+    "CREATE INDEX IF NOT EXISTS idx_v_components_subcategory ON v_components(subcategory)",
+  )
+  db.exec(
+    "CREATE INDEX IF NOT EXISTS idx_v_components_package ON v_components(package)",
+  )
+  db.exec(
+    "CREATE INDEX IF NOT EXISTS idx_v_components_stock ON v_components(stock)",
+  )
 }
 
 db.close()
