@@ -4,7 +4,8 @@ import type { KyselyDatabaseInstance } from "../kysely-types"
 
 export const legacySchema: DbOptimizationSpec = {
   name: "create_legacy_schema",
-  description: "Creates legacy components, categories, and v_components to support older queries.",
+  description:
+    "Creates legacy components, categories, and v_components to support older queries.",
 
   async checkIfAdded(db: KyselyDatabaseInstance) {
     const tableExists = await sql`
@@ -87,7 +88,7 @@ export const legacySchema: DbOptimizationSpec = {
       FROM components c
       LEFT JOIN categories cat ON c.category_id = cat.id
     `.execute(db)
-    
+
     console.log("Legacy schema created successfully!")
   },
 }
