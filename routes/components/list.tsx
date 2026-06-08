@@ -66,14 +66,15 @@ export default withWinterSpec({
     query = query.where("package", "=", req.query.package)
   }
 
-  if (req.query.is_basic) {
-    query = query.where("basic", "=", 1)
-  }
-  if (req.query.is_preferred) {
-    query = query.where("preferred", "=", 1)
-  }
   if (req.query.is_extended_promotional) {
     query = query.where("preferred", "=", 1).where("basic", "=", 0)
+  } else {
+    if (req.query.is_basic) {
+      query = query.where("basic", "=", 1)
+    }
+    if (req.query.is_preferred) {
+      query = query.where("preferred", "=", 1)
+    }
   }
 
   if (req.query.search) {
@@ -146,7 +147,7 @@ export default withWinterSpec({
               type="checkbox"
               name="is_basic"
               value="true"
-              checked={req.query.is_basic}
+              defaultChecked={req.query.is_basic}
             />
           </label>
         </div>
@@ -157,7 +158,7 @@ export default withWinterSpec({
               type="checkbox"
               name="is_preferred"
               value="true"
-              checked={req.query.is_preferred}
+              defaultChecked={req.query.is_preferred}
             />
           </label>
         </div>
@@ -168,7 +169,7 @@ export default withWinterSpec({
               type="checkbox"
               name="is_extended_promotional"
               value="true"
-              checked={req.query.is_extended_promotional}
+              defaultChecked={req.query.is_extended_promotional}
             />
           </label>
         </div>

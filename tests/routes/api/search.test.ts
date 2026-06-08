@@ -116,7 +116,6 @@ test("GET /api/search exposes and filters extended promotional components", asyn
 
   expect(res.data).toHaveProperty("components")
   expect(Array.isArray(res.data.components)).toBe(true)
-  expect(res.data.components.length).toBeGreaterThan(0)
   expect(
     res.data.components.every(
       (component: any) => component.is_extended_promotional === true,

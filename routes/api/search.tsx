@@ -67,14 +67,15 @@ export default withWinterSpec({
     query = query.where("package", "=", req.query.package)
   }
 
-  if (req.query.is_basic) {
-    query = query.where("basic", "=", 1)
-  }
-  if (req.query.is_preferred) {
-    query = query.where("preferred", "=", 1)
-  }
   if (req.query.is_extended_promotional) {
     query = query.where("preferred", "=", 1).where("basic", "=", 0)
+  } else {
+    if (req.query.is_basic) {
+      query = query.where("basic", "=", 1)
+    }
+    if (req.query.is_preferred) {
+      query = query.where("preferred", "=", 1)
+    }
   }
 
   const baseQuery = query
