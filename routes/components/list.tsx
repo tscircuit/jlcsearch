@@ -2,6 +2,10 @@ import { sql } from "kysely"
 import { Table } from "lib/ui/Table"
 import { ExpressionBuilder } from "kysely"
 import { buildSearchTokenGroups } from "lib/util/search-token-groups"
+import {
+  applyPromotionalComponentFilters,
+  isExtendedPromotional,
+} from "lib/util/component-promotions"
 import { withWinterSpec } from "lib/with-winter-spec"
 import { z } from "zod"
 
@@ -66,16 +70,7 @@ export default withWinterSpec({
     query = query.where("package", "=", req.query.package)
   }
 
-  if (req.query.is_extended_promotional) {
-    query = query.where("preferred", "=", 1).where("basic", "=", 0)
-  } else {
-    if (req.query.is_basic) {
-      query = query.where("basic", "=", 1)
-    }
-    if (req.query.is_preferred) {
-      query = query.where("preferred", "=", 1)
-    }
-  }
+  query = applyPromotionalComponentFilters(query, req.query)
 
   if (req.query.search) {
     const search = req.query.search
@@ -117,7 +112,7 @@ export default withWinterSpec({
     package: c.package,
     is_basic: Boolean(c.basic),
     is_preferred: Boolean(c.preferred),
-    is_extended_promotional: Boolean(c.preferred) && !Boolean(c.basic),
+    is_extended_promotional: isExtendedPromotional(c),
     description: c.description,
     stock: c.stock,
     price: extractSmallQuantityPrice(c.price),
