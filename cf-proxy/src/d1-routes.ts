@@ -300,7 +300,7 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
         category: row.category?.trim() ?? "",
         subcategory: row.subcategory?.trim() ?? "",
       }))
-      .filter((row) => row.category !== "")
+      .filter((row) => row.category !== "" && row.subcategory !== "")
 
     const categories = params.category_name
       ? normalizedRows

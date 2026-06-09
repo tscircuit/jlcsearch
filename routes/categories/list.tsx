@@ -13,6 +13,13 @@ export default withWinterSpec({
   let categories: Array<{ category: string; subcategory?: string }> =
     await ctx.db.selectFrom("categories").selectAll().execute()
 
+  categories = categories
+    .map((c) => ({
+      category: c.category.trim(),
+      subcategory: c.subcategory?.trim(),
+    }))
+    .filter((c) => c.category !== "" && c.subcategory !== "")
+
   if (req.query.category_name) {
     categories = categories.filter(
       (c: { category: string }) => c.category === req.query.category_name,
