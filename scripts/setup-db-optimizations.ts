@@ -42,6 +42,11 @@ async function main() {
 
   await db.destroy()
 
+  if (process.env.CI === "true") {
+    console.log("Skipping VACUUM in CI to avoid duplicating the large cache DB")
+    return
+  }
+
   const bunDb = getBunDatabaseClient()
   console.log("Running VACUUM to optimize database...")
   await bunDb.exec("VACUUM")
