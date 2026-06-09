@@ -2,16 +2,13 @@ import { sql } from "kysely"
 import { Table } from "lib/ui/Table"
 import { ExpressionBuilder } from "kysely"
 import { buildSearchTokenGroups } from "lib/util/search-token-groups"
+import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import { withWinterSpec } from "lib/with-winter-spec"
 import { z } from "zod"
 
 const extractSmallQuantityPrice = (price: string | null) => {
-  try {
-    const priceObj = JSON.parse(price!)
-    return priceObj[0].price
-  } catch (e) {
-    return ""
-  }
+  if (!price) return ""
+  return extractMinQPrice(price) ?? ""
 }
 
 const escapeFts5SearchTerm = (term: string): string => {

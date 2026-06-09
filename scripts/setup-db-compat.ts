@@ -1,37 +1,5 @@
 import { getBunDatabaseClient } from "lib/db/get-db-client"
 
-const BATCH_SIZE = 5000
-
-type SourceComponentRow = {
-  lcsc: number
-  category_id: number
-  mfr: string
-  package: string
-  joints: number
-  manufacturer_id: number
-  basic: number
-  preferred: number
-  description: string
-  datasheet: string
-  stock: number
-  price: string
-  last_update: number
-  last_on_stock: number
-  flag: number
-  jlc_attributes: string
-  rohs: number | null
-  eccn: string
-  assembly: number | null
-  assembly_process: string | null
-  assembly_mode: string | null
-  website_component_id: string | null
-  attrition: string
-  lcsc_attributes: string | null
-  lcsc_image: string | null
-  lcsc_url_slug: string | null
-  lcsc_manufacturer: string | null
-}
-
 const tableExists = (
   db: ReturnType<typeof getBunDatabaseClient>,
   name: string,
@@ -41,72 +9,6 @@ const tableExists = (
       "SELECT name FROM sqlite_master WHERE type IN ('table', 'view') AND name = ? LIMIT 1",
     )
     .get(name) !== null
-
-const parseJsonObject = (value: string | null): Record<string, unknown> => {
-  if (!value) return {}
-  try {
-    const parsed = JSON.parse(value)
-    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
-      ? parsed
-      : {}
-  } catch {
-    return {}
-  }
-}
-
-const parsePrice = (priceString: string | null) => {
-  if (!priceString?.trim()) return []
-
-  return priceString
-    .split(",")
-    .filter(Boolean)
-    .map((price) => {
-      const [rangeText, priceText] = price.split(":")
-      const [qFrom, qTo] = rangeText.split("-")
-      return {
-        qFrom: Number.parseInt(qFrom, 10),
-        qTo: qTo ? Number.parseInt(qTo, 10) : null,
-        price: Number.parseFloat(priceText),
-      }
-    })
-    .filter(
-      (price) => Number.isFinite(price.qFrom) && Number.isFinite(price.price),
-    )
-    .sort((a, b) => a.qFrom - b.qFrom)
-}
-
-const buildExtra = (row: SourceComponentRow) => {
-  const attributes = parseJsonObject(row.lcsc_attributes)
-  const extra: Record<string, unknown> = { attributes }
-
-  if (row.lcsc_image) {
-    extra.images = [{ original: `compact/${row.lcsc_image}` }]
-  }
-
-  if (row.lcsc_url_slug) {
-    extra.url = `https://lcsc.com/product-detail/${row.lcsc_url_slug}_C${row.lcsc}.html`
-  }
-
-  if (row.lcsc_manufacturer) {
-    extra.manufacturer = row.lcsc_manufacturer
-  }
-
-  return Object.keys(attributes).length === 0 && Object.keys(extra).length === 1
-    ? "{}"
-    : JSON.stringify(extra)
-}
-
-const buildJlcExtra = (row: SourceComponentRow) =>
-  JSON.stringify({
-    rohs: row.rohs === null ? null : Boolean(row.rohs),
-    eccn: row.eccn,
-    assembly: row.assembly === null ? null : Boolean(row.assembly),
-    assemblyProcess: row.assembly_process,
-    assemblyMode: row.assembly_mode,
-    websiteComponentId: row.website_component_id,
-    attrition: parseJsonObject(row.attrition),
-    attributes: parseJsonObject(row.jlc_attributes),
-  })
 
 const createLegacySchema = (db: ReturnType<typeof getBunDatabaseClient>) => {
   db.exec(`
@@ -175,7 +77,12 @@ const populateLegacyLookupTables = (
 const populateLegacyComponents = (
   db: ReturnType<typeof getBunDatabaseClient>,
 ) => {
-  const selectRows = db.query<SourceComponentRow, [number, number]>(`
+  db.exec(`
+    INSERT INTO components (
+      lcsc, category_id, mfr, package, joints, manufacturer_id, basic,
+      preferred, description, datasheet, stock, price, last_update, extra,
+      flag, last_on_stock, jlc_extra
+    )
     SELECT
       j.lcsc,
       cat.id AS category_id,
@@ -190,80 +97,35 @@ const populateLegacyComponents = (
       j.stock,
       j.price,
       COALESCE(l.fetched_at, j.fetched_at) AS last_update,
-      j.last_on_stock,
+      json_object('attributes', json(COALESCE(NULLIF(l.attributes, ''), '{}'))) AS extra,
       j.sync_seen AS flag,
-      j.attributes AS jlc_attributes,
-      j.rohs,
-      j.eccn,
-      j.assembly,
-      j.assembly_process,
-      j.assembly_mode,
-      j.website_component_id,
-      j.attrition,
-      l.attributes AS lcsc_attributes,
-      l.image AS lcsc_image,
-      l.url_slug AS lcsc_url_slug,
-      l.manufacturer AS lcsc_manufacturer
+      j.last_on_stock,
+      json_object(
+        'rohs', CASE
+          WHEN j.rohs IS NULL THEN NULL
+          WHEN j.rohs = 0 THEN json('false')
+          ELSE json('true')
+        END,
+        'eccn', j.eccn,
+        'assembly', CASE
+          WHEN j.assembly IS NULL THEN NULL
+          WHEN j.assembly = 0 THEN json('false')
+          ELSE json('true')
+        END,
+        'assemblyProcess', j.assembly_process,
+        'assemblyMode', j.assembly_mode,
+        'websiteComponentId', j.website_component_id,
+        'attrition', json(COALESCE(NULLIF(j.attrition, ''), '{}')),
+        'attributes', json(COALESCE(NULLIF(j.attributes, ''), '{}'))
+      ) AS jlc_extra
     FROM jlc_components j
     LEFT JOIN lcsc_components l ON l.lcsc = j.lcsc
     JOIN categories cat
       ON cat.category = j.category AND cat.subcategory = j.subcategory
     JOIN manufacturers m
       ON m.name = COALESCE(NULLIF(j.manufacturer, ''), NULLIF(l.manufacturer, ''), '')
-    WHERE j.present = 1 AND j.lcsc > ?
-    ORDER BY j.lcsc
-    LIMIT ?
+    WHERE j.present = 1;
   `)
-
-  const insertRow = db.prepare(`
-    INSERT INTO components (
-      lcsc, category_id, mfr, package, joints, manufacturer_id, basic,
-      preferred, description, datasheet, stock, price, last_update, extra,
-      flag, last_on_stock, jlc_extra
-    )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `)
-
-  let totalRows = 0
-  let lastLcsc = 0
-
-  while (true) {
-    const rows = selectRows.all(lastLcsc, BATCH_SIZE)
-    if (rows.length === 0) break
-
-    db.exec("BEGIN")
-    try {
-      for (const row of rows) {
-        insertRow.run(
-          row.lcsc,
-          row.category_id,
-          row.mfr,
-          row.package,
-          row.joints,
-          row.manufacturer_id,
-          row.basic,
-          row.preferred,
-          row.description,
-          row.datasheet,
-          row.stock,
-          JSON.stringify(parsePrice(row.price)),
-          row.last_update,
-          buildExtra(row),
-          row.flag,
-          row.last_on_stock,
-          buildJlcExtra(row),
-        )
-      }
-      db.exec("COMMIT")
-    } catch (error) {
-      db.exec("ROLLBACK")
-      throw error
-    }
-
-    totalRows += rows.length
-    lastLcsc = rows[rows.length - 1].lcsc
-    console.log(`Migrated ${totalRows} components into legacy schema`)
-  }
 }
 
 const createLegacyIndexesAndView = (
