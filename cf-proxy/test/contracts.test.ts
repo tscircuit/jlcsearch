@@ -379,6 +379,7 @@ describe("Cloudflare route contracts", () => {
       "lcsc",
       "mfr",
       "package",
+      "is_extended_promotional",
       "description",
       ["price", "price1"],
       "stock",
@@ -416,6 +417,9 @@ describe("Cloudflare route contracts", () => {
     const { response, data } = await fetchJson("/components/list?json=true")
     expect(response.ok).toBe(true)
     expect(Array.isArray(data.components)).toBe(true)
+    if (data.components.length > 0) {
+      expectRowHasFields(data.components[0], ["is_extended_promotional"])
+    }
   })
 
   it("GET /not-found/list?json=true returns a 404-style error payload", async () => {
