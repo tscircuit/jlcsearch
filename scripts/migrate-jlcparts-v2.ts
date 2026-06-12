@@ -101,13 +101,17 @@ async function main() {
     manufacturersMap.set(mfr.name, mfr.id)
   }
 
-  console.log("Selecting active components from jlc_components...")
+  console.log(
+    "Selecting active components from jlc_components joined with lcsc_components...",
+  )
   const selectQuery = db.query(`
     SELECT 
-      lcsc, category, subcategory, mfr, package, joints, manufacturer, preferred, 
-      library_type, last_on_stock, description, datasheet, stock, price, attributes, fetched_at
-    FROM jlc_components
-    WHERE last_on_stock >= strftime('%s', 'now', '-1 year')
+      j.lcsc, j.category, j.subcategory, j.mfr, j.package, j.joints, j.manufacturer, j.preferred, 
+      j.library_type, j.last_on_stock, j.description, j.datasheet, j.stock, j.price, j.attributes as jlc_attributes,
+      l.attributes as lcsc_attributes, j.fetched_at
+    FROM jlc_components j
+    LEFT JOIN lcsc_components l ON j.lcsc = l.lcsc
+    WHERE j.last_on_stock >= strftime('%s', 'now', '-1 year')
   `)
 
   const componentsToInsert = selectQuery.all() as any[]
@@ -132,9 +136,11 @@ async function main() {
         categoriesMap.get(`${j.category}\0${j.subcategory}`) || null
       const manufacturerId = manufacturersMap.get(j.manufacturer) || null
       const basic = j.library_type === "base" ? 1 : 0
+      const jlcAttrs = j.jlc_attributes ? JSON.parse(j.jlc_attributes) : {}
+      const lcscAttrs = j.lcsc_attributes ? JSON.parse(j.lcsc_attributes) : {}
       const extraJson = JSON.stringify({
         manufacturer: { name: j.manufacturer },
-        attributes: JSON.parse(j.attributes || "{}"),
+        attributes: { ...jlcAttrs, ...lcscAttrs },
       })
       const priceJson = parsePriceToNewJson(j.price)
 
