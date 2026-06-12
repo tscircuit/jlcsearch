@@ -10,8 +10,12 @@ export default withWinterSpec({
   }),
   jsonResponse: z.any(),
 } as const)(async (req, ctx) => {
-  let categories: Array<{ category: string; subcategory?: string }> =
+  let categories: Array<{ category: string; subcategory: string }> =
     await ctx.db.selectFrom("categories").selectAll().execute()
+
+  categories = categories.filter(
+    (c) => c.category.trim() !== "" && c.subcategory.trim() !== "",
+  )
 
   if (req.query.category_name) {
     categories = categories.filter(
@@ -35,7 +39,8 @@ export default withWinterSpec({
     categories = Array.from(categoryMap.entries()).map(
       ([category, subcategories]) => ({
         category,
-        subcategory: Array.from(subcategories)[0] as string | undefined,
+        subcategory:
+          (Array.from(subcategories)[0] as string | undefined) ?? "",
       }),
     )
   }

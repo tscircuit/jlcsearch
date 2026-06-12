@@ -91,6 +91,10 @@ export default withWinterSpec({
       if (!Number.isNaN(lcscNumber)) {
         query = query.where("lcsc", "=", lcscNumber)
       }
+    } else if (searchTerm.includes(".") && !searchTerm.includes(" ")) {
+      return ctx.json({
+        components: [],
+      })
     } else {
       const searchTokens = tokenizeSearchTerm(searchTerm)
       const searchTokenGroups = buildSearchTokenGroups(searchTerm)
@@ -152,6 +156,12 @@ export default withWinterSpec({
   }
 
   const fullComponents = await query.execute()
+
+  if (req.query.q?.includes(".") && fullComponents.length === 0) {
+    return ctx.json({
+      components: [],
+    })
+  }
 
   if (fallbackLikeTokens.length > 0 && fullComponents.length === 0) {
     let fallbackQuery = baseQuery

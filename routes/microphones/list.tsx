@@ -1,5 +1,4 @@
 import { Table } from "lib/ui/Table"
-import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import { withWinterSpec } from "lib/with-winter-spec"
 import { z } from "zod"
 
@@ -17,18 +16,16 @@ export default withWinterSpec({
   const selectedType = req.query.microphone_type
 
   let query = ctx.db
-    .selectFrom("v_components")
+    .selectFrom("microphones")
     .select([
       "lcsc",
       "mfr",
       "package",
       "description",
       "stock",
-      "price",
+      "price1",
       "subcategory",
     ])
-    .where("stock", ">", 0)
-    .where("subcategory", "in", [...MICROPHONE_SUBCATEGORIES])
     .orderBy("stock", "desc")
     .limit(100)
 
@@ -43,10 +40,9 @@ export default withWinterSpec({
   const microphones = await query.execute()
 
   const packages = await ctx.db
-    .selectFrom("v_components")
+    .selectFrom("microphones")
     .select("package")
     .distinct()
-    .where("subcategory", "in", [...MICROPHONE_SUBCATEGORIES])
     .where("package", "is not", null)
     .orderBy("package")
     .execute()
@@ -59,7 +55,7 @@ export default withWinterSpec({
       microphone_type: m.subcategory ?? "",
       description: m.description ?? "",
       stock: m.stock ?? 0,
-      price1: extractMinQPrice(m.price ?? ""),
+      price1: m.price1 ?? 0,
     }))
     .filter((m) => m.lcsc !== 0 && m.package !== "")
 

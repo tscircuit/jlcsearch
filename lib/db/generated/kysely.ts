@@ -867,6 +867,17 @@ export interface WifiModule {
   tx_current_ma: number | null;
 }
 
+export interface Microphone {
+  description: string | null;
+  lcsc: Generated<number | null>;
+  mfr: string | null;
+  package: string | null;
+  price: string | null;
+  price1: number | null;
+  stock: number | null;
+  subcategory: string | null;
+}
+
 export interface WireToBoardConnector {
   attributes: string | null;
   description: string | null;
@@ -924,6 +935,7 @@ export interface DB {
   led_with_ic: LedWithIc;
   manufacturers: Manufacturer;
   microcontroller: Microcontroller;
+  microphones: Microphone;
   mosfet: Mosfet;
   oled_display: OledDisplay;
   pcie_m2_connector: PcieM2Connector;
