@@ -51,6 +51,7 @@ export default withWinterSpec({
       "price",
       "extra",
       "basic",
+      "is_extended_promotional",
     ])
     .limit(limit)
     .orderBy("stock", "desc")
@@ -114,6 +115,7 @@ export default withWinterSpec({
     description: c.description,
     stock: c.stock,
     price: extractSmallQuantityPrice(c.price),
+    is_extended_promotional: Boolean(c.is_extended_promotional),
   }))
 
   if (ctx.isApiRequest) {
