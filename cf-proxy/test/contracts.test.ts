@@ -23,6 +23,9 @@ interface RouteCase {
 const REMOTE_TEST_TIMEOUT_MS = 15_000
 const it = (name: string, fn: () => Promise<unknown> | unknown) =>
   vitestIt(name, fn, REMOTE_TEST_TIMEOUT_MS)
+const contractDescribe = process.env.CF_TEST_BASE_URL?.trim()
+  ? describe
+  : describe.skip
 
 const getFieldValue = (row: any, alias: FieldAlias): unknown => {
   if (Array.isArray(alias)) {
@@ -363,7 +366,7 @@ const routeCases: RouteCase[] = [
   },
 ]
 
-describe("Cloudflare route contracts", () => {
+contractDescribe("Cloudflare route contracts", () => {
   it("GET /health returns ok", async () => {
     const { response, data } = await fetchJson("/health")
     expect(response.ok).toBe(true)
