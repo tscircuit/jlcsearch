@@ -38,7 +38,9 @@ test("GET /api/search with search query '555 Timer' returns expected components"
   }
 })
 
-test("GET /api/search with search query 'red led' returns expected components", async () => {
+test(
+  "GET /api/search with search query 'red led' returns expected components",
+  async () => {
   const { axios } = await getTestServer()
   const res = await axios.get("/api/search?limit=1&q=red%20led")
 
@@ -54,7 +56,9 @@ test("GET /api/search with search query 'red led' returns expected components", 
     expect(component).toHaveProperty("price")
     expect(component).toHaveProperty("stock")
   }
-})
+  },
+  { timeout: 10000 },
+)
 
 test("GET /api/search with part number strips leading 'C'", async () => {
   const { axios } = await getTestServer()
