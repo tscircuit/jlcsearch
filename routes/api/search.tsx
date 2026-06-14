@@ -1,7 +1,7 @@
 import { sql } from "kysely"
 import {
-  buildSearchTokenGroups,
   type SearchTokenGroup,
+  buildSearchTokenGroups,
   tokenizeSearchTerm,
 } from "lib/util/search-token-groups"
 import { withWinterSpec } from "lib/with-winter-spec"
@@ -207,7 +207,7 @@ export default withWinterSpec({
     package: c.package,
     is_basic: Boolean(c.basic),
     is_preferred: Boolean(c.preferred),
-    is_extended_promotional: Boolean(c.preferred) && !Boolean(c.basic),
+    is_extended_promotional: Boolean(c.preferred) && !c.basic,
     description: c.description,
     stock: c.stock,
     price: extractSmallQuantityPrice(c.price),

@@ -1,4 +1,4 @@
-import { sql, type Kysely, type RawBuilder } from "kysely"
+import { type Kysely, type RawBuilder, sql } from "kysely"
 import type { DB } from "./db/types"
 import { buildSearchTokenGroups } from "./search-query"
 
@@ -29,7 +29,7 @@ interface SearchRow {
 export const isExtendedPromotional = (row: {
   basic: number | boolean | null | undefined
   preferred: number | boolean | null | undefined
-}): boolean => Boolean(row.preferred) && !Boolean(row.basic)
+}): boolean => Boolean(row.preferred) && !row.basic
 
 const buildWhereClause = (conditions: RawBuilder<unknown>[]) =>
   conditions.length > 0 ? sql.join(conditions, sql` AND `) : sql`1 = 1`
