@@ -40,11 +40,15 @@ async function main() {
 
   await db.destroy()
 
-  const bunDb = getBunDatabaseClient()
-  console.log("Running VACUUM to optimize database...")
-  await bunDb.exec("VACUUM")
-  console.log("VACUUM completed")
-  bunDb.close()
+  if (process.env.GITHUB_ACTIONS !== "true") {
+    const bunDb = getBunDatabaseClient()
+    console.log("Running VACUUM to optimize database...")
+    await bunDb.exec("VACUUM")
+    console.log("VACUUM completed")
+    bunDb.close()
+  } else {
+    console.log("Skipping VACUUM in GitHub Actions CI")
+  }
 }
 
 main().catch(console.error)
