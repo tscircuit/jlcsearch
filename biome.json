@@ -9,6 +9,7 @@
   },
   "files": {
     "ignore": [
+      ".home",
       "cosmos-export",
       "dist",
       "package.json",
