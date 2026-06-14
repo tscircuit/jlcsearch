@@ -210,7 +210,7 @@ export interface Component {
   joints: number;
   last_on_stock: Generated<number>;
   last_update: Generated<number>;
-  lcsc: Generated<number | null>;
+  lcsc: Generated<number>;
   manufacturer_id: number;
   mfr: string;
   package: string;

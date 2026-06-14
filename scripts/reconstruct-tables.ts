@@ -64,7 +64,7 @@ async function main() {
   console.log("Reconstructing categories table...")
   db.exec(`
     CREATE TABLE IF NOT EXISTS categories (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
       category TEXT NOT NULL,
       subcategory TEXT NOT NULL
     );
@@ -78,7 +78,7 @@ async function main() {
   console.log("Reconstructing manufacturers table...")
   db.exec(`
     CREATE TABLE IF NOT EXISTS manufacturers (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
       name TEXT NOT NULL
     );
     CREATE UNIQUE INDEX IF NOT EXISTS idx_manufacturers_uniq ON manufacturers(name);
@@ -96,7 +96,7 @@ async function main() {
   db.exec(`
     DROP TABLE IF EXISTS components;
     CREATE TABLE components (
-      lcsc INTEGER PRIMARY KEY,
+      lcsc INTEGER PRIMARY KEY NOT NULL,
       mfr TEXT NOT NULL,
       package TEXT NOT NULL,
       joints INTEGER NOT NULL,

@@ -1,0 +1,62 @@
+lib/db/derivedtables/accelerometer.ts(98,9): error TS2322: Type 'number | null' is not assignable to type 'number'.
+  Type 'null' is not assignable to type 'number'.
+lib/db/derivedtables/adc.ts(111,9): error TS2322: Type 'number | null' is not assignable to type 'number'.
+  Type 'null' is not assignable to type 'number'.
+lib/db/derivedtables/analog_multiplexer.ts(140,9): error TS2322: Type 'number | null' is not assignable to type 'number'.
+  Type 'null' is not assignable to type 'number'.
+lib/db/derivedtables/boost_converter.ts(49,3): error TS2322: Type '(components: UnwrapGenerated<Component>[]) => ({ lcsc: number | null; mfr: string; description: string; stock: number; price1: number | null; in_stock: boolean; ... 13 more ...; attributes: any; } | null)[]' is not assignable to type '(components: UnwrapGenerated<Component>[]) => (BoostConverter | null)[]'.
+  Type '({ lcsc: number | null; mfr: string; description: string; stock: number; price1: number | null; in_stock: boolean; is_basic: boolean; is_preferred: boolean; is_extended_promotional: boolean; ... 10 more ...; attributes: any; } | null)[]' is not assignable to type '(BoostConverter | null)[]'.
+    Type '{ lcsc: number | null; mfr: string; description: string; stock: number; price1: number | null; in_stock: boolean; is_basic: boolean; is_preferred: boolean; is_extended_promotional: boolean; ... 10 more ...; attributes: any; } | null' is not assignable to type 'BoostConverter | null'.
+      Type '{ lcsc: number | null; mfr: string; description: string; stock: number; price1: number | null; in_stock: boolean; is_basic: boolean; is_preferred: boolean; is_extended_promotional: boolean; ... 10 more ...; attributes: any; }' is not assignable to type 'BoostConverter'.
+        Types of property 'lcsc' are incompatible.
+          Type 'number | null' is not assignable to type 'number'.
+            Type 'null' is not assignable to type 'number'.
+lib/db/derivedtables/buck_boost_converter.ts(51,5): error TS2322: Type '(components: UnwrapGenerated<Component>[]) => ({ lcsc: number | null; mfr: string; description: string; stock: number; price1: number | null; in_stock: boolean; ... 13 more ...; attributes: any; } | null)[]' is not assignable to type '(components: UnwrapGenerated<Component>[]) => (BuckBoostConverter | null)[]'.
+  Type '({ lcsc: number | null; mfr: string; description: string; stock: number; price1: number | null; in_stock: boolean; is_basic: boolean; is_preferred: boolean; is_extended_promotional: boolean; ... 10 more ...; attributes: any; } | null)[]' is not assignable to type '(BuckBoostConverter | null)[]'.
+    Type '{ lcsc: number | null; mfr: string; description: string; stock: number; price1: number | null; in_stock: boolean; is_basic: boolean; is_preferred: boolean; is_extended_promotional: boolean; ... 10 more ...; attributes: any; } | null' is not assignable to type 'BuckBoostConverter | null'.
+      Type '{ lcsc: number | null; mfr: string; description: string; stock: number; price1: number | null; in_stock: boolean; is_basic: boolean; is_preferred: boolean; is_extended_promotional: boolean; ... 10 more ...; attributes: any; }' is not assignable to type 'BuckBoostConverter'.
+        Types of property 'lcsc' are incompatible.
+          Type 'number | null' is not assignable to type 'number'.
+            Type 'null' is not assignable to type 'number'.
+lib/db/derivedtables/capacitor.ts(111,9): error TS2322: Type 'number | null' is not assignable to type 'number'.
+  Type 'null' is not assignable to type 'number'.
+lib/db/derivedtables/dac.ts(125,9): error TS2322: Type 'number | null' is not assignable to type 'number'.
+  Type 'null' is not assignable to type 'number'.
+lib/db/derivedtables/diode.ts(155,9): error TS2322: Type 'number | null' is not assignable to type 'number'.
+  Type 'null' is not assignable to type 'number'.
+lib/db/derivedtables/gas_sensor.ts(48,3): error TS2322: Type '(components: UnwrapGenerated<Component>[]) => { lcsc: number | null; mfr: string; description: string; stock: number; price1: number | null; in_stock: boolean; ... 16 more ...; attributes: {}; }[]' is not assignable to type '(components: UnwrapGenerated<Component>[]) => (GasSensor | null)[]'.
+  Type '{ lcsc: number | null; mfr: string; description: string; stock: number; price1: number | null; in_stock: boolean; is_basic: boolean; is_preferred: boolean; is_extended_promotional: boolean; ... 13 more ...; attributes: {}; }[]' is not assignable to type '(GasSensor | null)[]'.
+    Type '{ lcsc: number | null; mfr: string; description: string; stock: number; price1: number | null; in_stock: boolean; is_basic: boolean; is_preferred: boolean; is_extended_promotional: boolean; ... 13 more ...; attributes: {}; }' is not assignable to type 'GasSensor'.
+      Types of property 'lcsc' are incompatible.
+        Type 'number | null' is not assignable to type 'number'.
+          Type 'null' is not assignable to type 'number'.
+lib/db/derivedtables/gyroscope.ts(102,9): error TS2322: Type 'number | null' is not assignable to type 'number'.
+  Type 'null' is not assignable to type 'number'.
+lib/db/derivedtables/header.ts(224,9): error TS2322: Type 'number | null' is not assignable to type 'number'.
+  Type 'null' is not assignable to type 'number'.
+lib/db/derivedtables/io_expander.ts(135,9): error TS2322: Type 'number | null' is not assignable to type 'number'.
+  Type 'null' is not assignable to type 'number'.
+lib/db/derivedtables/led.ts(161,9): error TS2322: Type 'number | null' is not assignable to type 'number'.
+  Type 'null' is not assignable to type 'number'.
+lib/db/derivedtables/microcontroller.ts(224,9): error TS2322: Type 'number | null' is not assignable to type 'number'.
+  Type 'null' is not assignable to type 'number'.
+lib/db/derivedtables/potentiometer.ts(63,9): error TS2322: Type 'number | null' is not assignable to type 'number'.
+  Type 'null' is not assignable to type 'number'.
+lib/db/derivedtables/resistor.ts(78,9): error TS2322: Type 'number | null' is not assignable to type 'number'.
+  Type 'null' is not assignable to type 'number'.
+lib/db/derivedtables/resistor_array.ts(81,5): error TS2322: Type '({ lcsc: number | null; mfr: string; description: string; stock: number; price1: number; in_stock: boolean; is_basic: boolean; is_preferred: boolean; package: string; resistance: number | null; ... 7 more ...; attributes: any; } | null)[]' is not assignable to type '(ResistorArray | null)[]'.
+  Type '{ lcsc: number | null; mfr: string; description: string; stock: number; price1: number; in_stock: boolean; is_basic: boolean; is_preferred: boolean; package: string; resistance: number | null; ... 7 more ...; attributes: any; } | null' is not assignable to type 'ResistorArray | null'.
+    Property 'is_extended_promotional' is missing in type '{ lcsc: number | null; mfr: string; description: string; stock: number; price1: number; in_stock: boolean; is_basic: boolean; is_preferred: boolean; package: string; resistance: number | null; ... 7 more ...; attributes: any; }' but required in type 'ResistorArray'.
+lib/db/derivedtables/switch.ts(55,3): error TS2322: Type '(components: UnwrapGenerated<Component>[]) => ({ lcsc: number | null; mfr: string; description: string; stock: number; price1: number; in_stock: boolean; is_basic: boolean; ... 15 more ...; attributes: any; } | null)[]' is not assignable to type '(components: UnwrapGenerated<Component>[]) => (Switch | null)[]'.
+  Type '({ lcsc: number | null; mfr: string; description: string; stock: number; price1: number; in_stock: boolean; is_basic: boolean; is_preferred: boolean; is_extended_promotional: boolean; package: string; ... 12 more ...; attributes: any; } | null)[]' is not assignable to type '(Switch | null)[]'.
+    Type '{ lcsc: number | null; mfr: string; description: string; stock: number; price1: number; in_stock: boolean; is_basic: boolean; is_preferred: boolean; is_extended_promotional: boolean; package: string; ... 12 more ...; attributes: any; } | null' is not assignable to type 'Switch | null'.
+      Type '{ lcsc: number | null; mfr: string; description: string; stock: number; price1: number; in_stock: boolean; is_basic: boolean; is_preferred: boolean; is_extended_promotional: boolean; package: string; ... 12 more ...; attributes: any; }' is not assignable to type 'Switch'.
+        Types of property 'lcsc' are incompatible.
+          Type 'number | null' is not assignable to type 'number'.
+            Type 'null' is not assignable to type 'number'.
+lib/db/derivedtables/voltage_regulator.ts(180,9): error TS2322: Type 'number | null' is not assignable to type 'number'.
+  Type 'null' is not assignable to type 'number'.
+lib/db/derivedtables/wifi_module.ts(136,9): error TS2322: Type 'number | null' is not assignable to type 'number'.
+  Type 'null' is not assignable to type 'number'.
+scripts/reconstruct-tables.ts(1,22): error TS7016: Could not find a declaration file for module 'better-sqlite3'. '/Users/adityasingh/Bounties/jlcsearch/node_modules/better-sqlite3/lib/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/better-sqlite3` if it exists or add a new declaration (.d.ts) file containing `declare module 'better-sqlite3';`
