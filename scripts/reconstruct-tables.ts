@@ -61,6 +61,15 @@ async function main() {
   db.exec("PRAGMA synchronous = OFF;")
   db.exec("PRAGMA cache_size = 100000;")
 
+  console.log("Creating temporary indexes on source tables for performance...")
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_jlc_components_lcsc ON jlc_components(lcsc);
+    CREATE INDEX IF NOT EXISTS idx_lcsc_components_lcsc ON lcsc_components(lcsc);
+    CREATE INDEX IF NOT EXISTS idx_jlc_components_mfr ON jlc_components(manufacturer);
+    CREATE INDEX IF NOT EXISTS idx_lcsc_components_mfr ON lcsc_components(manufacturer);
+    CREATE INDEX IF NOT EXISTS idx_jlc_components_cat_subcat ON jlc_components(category, subcategory);
+  `)
+
   console.log("Reconstructing categories table...")
   db.exec(`
     CREATE TABLE IF NOT EXISTS categories (
