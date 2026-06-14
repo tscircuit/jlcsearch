@@ -43,12 +43,13 @@ export default withWinterSpec({
   const microphones = await query.execute()
 
   const packages = await ctx.db
-    .selectFrom("v_components")
-    .select("package")
+    .selectFrom("components")
+    .innerJoin("categories", "components.category_id", "categories.id")
+    .select("components.package as package")
     .distinct()
-    .where("subcategory", "in", [...MICROPHONE_SUBCATEGORIES])
-    .where("package", "is not", null)
-    .orderBy("package")
+    .where("categories.subcategory", "in", [...MICROPHONE_SUBCATEGORIES])
+    .where("components.package", "is not", null)
+    .orderBy("components.package")
     .execute()
 
   const normalizedMicrophones = microphones

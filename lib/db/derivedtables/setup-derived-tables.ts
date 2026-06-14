@@ -199,7 +199,7 @@ export const setupDerivedTables = async ({
   logger?: Logger
 } = {}) => {
   const activeDb = db ?? getDbClient()
-  const shouldDestroy = !db
+  const shouldDestroy = false
 
   try {
     for (const tableSpec of DERIVED_TABLES) {
@@ -214,7 +214,7 @@ export const setupDerivedTables = async ({
     }
   } finally {
     if (shouldDestroy) {
-      await activeDb.destroy()
+      await (activeDb as any).destroy()
     }
   }
 }
