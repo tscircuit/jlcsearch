@@ -61,7 +61,9 @@ async function main() {
   db.exec("PRAGMA synchronous = OFF;")
   db.exec("PRAGMA cache_size = 100000;")
 
-  console.log("Creating temporary index on lcsc_components(lcsc) for performance...")
+  console.log(
+    "Creating temporary index on lcsc_components(lcsc) for performance...",
+  )
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_lcsc_components_lcsc ON lcsc_components(lcsc);
   `)
