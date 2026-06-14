@@ -199,6 +199,7 @@ export interface Component {
   manufacturer_id: number;
   mfr: string;
   package: string;
+  extended_promotional: Generated<number>;
   preferred: Generated<number>;
   price: string;
   stock: number;
@@ -808,6 +809,7 @@ export interface VComponent {
   manufacturer: string | null;
   mfr: string | null;
   package: string | null;
+  extended_promotional: number | null;
   preferred: number | null;
   price: string | null;
   stock: number | null;

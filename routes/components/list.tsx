@@ -1,6 +1,5 @@
 import { sql } from "kysely"
 import { Table } from "lib/ui/Table"
-import { ExpressionBuilder } from "kysely"
 import { buildSearchTokenGroups } from "lib/util/search-token-groups"
 import { withWinterSpec } from "lib/with-winter-spec"
 import { z } from "zod"
@@ -35,29 +34,37 @@ export default withWinterSpec({
     search: z.string().optional(),
     is_basic: z.boolean().optional(),
     is_preferred: z.boolean().optional(),
+    is_extended_promotional: z.boolean().optional(),
   }),
   jsonResponse: z.any(),
 } as const)(async (req, ctx) => {
   const limit = 100
 
   let query = ctx.db
-    .selectFrom("v_components")
+    .selectFrom("components")
+    .innerJoin("categories", "components.category_id", "categories.id")
     .select([
-      "lcsc",
-      "mfr",
-      "package",
-      "description",
-      "stock",
-      "price",
-      "extra",
-      "basic",
+      "components.lcsc",
+      "components.mfr",
+      "components.package",
+      "components.description",
+      "components.stock",
+      "components.price",
+      "components.extra",
+      "components.basic",
+      "components.preferred",
+      "categories.subcategory as subcategory",
     ])
     .limit(limit)
     .orderBy("stock", "desc")
     .where("stock", ">", 0)
 
   if (req.query.subcategory_name) {
-    query = query.where("subcategory", "=", req.query.subcategory_name)
+    query = query.where(
+      "categories.subcategory",
+      "=",
+      req.query.subcategory_name,
+    )
   }
 
   if (req.query.package) {
@@ -69,6 +76,9 @@ export default withWinterSpec({
   }
   if (req.query.is_preferred) {
     query = query.where("preferred", "=", 1)
+  }
+  if (req.query.is_extended_promotional) {
+    query = query.where("basic", "=", 0).where("preferred", "=", 1)
   }
 
   if (req.query.search) {
@@ -111,6 +121,7 @@ export default withWinterSpec({
     package: c.package,
     is_basic: Boolean(c.basic),
     is_preferred: Boolean(c.preferred),
+    is_extended_promotional: Boolean(c.basic === 0 && c.preferred === 1),
     description: c.description,
     stock: c.stock,
     price: extractSmallQuantityPrice(c.price),
@@ -152,6 +163,17 @@ export default withWinterSpec({
               name="is_preferred"
               value="true"
               checked={req.query.is_preferred}
+            />
+          </label>
+        </div>
+        <div>
+          <label>
+            Extended Promotional:
+            <input
+              type="checkbox"
+              name="is_extended_promotional"
+              value="true"
+              checked={req.query.is_extended_promotional}
             />
           </label>
         </div>
