@@ -166,9 +166,8 @@ const routeCases: RouteCase[] = [
       "package",
       "description",
       ["price", "price1"],
-      "is_extended_promotional",
     ],
-    booleanFields: ["is_basic", "is_preferred", "is_extended_promotional"],
+    booleanFields: ["is_basic", "is_preferred"],
   },
   {
     name: "diodes",
