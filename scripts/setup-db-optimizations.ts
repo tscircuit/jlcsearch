@@ -2,6 +2,7 @@ import { sql } from "kysely"
 import {
   getBunDatabaseClient,
   getDbClient,
+  getResolvedDbPath,
   resetDbClientSingleton,
 } from "lib/db/get-db-client"
 import { componentBasicIndex } from "lib/db/optimizations/component-basic-index"
@@ -204,6 +205,29 @@ const materializeCompatibilityTables = async (
   }
 }
 
+const downloadPrebuiltDatabase = async () => {
+  const token = process.env.DATABASE_DOWNLOAD_TOKEN?.trim()
+
+  if (!token) {
+    throw new Error(
+      "Cannot materialize compatibility tables because no compatible source table was found and DATABASE_DOWNLOAD_TOKEN is not set",
+    )
+  }
+
+  const url = `https://jlcsearch.fly.dev/database/${token}`
+  console.log("Downloading prebuilt database from jlcsearch.fly.dev...")
+
+  const response = await fetch(url)
+  if (!response.ok) {
+    throw new Error(
+      `Failed to download prebuilt database: ${response.status} ${response.statusText}`,
+    )
+  }
+
+  await Bun.write(getResolvedDbPath(), await response.arrayBuffer())
+  console.log("Prebuilt database download complete")
+}
+
 const OPTIMIZATIONS: DbOptimizationSpec[] = [
   componentSearchFTS,
   componentPackageIndex,
@@ -219,6 +243,14 @@ const OPTIMIZATIONS: DbOptimizationSpec[] = [
 
 async function main() {
   const db = getDbClient()
+  const sourceTable = await resolveCompatibilitySource(db)
+
+  if (!sourceTable) {
+    await db.destroy()
+    resetDbClientSingleton()
+    await downloadPrebuiltDatabase()
+    return
+  }
 
   await materializeCompatibilityTables(db)
 
