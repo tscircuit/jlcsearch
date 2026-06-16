@@ -1,10 +1,11 @@
-import { mkdir, chmod } from "node:fs/promises"
 import { existsSync } from "node:fs"
-import { platform, arch } from "node:os"
+import { chmod, mkdir } from "node:fs/promises"
+import { arch, platform } from "node:os"
 
 const BINARY_DIR = ".bin"
 const BINARY_NAME = "7zz"
-const GITHUB_RELEASE_API = "https://api.github.com/repos/ip7z/7zip/releases/latest"
+const GITHUB_RELEASE_API =
+  "https://api.github.com/repos/ip7z/7zip/releases/latest"
 
 // Map of platform-arch combinations to release asset suffixes.
 const ASSET_SUFFIXES: Record<string, string> = {
@@ -33,10 +34,15 @@ async function resolveDownloadUrl(platformKey: string) {
   })
 
   if (!response.ok) {
-    throw new Error(`Failed to load latest 7-Zip release: ${response.status} ${response.statusText}`)
+    throw new Error(
+      `Failed to load latest 7-Zip release: ${response.status} ${response.statusText}`,
+    )
   }
 
-  const release = (await response.json()) as { tag_name?: string; assets?: GithubReleaseAsset[] }
+  const release = (await response.json()) as {
+    tag_name?: string
+    assets?: GithubReleaseAsset[]
+  }
   const assets = release.assets ?? []
   const asset = assets.find((candidate) => candidate.name.endsWith(assetSuffix))
 
