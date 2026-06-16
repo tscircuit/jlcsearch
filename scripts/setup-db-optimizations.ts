@@ -31,12 +31,25 @@ const tableExists = async (
   return result.rows.length > 0
 }
 
+const tableOrViewExists = async (
+  db: ReturnType<typeof getDbClient>,
+  tableName: string,
+) => {
+  const result = await sql`
+    SELECT name FROM sqlite_master
+    WHERE type IN ('table', 'view') AND name=${tableName}
+  `.execute(db)
+
+  return result.rows.length > 0
+}
+
 const resolveCompatibilitySource = async (
   db: ReturnType<typeof getDbClient>,
 ) => {
-  if (await tableExists(db, "v_components")) return "v_components"
-  if (await tableExists(db, "component_catalog")) return "component_catalog"
-  if (await tableExists(db, "search_index")) return "search_index"
+  if (await tableOrViewExists(db, "v_components")) return "v_components"
+  if (await tableOrViewExists(db, "component_catalog"))
+    return "component_catalog"
+  if (await tableOrViewExists(db, "search_index")) return "search_index"
   return null
 }
 
