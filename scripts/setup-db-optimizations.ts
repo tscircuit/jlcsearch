@@ -16,6 +16,8 @@ import { componentStockIndex } from "lib/db/optimizations/component-stock-index"
 import { removeStaleComponents } from "lib/db/optimizations/remove-stale-components"
 import type { DbOptimizationSpec } from "lib/db/optimizations/types"
 
+type CompatibilitySource = "v_components" | "component_catalog" | "search_index"
+
 const tableExists = async (
   db: ReturnType<typeof getDbClient>,
   tableName: string,
@@ -28,63 +30,177 @@ const tableExists = async (
   return result.rows.length > 0
 }
 
+const resolveCompatibilitySource = async (
+  db: ReturnType<typeof getDbClient>,
+) => {
+  if (await tableExists(db, "v_components")) return "v_components"
+  if (await tableExists(db, "component_catalog")) return "component_catalog"
+  if (await tableExists(db, "search_index")) return "search_index"
+  return null
+}
+
+const createCategoriesTable = async (
+  db: ReturnType<typeof getDbClient>,
+  sourceTable: CompatibilitySource,
+) => {
+  await sql`
+    CREATE TABLE categories AS
+    SELECT
+      ROW_NUMBER() OVER (ORDER BY category, subcategory) AS id,
+      category,
+      subcategory
+    FROM (
+      SELECT DISTINCT
+        COALESCE(category, '') AS category,
+        COALESCE(subcategory, '') AS subcategory
+      FROM ${sql.id(sourceTable)}
+    )
+  `.execute(db)
+}
+
+const createComponentsTable = async (
+  db: ReturnType<typeof getDbClient>,
+  sourceTable: CompatibilitySource,
+) => {
+  switch (sourceTable) {
+    case "v_components":
+      await sql`
+        CREATE TABLE components AS
+        SELECT
+          s.lcsc,
+          0 AS manufacturer_id,
+          s.mfr,
+          s.package,
+          s.description,
+          s.datasheet,
+          COALESCE(s.joints, 0) AS joints,
+          0 AS last_update,
+          COALESCE(s.last_on_stock, strftime('%s', 'now')) AS last_on_stock,
+          0 AS flag,
+          c.id AS category_id,
+          c.category,
+          c.subcategory,
+          s.manufacturer,
+          COALESCE(s.basic, 0) AS basic,
+          COALESCE(s.preferred, 0) AS preferred,
+          COALESCE(
+            s.extended_promotional,
+            CASE
+              WHEN COALESCE(s.basic, 0) = 0 AND COALESCE(s.preferred, 0) = 1 THEN 1
+              ELSE 0
+            END,
+          ) AS extended_promotional,
+          s.price,
+          s.stock,
+          s.extra
+        FROM ${sql.id(sourceTable)} AS s
+        LEFT JOIN categories AS c
+          ON c.category = COALESCE(s.category, '')
+         AND c.subcategory = COALESCE(s.subcategory, '')
+      `.execute(db)
+      return
+    case "component_catalog":
+      await sql`
+        CREATE TABLE components AS
+        SELECT
+          s.lcsc,
+          0 AS manufacturer_id,
+          s.mfr,
+          s.package,
+          s.description,
+          NULL AS datasheet,
+          0 AS joints,
+          0 AS last_update,
+          strftime('%s', 'now') AS last_on_stock,
+          0 AS flag,
+          c.id AS category_id,
+          c.category,
+          c.subcategory,
+          NULL AS manufacturer,
+          COALESCE(s.basic, 0) AS basic,
+          COALESCE(s.preferred, 0) AS preferred,
+          CASE
+            WHEN COALESCE(s.basic, 0) = 0 AND COALESCE(s.preferred, 0) = 1 THEN 1
+            ELSE 0
+          END AS extended_promotional,
+          s.price,
+          s.stock,
+          s.extra
+        FROM ${sql.id(sourceTable)} AS s
+        LEFT JOIN categories AS c
+          ON c.category = COALESCE(s.category, '')
+         AND c.subcategory = COALESCE(s.subcategory, '')
+      `.execute(db)
+      return
+    case "search_index":
+      await sql`
+        CREATE TABLE components AS
+        SELECT
+          s.lcsc,
+          0 AS manufacturer_id,
+          s.mfr,
+          s.package,
+          s.description,
+          NULL AS datasheet,
+          0 AS joints,
+          0 AS last_update,
+          strftime('%s', 'now') AS last_on_stock,
+          0 AS flag,
+          c.id AS category_id,
+          c.category,
+          c.subcategory,
+          s.manufacturer_name AS manufacturer,
+          COALESCE(s.basic, 0) AS basic,
+          COALESCE(s.preferred, 0) AS preferred,
+          CASE
+            WHEN COALESCE(s.basic, 0) = 0 AND COALESCE(s.preferred, 0) = 1 THEN 1
+            ELSE 0
+          END AS extended_promotional,
+          s.price,
+          s.stock,
+          json_object(
+            'manufacturer',
+            json_object('name', s.manufacturer_name),
+            'title',
+            s.title,
+            'mpn',
+            s.mpn,
+            'attributes',
+            s.attributes
+          ) AS extra
+        FROM ${sql.id(sourceTable)} AS s
+        LEFT JOIN categories AS c
+          ON c.category = COALESCE(s.category, '')
+         AND c.subcategory = COALESCE(s.subcategory, '')
+      `.execute(db)
+  }
+}
+
 const materializeCompatibilityTables = async (
   db: ReturnType<typeof getDbClient>,
 ) => {
   const hasComponents = await tableExists(db, "components")
   const hasCategories = await tableExists(db, "categories")
-  const hasVComponents = await tableExists(db, "v_components")
+  const sourceTable = await resolveCompatibilitySource(db)
 
   if (hasComponents && hasCategories) {
     return
   }
 
-  if (!hasVComponents) {
+  if (!sourceTable) {
     throw new Error(
-      "Cannot materialize compatibility tables because v_components is missing",
+      "Cannot materialize compatibility tables because no compatible source table was found",
     )
   }
 
-  console.log("Materializing compatibility tables from v_components...")
-
-  if (!hasComponents) {
-    await sql`
-      CREATE TABLE components AS
-      SELECT
-        lcsc,
-        0 AS manufacturer_id,
-        mfr,
-        package,
-        description,
-        datasheet,
-        COALESCE(joints, 0) AS joints,
-        0 AS last_update,
-        COALESCE(last_on_stock, 0) AS last_on_stock,
-        0 AS flag,
-        category_id,
-        category,
-        subcategory,
-        manufacturer,
-        COALESCE(basic, 0) AS basic,
-        COALESCE(preferred, 0) AS preferred,
-        COALESCE(extended_promotional, CASE WHEN COALESCE(basic, 0) = 0 AND COALESCE(preferred, 0) = 1 THEN 1 ELSE 0 END) AS extended_promotional,
-        price,
-        stock,
-        extra
-      FROM v_components
-    `.execute(db)
-  }
+  console.log(`Materializing compatibility tables from ${sourceTable}...`)
 
   if (!hasCategories) {
-    await sql`
-      CREATE TABLE categories AS
-      SELECT DISTINCT
-        category_id AS id,
-        category,
-        subcategory
-      FROM v_components
-      WHERE category_id IS NOT NULL
-    `.execute(db)
+    await createCategoriesTable(db, sourceTable)
+  }
+
+  if (!hasComponents) {
+    await createComponentsTable(db, sourceTable)
   }
 }
 
