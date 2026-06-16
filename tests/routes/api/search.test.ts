@@ -120,7 +120,9 @@ test("GET /api/search response includes is_extended_promotional field", async ()
 
 test("GET /api/search with is_extended_promotional filter returns only promotional components", async () => {
   const { axios } = await getTestServer()
-  const res = await axios.get("/api/search?is_extended_promotional=true&limit=100")
+  const res = await axios.get(
+    "/api/search?is_extended_promotional=true&limit=100",
+  )
 
   expect(res.data).toHaveProperty("components")
   for (const c of res.data.components) {
