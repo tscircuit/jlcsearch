@@ -4,17 +4,13 @@ import {
   type SearchTokenGroup,
   tokenizeSearchTerm,
 } from "lib/util/search-token-groups"
+import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import { withWinterSpec } from "lib/with-winter-spec"
 import { z } from "zod"
 
 const extractSmallQuantityPrice = (price: string | null): string => {
   if (!price) return ""
-  try {
-    const priceObj = JSON.parse(price)
-    return priceObj[0]?.price || ""
-  } catch {
-    return ""
-  }
+  return extractMinQPrice(price)?.toString() ?? ""
 }
 
 const escapeFts5SearchTerm = (term: string): string => {
