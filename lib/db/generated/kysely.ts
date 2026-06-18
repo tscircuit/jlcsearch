@@ -192,6 +192,7 @@ export interface Component {
   description: string;
   extra: string | null;
   flag: Generated<number>;
+  is_extended_promotional: number | null;
   joints: number;
   last_on_stock: Generated<number>;
   last_update: number;
