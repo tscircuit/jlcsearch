@@ -156,7 +156,7 @@ async function main() {
       make_extra(j.attributes, l.attributes, COALESCE(l.manufacturer, j.manufacturer), l.image, l.url_slug),
       CASE WHEN j.library_type = 'base' THEN 1 ELSE 0 END,
       j.preferred,
-      j.preferred,
+      CASE WHEN j.library_type = 'expand' AND j.preferred = 1 THEN 1 ELSE 0 END,
       cat.id,
       m.id,
       j.last_on_stock,
