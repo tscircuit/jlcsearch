@@ -296,6 +296,7 @@ SELECT
   package,
   basic,
   preferred,
+  is_extended_promotional,
   description,
   stock,
   price,
@@ -319,6 +320,7 @@ CREATE TABLE component_catalog (
   package TEXT,
   basic INTEGER,
   preferred INTEGER,
+  is_extended_promotional INTEGER,
   description TEXT,
   stock INTEGER,
   price TEXT,
@@ -350,6 +352,7 @@ SELECT
   END AS price1,
   basic,
   preferred,
+  is_extended_promotional,
   category,
   subcategory,
   CASE
@@ -405,6 +408,7 @@ CREATE TABLE search_index (
   price1 REAL,
   basic INTEGER,
   preferred INTEGER,
+  is_extended_promotional INTEGER,
   category TEXT,
   subcategory TEXT,
   manufacturer_name TEXT,
@@ -479,3 +483,4 @@ main() {
 }
 
 main "$@"
+
