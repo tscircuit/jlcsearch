@@ -1,9 +1,9 @@
 import {
+  type FilterOptions,
+  type QueryParams,
   ROUTE_TO_TABLE,
   TABLE_CONFIGS,
   TABLE_RESPONSE_KEY,
-  type QueryParams,
-  type FilterOptions,
 } from "./handlers"
 
 const escapeHtml = (value: unknown): string =>
@@ -33,6 +33,7 @@ const routeLabels: Record<string, string> = {
   "/analog_multiplexers/list": "Analog Muxes",
   "/analog_switches/list": "Analog Switches",
   "/io_expanders/list": "I/O Expanders",
+  "/imus/list": "IMUs",
   "/gyroscopes/list": "Gyroscopes",
   "/accelerometers/list": "Accelerometers",
   "/gas_sensors/list": "Gas Sensors",
