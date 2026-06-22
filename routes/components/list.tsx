@@ -1,6 +1,6 @@
-import { sql } from "kysely"
+import { ExpressionBuilder, sql } from "kysely"
 import { Table } from "lib/ui/Table"
-import { ExpressionBuilder } from "kysely"
+import { parseLcscSearchTerm } from "lib/util/parse-lcsc-search-term"
 import { buildSearchTokenGroups } from "lib/util/search-token-groups"
 import { withWinterSpec } from "lib/with-winter-spec"
 import { z } from "zod"
@@ -73,9 +73,10 @@ export default withWinterSpec({
 
   if (req.query.search) {
     const search = req.query.search
+    const lcscSearchTerm = parseLcscSearchTerm(search)
 
-    if (search.match(/^\d+$/)) {
-      query = query.where("lcsc", "=", parseInt(search))
+    if (lcscSearchTerm !== null) {
+      query = query.where("lcsc", "=", lcscSearchTerm)
     } else {
       const tokenGroups = buildSearchTokenGroups(search)
       const searchTokenGroups =
