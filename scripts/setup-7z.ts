@@ -15,6 +15,17 @@ const ASSET_SUFFIXES: Record<string, string> = {
   "darwin-arm64": "mac.tar.xz",
 }
 
+const FALLBACK_DOWNLOAD_URLS: Record<string, string> = {
+  "linux-x64":
+    "https://github.com/ip7z/7zip/releases/download/26.01/7z2601-linux-x64.tar.xz",
+  "linux-arm64":
+    "https://github.com/ip7z/7zip/releases/download/26.01/7z2601-linux-arm64.tar.xz",
+  "darwin-x64":
+    "https://github.com/ip7z/7zip/releases/download/26.01/7z2601-mac.tar.xz",
+  "darwin-arm64":
+    "https://github.com/ip7z/7zip/releases/download/26.01/7z2601-mac.tar.xz",
+}
+
 type GithubReleaseAsset = {
   name: string
   browser_download_url: string
@@ -34,6 +45,14 @@ async function resolveDownloadUrl(platformKey: string) {
   })
 
   if (!response.ok) {
+    const fallbackUrl = FALLBACK_DOWNLOAD_URLS[platformKey]
+    if (fallbackUrl) {
+      console.warn(
+        `Failed to load latest 7-Zip release: ${response.status} ${response.statusText}; using pinned fallback`,
+      )
+      return fallbackUrl
+    }
+
     throw new Error(
       `Failed to load latest 7-Zip release: ${response.status} ${response.statusText}`,
     )
