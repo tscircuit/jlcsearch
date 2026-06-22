@@ -35,7 +35,7 @@ export default withWinterSpec({
     categories = Array.from(categoryMap.entries()).map(
       ([category, subcategories]) => ({
         category,
-        subcategory: Array.from(subcategories)[0] as string | undefined,
+        subcategory: Array.from(subcategories)[0] ?? "",
       }),
     )
   }

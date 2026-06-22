@@ -17,38 +17,40 @@ export default withWinterSpec({
   const selectedType = req.query.microphone_type
 
   let query = ctx.db
-    .selectFrom("v_components")
+    .selectFrom("components")
+    .innerJoin("categories", "components.category_id", "categories.id")
     .select([
-      "lcsc",
-      "mfr",
-      "package",
-      "description",
-      "stock",
-      "price",
-      "subcategory",
+      "components.lcsc",
+      "components.mfr",
+      "components.package",
+      "components.description",
+      "components.stock",
+      "components.price",
+      "categories.subcategory as subcategory",
     ])
-    .where("stock", ">", 0)
-    .where("subcategory", "in", [...MICROPHONE_SUBCATEGORIES])
-    .orderBy("stock", "desc")
+    .where("components.stock", ">", 0)
+    .where("categories.subcategory", "in", [...MICROPHONE_SUBCATEGORIES])
+    .orderBy("components.stock", "desc")
     .limit(100)
 
   if (req.query.package) {
-    query = query.where("package", "=", req.query.package)
+    query = query.where("components.package", "=", req.query.package)
   }
 
   if (selectedType && selectedType !== "all") {
-    query = query.where("subcategory", "=", selectedType)
+    query = query.where("categories.subcategory", "=", selectedType)
   }
 
   const microphones = await query.execute()
 
   const packages = await ctx.db
-    .selectFrom("v_components")
-    .select("package")
+    .selectFrom("components")
+    .innerJoin("categories", "components.category_id", "categories.id")
+    .select("components.package")
     .distinct()
-    .where("subcategory", "in", [...MICROPHONE_SUBCATEGORIES])
-    .where("package", "is not", null)
-    .orderBy("package")
+    .where("categories.subcategory", "in", [...MICROPHONE_SUBCATEGORIES])
+    .where("components.package", "is not", null)
+    .orderBy("components.package")
     .execute()
 
   const normalizedMicrophones = microphones
