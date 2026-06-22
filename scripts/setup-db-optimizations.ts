@@ -17,7 +17,11 @@ import { componentStockIndex } from "lib/db/optimizations/component-stock-index"
 import { removeStaleComponents } from "lib/db/optimizations/remove-stale-components"
 import type { DbOptimizationSpec } from "lib/db/optimizations/types"
 
-type CompatibilitySource = "v_components" | "component_catalog" | "search_index"
+type CompatibilitySource =
+  | "v_components"
+  | "component_catalog"
+  | "search_index"
+  | "jlc_components"
 
 const tableExists = async (
   db: ReturnType<typeof getDbClient>,
@@ -50,6 +54,7 @@ const resolveCompatibilitySource = async (
   if (await tableOrViewExists(db, "component_catalog"))
     return "component_catalog"
   if (await tableOrViewExists(db, "search_index")) return "search_index"
+  if (await tableOrViewExists(db, "jlc_components")) return "jlc_components"
   return null
 }
 
@@ -102,7 +107,7 @@ const createComponentsTable = async (
             CASE
               WHEN COALESCE(s.basic, 0) = 0 AND COALESCE(s.preferred, 0) = 1 THEN 1
               ELSE 0
-            END,
+            END
           ) AS extended_promotional,
           s.price,
           s.stock,
@@ -183,6 +188,73 @@ const createComponentsTable = async (
             s.attributes
           ) AS extra
         FROM ${sql.id(sourceTable)} AS s
+        LEFT JOIN categories AS c
+          ON c.category = COALESCE(s.category, '')
+         AND c.subcategory = COALESCE(s.subcategory, '')
+      `.execute(db)
+      return
+    case "jlc_components":
+      await sql`
+        CREATE TABLE components AS
+        SELECT
+          s.lcsc,
+          0 AS manufacturer_id,
+          s.mfr,
+          s.package,
+          s.description,
+          s.datasheet,
+          COALESCE(s.joints, 0) AS joints,
+          COALESCE(s.fetched_at, 0) AS last_update,
+          COALESCE(s.last_on_stock, strftime('%s', 'now')) AS last_on_stock,
+          0 AS flag,
+          c.id AS category_id,
+          c.category,
+          c.subcategory,
+          COALESCE(
+            lcsc.manufacturer,
+            s.manufacturer,
+            ''
+          ) AS manufacturer,
+          CASE
+            WHEN s.library_type = 'base' THEN 1
+            ELSE 0
+          END AS basic,
+          COALESCE(s.preferred, 0) AS preferred,
+          CASE
+            WHEN s.library_type != 'base' AND COALESCE(s.preferred, 0) = 1 THEN 1
+            ELSE 0
+          END AS extended_promotional,
+          s.price,
+          COALESCE(s.stock, 0) AS stock,
+          json_object(
+            'manufacturer',
+            json_object('name', COALESCE(lcsc.manufacturer, s.manufacturer, '')),
+            'attributes',
+            COALESCE(s.attributes, '{}'),
+            'lcsc_attributes',
+            COALESCE(lcsc.attributes, '{}'),
+            'rohs',
+            s.rohs,
+            'eccn',
+            s.eccn,
+            'assembly',
+            s.assembly,
+            'assembly_process',
+            s.assembly_process,
+            'assembly_mode',
+            s.assembly_mode,
+            'website_component_id',
+            s.website_component_id,
+            'attrition',
+            s.attrition,
+            'image',
+            lcsc.image,
+            'url_slug',
+            lcsc.url_slug
+          ) AS extra
+        FROM jlc_components AS s
+        LEFT JOIN lcsc_components AS lcsc
+          ON lcsc.lcsc = s.lcsc
         LEFT JOIN categories AS c
           ON c.category = COALESCE(s.category, '')
          AND c.subcategory = COALESCE(s.subcategory, '')
@@ -290,4 +362,7 @@ async function main() {
   bunDb.close()
 }
 
-main().catch(console.error)
+main().catch((error) => {
+  console.error(error)
+  process.exit(1)
+})
