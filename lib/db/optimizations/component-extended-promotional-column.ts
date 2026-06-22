@@ -8,13 +8,11 @@ export const componentExtendedPromotionalColumn: DbOptimizationSpec = {
     "Adds extended_promotional boolean column to components table derived from basic and preferred flags",
 
   async checkIfAdded(db: KyselyDatabaseInstance) {
-    const {
-      rows: [ex],
-    } = await sql<any>`
-      SELECT * FROM components LIMIT 1
+    const result = await sql<{ name: string }>`
+      PRAGMA table_info(components)
     `.execute(db)
 
-    return "extended_promotional" in ex
+    return result.rows.some((column) => column.name === "extended_promotional")
   },
 
   async execute(db: KyselyDatabaseInstance) {

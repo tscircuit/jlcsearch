@@ -8,13 +8,11 @@ export const componentInStockColumn: DbOptimizationSpec = {
     "Adds in_stock boolean column to components table derived from stock > 0",
 
   async checkIfAdded(db: KyselyDatabaseInstance) {
-    const {
-      rows: [ex],
-    } = await sql<any>`
-      SELECT * FROM components LIMIT 1
+    const result = await sql<{ name: string }>`
+      PRAGMA table_info(components)
     `.execute(db)
 
-    return "in_stock" in ex
+    return result.rows.some((column) => column.name === "in_stock")
   },
 
   async execute(db: KyselyDatabaseInstance) {

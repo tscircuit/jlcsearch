@@ -11,7 +11,7 @@ export const removeStaleComponents: DbOptimizationSpec = {
     const result = await sql<{ count: number }>`
       SELECT COUNT(*) as count 
       FROM components 
-      WHERE last_on_stock < strftime('%s', 'now', '-1 year')
+      WHERE last_on_stock < CAST(strftime('%s', 'now', '-1 year') AS INTEGER)
     `.execute(db)
 
     // If no stale components exist, consider this optimization as "added"
@@ -21,7 +21,7 @@ export const removeStaleComponents: DbOptimizationSpec = {
   async execute(db: KyselyDatabaseInstance) {
     await sql`
       DELETE FROM components 
-      WHERE last_on_stock < strftime('%s', 'now', '-1 year')
+      WHERE last_on_stock < CAST(strftime('%s', 'now', '-1 year') AS INTEGER)
     `.execute(db)
   },
 }
