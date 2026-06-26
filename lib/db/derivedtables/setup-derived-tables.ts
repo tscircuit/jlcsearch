@@ -168,15 +168,17 @@ const createTable = async (
           },
     )
 
-    for (const component of mappedComponents) {
-      if (component === null) continue
-      const attrStringified = JSON.stringify(component.attributes ?? {})
+    const rowsToInsert = mappedComponents
+      .filter((c) => c !== null)
+      .map((component) => ({
+        ...component,
+        attributes: JSON.stringify(component!.attributes ?? {}),
+      }))
+
+    if (rowsToInsert.length > 0) {
       await db
         .insertInto(spec.tableName as any)
-        .values({
-          ...component,
-          attributes: attrStringified,
-        })
+        .values(rowsToInsert as any)
         .execute()
     }
 
@@ -199,7 +201,7 @@ export const setupDerivedTables = async ({
   logger?: Logger
 } = {}) => {
   const activeDb = db ?? getDbClient()
-  const shouldDestroy = !db
+  const shouldDestroy = false
 
   try {
     for (const tableSpec of DERIVED_TABLES) {
@@ -214,7 +216,7 @@ export const setupDerivedTables = async ({
     }
   } finally {
     if (shouldDestroy) {
-      await activeDb.destroy()
+      await (activeDb as any).destroy()
     }
   }
 }
