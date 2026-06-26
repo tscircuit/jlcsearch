@@ -179,6 +179,7 @@ export interface Capacitor {
   is_basic: number | null;
   is_extended_promotional: number | null;
   is_polarized: number | null;
+  is_extended_promotional: number | null;
   is_preferred: number | null;
   is_surface_mount: number | null;
   lcsc: Generated<number | null>;
@@ -557,6 +558,7 @@ export interface Ldo {
   is_basic: number | null;
   is_extended_promotional: number | null;
   is_positive: number | null;
+  is_extended_promotional: number | null;
   is_preferred: number | null;
   lcsc: Generated<number | null>;
   mfr: string | null;
@@ -825,6 +827,7 @@ export interface Resistor {
   is_extended_promotional: number | null;
   is_multi_resistor_chip: number | null;
   is_potentiometer: number | null;
+  is_extended_promotional: number | null;
   is_preferred: number | null;
   is_surface_mount: number | null;
   lcsc: Generated<number | null>;
@@ -871,6 +874,7 @@ export interface Switch {
   is_basic: number | null;
   is_extended_promotional: number | null;
   is_latching: number | null;
+  is_extended_promotional: number | null;
   is_preferred: number | null;
   lcsc: Generated<number | null>;
   length_mm: number | null;
