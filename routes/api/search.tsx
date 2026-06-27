@@ -74,7 +74,7 @@ export default withWinterSpec({
     query = query.where("preferred", "=", 1)
   }
   if (req.query.is_extended_promotional) {
-    query = query.where(sql`(flag & 2) = 2`)
+    query = query.where(sql`(flag & 2) = 2` as any)
   }
 
   const baseQuery = query
