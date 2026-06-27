@@ -37,7 +37,6 @@ export const fuseTableSpec: DerivedTableSpec<Fuse> = {
     { name: "is_resettable", type: "boolean" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
-    { name: "is_extended_promotional", type: "boolean" },
   ],
   listCandidateComponents(db: KyselyDatabaseInstance) {
     return db
@@ -130,7 +129,6 @@ export const fuseTableSpec: DerivedTableSpec<Fuse> = {
           in_stock: Boolean((c.stock || 0) > 0),
           is_basic: Boolean(c.basic),
           is_preferred: Boolean(c.preferred),
-          is_extended_promotional: Boolean(c.extended_promotional),
           current_rating: current_rating as number,
           voltage_rating: voltage_rating as number,
           response_time,

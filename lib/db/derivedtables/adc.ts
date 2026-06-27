@@ -40,7 +40,6 @@ export const adcTableSpec: DerivedTableSpec<Adc> = {
     { name: "operating_temp_max", type: "real" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
-    { name: "is_extended_promotional", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db
@@ -116,7 +115,6 @@ export const adcTableSpec: DerivedTableSpec<Adc> = {
         in_stock: c.stock > 0,
         is_basic: Boolean(c.basic),
         is_preferred: Boolean(c.preferred),
-        is_extended_promotional: Boolean(c.extended_promotional),
         package: c.package || "",
         resolution_bits: resolution,
         sampling_rate_hz: samplingRate,

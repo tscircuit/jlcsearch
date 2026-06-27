@@ -15,7 +15,6 @@ export interface DerivedTableSpec<
     price1: number | null
     in_stock: boolean
     is_basic: boolean
-    is_extended_promotional: boolean
   },
 > {
   tableName: string

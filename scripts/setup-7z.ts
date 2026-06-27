@@ -1,4 +1,4 @@
-import { mkdir, chmod } from "node:fs/promises"
+import { mkdir, chmod, symlink } from "node:fs/promises"
 import { existsSync } from "node:fs"
 import { platform, arch } from "node:os"
 
@@ -13,15 +13,24 @@ const BINARY_URLS: Record<string, string> = {
   "darwin-arm64": "https://7-zip.org/a/7z2301-mac.tar.xz",
 }
 
+async function findSystemBinary(): Promise<string | null> {
+  // Look for 7zz or 7za already installed on the system (e.g. via p7zip-full / 7zip packages)
+  for (const candidate of ["7zz", "7za", "7z"]) {
+    const result = await Bun.spawn(["which", candidate]).exited
+    if (result === 0) {
+      const out = await new Response(
+        Bun.spawn(["which", candidate]).stdout,
+      ).text()
+      return out.trim()
+    }
+  }
+  return null
+}
+
 async function downloadAndExtract7z() {
   const currentPlatform = platform()
   const currentArch = arch()
   const platformKey = `${currentPlatform}-${currentArch}`
-
-  const downloadUrl = BINARY_URLS[platformKey]
-  if (!downloadUrl) {
-    throw new Error(`Unsupported platform: ${platformKey}`)
-  }
 
   // Create binary directory if it doesn't exist
   if (!existsSync(BINARY_DIR)) {
@@ -34,6 +43,19 @@ async function downloadAndExtract7z() {
   if (existsSync(binaryPath)) {
     console.log("7z binary already exists")
     return
+  }
+
+  // Prefer a system-installed binary over downloading (avoids network dependency)
+  const systemBinary = await findSystemBinary()
+  if (systemBinary) {
+    console.log(`Using system 7z binary: ${systemBinary}`)
+    await symlink(systemBinary, binaryPath)
+    return
+  }
+
+  const downloadUrl = BINARY_URLS[platformKey]
+  if (!downloadUrl) {
+    throw new Error(`Unsupported platform: ${platformKey}`)
   }
 
   console.log("Downloading 7z...")

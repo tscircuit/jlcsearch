@@ -29,7 +29,6 @@ export const relayTableSpec: DerivedTableSpec<Relay> = {
     { name: "pin_number", type: "integer" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
-    { name: "is_extended_promotional", type: "boolean" },
   ],
   listCandidateComponents(db: KyselyDatabaseInstance) {
     return db
@@ -63,7 +62,6 @@ export const relayTableSpec: DerivedTableSpec<Relay> = {
           in_stock: Boolean((c.stock || 0) > 0),
           is_basic: Boolean(c.basic),
           is_preferred: Boolean(c.preferred),
-          is_extended_promotional: Boolean(c.extended_promotional),
           package: String(c.package || ""),
           relay_type: (c as any).subcategory || "",
           contact_form: attrs["Contact Form"] || null,
