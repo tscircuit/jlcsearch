@@ -215,7 +215,12 @@ export const setupDerivedTables = async ({
     }
   } finally {
     if (shouldDestroy) {
-      await activeDb.destroy()
+      const mod = await import("lib/db/get-db-client")
+      if (mod?.destroyDbClient) {
+        await mod.destroyDbClient()
+      } else {
+        await activeDb.destroy()
+      }
     }
   }
 }
