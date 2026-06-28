@@ -1,6 +1,7 @@
 import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
 import { parseIntOrNull } from "lib/util/parse-int-or-null"
-import type { DerivedTableSpec } from "./types"
+import type { DerivedTableSpec, ExpressionBuilder } from "./types"
+import type { DB } from "../generated/kysely"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import { BaseComponent } from "./component-base"
 import type { KyselyDatabaseInstance } from "../kysely-types"
@@ -35,7 +36,7 @@ export const relayTableSpec: DerivedTableSpec<Relay> = {
       .selectFrom("components")
       .innerJoin("categories", "components.category_id", "categories.id")
       .selectAll()
-      .where((eb) =>
+      .where((eb: ExpressionBuilder<DB, "components" | "categories">) =>
         eb.and([
           eb("categories.subcategory", "like", "%Relay%"),
           eb("categories.subcategory", "not like", "%Accessory%"),

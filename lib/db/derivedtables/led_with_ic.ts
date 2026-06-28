@@ -1,4 +1,5 @@
-import type { DerivedTableSpec } from "./types"
+import type { DerivedTableSpec, ExpressionBuilder } from "./types"
+import type { DB } from "../generated/kysely"
 import { BaseComponent } from "./component-base"
 import type { SelectQueryBuilder, Generated } from "kysely"
 import type { Component } from "../generated/kysely"
