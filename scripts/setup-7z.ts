@@ -24,11 +24,11 @@ const BINARY_URLS: Record<string, string> = {
 async function downloadAndExtract7z() {
   const currentPlatform = platform()
   const currentArch = arch()
-  const platformKey = `${currentPlatform}-${currentArch}`
+  const platformKey = \-\
 
   const downloadUrl = BINARY_URLS[platformKey]
   if (!downloadUrl) {
-    throw new Error(`Unsupported platform: ${platformKey}`)
+    throw new Error(Unsupported platform: \)
   }
 
   // Create binary directory if it doesn't exist
@@ -36,7 +36,7 @@ async function downloadAndExtract7z() {
     await mkdir(BINARY_DIR)
   }
 
-  const binaryPath = `${BINARY_DIR}/${BINARY_NAME}`
+  const binaryPath = \/\
 
   // Skip if binary already exists
   if (existsSync(binaryPath)) {
@@ -47,7 +47,7 @@ async function downloadAndExtract7z() {
   console.log("Downloading 7z...")
   const response = await fetch(downloadUrl)
   if (!response.ok) {
-    throw new Error(`Failed to download: ${response.statusText}`)
+    throw new Error(Failed to download: \)
   }
 
   // Save the tar.xz file
