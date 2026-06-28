@@ -1,4 +1,5 @@
-import type { DerivedTableSpec } from "./types"
+import type { DerivedTableSpec, ExpressionBuilder } from "./types"
+import type { DB } from "../generated/kysely"
 import type { SelectQueryBuilder, Generated } from "kysely"
 import type { Component } from "../generated/kysely"
 import type { KyselyDatabaseInstance } from "../kysely-types"
@@ -41,7 +42,7 @@ export const mosfetTableSpec: DerivedTableSpec<Mosfet> = {
       .selectFrom("components")
       .innerJoin("categories", "components.category_id", "categories.id")
       .selectAll()
-      .where((eb) =>
+      .where((eb: ExpressionBuilder<DB, "components" | "categories">) =>
         eb.or([
           eb("categories.subcategory", "=", "MOSFETs"),
           eb("description", "like", "%MOSFET%"),

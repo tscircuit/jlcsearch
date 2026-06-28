@@ -1,4 +1,5 @@
-import type { DerivedTableSpec } from "./types"
+import type { DerivedTableSpec, ExpressionBuilder } from "./types"
+import type { DB } from "../generated/kysely"
 import { voltageRegulatorTableSpec } from "./voltage_regulator"
 import type { VoltageRegulator } from "./voltage_regulator"
 

@@ -1,4 +1,5 @@
 import type { SelectQueryBuilder } from "kysely"
+export type { ExpressionBuilder } from "kysely"
 import type { Component, Generated } from "../generated/kysely"
 import type { KyselyDatabaseInstance } from "../kysely-types"
 
