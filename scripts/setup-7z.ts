@@ -5,7 +5,7 @@ import { arch, platform } from "node:os"
 const BINARY_DIR = ".bin"
 const BINARY_NAME = "7zz"
 
-// Map of platform-arch combinations to download URLs (7-Zip 26.02 from GitHub releases)
+// Map of platform-arch combinations to download URLs
 const BINARY_URLS: Record<string, string> = {
   "linux-x64":
     "https://github.com/ip7z/7zip/releases/download/26.02/7z2602-linux-x64.tar.xz",
@@ -24,11 +24,11 @@ const BINARY_URLS: Record<string, string> = {
 async function downloadAndExtract7z() {
   const currentPlatform = platform()
   const currentArch = arch()
-  const platformKey = \-\
+  const platformKey = `${currentPlatform}-${currentArch}`
 
   const downloadUrl = BINARY_URLS[platformKey]
   if (!downloadUrl) {
-    throw new Error(Unsupported platform: \)
+    throw new Error(`Unsupported platform: ${platformKey}`)
   }
 
   // Create binary directory if it doesn't exist
@@ -36,7 +36,7 @@ async function downloadAndExtract7z() {
     await mkdir(BINARY_DIR)
   }
 
-  const binaryPath = \/\
+  const binaryPath = `${BINARY_DIR}/${BINARY_NAME}`
 
   // Skip if binary already exists
   if (existsSync(binaryPath)) {
@@ -47,7 +47,7 @@ async function downloadAndExtract7z() {
   console.log("Downloading 7z...")
   const response = await fetch(downloadUrl)
   if (!response.ok) {
-    throw new Error(Failed to download: \)
+    throw new Error(`Failed to download: ${response.statusText}`)
   }
 
   // Save the tar.xz file
