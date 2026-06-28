@@ -83,7 +83,15 @@ export const getDbClient = () => {
   return dbClientSingleton
 }
 
+export const destroyDbClient = async () => {
+  if (!dbClientSingleton) return
+  const db = dbClientSingleton
+  dbClientSingleton = undefined
+  await db.destroy()
+}
+
 export const getBunDatabaseClient = () => {
   const Database = getDatabaseCtor()
   return new Database(getResolvedDbPath())
 }
+
