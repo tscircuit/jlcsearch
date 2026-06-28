@@ -200,22 +200,15 @@ export const setupDerivedTables = async ({
   logger?: Logger
 } = {}) => {
   const activeDb = db ?? getDbClient()
-  const shouldDestroy = !db
 
-  try {
-    for (const tableSpec of DERIVED_TABLES) {
-      logger(`Setting up derived table: ${tableSpec.tableName}`)
-      await createTable(activeDb, tableSpec, {
-        populate,
-        resetAll,
-        resetTable,
-        logger,
-      })
-      logger(`Successfully set up ${tableSpec.tableName}`)
-    }
-  } finally {
-    if (shouldDestroy) {
-      await activeDb.destroy()
-    }
+  for (const tableSpec of DERIVED_TABLES) {
+    logger(`Setting up derived table: ${tableSpec.tableName}`)
+    await createTable(activeDb, tableSpec, {
+      populate,
+      resetAll,
+      resetTable,
+      logger,
+    })
+    logger(`Successfully set up ${tableSpec.tableName}`)
   }
 }
