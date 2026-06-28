@@ -2,6 +2,8 @@ import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import { BaseComponent } from "./component-base"
 import type { DerivedTableSpec } from "./types"
+import type { ExpressionBuilder } from "kysely"
+import type { DB } from "../generated/kysely"
 
 export interface BoostConverter extends BaseComponent {
   package: string
@@ -38,7 +40,7 @@ export const boostConverterTableSpec: DerivedTableSpec<BoostConverter> = {
       .innerJoin("categories", "components.category_id", "categories.id")
       .selectAll()
       .where("categories.subcategory", "=", "DC-DC Converters")
-      .where((eb) =>
+      .where((eb: ExpressionBuilder<DB, "components" | "categories">) =>
         eb.or([
           eb("description", "like", "%Boost%"),
           eb("description", "like", "%Step-Up%"),
