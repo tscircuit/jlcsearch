@@ -25,7 +25,7 @@
     "setup:7z": "bun run scripts/setup-7z.ts",
     "setup:download-cache-fragments": "bun scripts/download-cache-fragments.ts",
     "setup:extract-db": ".bin/7zz x .buildtmp/cache.zip",
-    "setup:replace-db-file": "rm -f ./db.sqlite3 && mv ./cache.sqlite3 ./db.sqlite3",
+    "setup:replace-db-file": "rm -f ./db.sqlite3 && mv ./cache.sqlite3 ./db.sqlite3",`n    "setup:compat-db": "bun run scripts/setup-db-compat.ts",
     "setup:optimize-db": "bun run scripts/setup-db-optimizations.ts",
     "setup:derived-tables": "bun run scripts/setup-derived-tables.ts",
     "setup:download": "curl -o db.sqlite \"https://jlcsearch.fly.dev/database/$DATABASE_DOWNLOAD_TOKEN\"",
@@ -42,3 +42,4 @@
     "redaxios": "^0.5.1"
   }
 }
+
