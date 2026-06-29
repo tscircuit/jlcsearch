@@ -902,6 +902,7 @@ export interface VComponent {
   category_id: number | null;
   datasheet: string | null;
   description: string | null;
+  extended_promotional: number | null;
   extra: string | null;
   joints: number | null;
   last_on_stock: number | null;
