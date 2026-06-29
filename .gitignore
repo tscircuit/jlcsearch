@@ -188,3 +188,4 @@ db.backup.sqlite3
 /MANUAL
 cf-proxy/.db-sync-temp/
 cf-proxy/.wrangler
+.home/

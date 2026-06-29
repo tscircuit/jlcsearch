@@ -14,10 +14,26 @@ export default withWinterSpec({
   }),
   jsonResponse: z.any(),
 } as const)(async (req, ctx) => {
+  const categoryIds = await ctx.db
+    .selectFrom("categories")
+    .select(["id", "subcategory"])
+    .where("subcategory", "in", [...MICROPHONE_SUBCATEGORIES])
+    .execute()
+  const ids = categoryIds
+    .map((c) => c.id)
+    .filter((id): id is number => id !== null)
+
+  const subcategoryMap = new Map<number, string>()
+  for (const cat of categoryIds) {
+    if (cat.id !== null && cat.subcategory !== null) {
+      subcategoryMap.set(cat.id, cat.subcategory)
+    }
+  }
+
   const selectedType = req.query.microphone_type
 
   let query = ctx.db
-    .selectFrom("v_components")
+    .selectFrom("components")
     .select([
       "lcsc",
       "mfr",
@@ -25,28 +41,33 @@ export default withWinterSpec({
       "description",
       "stock",
       "price",
-      "subcategory",
+      "category_id",
     ])
     .where("stock", ">", 0)
-    .where("subcategory", "in", [...MICROPHONE_SUBCATEGORIES])
     .orderBy("stock", "desc")
     .limit(100)
+
+  if (selectedType && selectedType !== "all") {
+    const filteredIds = categoryIds
+      .filter((c) => c.subcategory === selectedType)
+      .map((c) => c.id)
+      .filter((id): id is number => id !== null)
+    query = query.where("category_id", "in", filteredIds)
+  } else {
+    query = query.where("category_id", "in", ids)
+  }
 
   if (req.query.package) {
     query = query.where("package", "=", req.query.package)
   }
 
-  if (selectedType && selectedType !== "all") {
-    query = query.where("subcategory", "=", selectedType)
-  }
-
   const microphones = await query.execute()
 
   const packages = await ctx.db
-    .selectFrom("v_components")
+    .selectFrom("components")
     .select("package")
     .distinct()
-    .where("subcategory", "in", [...MICROPHONE_SUBCATEGORIES])
+    .where("category_id", "in", ids)
     .where("package", "is not", null)
     .orderBy("package")
     .execute()
@@ -56,7 +77,9 @@ export default withWinterSpec({
       lcsc: m.lcsc ?? 0,
       mfr: m.mfr ?? "",
       package: m.package ?? "",
-      microphone_type: m.subcategory ?? "",
+      microphone_type: m.category_id
+        ? (subcategoryMap.get(m.category_id) ?? "")
+        : "",
       description: m.description ?? "",
       stock: m.stock ?? 0,
       price1: extractMinQPrice(m.price ?? ""),
