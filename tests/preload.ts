@@ -1,17 +1,16 @@
 import { afterEach } from "bun:test"
 import { setupDerivedTables } from "lib/db/derivedtables/setup-derived-tables"
+import { getDbClient } from "lib/db/get-db-client"
 
 declare global {
   var deferredCleanupFns: Array<() => void | Promise<void>>
   var derivedTablesSetupPromise: Promise<void> | undefined
 }
 
-import { getDbClient } from "lib/db/get-db-client"
-
 globalThis.deferredCleanupFns ??= []
-globalThis.derivedTablesSetupPromise ??= setupDerivedTables({
+globalThis.derivedTablesSetupPromise ??= setupDerivedTables({ 
   db: getDbClient(),
-  populate: false,
+  populate: false 
 })
 
 await globalThis.derivedTablesSetupPromise
