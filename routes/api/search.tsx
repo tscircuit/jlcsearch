@@ -49,6 +49,7 @@ export default withWinterSpec({
     q: z.string().optional(),
     limit: z.string().optional(),
     is_basic: z.boolean().optional(),
+    is_extended_promotional: z.boolean().optional(),
     is_preferred: z.boolean().optional(),
   }),
   jsonResponse: z.any(),
