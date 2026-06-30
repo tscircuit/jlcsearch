@@ -1,4 +1,4 @@
-import { sql } from "kysely"
+﻿import { sql } from "kysely"
 import { Table } from "lib/ui/Table"
 import { ExpressionBuilder } from "kysely"
 import { buildSearchTokenGroups } from "lib/util/search-token-groups"
@@ -35,6 +35,7 @@ export default withWinterSpec({
     search: z.string().optional(),
     is_basic: z.boolean().optional(),
     is_preferred: z.boolean().optional(),
+    is_extended_promotional: z.boolean().optional(),
   }),
   jsonResponse: z.any(),
 } as const)(async (req, ctx) => {
@@ -51,6 +52,7 @@ export default withWinterSpec({
       "price",
       "extra",
       "basic",
+      "preferred",
     ])
     .limit(limit)
     .orderBy("stock", "desc")
@@ -69,6 +71,11 @@ export default withWinterSpec({
   }
   if (req.query.is_preferred) {
     query = query.where("preferred", "=", 1)
+  }
+
+  if (req.query.is_extended_promotional !== undefined) {
+    const target = req.query.is_extended_promotional
+    query = query.where("extra", "like", `%is_extended_promotional%${target}%`)
   }
 
   if (req.query.search) {
@@ -152,6 +159,17 @@ export default withWinterSpec({
               name="is_preferred"
               value="true"
               checked={req.query.is_preferred}
+            />
+          </label>
+        </div>
+        <div>
+          <label>
+            Extended Promotional:
+            <input
+              type="checkbox"
+              name="is_extended_promotional"
+              value="true"
+              checked={req.query.is_extended_promotional}
             />
           </label>
         </div>
