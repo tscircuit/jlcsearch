@@ -366,7 +366,7 @@ async function handleD1Search(
       mfr: row.mfr ?? "",
       package: row.package ?? "",
       is_basic: Boolean(row.basic),
-        is_extended_promotional: Boolean(row.extended_promotional),
+      is_extended_promotional: Boolean(row.extended_promotional),
       is_preferred: Boolean(row.preferred),
       description: row.description ?? "",
       stock: row.stock ?? 0,
