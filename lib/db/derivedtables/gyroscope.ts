@@ -105,6 +105,7 @@ export const gyroscopeTableSpec: DerivedTableSpec<Gyroscope> = {
         price1: extractMinQPrice(c.price),
         in_stock: c.stock > 0,
         is_basic: Boolean(c.basic),
+        is_extended_promotional: Boolean(c.extended_promotional),
         is_preferred: Boolean(c.preferred),
         package: c.package || "",
         supply_voltage_min: voltageMin,
