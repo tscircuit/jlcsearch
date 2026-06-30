@@ -6,8 +6,13 @@ declare global {
   var derivedTablesSetupPromise: Promise<void> | undefined
 }
 
+import { getDbClient } from "lib/db/get-db-client"
+
 globalThis.deferredCleanupFns ??= []
-globalThis.derivedTablesSetupPromise ??= setupDerivedTables({ populate: false })
+globalThis.derivedTablesSetupPromise ??= setupDerivedTables({
+  db: getDbClient(),
+  populate: false,
+})
 
 await globalThis.derivedTablesSetupPromise
 
