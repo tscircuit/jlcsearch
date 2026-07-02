@@ -191,6 +191,7 @@ export interface Component {
   datasheet: string;
   description: string;
   extra: string | null;
+  extended: Generated<number>;
   flag: Generated<number>;
   joints: number;
   last_on_stock: Generated<number>;
@@ -802,6 +803,7 @@ export interface VComponent {
   datasheet: string | null;
   description: string | null;
   extra: string | null;
+  extended: number | null;
   joints: number | null;
   last_on_stock: number | null;
   lcsc: number | null;
