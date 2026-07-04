@@ -9,6 +9,7 @@ export interface SearchQueryParams {
   limit?: string
   is_basic?: string
   is_preferred?: string
+  is_extended_promotional?: string
 }
 
 interface SearchRow {
@@ -21,6 +22,7 @@ interface SearchRow {
   price1: number | null
   basic: number | null
   preferred: number | null
+  extended: number | null
   category: string | null
   subcategory: string | null
 }
@@ -110,6 +112,13 @@ export async function searchIndex(
     conditions.push(sql`search_index.preferred = 1`)
   }
 
+  if (
+    params.is_extended_promotional === "true" ||
+    params.is_extended_promotional === "1"
+  ) {
+    conditions.push(sql`search_index.extended = 1`)
+  }
+
   const raw = params.q?.trim()
 
   if (raw) {
@@ -151,6 +160,7 @@ export async function searchIndex(
       search_index.price1,
       search_index.basic,
       search_index.preferred,
+      search_index.extended,
       search_index.category,
       search_index.subcategory
     FROM search_index
