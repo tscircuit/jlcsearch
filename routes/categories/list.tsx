@@ -24,7 +24,7 @@ export default withWinterSpec({
         if (!acc.has(c.category)) {
           acc.set(c.category, new Set<string>())
         }
-        if (c.subcategory) {
+        if (c.subcategory !== undefined && c.subcategory !== null) {
           acc.get(c.category)!.add(c.subcategory)
         }
         return acc
@@ -35,7 +35,7 @@ export default withWinterSpec({
     categories = Array.from(categoryMap.entries()).map(
       ([category, subcategories]) => ({
         category,
-        subcategory: Array.from(subcategories)[0] as string | undefined,
+        subcategory: (Array.from(subcategories)[0] as string | undefined) ?? "",
       }),
     )
   }

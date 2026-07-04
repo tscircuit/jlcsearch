@@ -123,6 +123,7 @@ export const resistorArrayTableSpec: DerivedTableSpec<ResistorArray> = {
         price1: extractMinQPrice(component.price)!,
         in_stock: component.stock > 0,
         is_basic: Boolean(component.basic),
+        is_extended_promotional: Boolean(component.extended_promotional),
         is_preferred: Boolean(component.preferred),
         package: component.package ?? "",
         resistance,

@@ -123,14 +123,24 @@ const createTable = async (
   }
 
   let tableCreator = db.schema.createTable(spec.tableName)
-  for (const col of [
+  const baseColumns = [
     { name: "lcsc", type: "integer", primaryKey: true },
     { name: "mfr", type: "text" },
     { name: "description", type: "text" },
     { name: "stock", type: "integer" },
     { name: "price1", type: "real" },
     { name: "in_stock", type: "boolean" },
-  ].concat(spec.extraColumns as any, [{ name: "attributes", type: "text" }])) {
+    { name: "is_basic", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
+    { name: "is_preferred", type: "boolean" },
+  ]
+
+  const baseColumnNames = new Set(baseColumns.map((c) => c.name))
+  const uniqueExtraColumns = (spec.extraColumns as any).filter(
+    (c: any) => !baseColumnNames.has(c.name)
+  )
+
+  for (const col of baseColumns.concat(uniqueExtraColumns, [{ name: "attributes", type: "text" }])) {
     tableCreator = tableCreator.addColumn(
       col.name as string,
       col.type as any,

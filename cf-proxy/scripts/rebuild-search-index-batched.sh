@@ -42,6 +42,7 @@ run_wrangler d1 execute "$DB_NAME" --remote --command \
      price TEXT,
      price1 REAL,
      basic INTEGER,
+     extended_promotional INTEGER,
      preferred INTEGER,
      category TEXT,
      subcategory TEXT,
@@ -69,6 +70,7 @@ INSERT INTO search_index_next (
   price,
   price1,
   basic,
+  extended_promotional,
   preferred,
   category,
   subcategory,
@@ -90,6 +92,7 @@ SELECT
     ELSE NULL
   END AS price1,
   basic,
+  extended_promotional,
   preferred,
   category,
   subcategory,

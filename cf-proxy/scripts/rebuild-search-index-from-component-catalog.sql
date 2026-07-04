@@ -13,6 +13,7 @@ SELECT
     ELSE NULL
   END AS price1,
   basic,
+  extended_promotional,
   preferred,
   category,
   subcategory,
