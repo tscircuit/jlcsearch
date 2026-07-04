@@ -22,6 +22,7 @@ const routeLabels: Record<string, string> = {
   "/capacitors/list": "Capacitors",
   "/potentiometers/list": "Potentiometers",
   "/headers/list": "Headers",
+  "/pinheaders/list": "Pin Headers",
   "/usb_c_connectors/list": "USB-C Connectors",
   "/pcie_m2_connectors/list": "PCIe M.2 Connectors",
   "/fpc_connectors/list": "FPC Connectors",

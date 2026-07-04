@@ -10,8 +10,16 @@ export default withWinterSpec({
   commonParams: z.object({
     json: z.boolean().optional(),
     pitch: z.string().optional(),
+    pitch_mm: z.coerce.number().optional(),
     num_pins: z.coerce.number().optional(),
+    pin_count: z.coerce.number().optional(),
+    num_rows: z.coerce.number().optional(),
+    num_pins_per_row: z.coerce.number().optional(),
     is_right_angle: z
+      .union([z.literal(""), boolish])
+      .transform((value) => (value === "" ? undefined : value))
+      .optional(),
+    is_shrouded: z
       .union([z.literal(""), boolish])
       .transform((value) => (value === "" ? undefined : value))
       .optional(),
@@ -25,9 +33,12 @@ export default withWinterSpec({
           mfr: z.string(),
           package: z.string(),
           pitch_mm: z.number().optional(),
+          num_rows: z.number().optional(),
           num_pins: z.number().optional(),
+          num_pins_per_row: z.number().optional(),
           gender: z.string().optional(),
           is_right_angle: z.coerce.boolean().optional(),
+          is_shrouded: z.coerce.boolean().optional(),
           voltage_rating: z.number().optional(),
           current_rating: z.number().optional(),
           stock: z.number().optional(),
@@ -47,16 +58,35 @@ export default withWinterSpec({
   const params = req.commonParams
 
   // Apply filters
-  if (params.pitch) {
-    query = query.where("pitch_mm", "=", parseFloat(params.pitch))
+  const pitch =
+    params.pitch_mm ??
+    (params.pitch === undefined || params.pitch === ""
+      ? undefined
+      : parseFloat(params.pitch))
+  const numPins = params.num_pins ?? params.pin_count
+
+  if (pitch !== undefined && !Number.isNaN(pitch)) {
+    query = query.where("pitch_mm", "=", pitch)
   }
 
-  if (params.num_pins) {
-    query = query.where("num_pins", "=", params.num_pins)
+  if (numPins) {
+    query = query.where("num_pins", "=", numPins)
+  }
+
+  if (params.num_rows) {
+    query = query.where("num_rows", "=", params.num_rows)
+  }
+
+  if (params.num_pins_per_row) {
+    query = query.where("num_pins_per_row", "=", params.num_pins_per_row)
   }
 
   if (params.is_right_angle !== undefined) {
     query = query.where("is_right_angle", "=", params.is_right_angle ? 1 : 0)
+  }
+
+  if (params.is_shrouded !== undefined) {
+    query = query.where("is_shrouded", "=", params.is_shrouded ? 1 : 0)
   }
 
   if (params.gender) {
@@ -89,9 +119,12 @@ export default withWinterSpec({
           mfr: h.mfr ?? "",
           package: h.package ?? "",
           pitch_mm: h.pitch_mm ?? undefined,
+          num_rows: h.num_rows ?? undefined,
           num_pins: h.num_pins ?? undefined,
+          num_pins_per_row: h.num_pins_per_row ?? undefined,
           gender: h.gender ?? undefined,
           is_right_angle: Boolean(h.is_right_angle ?? undefined),
+          is_shrouded: Boolean(h.is_shrouded ?? undefined),
           voltage_rating: h.voltage_rating_volt ?? undefined,
           current_rating: h.current_rating_amp ?? undefined,
           stock: h.stock ?? undefined,
@@ -114,7 +147,7 @@ export default withWinterSpec({
               <option
                 key={p.pitch_mm}
                 value={p.pitch_mm!}
-                selected={p.pitch_mm?.toString() === params.pitch}
+                selected={p.pitch_mm === pitch}
               >
                 {p.pitch_mm}mm
               </option>
@@ -130,7 +163,7 @@ export default withWinterSpec({
               <option
                 key={p.num_pins}
                 value={p.num_pins?.toString() ?? ""}
-                selected={p.num_pins === params.num_pins}
+                selected={p.num_pins === numPins}
               >
                 {p.num_pins}
               </option>

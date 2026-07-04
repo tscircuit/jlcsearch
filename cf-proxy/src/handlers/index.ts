@@ -263,9 +263,16 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
   header: {
     filters: {
       pitch: { field: "pitch_mm", type: "number" },
+      pitch_mm: { field: "pitch_mm", type: "number" },
       num_pins: { field: "num_pins", type: "number" },
+      pin_count: { field: "num_pins", type: "number" },
+      num_rows: { field: "num_rows", type: "number" },
+      num_pins_per_row: { field: "num_pins_per_row", type: "number" },
       gender: { field: "gender", type: "string" },
       is_right_angle: { field: "is_right_angle", type: "boolean" },
+      is_shrouded: { field: "is_shrouded", type: "boolean" },
+      is_basic: { field: "is_basic", type: "boolean" },
+      is_preferred: { field: "is_preferred", type: "boolean" },
     },
   },
   accelerometer: {
@@ -471,6 +478,7 @@ export const ROUTE_TO_TABLE: Record<string, string> = {
   "/mosfets/list": "mosfet",
   "/switches/list": "switch",
   "/headers/list": "header",
+  "/pinheaders/list": "header",
   "/accelerometers/list": "accelerometer",
   "/adcs/list": "adc",
   "/analog_multiplexers/list": "analog_multiplexer",

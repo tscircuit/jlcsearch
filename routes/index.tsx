@@ -20,6 +20,7 @@ export default withWinterSpec({
         <a href="/capacitors/list">Capacitors</a>
         <a href="/potentiometers/list">Potentiometers</a>
         <a href="/headers/list">Headers</a>
+        <a href="/pinheaders/list">Pin Headers</a>
         <a href="/usb_c_connectors/list">USB-C Connectors</a>
         <a href="/pcie_m2_connectors/list">PCIe M.2 Connectors</a>
         <a href="/fpc_connectors/list">FPC Connectors</a>
