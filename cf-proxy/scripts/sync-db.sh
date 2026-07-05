@@ -295,6 +295,10 @@ SELECT
   mfr,
   package,
   basic,
+  CASE
+    WHEN basic = 0 AND preferred = 1 THEN 1
+    ELSE 0
+  END AS is_extended_promotional,
   preferred,
   description,
   stock,
@@ -305,6 +309,7 @@ FROM v_components;
 CREATE INDEX IF NOT EXISTS idx_component_catalog_subcategory ON component_catalog(subcategory);
 CREATE INDEX IF NOT EXISTS idx_component_catalog_package ON component_catalog(package);
 CREATE INDEX IF NOT EXISTS idx_component_catalog_basic ON component_catalog(basic);
+CREATE INDEX IF NOT EXISTS idx_component_catalog_is_extended_promotional ON component_catalog(is_extended_promotional);
 CREATE INDEX IF NOT EXISTS idx_component_catalog_preferred ON component_catalog(preferred);
 CREATE INDEX IF NOT EXISTS idx_component_catalog_stock ON component_catalog(stock DESC);
 COMPONENT_CATALOG_SCHEMA
@@ -318,6 +323,7 @@ CREATE TABLE component_catalog (
   mfr TEXT,
   package TEXT,
   basic INTEGER,
+  is_extended_promotional INTEGER,
   preferred INTEGER,
   description TEXT,
   stock INTEGER,
@@ -327,6 +333,7 @@ CREATE TABLE component_catalog (
 CREATE INDEX IF NOT EXISTS idx_component_catalog_subcategory ON component_catalog(subcategory);
 CREATE INDEX IF NOT EXISTS idx_component_catalog_package ON component_catalog(package);
 CREATE INDEX IF NOT EXISTS idx_component_catalog_basic ON component_catalog(basic);
+CREATE INDEX IF NOT EXISTS idx_component_catalog_is_extended_promotional ON component_catalog(is_extended_promotional);
 CREATE INDEX IF NOT EXISTS idx_component_catalog_preferred ON component_catalog(preferred);
 CREATE INDEX IF NOT EXISTS idx_component_catalog_stock ON component_catalog(stock DESC);
 COMPONENT_CATALOG_SCHEMA_EXPORT
@@ -349,6 +356,7 @@ SELECT
     ELSE NULL
   END AS price1,
   basic,
+  is_extended_promotional,
   preferred,
   category,
   subcategory,
@@ -389,6 +397,8 @@ CREATE INDEX IF NOT EXISTS idx_search_index_package_stock ON search_index(packag
 CREATE INDEX IF NOT EXISTS idx_search_index_subcategory_stock ON search_index(subcategory, stock DESC);
 CREATE INDEX IF NOT EXISTS idx_search_index_basic ON search_index(basic);
 CREATE INDEX IF NOT EXISTS idx_search_index_basic_stock ON search_index(basic, stock DESC);
+CREATE INDEX IF NOT EXISTS idx_search_index_is_extended_promotional ON search_index(is_extended_promotional);
+CREATE INDEX IF NOT EXISTS idx_search_index_is_extended_promotional_stock ON search_index(is_extended_promotional, stock DESC);
 CREATE INDEX IF NOT EXISTS idx_search_index_preferred ON search_index(preferred);
 CREATE INDEX IF NOT EXISTS idx_search_index_preferred_stock ON search_index(preferred, stock DESC);
 SEARCH_INDEX_SCHEMA
@@ -404,6 +414,7 @@ CREATE TABLE search_index (
   price TEXT,
   price1 REAL,
   basic INTEGER,
+  is_extended_promotional INTEGER,
   preferred INTEGER,
   category TEXT,
   subcategory TEXT,
@@ -420,6 +431,8 @@ CREATE INDEX IF NOT EXISTS idx_search_index_package_stock ON search_index(packag
 CREATE INDEX IF NOT EXISTS idx_search_index_subcategory_stock ON search_index(subcategory, stock DESC);
 CREATE INDEX IF NOT EXISTS idx_search_index_basic ON search_index(basic);
 CREATE INDEX IF NOT EXISTS idx_search_index_basic_stock ON search_index(basic, stock DESC);
+CREATE INDEX IF NOT EXISTS idx_search_index_is_extended_promotional ON search_index(is_extended_promotional);
+CREATE INDEX IF NOT EXISTS idx_search_index_is_extended_promotional_stock ON search_index(is_extended_promotional, stock DESC);
 CREATE INDEX IF NOT EXISTS idx_search_index_preferred ON search_index(preferred);
 CREATE INDEX IF NOT EXISTS idx_search_index_preferred_stock ON search_index(preferred, stock DESC);
 SEARCH_INDEX_SCHEMA_EXPORT

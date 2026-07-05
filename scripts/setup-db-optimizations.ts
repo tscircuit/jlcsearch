@@ -1,16 +1,19 @@
 import { getBunDatabaseClient, getDbClient } from "lib/db/get-db-client"
-import { componentStockIndex } from "lib/db/optimizations/component-stock-index"
-import { componentInStockColumn } from "lib/db/optimizations/component-in-stock-column"
-import { removeStaleComponents } from "lib/db/optimizations/remove-stale-components"
-import { componentCategoryIndex } from "lib/db/optimizations/component-category-index"
-import { componentInStockCategoryIndex } from "lib/db/optimizations/component-in-stock-category-index"
-import type { DbOptimizationSpec } from "lib/db/optimizations/types"
-import { componentSearchFTS } from "lib/db/optimizations/component-search-fts"
-import { componentPackageIndex } from "lib/db/optimizations/component-indexes"
 import { componentBasicIndex } from "lib/db/optimizations/component-basic-index"
+import { componentCategoryIndex } from "lib/db/optimizations/component-category-index"
+import { componentExtendedPromotionalColumn } from "lib/db/optimizations/component-extended-promotional-column"
+import { componentInStockCategoryIndex } from "lib/db/optimizations/component-in-stock-category-index"
+import { componentInStockColumn } from "lib/db/optimizations/component-in-stock-column"
+import { componentPackageIndex } from "lib/db/optimizations/component-indexes"
 import { componentPreferredIndex } from "lib/db/optimizations/component-preferred-index"
+import { componentSearchFTS } from "lib/db/optimizations/component-search-fts"
+import { componentStockIndex } from "lib/db/optimizations/component-stock-index"
+import { removeStaleComponents } from "lib/db/optimizations/remove-stale-components"
+import { sourceDbV2Compat } from "lib/db/optimizations/source-db-v2-compat"
+import type { DbOptimizationSpec } from "lib/db/optimizations/types"
 
 const OPTIMIZATIONS: DbOptimizationSpec[] = [
+  sourceDbV2Compat,
   componentSearchFTS,
   componentPackageIndex,
   componentBasicIndex,
@@ -18,6 +21,7 @@ const OPTIMIZATIONS: DbOptimizationSpec[] = [
   removeStaleComponents,
   componentStockIndex,
   componentInStockColumn,
+  componentExtendedPromotionalColumn,
   componentCategoryIndex,
   componentInStockCategoryIndex,
 ]
@@ -47,4 +51,7 @@ async function main() {
   bunDb.close()
 }
 
-main().catch(console.error)
+main().catch((error) => {
+  console.error(error)
+  process.exit(1)
+})

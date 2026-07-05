@@ -1,7 +1,7 @@
 import { sql } from "kysely"
 import {
-  buildSearchTokenGroups,
   type SearchTokenGroup,
+  buildSearchTokenGroups,
   tokenizeSearchTerm,
 } from "lib/util/search-token-groups"
 import { withWinterSpec } from "lib/with-winter-spec"
@@ -49,6 +49,7 @@ export default withWinterSpec({
     q: z.string().optional(),
     limit: z.string().optional(),
     is_basic: z.boolean().optional(),
+    is_extended_promotional: z.boolean().optional(),
     is_preferred: z.boolean().optional(),
   }),
   jsonResponse: z.any(),
@@ -68,6 +69,9 @@ export default withWinterSpec({
 
   if (req.query.is_basic) {
     query = query.where("basic", "=", 1)
+  }
+  if (req.query.is_extended_promotional) {
+    query = query.where("is_extended_promotional", "=", 1)
   }
   if (req.query.is_preferred) {
     query = query.where("preferred", "=", 1)
@@ -192,6 +196,7 @@ export default withWinterSpec({
     mfr: c.mfr,
     package: c.package,
     is_basic: Boolean(c.basic),
+    is_extended_promotional: Boolean(c.is_extended_promotional),
     is_preferred: Boolean(c.preferred),
     description: c.description,
     stock: c.stock,
