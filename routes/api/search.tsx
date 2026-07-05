@@ -1,7 +1,8 @@
 import { sql } from "kysely"
+import { parseLcscSearchTerm } from "lib/util/parse-lcsc-search-term"
 import {
-  buildSearchTokenGroups,
   type SearchTokenGroup,
+  buildSearchTokenGroups,
   tokenizeSearchTerm,
 } from "lib/util/search-token-groups"
 import { withWinterSpec } from "lib/with-winter-spec"
@@ -80,13 +81,10 @@ export default withWinterSpec({
   if (req.query.q) {
     const rawSearchTerm = req.query.q.trim()
     const searchTerm = rawSearchTerm.toLowerCase()
+    const lcscSearchTerm = parseLcscSearchTerm(rawSearchTerm)
 
-    if (/^c\d+$/i.test(rawSearchTerm)) {
-      const lcscNumber = Number.parseInt(rawSearchTerm.slice(1), 10)
-
-      if (!Number.isNaN(lcscNumber)) {
-        query = query.where("lcsc", "=", lcscNumber)
-      }
+    if (lcscSearchTerm !== null) {
+      query = query.where("lcsc", "=", lcscSearchTerm)
     } else {
       const searchTokens = tokenizeSearchTerm(searchTerm)
       const searchTokenGroups = buildSearchTokenGroups(searchTerm)
