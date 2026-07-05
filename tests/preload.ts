@@ -1,4 +1,5 @@
 import { afterEach } from "bun:test"
+import { getDbClient } from "lib/db/get-db-client"
 import { setupDerivedTables } from "lib/db/derivedtables/setup-derived-tables"
 
 declare global {
@@ -7,7 +8,10 @@ declare global {
 }
 
 globalThis.deferredCleanupFns ??= []
-globalThis.derivedTablesSetupPromise ??= setupDerivedTables({ populate: false })
+globalThis.derivedTablesSetupPromise ??= setupDerivedTables({
+  db: getDbClient(),
+  populate: false,
+})
 
 await globalThis.derivedTablesSetupPromise
 
