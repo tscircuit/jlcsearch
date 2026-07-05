@@ -19,20 +19,19 @@ const winterspecBundle = await createWinterSpecBundleFromDir(
 export const getTestServer = async (
   options: { env?: Record<string, string> } = {},
 ): Promise<TestFixture> => {
-  const port = 3001 + Math.floor(Math.random() * 999)
   const testInstanceId = Math.random().toString(36).substring(2, 15)
 
   const fixture = {} as TestFixture
 
   const server = Bun.serve({
-    port,
+    port: 0,
     fetch: (req) => {
       const response = winterspecBundle.makeRequest(req)
       return response
     },
   })
 
-  const url = `http://127.0.0.1:${port}`
+  const url = `http://127.0.0.1:${server.port}`
   const axios = defaultAxios.create({
     baseURL: url,
   })
