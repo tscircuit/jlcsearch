@@ -1,4 +1,8 @@
-import { getBunDatabaseClient, getDbClient } from "lib/db/get-db-client"
+import {
+  getBunDatabaseClient,
+  getDbClient,
+  destroyDbClient,
+} from "lib/db/get-db-client"
 import { componentStockIndex } from "lib/db/optimizations/component-stock-index"
 import { componentInStockColumn } from "lib/db/optimizations/component-in-stock-column"
 import { removeStaleComponents } from "lib/db/optimizations/remove-stale-components"
@@ -38,7 +42,8 @@ async function main() {
     }
   }
 
-  await db.destroy()
+  // Use destroyDbClient to clear the singleton properly
+  await destroyDbClient()
 
   const bunDb = getBunDatabaseClient()
   console.log("Running VACUUM to optimize database...")

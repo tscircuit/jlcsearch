@@ -1,15 +1,80 @@
 import React from "react"
 import { timeAgo } from "./time-ago"
 
-const pluralize = (resource: string) => {
-  return resource.endsWith("y") ? `${resource.slice(0, -1)}ies` : `${resource}s`
+const UNIT_SUFFIX_LABELS: Array<[RegExp, string]> = [
+  [/_farads$/, "F"],
+  [/_fraction$/, "%"],
+  [/_watts$/, "W"],
+  [/_hz$/, "Hz"],
+  [/_ghz$/, "GHz"],
+  [/_bytes$/, "bytes"],
+  [/_volt$/, "V"],
+  [/_volts$/, "V"],
+  [/_amp$/, "A"],
+  [/_amps$/, "A"],
+  [/_a$/, "A"],
+  [/_nm$/, "nm"],
+  [/_mcd$/, "mcd"],
+  [/_mm$/, "mm"],
+]
+
+const COLUMN_LABELS: Record<string, string> = {
+  lcsc: "LCSC",
+  mfr: "MFR",
+  price1: "Price",
+  in_stock: "In Stock",
+  is_basic: "Basic",
+  is_preferred: "Preferred",
+  capacitance_farads: "Capacitance (F)",
+  tolerance_fraction: "Tolerance (%)",
+  voltage_rating: "Voltage",
+  current_rating: "Current",
+  power_watts: "Power (W)",
+  current_rating_a: "Current (A)",
+  current_rating_amp: "Current (A)",
+  voltage_rating_volt: "Voltage (V)",
+  wavelength_nm: "Wavelength (nm)",
+  luminous_intensity_mcd: "Intensity (mcd)",
+  number_of_contacts: "Contacts",
+  num_channels: "Channels",
+  num_bits: "Bits",
+  num_pins: "Pins",
+  num_pins_per_row: "Pins / Row",
+  num_rows: "Rows",
+  pin_count: "Pins",
+  channel_count: "Channels",
+  cpu_speed_hz: "CPU Speed (Hz)",
+  flash_size_bytes: "Flash (bytes)",
+  ram_size_bytes: "RAM (bytes)",
+  clock_frequency_hz: "Clock (Hz)",
+  frequency_ghz: "Frequency (GHz)",
+  pitch_mm: "Pitch (mm)",
 }
 
-const removeResourcePrefixes = (resource: string) => {
-  if (resource.startsWith("creator_")) return resource.slice(8)
-  if (resource.startsWith("owner_")) return resource.slice(6)
-  if (resource.startsWith("personal_")) return resource.slice(9)
-  return resource
+const titleCase = (value: string) =>
+  value
+    .split("_")
+    .filter(Boolean)
+    .map((segment) => {
+      const lower = segment.toLowerCase()
+      if (["id", "io", "rgb", "usb", "dc", "ac", "bjt"].includes(lower)) {
+        return lower.toUpperCase()
+      }
+      return lower.charAt(0).toUpperCase() + lower.slice(1)
+    })
+    .join(" ")
+
+export const getColumnLabel = (columnKey: string): string => {
+  if (COLUMN_LABELS[columnKey]) return COLUMN_LABELS[columnKey]
+
+  for (const [suffixPattern, unit] of UNIT_SUFFIX_LABELS) {
+    if (suffixPattern.test(columnKey)) {
+      const baseKey = columnKey.replace(suffixPattern, "")
+      return `${titleCase(baseKey)} (${unit})`
+    }
+  }
+
+  return titleCase(columnKey)
 }
 
 const Cell = ({
@@ -59,7 +124,9 @@ export const Table = ({
         <tbody>
           {entries.map(([key, value], index) => (
             <tr key={index}>
-              <td className="border border-gray-300 p-1">{key}</td>
+              <td className="border border-gray-300 p-1">
+                {getColumnLabel(key)}
+              </td>
               <td className="border border-gray-300 p-1">
                 <Cell
                   row={obj}
@@ -85,7 +152,7 @@ export const Table = ({
         <tr>
           {keys.map((key) => (
             <th key={key} className="p-1 border border-gray-300">
-              {key}
+              {getColumnLabel(key)}
             </th>
           ))}
         </tr>
