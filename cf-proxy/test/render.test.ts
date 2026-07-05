@@ -59,4 +59,34 @@ describe("render helpers", () => {
       "Feature&quot;:&quot;Overcurrent Protection(OCP)&quot;",
     )
   })
+
+  it("renders the extended promotional components filter and column", () => {
+    const html = renderD1TablePage(
+      "/components/list",
+      {
+        components: [
+          {
+            lcsc: 9001,
+            mfr: "ACME",
+            package: "SOT-23",
+            is_basic: false,
+            is_preferred: true,
+            is_extended_promotional: true,
+          },
+        ],
+      },
+      { is_extended_promotional: "true" },
+      "https://jlcsearch-proxy-staging.seve.workers.dev/components/list?is_extended_promotional=true",
+    )
+
+    expect(html).toContain("Extended Promotional Part")
+    expect(html).toContain('name="is_extended_promotional"')
+    expect(html).toContain(
+      'name="is_extended_promotional" value="true" checked',
+    )
+    expect(html).toContain(
+      '<th class="p-1 border border-gray-300">Extended Promotional</th>',
+    )
+    expect(html).toContain("/components/list.json?is_extended_promotional=true")
+  })
 })

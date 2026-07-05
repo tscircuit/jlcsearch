@@ -1,16 +1,17 @@
-import { mkdir, chmod } from "node:fs/promises"
 import { existsSync } from "node:fs"
-import { platform, arch } from "node:os"
+import { chmod, mkdir } from "node:fs/promises"
+import { arch, platform } from "node:os"
 
 const BINARY_DIR = ".bin"
 const BINARY_NAME = "7zz"
+const BINARY_VERSION = "2501"
 
 // Map of platform-arch combinations to download URLs
 const BINARY_URLS: Record<string, string> = {
-  "linux-x64": "https://7-zip.org/a/7z2408-linux-x64.tar.xz",
-  "linux-arm64": "https://7-zip.org/a/7z2408-linux-arm64.tar.xz",
-  "darwin-x64": "https://7-zip.org/a/7z2408-mac.tar.xz",
-  "darwin-arm64": "https://7-zip.org/a/7z2408-mac.tar.xz",
+  "linux-x64": `https://7-zip.org/a/7z${BINARY_VERSION}-linux-x64.tar.xz`,
+  "linux-arm64": `https://7-zip.org/a/7z${BINARY_VERSION}-linux-arm64.tar.xz`,
+  "darwin-x64": `https://7-zip.org/a/7z${BINARY_VERSION}-mac.tar.xz`,
+  "darwin-arm64": `https://7-zip.org/a/7z${BINARY_VERSION}-mac.tar.xz`,
 }
 
 async function downloadAndExtract7z() {
