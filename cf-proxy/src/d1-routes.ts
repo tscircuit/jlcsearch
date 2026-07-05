@@ -1,13 +1,13 @@
 import type { Kysely } from "kysely"
 import type { DB } from "./db/types"
 import {
-  queryFilterOptions,
-  queryTable,
+  type FilterOptions,
+  type QueryParams,
   ROUTE_TO_TABLE,
   TABLE_CONFIGS,
   TABLE_RESPONSE_KEY,
-  type FilterOptions,
-  type QueryParams,
+  queryFilterOptions,
+  queryTable,
 } from "./handlers"
 
 export interface D1QueryResult {
@@ -19,6 +19,7 @@ export interface D1QueryResult {
 type D1Handler = (db: Kysely<DB>, params: QueryParams) => Promise<D1QueryResult>
 
 const PROCESSOR_INTERFACES = ["uart", "i2c", "spi", "can", "usb"] as const
+const SENSOR_INTERFACES = ["spi", "i2c", "uart"] as const
 const MICROPHONE_SUBCATEGORIES = ["Microphones", "MEMS Microphones"] as const
 
 const parseFiniteNumber = (value: string | undefined): number | null => {
@@ -41,6 +42,40 @@ const getNonEmptyStrings = (
   rows: Array<Record<string, string | null>>,
   key: string,
 ): string[] => rows.map((row) => row[key]?.trim() ?? "").filter(Boolean)
+
+const applySensorInterfaceFilter = <T>(
+  query: T,
+  interfaceName: string | undefined,
+): T => {
+  switch (interfaceName) {
+    case "spi":
+      return (query as any).where("has_spi", "=", 1)
+    case "i2c":
+      return (query as any).where("has_i2c", "=", 1)
+    case "uart":
+      return (query as any).where("has_uart", "=", 1)
+    default:
+      return query
+  }
+}
+
+const normalizeImuRow = (
+  type: "accelerometer" | "gyroscope",
+  row: Record<string, any>,
+) => ({
+  type,
+  lcsc: row.lcsc ?? 0,
+  mfr: row.mfr ?? "",
+  package: row.package ?? "",
+  supply_voltage_min: row.supply_voltage_min ?? 0,
+  supply_voltage_max: row.supply_voltage_max ?? 0,
+  axes: row.axes ?? "",
+  has_i2c: Boolean(row.has_i2c),
+  has_spi: Boolean(row.has_spi),
+  has_uart: Boolean(row.has_uart),
+  stock: row.stock ?? 0,
+  price1: row.price1 ?? 0,
+})
 
 const getMicrocontrollerListHandler = (
   tableName: "arm_processor" | "risc_v_processor",
@@ -220,6 +255,88 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
     "risc_v_processors",
     "RISC-V",
   ),
+  "/imus/list": async (db, params) => {
+    let accelerometerQuery = db
+      .selectFrom("accelerometer")
+      .selectAll()
+      .limit(100)
+      .orderBy("stock", "desc")
+    let gyroscopeQuery = db
+      .selectFrom("gyroscope")
+      .selectAll()
+      .limit(100)
+      .orderBy("stock", "desc")
+
+    if (params.package) {
+      accelerometerQuery = accelerometerQuery.where(
+        "package",
+        "=",
+        params.package,
+      )
+      gyroscopeQuery = gyroscopeQuery.where("package", "=", params.package)
+    }
+
+    accelerometerQuery = applySensorInterfaceFilter(
+      accelerometerQuery,
+      params.interface,
+    )
+    gyroscopeQuery = applySensorInterfaceFilter(
+      gyroscopeQuery,
+      params.interface,
+    )
+
+    const [
+      accelerometerPackages,
+      gyroscopePackages,
+      accelerometers,
+      gyroscopes,
+    ] = await Promise.all([
+      db
+        .selectFrom("accelerometer")
+        .select("package")
+        .distinct()
+        .where("package", "is not", null)
+        .orderBy("package")
+        .execute(),
+      db
+        .selectFrom("gyroscope")
+        .select("package")
+        .distinct()
+        .where("package", "is not", null)
+        .orderBy("package")
+        .execute(),
+      accelerometerQuery.execute(),
+      gyroscopeQuery.execute(),
+    ])
+
+    const imus = [
+      ...accelerometers.map((row) => normalizeImuRow("accelerometer", row)),
+      ...gyroscopes.map((row) => normalizeImuRow("gyroscope", row)),
+    ]
+      .filter((row) => row.lcsc !== 0 && row.package !== "")
+      .sort((a, b) => b.stock - a.stock)
+      .slice(0, 100)
+
+    return {
+      tableName: "imu",
+      filterOptions: {
+        package: Array.from(
+          new Set([
+            ...getNonEmptyStrings(
+              accelerometerPackages as Array<Record<string, string | null>>,
+              "package",
+            ),
+            ...getNonEmptyStrings(
+              gyroscopePackages as Array<Record<string, string | null>>,
+              "package",
+            ),
+          ]),
+        ).sort(),
+        interface: [...SENSOR_INTERFACES],
+      },
+      data: { imus },
+    }
+  },
   "/microphones/list": async (db, params) => {
     let query = db
       .selectFrom("component_catalog")
@@ -369,7 +486,7 @@ export function getD1Handler(pathname: string): D1Handler | null {
   if (!config) {
     return async (db, params) => {
       const results = await queryTable(db, tableName, params, { filters: {} })
-      const responseKey = TABLE_RESPONSE_KEY[tableName] || tableName + "s"
+      const responseKey = TABLE_RESPONSE_KEY[tableName] || `${tableName}s`
       return {
         data: { [responseKey]: results },
         tableName,
@@ -380,7 +497,7 @@ export function getD1Handler(pathname: string): D1Handler | null {
   return async (db, params) => {
     const results = await queryTable(db, tableName, params, config)
     const filterOptions = await queryFilterOptions(db, tableName, config)
-    const responseKey = TABLE_RESPONSE_KEY[tableName] || tableName + "s"
+    const responseKey = TABLE_RESPONSE_KEY[tableName] || `${tableName}s`
     return {
       data: { [responseKey]: results },
       tableName,
