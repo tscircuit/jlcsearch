@@ -198,6 +198,7 @@ export interface Component {
   lcsc: Generated<number>;
   manufacturer_id: number;
   mfr: string;
+  is_extended_promotional?: number | null;
   package: string;
   preferred: Generated<number>;
   price: string;
@@ -811,6 +812,7 @@ export interface VComponent {
   preferred: number | null;
   price: string | null;
   stock: number | null;
+  is_extended_promotional?: number | null;
   subcategory: string | null;
 }
 
@@ -938,3 +940,4 @@ export interface DB {
   wifi_module: WifiModule;
   wire_to_board_connector: WireToBoardConnector;
 }
+

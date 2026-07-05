@@ -1,4 +1,5 @@
-import type { DerivedTableSpec } from "./types"
+import type { DerivedTableSpec, ExpressionBuilder } from "./types"
+import type { DB } from "../generated/kysely"
 import type { KyselyDatabaseInstance } from "../kysely-types"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import { BaseComponent } from "./component-base"
@@ -25,7 +26,9 @@ export const lcdDisplayTableSpec: DerivedTableSpec<LCDDisplay> = {
       .selectFrom("components")
       .innerJoin("categories", "components.category_id", "categories.id")
       .selectAll()
-      .where((eb) => eb("description", "like", "%LCD%"))
+      .where((eb: ExpressionBuilder<DB, "components" | "categories">) =>
+        eb("description", "like", "%LCD%"),
+      )
   },
   mapToTable(components) {
     return components.map((c) => {

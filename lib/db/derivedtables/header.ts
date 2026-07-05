@@ -1,5 +1,7 @@
 import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
 import type { DerivedTableSpec } from "./types"
+import type { ExpressionBuilder } from "kysely"
+import type { DB } from "../generated/kysely"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import { BaseComponent } from "./component-base"
 
@@ -55,7 +57,7 @@ export const headerTableSpec: DerivedTableSpec<Header> = {
       .innerJoin("categories", "components.category_id", "categories.id")
       .selectAll("components")
       .select(["categories.subcategory as source_subcategory"])
-      .where((wb) =>
+      .where((wb: ExpressionBuilder<DB, "components" | "categories">) =>
         wb.or([
           wb("categories.subcategory", "=", "Female Headers"),
           wb("categories.subcategory", "=", "Pin Headers"),
