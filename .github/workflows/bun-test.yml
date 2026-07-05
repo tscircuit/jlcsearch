@@ -26,11 +26,14 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ./db.sqlite3
-          key: db-sqlite3-${{ hashFiles('scripts/setup-*.ts') }}
+          key: db-sqlite3-${{ hashFiles('scripts/setup-*.ts', 'package.json', 'lib/db/derivedtables/**/*.ts') }}
 
       - name: Run setup if cache miss
         if: steps.cache-setup.outputs.cache-hit != 'true'
         run: bun run setup
+
+      - name: Ensure compatibility views
+        run: bun scripts/ensure-test-db-views.ts
 
       - name: Run tests
         run: bun test
