@@ -6,7 +6,12 @@
 export const extractMinQPrice = (price: string) => {
   try {
     return JSON.parse(price)[0].price as number
-  } catch (e) {
-    return null
+  } catch {
+    const firstPriceRange = price.split(",").find(Boolean)
+    if (!firstPriceRange) return null
+
+    const priceText = firstPriceRange.split(":")[1]
+    const parsedPrice = Number.parseFloat(priceText)
+    return Number.isFinite(parsedPrice) ? parsedPrice : null
   }
 }

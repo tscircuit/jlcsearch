@@ -6,4 +6,24 @@ test("GET /components/list with json param returns component data", async () => 
   const res = await axios.get("/components/list?json=true")
   expect(res.data).toHaveProperty("components")
   expect(Array.isArray(res.data.components)).toBe(true)
+  if (res.data.components.length > 0) {
+    expect(res.data.components[0]).toHaveProperty("is_extended_promotional")
+    expect(typeof res.data.components[0].is_extended_promotional).toBe(
+      "boolean",
+    )
+  }
+})
+
+test("GET /components/list full response includes is_extended_promotional", async () => {
+  const { axios } = await getTestServer()
+  const res = await axios.get("/components/list?json=true&full=true")
+
+  expect(res.data).toHaveProperty("components")
+  expect(Array.isArray(res.data.components)).toBe(true)
+  if (res.data.components.length > 0) {
+    expect(res.data.components[0]).toHaveProperty("is_extended_promotional")
+    expect(typeof res.data.components[0].is_extended_promotional).toBe(
+      "boolean",
+    )
+  }
 })
