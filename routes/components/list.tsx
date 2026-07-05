@@ -34,6 +34,7 @@ export default withWinterSpec({
     full: z.boolean().optional(),
     search: z.string().optional(),
     is_basic: z.boolean().optional(),
+    is_extended_promotional: z.boolean().optional(),
     is_preferred: z.boolean().optional(),
   }),
   jsonResponse: z.any(),
@@ -66,6 +67,9 @@ export default withWinterSpec({
 
   if (req.query.is_basic) {
     query = query.where("basic", "=", 1)
+  }
+  if (req.query.is_extended_promotional) {
+    query = query.where("preferred", "=", 1)
   }
   if (req.query.is_preferred) {
     query = query.where("preferred", "=", 1)
@@ -110,6 +114,7 @@ export default withWinterSpec({
     mfr: c.mfr,
     package: c.package,
     is_basic: Boolean(c.basic),
+    is_extended_promotional: Boolean(c.preferred),
     is_preferred: Boolean(c.preferred),
     description: c.description,
     stock: c.stock,
@@ -141,6 +146,17 @@ export default withWinterSpec({
               name="is_basic"
               value="true"
               checked={req.query.is_basic}
+            />
+          </label>
+        </div>
+        <div>
+          <label>
+            Extended Promotional:
+            <input
+              type="checkbox"
+              name="is_extended_promotional"
+              value="true"
+              checked={req.query.is_extended_promotional}
             />
           </label>
         </div>

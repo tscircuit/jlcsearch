@@ -42,6 +42,7 @@ run_wrangler d1 execute "$DB_NAME" --remote --command \
      price TEXT,
      price1 REAL,
      basic INTEGER,
+     is_extended_promotional INTEGER,
      preferred INTEGER,
      category TEXT,
      subcategory TEXT,
@@ -69,6 +70,7 @@ INSERT INTO search_index_next (
   price,
   price1,
   basic,
+  is_extended_promotional,
   preferred,
   category,
   subcategory,
@@ -90,6 +92,7 @@ SELECT
     ELSE NULL
   END AS price1,
   basic,
+  preferred AS is_extended_promotional,
   preferred,
   category,
   subcategory,
@@ -133,6 +136,7 @@ run_wrangler d1 execute "$DB_NAME" --remote --command \
    CREATE INDEX IF NOT EXISTS idx_search_index_next_lcsc ON search_index_next(lcsc);
    CREATE INDEX IF NOT EXISTS idx_search_index_next_package ON search_index_next(package);
    CREATE INDEX IF NOT EXISTS idx_search_index_next_basic ON search_index_next(basic);
+   CREATE INDEX IF NOT EXISTS idx_search_index_next_extended_promotional ON search_index_next(is_extended_promotional);
    CREATE INDEX IF NOT EXISTS idx_search_index_next_preferred ON search_index_next(preferred);"
 
 echo "Validating row count..."
@@ -156,12 +160,14 @@ run_wrangler d1 execute "$DB_NAME" --remote --command \
    DROP INDEX IF EXISTS idx_search_index_lcsc;
    DROP INDEX IF EXISTS idx_search_index_package;
    DROP INDEX IF EXISTS idx_search_index_basic;
+   DROP INDEX IF EXISTS idx_search_index_extended_promotional;
    DROP INDEX IF EXISTS idx_search_index_preferred;
    ALTER TABLE search_index_next RENAME TO search_index;
    CREATE INDEX IF NOT EXISTS idx_search_index_stock ON search_index(stock DESC);
    CREATE INDEX IF NOT EXISTS idx_search_index_lcsc ON search_index(lcsc);
    CREATE INDEX IF NOT EXISTS idx_search_index_package ON search_index(package);
    CREATE INDEX IF NOT EXISTS idx_search_index_basic ON search_index(basic);
+   CREATE INDEX IF NOT EXISTS idx_search_index_extended_promotional ON search_index(is_extended_promotional);
    CREATE INDEX IF NOT EXISTS idx_search_index_preferred ON search_index(preferred);"
 
 echo "Done. Old table kept as search_index_old for rollback."
