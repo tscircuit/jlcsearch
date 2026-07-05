@@ -7,11 +7,19 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 60
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Free runner disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          df -h
 
       - name: Setup bun
         uses: oven-sh/setup-bun@v2
@@ -21,12 +29,18 @@ jobs:
       - name: Install dependencies
         run: bun install
 
+      - name: Install cf-proxy dependencies
+        run: bun install
+        working-directory: cf-proxy
+
       - name: Cache setup artifacts
         id: cache-setup
         uses: actions/cache@v4
         with:
           path: ./db.sqlite3
           key: db-sqlite3-${{ hashFiles('scripts/setup-*.ts') }}
+          restore-keys: |
+            db-sqlite3-
 
       - name: Run setup if cache miss
         if: steps.cache-setup.outputs.cache-hit != 'true'
