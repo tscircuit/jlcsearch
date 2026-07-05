@@ -2,10 +2,10 @@ import { sql } from "kysely"
 import type { DbOptimizationSpec } from "./types"
 import type { KyselyDatabaseInstance } from "../kysely-types"
 
-export const componentInStockColumn: DbOptimizationSpec = {
-  name: "add_components_in_stock_column",
+export const componentExtendedPromotionalColumn: DbOptimizationSpec = {
+  name: "add_components_extended_promotional_column",
   description:
-    "Adds in_stock boolean column to components table derived from stock > 0",
+    "Adds extended_promotional boolean column to components table derived from flag & 2",
 
   async checkIfAdded(db: KyselyDatabaseInstance) {
     const {
@@ -14,22 +14,22 @@ export const componentInStockColumn: DbOptimizationSpec = {
       SELECT * FROM components LIMIT 1
     `.execute(db)
 
-    return "in_stock" in ex
+    return "extended_promotional" in ex
   },
 
   async execute(db: KyselyDatabaseInstance) {
-    // Add the column
+    // Add the column - extended promotional parts have flag bit 2 set
     await sql`
       ALTER TABLE components 
-      ADD COLUMN in_stock boolean 
-      GENERATED ALWAYS AS (stock > 0)
+      ADD COLUMN extended_promotional boolean 
+      GENERATED ALWAYS AS ((flag & 2) = 2)
     `.execute(db)
 
     // Create an index on the new column
     await db.schema
-      .createIndex("idx_components_in_stock")
+      .createIndex("idx_components_extended_promotional")
       .on("components")
-      .column("in_stock")
+      .column("extended_promotional")
       .execute()
   },
 }
