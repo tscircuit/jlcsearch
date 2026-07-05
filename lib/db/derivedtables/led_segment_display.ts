@@ -1,4 +1,5 @@
-import type { DerivedTableSpec } from "./types"
+import type { DerivedTableSpec, ExpressionBuilder } from "./types"
+import type { DB } from "../generated/kysely"
 import type { KyselyDatabaseInstance } from "../kysely-types"
 import { BaseComponent } from "./component-base"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
