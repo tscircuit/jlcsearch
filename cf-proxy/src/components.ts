@@ -8,6 +8,7 @@ export interface ComponentCatalogQueryParams {
   search?: string
   is_basic?: string
   is_preferred?: string
+  is_extended_promotional?: string
 }
 
 export async function queryComponentCatalog(
@@ -26,6 +27,7 @@ export async function queryComponentCatalog(
     stock: number | null
     price: string | null
     extra: string | null
+    is_extended_promotional: number | null
   }>
 > {
   const rows = await searchIndex(db, {
@@ -34,6 +36,7 @@ export async function queryComponentCatalog(
     subcategory_name: params.subcategory_name,
     is_basic: params.is_basic,
     is_preferred: params.is_preferred,
+    is_extended_promotional: params.is_extended_promotional,
     limit: "100",
   })
 
