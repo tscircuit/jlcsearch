@@ -1,9 +1,9 @@
 import {
+  type FilterOptions,
+  type QueryParams,
   ROUTE_TO_TABLE,
   TABLE_CONFIGS,
   TABLE_RESPONSE_KEY,
-  type QueryParams,
-  type FilterOptions,
 } from "./handlers"
 
 const escapeHtml = (value: unknown): string =>
@@ -544,7 +544,7 @@ const renderComponentsFilters = (
     <label>Basic Part:<input type="checkbox" name="is_basic" value="true"${params.is_basic === "true" ? " checked" : ""} /></label>
   </div>
   <div>
-    <label>Preferred Part:<input type="checkbox" name="is_preferred" value="true"${params.is_preferred === "true" ? " checked" : ""} /></label>
+    <label>Extended Promotional Part:<input type="checkbox" name="is_extended_promotional" value="true"${params.is_extended_promotional === "true" || params.is_preferred === "true" ? " checked" : ""} /></label>
   </div>
   <button type="submit">Filter</button>
 </form>`
