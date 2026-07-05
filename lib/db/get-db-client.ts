@@ -83,6 +83,10 @@ export const getDbClient = () => {
   return dbClientSingleton
 }
 
+export const resetDbClient = () => {
+  dbClientSingleton = undefined
+}
+
 export const getBunDatabaseClient = () => {
   const Database = getDatabaseCtor()
   return new Database(getResolvedDbPath())
