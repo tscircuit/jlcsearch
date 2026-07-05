@@ -22,7 +22,9 @@ test("GET /led_segment_display/list.json with json param returns LED Segment dat
     expect(typeof ledSegment.package).toBe("string")
     expect(typeof ledSegment.description).toBe("string")
     expect(typeof ledSegment.stock).toBe("number")
-    expect(typeof ledSegment.price1).toBe("number")
+    expect(
+      ledSegment.price1 === null || typeof ledSegment.price1 === "number",
+    ).toBe(true)
 
     // Check optional properties if they exist
     if ("positions" in ledSegment) {

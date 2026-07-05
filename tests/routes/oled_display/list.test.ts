@@ -25,7 +25,9 @@ test("GET /oled_display/list.json with json param returns OLED Display data", as
     expect(typeof oledDisplay.package).toBe("string")
     expect(typeof oledDisplay.description).toBe("string")
     expect(typeof oledDisplay.stock).toBe("number")
-    expect(typeof oledDisplay.price1).toBe("number")
+    expect(
+      oledDisplay.price1 === null || typeof oledDisplay.price1 === "number",
+    ).toBe(true)
     if (oledDisplay.protocol) {
       expect(typeof oledDisplay.protocol).toBe("string")
     }

@@ -24,7 +24,9 @@ test("GET /lcd_display/list.json with json param returns LCD Display data", asyn
     expect(typeof lcdDisplay.package).toBe("string")
     expect(typeof lcdDisplay.description).toBe("string")
     expect(typeof lcdDisplay.stock).toBe("number")
-    expect(typeof lcdDisplay.price1).toBe("number")
+    expect(
+      lcdDisplay.price1 === null || typeof lcdDisplay.price1 === "number",
+    ).toBe(true)
 
     if (lcdDisplay.display_size) {
       expect(typeof lcdDisplay.display_size).toBe("string")

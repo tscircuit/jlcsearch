@@ -1,9 +1,12 @@
 import { getBunDatabaseClient, getDbClient } from "lib/db/get-db-client"
+import { sql } from "kysely"
+import { adaptUpstreamSchema } from "lib/db/optimizations/00-adapt-upstream-schema"
 import { componentStockIndex } from "lib/db/optimizations/component-stock-index"
 import { componentInStockColumn } from "lib/db/optimizations/component-in-stock-column"
 import { removeStaleComponents } from "lib/db/optimizations/remove-stale-components"
 import { componentCategoryIndex } from "lib/db/optimizations/component-category-index"
 import { componentInStockCategoryIndex } from "lib/db/optimizations/component-in-stock-category-index"
+import { componentIsExtendedPromotionalColumn } from "lib/db/optimizations/component-is-extended-promotional-column"
 import type { DbOptimizationSpec } from "lib/db/optimizations/types"
 import { componentSearchFTS } from "lib/db/optimizations/component-search-fts"
 import { componentPackageIndex } from "lib/db/optimizations/component-indexes"
@@ -11,6 +14,7 @@ import { componentBasicIndex } from "lib/db/optimizations/component-basic-index"
 import { componentPreferredIndex } from "lib/db/optimizations/component-preferred-index"
 
 const OPTIMIZATIONS: DbOptimizationSpec[] = [
+  adaptUpstreamSchema,
   componentSearchFTS,
   componentPackageIndex,
   componentBasicIndex,
@@ -20,6 +24,7 @@ const OPTIMIZATIONS: DbOptimizationSpec[] = [
   componentInStockColumn,
   componentCategoryIndex,
   componentInStockCategoryIndex,
+  componentIsExtendedPromotionalColumn,
 ]
 
 async function main() {

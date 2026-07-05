@@ -29,7 +29,7 @@ test("GET /fuses/list.json with json param returns fuse data", async () => {
     expect(typeof fuse.package).toBe("string")
     expect(typeof fuse.description).toBe("string")
     expect(typeof fuse.stock).toBe("number")
-    expect(typeof fuse.price1).toBe("number")
+    expect(fuse.price1 === null || typeof fuse.price1 === "number").toBe(true)
     expect(typeof fuse.current_rating).toBe("number")
     expect(typeof fuse.voltage_rating).toBe("number")
     expect(typeof fuse.response_time).toBe("string")
