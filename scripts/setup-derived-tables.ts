@@ -9,6 +9,7 @@ async function main() {
     resetAll,
     resetTable,
     logger: console.log,
+    destroyOnComplete: true,
   })
 }
 

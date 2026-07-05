@@ -50,6 +50,7 @@ export default withWinterSpec({
     limit: z.string().optional(),
     is_basic: z.boolean().optional(),
     is_preferred: z.boolean().optional(),
+    is_extended_promotional: z.boolean().optional(),
   }),
   jsonResponse: z.any(),
 } as const)(async (req, ctx) => {
@@ -71,6 +72,11 @@ export default withWinterSpec({
   }
   if (req.query.is_preferred) {
     query = query.where("preferred", "=", 1)
+  }
+  if (req.query.is_extended_promotional === true) {
+    query = query.where("preferred", "=", 1).where("basic", "=", 0)
+  } else if (req.query.is_extended_promotional === false) {
+    query = query.where(sql<boolean>`NOT (preferred = 1 AND basic = 0)`)
   }
 
   const baseQuery = query
@@ -187,18 +193,24 @@ export default withWinterSpec({
     }
   }
 
-  const components = fullComponents.map((c) => ({
+  const fullComponentsWithDerivedFields = fullComponents.map((c) => ({
+    ...c,
+    is_extended_promotional: Boolean(c.preferred && !c.basic),
+  }))
+
+  const components = fullComponentsWithDerivedFields.map((c) => ({
     lcsc: c.lcsc,
     mfr: c.mfr,
     package: c.package,
     is_basic: Boolean(c.basic),
     is_preferred: Boolean(c.preferred),
+    is_extended_promotional: c.is_extended_promotional,
     description: c.description,
     stock: c.stock,
     price: extractSmallQuantityPrice(c.price),
   }))
 
   return ctx.json({
-    components: req.query.full ? fullComponents : components,
+    components: req.query.full ? fullComponentsWithDerivedFields : components,
   })
 })
