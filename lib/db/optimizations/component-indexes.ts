@@ -22,3 +22,24 @@ export const componentPackageIndex: DbOptimizationSpec = {
       .execute()
   },
 }
+
+export const componentLcscIndex: DbOptimizationSpec = {
+  name: "idx_components_lcsc",
+  description: "Index on lcsc column for search performance",
+
+  async checkIfAdded(db: KyselyDatabaseInstance) {
+    const result = await sql`
+      SELECT name FROM sqlite_master
+      WHERE type='index' AND name=${this.name}
+    `.execute(db)
+    return result.rows.length > 0
+  },
+
+  async execute(db: KyselyDatabaseInstance) {
+    await db.schema
+      .createIndex(this.name)
+      .on("components")
+      .column("lcsc")
+      .execute()
+  },
+}

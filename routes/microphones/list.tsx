@@ -59,7 +59,7 @@ export default withWinterSpec({
       microphone_type: m.subcategory ?? "",
       description: m.description ?? "",
       stock: m.stock ?? 0,
-      price1: extractMinQPrice(m.price ?? ""),
+      price1: extractMinQPrice(m.price ?? "") ?? 0,
     }))
     .filter((m) => m.lcsc !== 0 && m.package !== "")
 

@@ -4,14 +4,22 @@ import { componentInStockColumn } from "lib/db/optimizations/component-in-stock-
 import { removeStaleComponents } from "lib/db/optimizations/remove-stale-components"
 import { componentCategoryIndex } from "lib/db/optimizations/component-category-index"
 import { componentInStockCategoryIndex } from "lib/db/optimizations/component-in-stock-category-index"
+import { componentIsExtendedPromotionalColumn } from "lib/db/optimizations/component-is-extended-promotional-column"
 import type { DbOptimizationSpec } from "lib/db/optimizations/types"
 import { componentSearchFTS } from "lib/db/optimizations/component-search-fts"
-import { componentPackageIndex } from "lib/db/optimizations/component-indexes"
+import {
+  componentPackageIndex,
+  componentLcscIndex,
+} from "lib/db/optimizations/component-indexes"
 import { componentBasicIndex } from "lib/db/optimizations/component-basic-index"
 import { componentPreferredIndex } from "lib/db/optimizations/component-preferred-index"
+import { legacySchema } from "lib/db/optimizations/legacy-schema"
+import { categorySubcategoryIndex } from "lib/db/optimizations/category-subcategory-index"
 
 const OPTIMIZATIONS: DbOptimizationSpec[] = [
+  legacySchema,
   componentSearchFTS,
+  componentLcscIndex,
   componentPackageIndex,
   componentBasicIndex,
   componentPreferredIndex,
@@ -20,6 +28,8 @@ const OPTIMIZATIONS: DbOptimizationSpec[] = [
   componentInStockColumn,
   componentCategoryIndex,
   componentInStockCategoryIndex,
+  categorySubcategoryIndex,
+  componentIsExtendedPromotionalColumn,
 ]
 
 async function main() {
