@@ -107,3 +107,32 @@ test("GET /api/search supports '0402 LED'", async () => {
   expect(res.data.components.every((c: any) => c.package === "0402")).toBe(true)
   expect(res.data.components.some((c: any) => c.lcsc === 965793)).toBe(true)
 })
+
+test("GET /api/search exposes is_extended_promotional field", async () => {
+  const { axios } = await getTestServer()
+  const res = await axios.get("/api/search?limit=1&q=resistor")
+
+  expect(res.data).toHaveProperty("components")
+  expect(Array.isArray(res.data.components)).toBe(true)
+  if (res.data.components.length > 0) {
+    const component = res.data.components[0]
+    expect(component).toHaveProperty("is_extended_promotional")
+    expect(typeof component.is_extended_promotional).toBe("boolean")
+  }
+})
+
+test("GET /api/search?is_extended_promotional=true filters to extended promotional parts", async () => {
+  const { axios } = await getTestServer()
+  const res = await axios.get(
+    "/api/search?limit=200&is_extended_promotional=true",
+  )
+
+  expect(res.data).toHaveProperty("components")
+  expect(Array.isArray(res.data.components)).toBe(true)
+  // Extended promotional parts are preferred but not basic.
+  expect(
+    res.data.components.every(
+      (c: any) => c.is_extended_promotional && c.is_preferred && !c.is_basic,
+    ),
+  ).toBe(true)
+})
