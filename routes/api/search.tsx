@@ -4,6 +4,7 @@ import {
   type SearchTokenGroup,
   tokenizeSearchTerm,
 } from "lib/util/search-token-groups"
+import { isExtendedPromotional } from "lib/util/is-extended-promotional"
 import { withWinterSpec } from "lib/with-winter-spec"
 import { z } from "zod"
 
@@ -50,6 +51,7 @@ export default withWinterSpec({
     limit: z.string().optional(),
     is_basic: z.boolean().optional(),
     is_preferred: z.boolean().optional(),
+    is_extended_promotional: z.boolean().optional(),
   }),
   jsonResponse: z.any(),
 } as const)(async (req, ctx) => {
@@ -71,6 +73,11 @@ export default withWinterSpec({
   }
   if (req.query.is_preferred) {
     query = query.where("preferred", "=", 1)
+  }
+  if (req.query.is_extended_promotional) {
+    query = query
+      .where("basic", "=", 0)
+      .where(sql<boolean>`LOWER(COALESCE(extra, '')) LIKE '%promotional%'`)
   }
 
   const baseQuery = query
@@ -193,6 +200,7 @@ export default withWinterSpec({
     package: c.package,
     is_basic: Boolean(c.basic),
     is_preferred: Boolean(c.preferred),
+    is_extended_promotional: isExtendedPromotional(c.basic, c.extra),
     description: c.description,
     stock: c.stock,
     price: extractSmallQuantityPrice(c.price),
