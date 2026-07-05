@@ -18,6 +18,7 @@ export default withWinterSpec({
           lcsc: z.number().int(),
           mfr: z.string(),
           package: z.string(),
+          is_extended_promotional: z.boolean(),
           gender: z.string().optional(),
           number_of_contacts: z.number().optional(),
           current_rating_a: z.number().optional(),
@@ -60,6 +61,7 @@ export default withWinterSpec({
           lcsc: c.lcsc ?? 0,
           mfr: c.mfr ?? "",
           package: c.package ?? "",
+          is_extended_promotional: Boolean(c.is_extended_promotional),
           gender: c.gender ?? undefined,
           number_of_contacts: c.number_of_contacts ?? undefined,
           current_rating_a: c.current_rating_a ?? undefined,
@@ -112,6 +114,7 @@ export default withWinterSpec({
           lcsc: c.lcsc,
           mfr: c.mfr,
           package: c.package,
+          is_extended_promotional: c.is_extended_promotional ? "✓" : "",
           contacts: (
             <span className="tabular-nums">{c.number_of_contacts}</span>
           ),

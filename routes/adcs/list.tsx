@@ -196,6 +196,7 @@ export default withWinterSpec({
           lcsc: adc.lcsc,
           mfr: adc.mfr,
           package: adc.package,
+          is_extended_promotional: adc.is_extended_promotional ? "✓" : "",
           resolution: adc.resolution_bits ? `${adc.resolution_bits} bit` : "",
           sampling: adc.sampling_rate_hz ? (
             <span className="tabular-nums">

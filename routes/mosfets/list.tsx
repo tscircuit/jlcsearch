@@ -34,6 +34,7 @@ export default withWinterSpec({
           price1: z.number().nullable(),
           in_stock: z.boolean(),
           package: z.string().nullable(),
+          is_extended_promotional: z.boolean(),
           drain_source_voltage: z.number().nullable(),
           continuous_drain_current: z.number().nullable(),
           gate_threshold_voltage: z.number().nullable(),
@@ -119,6 +120,7 @@ export default withWinterSpec({
         price1: mosfet.price1 === null ? null : Number(mosfet.price1),
         in_stock: Boolean((mosfet.stock || 0) > 0),
         package: mosfet.package,
+        is_extended_promotional: Boolean(mosfet.is_extended_promotional),
         drain_source_voltage: mosfet.drain_source_voltage,
         continuous_drain_current: mosfet.continuous_drain_current,
         gate_threshold_voltage: mosfet.gate_threshold_voltage,
@@ -246,6 +248,7 @@ export default withWinterSpec({
           lcsc: m.lcsc,
           mfr: m.mfr,
           package: m.package,
+          is_extended_promotional: m.is_extended_promotional ? "✓" : "",
           description: m.description,
           voltage: m.drain_source_voltage && (
             <span className="tabular-nums">{m.drain_source_voltage}V</span>

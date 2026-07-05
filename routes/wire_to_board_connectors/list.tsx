@@ -23,6 +23,7 @@ export default withWinterSpec({
           lcsc: z.number().int(),
           mfr: z.string(),
           package: z.string(),
+          is_extended_promotional: z.boolean(),
           pitch_mm: z.number().optional(),
           num_rows: z.number().optional(),
           num_pins_per_row: z.number().optional(),
@@ -86,6 +87,7 @@ export default withWinterSpec({
           lcsc: c.lcsc ?? 0,
           mfr: c.mfr ?? "",
           package: c.package ?? "",
+          is_extended_promotional: Boolean(c.is_extended_promotional),
           pitch_mm: c.pitch_mm ?? undefined,
           num_rows: c.num_rows ?? undefined,
           num_pins_per_row: c.num_pins_per_row ?? undefined,
@@ -165,6 +167,7 @@ export default withWinterSpec({
           lcsc: c.lcsc,
           mfr: c.mfr,
           package: c.package,
+          is_extended_promotional: c.is_extended_promotional ? "✓" : "",
           pitch: c.pitch_mm && (
             <span className="tabular-nums">{c.pitch_mm}mm</span>
           ),

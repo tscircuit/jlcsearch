@@ -30,6 +30,7 @@ export default withWinterSpec({
         is_surface_mount: z.boolean(),
         is_glass_encased: z.boolean(),
         is_resettable: z.boolean(),
+        is_extended_promotional: z.boolean(),
       }),
     ),
   }),
@@ -54,6 +55,7 @@ export default withWinterSpec({
       "is_surface_mount",
       "is_glass_encased",
       "is_resettable",
+      "is_extended_promotional",
     ] as const)
     .limit(limit)
     .orderBy("stock", "desc")
@@ -110,6 +112,7 @@ export default withWinterSpec({
     is_surface_mount: Boolean(c.is_surface_mount),
     is_glass_encased: Boolean(c.is_glass_encased),
     is_resettable: Boolean(c.is_resettable),
+    is_extended_promotional: c.is_extended_promotional ? "✓" : "",
   }))
 
   if (ctx.isApiRequest) {
@@ -128,6 +131,7 @@ export default withWinterSpec({
           is_surface_mount: Boolean(c.is_surface_mount),
           is_glass_encased: Boolean(c.is_glass_encased),
           is_resettable: Boolean(c.is_resettable),
+          is_extended_promotional: Boolean(c.is_extended_promotional),
         }))
         .filter((c) => c.lcsc !== 0 && c.package !== ""),
     })

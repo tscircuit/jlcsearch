@@ -24,6 +24,7 @@ export default withWinterSpec({
           lcsc: z.number().int(),
           mfr: z.string(),
           package: z.string(),
+          is_extended_promotional: z.boolean(),
           pitch_mm: z.number().optional(),
           num_pins: z.number().optional(),
           gender: z.string().optional(),
@@ -88,6 +89,7 @@ export default withWinterSpec({
           lcsc: h.lcsc ?? 0,
           mfr: h.mfr ?? "",
           package: h.package ?? "",
+          is_extended_promotional: Boolean(h.is_extended_promotional),
           pitch_mm: h.pitch_mm ?? undefined,
           num_pins: h.num_pins ?? undefined,
           gender: h.gender ?? undefined,
@@ -178,6 +180,7 @@ export default withWinterSpec({
           lcsc: h.lcsc,
           mfr: h.mfr,
           package: h.package,
+          is_extended_promotional: h.is_extended_promotional ? "✓" : "",
           pitch: <span className="tabular-nums">{h.pitch_mm}mm</span>,
           pins: (
             <span className="tabular-nums">

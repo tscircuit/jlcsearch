@@ -17,6 +17,7 @@ export default withWinterSpec({
         z.object({
           lcsc: z.number().int(),
           mfr: z.string(),
+          is_extended_promotional: z.boolean(),
           pitch_mm: z.number().optional(),
           number_of_contacts: z.number().optional(),
           contact_type: z.string().optional(),
@@ -69,6 +70,7 @@ export default withWinterSpec({
         .map((c) => ({
           lcsc: c.lcsc ?? 0,
           mfr: c.mfr ?? "",
+          is_extended_promotional: Boolean(c.is_extended_promotional),
           pitch_mm: c.pitch_mm ?? undefined,
           number_of_contacts: c.number_of_contacts ?? undefined,
           contact_type: c.contact_type ?? undefined,
@@ -124,6 +126,7 @@ export default withWinterSpec({
         rows={connectors.map((c) => ({
           lcsc: c.lcsc,
           mfr: c.mfr,
+          is_extended_promotional: c.is_extended_promotional ? "✓" : "",
           pitch: c.pitch_mm && (
             <span className="tabular-nums">{c.pitch_mm}mm</span>
           ),

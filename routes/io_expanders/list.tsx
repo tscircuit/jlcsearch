@@ -145,6 +145,7 @@ export default withWinterSpec({
           lcsc: e.lcsc,
           mfr: e.mfr,
           package: e.package,
+          is_extended_promotional: e.is_extended_promotional ? "✓" : "",
           gpios: e.num_gpios,
           voltage:
             e.supply_voltage_min && e.supply_voltage_max ? (

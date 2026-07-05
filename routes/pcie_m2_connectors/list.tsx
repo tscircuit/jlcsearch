@@ -17,6 +17,7 @@ export default withWinterSpec({
         z.object({
           lcsc: z.number().int(),
           mfr: z.string(),
+          is_extended_promotional: z.boolean(),
           key: z.string().nullable(),
           is_right_angle: z.boolean().optional(),
           stock: z.number().optional(),
@@ -57,6 +58,7 @@ export default withWinterSpec({
         .map((c) => ({
           lcsc: c.lcsc ?? 0,
           mfr: c.mfr ?? "",
+          is_extended_promotional: Boolean(c.is_extended_promotional),
           key: c.key ?? null,
           is_right_angle: Boolean(c.is_right_angle),
           stock: c.stock ?? undefined,
@@ -107,6 +109,7 @@ export default withWinterSpec({
         rows={connectors.map((c) => ({
           lcsc: c.lcsc,
           mfr: c.mfr,
+          is_extended_promotional: c.is_extended_promotional ? "✓" : "",
           key: c.key,
           orientation: c.is_right_angle ? "Right Angle" : "Straight",
           stock: <span className="tabular-nums">{c.stock}</span>,

@@ -29,6 +29,7 @@ export default withWinterSpec({
           lcsc: z.number().int(),
           mfr: z.string(),
           package: z.string(),
+          is_extended_promotional: z.boolean(),
           maxResistance: z.number(),
           pinVariant: z.string(),
           stock: z.number().optional(),
@@ -78,6 +79,7 @@ export default withWinterSpec({
           lcsc: p.lcsc ?? 0,
           mfr: p.mfr ?? "",
           package: p.package ?? "",
+          is_extended_promotional: Boolean(p.is_extended_promotional),
           maxResistance: p.max_resistance ?? 0,
           pinVariant: p.pin_variant ?? "two_pin",
           stock: p.stock ?? undefined,
@@ -142,6 +144,7 @@ export default withWinterSpec({
           lcsc: p.lcsc,
           mfr: p.mfr,
           package: p.package,
+          is_extended_promotional: p.is_extended_promotional ? "✓" : "",
           maxResistance: (
             <span className="tabular-nums">
               {formatSiUnit(p.max_resistance)}Ω

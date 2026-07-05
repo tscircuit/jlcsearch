@@ -52,6 +52,7 @@ export default withWinterSpec({
           lcsc: g.lcsc ?? 0,
           mfr: g.mfr ?? "",
           package: g.package ?? "",
+          is_extended_promotional: Boolean(g.is_extended_promotional),
           supply_voltage_min: g.supply_voltage_min ?? undefined,
           supply_voltage_max: g.supply_voltage_max ?? undefined,
           axes: g.axes ?? undefined,
@@ -110,6 +111,7 @@ export default withWinterSpec({
           lcsc: g.lcsc,
           mfr: g.mfr,
           package: g.package,
+          is_extended_promotional: g.is_extended_promotional ? "✓" : "",
           voltage:
             g.supply_voltage_min && g.supply_voltage_max ? (
               <span className="tabular-nums">

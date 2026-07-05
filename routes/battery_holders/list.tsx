@@ -19,6 +19,7 @@ export default withWinterSpec({
           lcsc: z.number().int(),
           mfr: z.string(),
           package: z.string(),
+          is_extended_promotional: z.boolean(),
           connector_type: z.string().optional(),
           battery_type: z.string().optional(),
           operating_temp_min: z.number().optional(),
@@ -80,6 +81,7 @@ export default withWinterSpec({
           lcsc: h.lcsc ?? 0,
           mfr: h.mfr ?? "",
           package: h.package ?? "",
+          is_extended_promotional: Boolean(h.is_extended_promotional),
           connector_type: h.connector_type ?? undefined,
           battery_type: h.battery_type ?? undefined,
           operating_temp_min: h.operating_temp_min ?? undefined,
@@ -152,6 +154,7 @@ export default withWinterSpec({
           lcsc: h.lcsc,
           mfr: h.mfr,
           package: h.package,
+          is_extended_promotional: h.is_extended_promotional ? "✓" : "",
           connector: h.connector_type,
           battery: h.battery_type,
           temp_range:
