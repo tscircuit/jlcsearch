@@ -1,6 +1,7 @@
 import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
-import type { DerivedTableSpec } from "./types"
+import type { DerivedTableSpec, ExpressionBuilder } from "./types"
+import type { DB } from "../generated/kysely"
 import { BaseComponent } from "./component-base"
 
 export interface ResistorArray extends BaseComponent {
