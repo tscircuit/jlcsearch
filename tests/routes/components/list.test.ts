@@ -6,4 +6,5 @@ test("GET /components/list with json param returns component data", async () => 
   const res = await axios.get("/components/list?json=true")
   expect(res.data).toHaveProperty("components")
   expect(Array.isArray(res.data.components)).toBe(true)
+  expect(res.data.components[0]).toHaveProperty("is_extended_promotional")
 })
