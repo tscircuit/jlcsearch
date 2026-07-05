@@ -166,6 +166,7 @@ const routeCases: RouteCase[] = [
       "package",
       "description",
       ["price", "price1"],
+      "is_extended_promotional",
     ],
   },
   {
@@ -382,6 +383,7 @@ describe("Cloudflare route contracts", () => {
       "description",
       ["price", "price1"],
       "stock",
+      "is_extended_promotional",
     ])
   })
 
