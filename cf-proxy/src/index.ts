@@ -1,7 +1,7 @@
 import { CacheService, addCorsHeaders, addVaryHeader } from "./cache-service"
 import { queryComponentCatalog } from "./components"
-import { getD1Client } from "./db/get-d1-client"
 import { getD1Handler } from "./d1-routes"
+import { getD1Client } from "./db/get-d1-client"
 import { renderD1TablePage, renderHomePage } from "./render"
 import { searchIndex } from "./search"
 
@@ -22,6 +22,51 @@ const extractSmallQuantityPrice = (price: string | null): string | number => {
     return ""
   }
 }
+
+const isExtendedPromotional = (row: {
+  basic?: number | null
+  preferred?: number | null
+}) => Boolean(row.preferred) && !row.basic
+
+interface D1ComponentRow {
+  lcsc?: number | null
+  mfr?: string | null
+  package?: string | null
+  description?: string | null
+  stock?: number | null
+  price?: string | null
+  price1?: number | null
+  category?: string | null
+  subcategory?: string | null
+  basic?: number | null
+  preferred?: number | null
+}
+
+export const mapD1SearchComponent = (row: D1ComponentRow) => ({
+  lcsc: row.lcsc ?? 0,
+  mfr: row.mfr ?? "",
+  package: row.package ?? "",
+  is_basic: Boolean(row.basic),
+  is_preferred: Boolean(row.preferred),
+  is_extended_promotional: isExtendedPromotional(row),
+  description: row.description ?? "",
+  stock: row.stock ?? 0,
+  price: row.price1 ?? extractSmallQuantityPrice(row.price ?? null),
+})
+
+export const mapD1CatalogComponent = (row: D1ComponentRow) => ({
+  lcsc: row.lcsc ?? 0,
+  mfr: row.mfr ?? "",
+  package: row.package ?? "",
+  description: row.description ?? "",
+  stock: row.stock ?? 0,
+  price: row.price ?? "",
+  category: row.category ?? "",
+  subcategory: row.subcategory ?? "",
+  is_basic: Boolean(row.basic),
+  is_preferred: Boolean(row.preferred),
+  is_extended_promotional: isExtendedPromotional(row),
+})
 
 const buildD1ErrorResponse = (
   origin: string | null,
@@ -361,16 +406,7 @@ async function handleD1Search(
     const db = getD1Client(env.DB)
     const params = Object.fromEntries(url.searchParams)
     const rows = await searchIndex(db, params)
-    const components = rows.map((row) => ({
-      lcsc: row.lcsc ?? 0,
-      mfr: row.mfr ?? "",
-      package: row.package ?? "",
-      is_basic: Boolean(row.basic),
-      is_preferred: Boolean(row.preferred),
-      description: row.description ?? "",
-      stock: row.stock ?? 0,
-      price: row.price1 ?? extractSmallQuantityPrice(row.price),
-    }))
+    const components = rows.map(mapD1SearchComponent)
 
     const headers = new Headers({
       "content-type": "application/json",
@@ -480,18 +516,7 @@ async function handleD1ComponentsList(
     const db = getD1Client(env.DB)
     const rows = await queryComponentCatalog(db, params)
     const data = {
-      components: rows.map((row) => ({
-        lcsc: row.lcsc ?? 0,
-        mfr: row.mfr ?? "",
-        package: row.package ?? "",
-        description: row.description ?? "",
-        stock: row.stock ?? 0,
-        price: row.price ?? "",
-        category: row.category ?? "",
-        subcategory: row.subcategory ?? "",
-        is_basic: Boolean(row.basic),
-        is_preferred: Boolean(row.preferred),
-      })),
+      components: rows.map(mapD1CatalogComponent),
     }
 
     const headers = new Headers({

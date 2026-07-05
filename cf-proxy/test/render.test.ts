@@ -59,4 +59,28 @@ describe("render helpers", () => {
       "Feature&quot;:&quot;Overcurrent Protection(OCP)&quot;",
     )
   })
+
+  it("renders the extended promotional components filter and column label", () => {
+    const html = renderD1TablePage(
+      "/components/list",
+      {
+        components: [
+          {
+            lcsc: 7420372,
+            mfr: "H5VL10B",
+            package: "DFN1006-2L",
+            is_extended_promotional: true,
+          },
+        ],
+      },
+      { is_extended_promotional: "true" },
+      "https://example.com/components/list?is_extended_promotional=true",
+    )
+
+    expect(html).toContain('name="is_extended_promotional"')
+    expect(html).toContain(
+      'name="is_extended_promotional" value="true" checked',
+    )
+    expect(html).toContain("Extended Promotional")
+  })
 })

@@ -616,6 +616,13 @@
             "schema": {
               "type": ["boolean"]
             }
+          },
+          {
+            "name": "is_extended_promotional",
+            "in": "query",
+            "schema": {
+              "type": ["boolean"]
+            }
           }
         ],
         "operationId": "apiSearchGet"
@@ -2204,6 +2211,13 @@
             "schema": {
               "type": ["boolean"]
             }
+          },
+          {
+            "name": "is_extended_promotional",
+            "in": "query",
+            "schema": {
+              "type": ["boolean"]
+            }
           }
         ],
         "operationId": "componentsList.jsonGet"
@@ -2266,6 +2280,13 @@
           },
           {
             "name": "is_preferred",
+            "in": "query",
+            "schema": {
+              "type": ["boolean"]
+            }
+          },
+          {
+            "name": "is_extended_promotional",
             "in": "query",
             "schema": {
               "type": ["boolean"]
