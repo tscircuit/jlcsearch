@@ -9,12 +9,14 @@ import { componentSearchFTS } from "lib/db/optimizations/component-search-fts"
 import { componentPackageIndex } from "lib/db/optimizations/component-indexes"
 import { componentBasicIndex } from "lib/db/optimizations/component-basic-index"
 import { componentPreferredIndex } from "lib/db/optimizations/component-preferred-index"
+import { componentExtendedPromotionalColumn } from "lib/db/optimizations/component-extended-promotional-column"
 
 const OPTIMIZATIONS: DbOptimizationSpec[] = [
   componentSearchFTS,
   componentPackageIndex,
   componentBasicIndex,
   componentPreferredIndex,
+  componentExtendedPromotionalColumn,
   removeStaleComponents,
   componentStockIndex,
   componentInStockColumn,
@@ -40,6 +42,11 @@ async function main() {
 
   await db.destroy()
 
+  if (process.env.CI === "true") {
+    console.log("Skipping VACUUM in CI to avoid duplicating the large cache DB")
+    return
+  }
+
   const bunDb = getBunDatabaseClient()
   console.log("Running VACUUM to optimize database...")
   await bunDb.exec("VACUUM")
@@ -47,4 +54,7 @@ async function main() {
   bunDb.close()
 }
 
-main().catch(console.error)
+main().catch((error) => {
+  console.error(error)
+  process.exit(1)
+})
