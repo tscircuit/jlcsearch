@@ -200,6 +200,7 @@ export interface Component {
   mfr: string;
   package: string;
   preferred: Generated<number>;
+  is_extended_promotional: number | null;
   price: string;
   stock: number;
 }
@@ -809,6 +810,7 @@ export interface VComponent {
   mfr: string | null;
   package: string | null;
   preferred: number | null;
+  is_extended_promotional: number | null;
   price: string | null;
   stock: number | null;
   subcategory: string | null;
@@ -938,3 +940,4 @@ export interface DB {
   wifi_module: WifiModule;
   wire_to_board_connector: WireToBoardConnector;
 }
+
