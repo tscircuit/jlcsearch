@@ -1,4 +1,4 @@
-import { Kysely, sql, type RawBuilder } from "kysely"
+import { Kysely, type RawBuilder, sql } from "kysely"
 import type { DB } from "../db/types"
 
 export type QueryParams = Record<string, string>
@@ -79,7 +79,7 @@ export async function queryTable(
       }
     } else if (type === "number") {
       const numValue = parseFloat(value)
-      if (!isNaN(numValue)) {
+      if (!Number.isNaN(numValue)) {
         if (operator === "=") {
           conditions.push(sql`${column} = ${numValue}`)
         } else if (operator === ">=") {
@@ -98,7 +98,7 @@ export async function queryTable(
     } else if (type === "number_tolerance") {
       // For resistance/capacitance with tolerance
       const numValue = parseFloat(value)
-      if (!isNaN(numValue)) {
+      if (!Number.isNaN(numValue)) {
         const delta = numValue * 0.0001
         conditions.push(sql`${column} >= ${numValue - delta}`)
         conditions.push(sql`${column} <= ${numValue + delta}`)
@@ -164,6 +164,10 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
       package: { field: "package", type: "string" },
       is_basic: { field: "is_basic", type: "boolean" },
       is_preferred: { field: "is_preferred", type: "boolean" },
+      is_extended_promotional: {
+        field: "is_extended_promotional",
+        type: "boolean",
+      },
       resistance: { field: "resistance", type: "number_tolerance" },
     },
   },
@@ -172,6 +176,10 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
       package: { field: "package", type: "string" },
       is_basic: { field: "is_basic", type: "boolean" },
       is_preferred: { field: "is_preferred", type: "boolean" },
+      is_extended_promotional: {
+        field: "is_extended_promotional",
+        type: "boolean",
+      },
       capacitance: { field: "capacitance_farads", type: "number_tolerance" },
     },
   },

@@ -7,7 +7,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 60
 
     steps:
       - name: Checkout code
@@ -17,6 +17,11 @@ jobs:
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
+
+      - name: Free runner disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          df -h
       
       - name: Install dependencies
         run: bun install
@@ -32,5 +37,13 @@ jobs:
         if: steps.cache-setup.outputs.cache-hit != 'true'
         run: bun run setup
 
-      - name: Run tests
-        run: bun test
+      - name: Run root Bun tests
+        run: bun test tests
+
+      - name: Install cf-proxy dependencies
+        run: bun install
+        working-directory: ./cf-proxy
+
+      - name: Run cf-proxy tests
+        run: bun run test
+        working-directory: ./cf-proxy
