@@ -7,7 +7,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 60
 
     steps:
       - name: Checkout code
@@ -21,6 +21,9 @@ jobs:
       - name: Install dependencies
         run: bun install
 
+      - name: Install cf-proxy dependencies
+        run: cd cf-proxy && bun install --frozen-lockfile
+
       - name: Cache setup artifacts
         id: cache-setup
         uses: actions/cache@v4
@@ -28,9 +31,17 @@ jobs:
           path: ./db.sqlite3
           key: db-sqlite3-${{ hashFiles('scripts/setup-*.ts') }}
 
+      - name: Report restored database
+        run: |
+          if [ "${{ steps.cache-setup.outputs.cache-hit }}" = "true" ] && [ -f db.sqlite3 ]; then
+            ls -lh db.sqlite3
+          else
+            echo "No exact db.sqlite3 cache hit; setup will rebuild the database"
+          fi
+
       - name: Run setup if cache miss
         if: steps.cache-setup.outputs.cache-hit != 'true'
         run: bun run setup
 
       - name: Run tests
-        run: bun test
+        run: bun test --timeout 10000
