@@ -49,8 +49,10 @@ const getDatabaseCtor = (): typeof BunDatabase => {
 
 const DEFAULT_DB_PATH = Path.join(import.meta.dir, "../../db.sqlite3")
 
-export const getResolvedDbPath = (): string => {
-  const configuredPath = process.env.JLCSEARCH_DB_PATH?.trim()
+export const getResolvedDbPath = (
+  configuredDbPath = process.env.JLCSEARCH_DB_PATH,
+): string => {
+  const configuredPath = configuredDbPath?.trim()
   if (!configuredPath) return DEFAULT_DB_PATH
   return Path.isAbsolute(configuredPath)
     ? configuredPath
@@ -83,7 +85,15 @@ export const getDbClient = () => {
   return dbClientSingleton
 }
 
-export const getBunDatabaseClient = () => {
+export const destroyDbClient = async () => {
+  if (!dbClientSingleton) return
+
+  const db = dbClientSingleton
+  dbClientSingleton = undefined
+  await db.destroy()
+}
+
+export const getBunDatabaseClient = (configuredDbPath?: string) => {
   const Database = getDatabaseCtor()
-  return new Database(getResolvedDbPath())
+  return new Database(getResolvedDbPath(configuredDbPath))
 }
