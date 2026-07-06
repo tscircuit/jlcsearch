@@ -179,6 +179,7 @@ dist
 db.sqlite3
 .buildtmp
 .winterspec
+.tmp
 db.backup.sqlite3
 .bin
 .fly.toml.swp

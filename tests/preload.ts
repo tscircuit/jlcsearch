@@ -1,5 +1,6 @@
 import { afterEach } from "bun:test"
 import { setupDerivedTables } from "lib/db/derivedtables/setup-derived-tables"
+import { setupTestDatabase } from "tests/fixtures/setup-test-db"
 
 declare global {
   var deferredCleanupFns: Array<() => void | Promise<void>>
@@ -7,6 +8,7 @@ declare global {
 }
 
 globalThis.deferredCleanupFns ??= []
+setupTestDatabase()
 globalThis.derivedTablesSetupPromise ??= setupDerivedTables({ populate: false })
 
 await globalThis.derivedTablesSetupPromise

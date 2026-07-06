@@ -80,6 +80,18 @@ export const getDbClient = () => {
     }),
   })
 
+  const dbClient = dbClientSingleton
+  const destroy = dbClient.destroy.bind(dbClient)
+  dbClient.destroy = async () => {
+    try {
+      await destroy()
+    } finally {
+      if (dbClientSingleton === dbClient) {
+        dbClientSingleton = undefined
+      }
+    }
+  }
+
   return dbClientSingleton
 }
 
