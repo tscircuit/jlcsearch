@@ -6,11 +6,17 @@ const BINARY_DIR = ".bin"
 const BINARY_NAME = "7zz"
 
 // Map of platform-arch combinations to download URLs
+// (github.com/ip7z/7zip is the official mirror; 7-zip.org removed the
+// versioned archives and now 404s)
 const BINARY_URLS: Record<string, string> = {
-  "linux-x64": "https://7-zip.org/a/7z2408-linux-x64.tar.xz",
-  "linux-arm64": "https://7-zip.org/a/7z2408-linux-arm64.tar.xz",
-  "darwin-x64": "https://7-zip.org/a/7z2408-mac.tar.xz",
-  "darwin-arm64": "https://7-zip.org/a/7z2408-mac.tar.xz",
+  "linux-x64":
+    "https://github.com/ip7z/7zip/releases/download/24.08/7z2408-linux-x64.tar.xz",
+  "linux-arm64":
+    "https://github.com/ip7z/7zip/releases/download/24.08/7z2408-linux-arm64.tar.xz",
+  "darwin-x64":
+    "https://github.com/ip7z/7zip/releases/download/24.08/7z2408-mac.tar.xz",
+  "darwin-arm64":
+    "https://github.com/ip7z/7zip/releases/download/24.08/7z2408-mac.tar.xz",
 }
 
 async function downloadAndExtract7z() {

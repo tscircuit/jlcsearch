@@ -1,4 +1,7 @@
 [test]
+# cf-proxy is its own package with its own deps; running its tests from the
+# root install fails with unresolved packages (e.g. kysely-d1)
+root = "tests"
 preload = ["./tests/preload.ts"]
 
 [install.lockfile]
