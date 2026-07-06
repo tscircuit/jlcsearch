@@ -147,12 +147,25 @@ const createTable = async (
     return
   }
 
-  const BATCH_SIZE = 1000
+  const BATCH_SIZE = Number.parseInt(
+    process.env.JLCSEARCH_DERIVED_TABLE_BATCH_SIZE ?? "5000",
+    10,
+  )
+  const INSERT_CHUNK_SIZE = Number.parseInt(
+    process.env.JLCSEARCH_DERIVED_TABLE_INSERT_CHUNK_SIZE ?? "1000",
+    10,
+  )
   let offset = 0
+  const inStockOnly =
+    process.env.JLCSEARCH_DERIVED_TABLE_IN_STOCK_ONLY !== "false"
 
   while (true) {
-    const components = await spec
-      .listCandidateComponents(db)
+    let candidateQuery = spec.listCandidateComponents(db)
+    if (inStockOnly) {
+      candidateQuery = candidateQuery.where("components.stock", ">", 0)
+    }
+
+    const components = await candidateQuery
       .offset(offset)
       .limit(BATCH_SIZE)
       .execute()
@@ -168,16 +181,24 @@ const createTable = async (
           },
     )
 
-    for (const component of mappedComponents) {
-      if (component === null) continue
-      const attrStringified = JSON.stringify(component.attributes ?? {})
-      await db
-        .insertInto(spec.tableName as any)
-        .values({
-          ...component,
-          attributes: attrStringified,
-        })
-        .execute()
+    const rowsToInsert = mappedComponents
+      .filter(
+        (component): component is NonNullable<typeof component> =>
+          component !== null,
+      )
+      .map((component) => ({
+        ...component,
+        attributes: JSON.stringify(component.attributes ?? {}),
+      }))
+
+    if (rowsToInsert.length > 0) {
+      for (let i = 0; i < rowsToInsert.length; i += INSERT_CHUNK_SIZE) {
+        const chunk = rowsToInsert.slice(i, i + INSERT_CHUNK_SIZE)
+        await db
+          .insertInto(spec.tableName as any)
+          .values(chunk as any)
+          .execute()
+      }
     }
 
     offset += components.length

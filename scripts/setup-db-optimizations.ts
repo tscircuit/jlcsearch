@@ -9,13 +9,21 @@ import { componentSearchFTS } from "lib/db/optimizations/component-search-fts"
 import { componentPackageIndex } from "lib/db/optimizations/component-indexes"
 import { componentBasicIndex } from "lib/db/optimizations/component-basic-index"
 import { componentPreferredIndex } from "lib/db/optimizations/component-preferred-index"
+import { componentExtendedPromotionalColumn } from "lib/db/optimizations/component-extended-promotional-column"
+import { componentExtendedPromotionalIndex } from "lib/db/optimizations/component-extended-promotional-index"
+
+const shouldPurgeStaleComponents =
+  process.env.JLCSEARCH_PURGE_STALE_COMPONENTS === "true"
+const shouldVacuum = process.env.JLCSEARCH_VACUUM === "true"
 
 const OPTIMIZATIONS: DbOptimizationSpec[] = [
+  ...(shouldPurgeStaleComponents ? [removeStaleComponents] : []),
   componentSearchFTS,
   componentPackageIndex,
   componentBasicIndex,
   componentPreferredIndex,
-  removeStaleComponents,
+  componentExtendedPromotionalColumn,
+  componentExtendedPromotionalIndex,
   componentStockIndex,
   componentInStockColumn,
   componentCategoryIndex,
@@ -24,6 +32,12 @@ const OPTIMIZATIONS: DbOptimizationSpec[] = [
 
 async function main() {
   const db = getDbClient()
+
+  if (!shouldPurgeStaleComponents) {
+    console.log(
+      "Skipping stale component purge (set JLCSEARCH_PURGE_STALE_COMPONENTS=true to enable).",
+    )
+  }
 
   for (const optimization of OPTIMIZATIONS) {
     const isAdded = await optimization.checkIfAdded(db)
@@ -40,11 +54,15 @@ async function main() {
 
   await db.destroy()
 
-  const bunDb = getBunDatabaseClient()
-  console.log("Running VACUUM to optimize database...")
-  await bunDb.exec("VACUUM")
-  console.log("VACUUM completed")
-  bunDb.close()
+  if (shouldVacuum) {
+    const bunDb = getBunDatabaseClient()
+    console.log("Running VACUUM to optimize database...")
+    await bunDb.exec("VACUUM")
+    console.log("VACUUM completed")
+    bunDb.close()
+  } else {
+    console.log("Skipping VACUUM (set JLCSEARCH_VACUUM=true to enable).")
+  }
 }
 
 main().catch(console.error)

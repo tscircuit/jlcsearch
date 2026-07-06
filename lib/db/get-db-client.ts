@@ -74,13 +74,20 @@ export const getDbClient = () => {
     )
   }
 
-  dbClientSingleton = new KyselyCtorRef<DB>({
+  const client = new KyselyCtorRef<DB>({
     dialect: new BunSqliteDialectRef({
       database: new Database(getResolvedDbPath()),
     }),
   })
 
-  return dbClientSingleton
+  const originalDestroy = client.destroy.bind(client)
+  ;(client as any).destroy = async () => {
+    await originalDestroy()
+    dbClientSingleton = undefined
+  }
+
+  dbClientSingleton = client
+  return client
 }
 
 export const getBunDatabaseClient = () => {
