@@ -64,6 +64,7 @@ export const lcdDisplayTableSpec: DerivedTableSpec<LCDDisplay> = {
           in_stock: Boolean((c.stock || 0) > 0),
           is_basic: Boolean(c.basic),
           is_preferred: Boolean(c.preferred),
+          is_extended_promotional: Boolean(c.is_extended_promotional),
           package: String(c.package || ""),
           display_size,
           resolution,
