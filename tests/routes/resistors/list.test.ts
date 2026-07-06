@@ -16,7 +16,24 @@ test("GET /resistors/list with json param returns resistor data", async () => {
     expect(resistor).toHaveProperty("mfr")
     expect(resistor).toHaveProperty("package")
     expect(resistor).toHaveProperty("resistance")
+    expect(resistor).toHaveProperty("is_extended_promotional")
     expect(typeof resistor.lcsc).toBe("number")
+    expect(typeof resistor.is_extended_promotional).toBe("boolean")
+  }
+})
+
+test("GET /resistors/list with is_extended_promotional filter returns only extended promotional parts", async () => {
+  const { axios } = await getTestServer()
+
+  const res = await axios.get(
+    "/resistors/list?json=true&is_extended_promotional=true",
+  )
+
+  expect(res.data).toHaveProperty("resistors")
+  expect(Array.isArray(res.data.resistors)).toBe(true)
+
+  for (const resistor of res.data.resistors) {
+    expect(resistor.is_extended_promotional).toBe(true)
   }
 })
 
