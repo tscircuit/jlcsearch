@@ -1,16 +1,21 @@
-import { mkdir, chmod } from "node:fs/promises"
+import { mkdir, chmod, rename, rm } from "node:fs/promises"
 import { existsSync } from "node:fs"
 import { platform, arch } from "node:os"
 
 const BINARY_DIR = ".bin"
 const BINARY_NAME = "7zz"
+const EXTRACT_DIR = ".buildtmp/7z"
 
 // Map of platform-arch combinations to download URLs
 const BINARY_URLS: Record<string, string> = {
-  "linux-x64": "https://7-zip.org/a/7z2408-linux-x64.tar.xz",
-  "linux-arm64": "https://7-zip.org/a/7z2408-linux-arm64.tar.xz",
-  "darwin-x64": "https://7-zip.org/a/7z2408-mac.tar.xz",
-  "darwin-arm64": "https://7-zip.org/a/7z2408-mac.tar.xz",
+  "linux-x64":
+    "https://github.com/ip7z/7zip/releases/download/26.01/7z2601-linux-x64.tar.xz",
+  "linux-arm64":
+    "https://github.com/ip7z/7zip/releases/download/26.01/7z2601-linux-arm64.tar.xz",
+  "darwin-x64":
+    "https://github.com/ip7z/7zip/releases/download/26.01/7z2601-mac.tar.xz",
+  "darwin-arm64":
+    "https://github.com/ip7z/7zip/releases/download/26.01/7z2601-mac.tar.xz",
 }
 
 async function downloadAndExtract7z() {
@@ -43,21 +48,23 @@ async function downloadAndExtract7z() {
   }
 
   // Save the tar.xz file
-  const tempFile = "7z-temp.tar.xz"
+  await rm(EXTRACT_DIR, { recursive: true, force: true })
+  await mkdir(EXTRACT_DIR, { recursive: true })
+  const tempFile = `${EXTRACT_DIR}/7z-temp.tar.xz`
   await Bun.write(tempFile, await response.arrayBuffer())
 
   // Extract the tar.xz file
   console.log("Extracting 7z binary...")
-  await Bun.spawn(["tar", "xf", tempFile]).exited
+  await Bun.spawn(["tar", "xf", tempFile, "-C", EXTRACT_DIR]).exited
 
   // Move the binary to the right location
-  await Bun.spawn(["mv", "7zz", binaryPath]).exited
+  await rename(`${EXTRACT_DIR}/${BINARY_NAME}`, binaryPath)
 
   // Make the binary executable
   await chmod(binaryPath, 0o755)
 
   // Cleanup
-  await Bun.spawn(["rm", tempFile]).exited
+  await rm(EXTRACT_DIR, { recursive: true, force: true })
 
   console.log("7z binary setup complete")
 }

@@ -147,6 +147,7 @@ const COLUMN_LABELS: Record<string, string> = {
   in_stock: "In Stock",
   is_basic: "Basic",
   is_preferred: "Preferred",
+  is_extended_promotional: "Extended Promotional",
   capacitance_farads: "Capacitance",
   tolerance_fraction: "Tolerance",
   voltage_rating: "Voltage",
@@ -540,6 +541,9 @@ const renderComponentsFilters = (
   <input type="hidden" name="subcategory_name" value="${escapeHtml(params.subcategory_name ?? "")}" />
   <input type="hidden" name="package" value="${escapeHtml(params.package ?? "")}" />
   <input type="hidden" name="search" value="${escapeHtml(params.search ?? "")}" />
+  <div>
+    <label>Extended Promotional Part:<input type="checkbox" name="is_extended_promotional" value="true"${params.is_extended_promotional === "true" ? " checked" : ""} /></label>
+  </div>
   <div>
     <label>Basic Part:<input type="checkbox" name="is_basic" value="true"${params.is_basic === "true" ? " checked" : ""} /></label>
   </div>
