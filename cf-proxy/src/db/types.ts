@@ -19,6 +19,7 @@ export interface Accelerometer {
   in_stock: number | null
   is_basic: number | null
   is_preferred: number | null
+  is_extended_promotional: number | null
   lcsc: Generated<number | null>
   mfr: string | null
   operating_temp_max: number | null
@@ -39,6 +40,7 @@ export interface Adc {
   has_spi: number | null
   has_uart: number | null
   in_stock: number | null
+  is_extended_promotional: number | null
   is_differential: number | null
   lcsc: Generated<number | null>
   mfr: string | null
@@ -63,6 +65,7 @@ export interface AnalogMultiplexer {
   has_parallel_interface: number | null
   has_spi: number | null
   in_stock: number | null
+  is_extended_promotional: number | null
   lcsc: Generated<number | null>
   leakage_current_na: number | null
   mfr: string | null
@@ -86,6 +89,7 @@ export interface BatteryHolder {
   in_stock: number | null
   is_basic: number | null
   is_preferred: number | null
+  is_extended_promotional: number | null
   lcsc: Generated<number | null>
   mfr: string | null
   operating_temp_max: number | null
@@ -102,6 +106,7 @@ export interface BjtTransistor {
   current_gain: number | null
   description: string | null
   in_stock: number | null
+  is_extended_promotional: number | null
   lcsc: Generated<number | null>
   mfr: string | null
   package: string | null
@@ -120,6 +125,7 @@ export interface BoostConverter {
   input_voltage_min: number | null
   is_basic: number | null
   is_preferred: number | null
+  is_extended_promotional: number | null
   is_synchronous: number | null
   lcsc: Generated<number | null>
   mfr: string | null
@@ -142,6 +148,7 @@ export interface BuckBoostConverter {
   input_voltage_min: number | null
   is_basic: number | null
   is_preferred: number | null
+  is_extended_promotional: number | null
   is_synchronous: number | null
   lcsc: Generated<number | null>
   mfr: string | null
@@ -165,6 +172,7 @@ export interface ComponentCatalog {
   mfr: string | null
   package: string | null
   preferred: number | null
+  is_extended_promotional: number | null
   price: string | null
   stock: number | null
   subcategory: string | null
@@ -180,6 +188,7 @@ export interface Capacitor {
   is_basic: number | null
   is_polarized: number | null
   is_preferred: number | null
+  is_extended_promotional: number | null
   is_surface_mount: number | null
   lcsc: Generated<number | null>
   lifetime_hours: number | null
@@ -200,6 +209,7 @@ export interface Dac {
   has_parallel_interface: number | null
   has_spi: number | null
   in_stock: number | null
+  is_extended_promotional: number | null
   lcsc: Generated<number | null>
   mfr: string | null
   nonlinearity_lsb: number | null
@@ -224,6 +234,7 @@ export interface Diode {
   forward_current: number | null
   forward_voltage: number | null
   in_stock: number | null
+  is_extended_promotional: number | null
   is_schottky: number | null
   is_tvs: number | null
   is_zener: number | null
@@ -247,6 +258,7 @@ export interface FpcConnector {
   in_stock: number | null
   is_basic: number | null
   is_preferred: number | null
+  is_extended_promotional: number | null
   lcsc: Generated<number | null>
   locking_feature: string | null
   mfr: string | null
@@ -263,6 +275,7 @@ export interface Fpga {
   in_stock: number | null
   is_basic: number | null
   is_preferred: number | null
+  is_extended_promotional: number | null
   lcsc: Generated<number | null>
   logic_array_blocks: number | null
   logic_elements: number | null
@@ -284,6 +297,7 @@ export interface Fuse {
   current_rating: number | null
   description: string | null
   in_stock: number | null
+  is_extended_promotional: number | null
   is_glass_encased: number | null
   is_resettable: number | null
   is_surface_mount: number | null
@@ -302,6 +316,7 @@ export interface GasSensor {
   in_stock: number | null
   is_basic: number | null
   is_preferred: number | null
+  is_extended_promotional: number | null
   lcsc: Generated<number | null>
   measures_air_quality: number | null
   measures_carbon_monoxide: number | null
@@ -331,6 +346,7 @@ export interface Gyroscope {
   in_stock: number | null
   is_basic: number | null
   is_preferred: number | null
+  is_extended_promotional: number | null
   lcsc: Generated<number | null>
   mfr: string | null
   operating_temp_max: number | null
@@ -350,6 +366,7 @@ export interface Header {
   description: string | null
   gender: string | null
   in_stock: number | null
+  is_extended_promotional: number | null
   insulation_height_mm: number | null
   is_right_angle: number | null
   is_shrouded: number | null
@@ -379,6 +396,7 @@ export interface IoExpander {
   has_smbus: number | null
   has_spi: number | null
   in_stock: number | null
+  is_extended_promotional: number | null
   lcsc: Generated<number | null>
   mfr: string | null
   num_gpios: number | null
@@ -400,6 +418,7 @@ export interface JstConnector {
   in_stock: number | null
   is_basic: number | null
   is_preferred: number | null
+  is_extended_promotional: number | null
   lcsc: Generated<number | null>
   mfr: string | null
   num_pins: number | null
@@ -417,6 +436,7 @@ export interface LcdDisplay {
   display_size: string | null
   display_type: string | null
   in_stock: number | null
+  is_extended_promotional: number | null
   lcsc: Generated<number | null>
   mfr: string | null
   package: string | null
@@ -435,6 +455,7 @@ export interface Ldo {
   is_basic: number | null
   is_positive: number | null
   is_preferred: number | null
+  is_extended_promotional: number | null
   lcsc: Generated<number | null>
   mfr: string | null
   operating_temp_max: number | null
@@ -459,6 +480,7 @@ export interface Led {
   forward_current: number | null
   forward_voltage: number | null
   in_stock: number | null
+  is_extended_promotional: number | null
   is_rgb: number | null
   lcsc: Generated<number | null>
   lens_color: string | null
@@ -480,6 +502,7 @@ export interface LedDotMatrixDisplay {
   color: string | null
   description: string | null
   in_stock: number | null
+  is_extended_promotional: number | null
   lcsc: Generated<number | null>
   matrix_size: string | null
   mfr: string | null
@@ -495,6 +518,7 @@ export interface LedDriver {
   dimming_method: string | null
   efficiency_percent: number | null
   in_stock: number | null
+  is_extended_promotional: number | null
   lcsc: Generated<number | null>
   mfr: string | null
   mounting_style: string | null
@@ -514,6 +538,7 @@ export interface LedSegmentDisplay {
   color: string | null
   description: string | null
   in_stock: number | null
+  is_extended_promotional: number | null
   lcsc: Generated<number | null>
   mfr: string | null
   package: string | null
@@ -531,6 +556,7 @@ export interface LedWithIc {
   forward_current: number | null
   forward_voltage: number | null
   in_stock: number | null
+  is_extended_promotional: number | null
   lcsc: Generated<number | null>
   mfr: string | null
   mounting_style: string | null
@@ -563,6 +589,7 @@ export interface Microcontroller {
   has_usb: number | null
   has_watchdog: number | null
   in_stock: number | null
+  is_extended_promotional: number | null
   lcsc: Generated<number | null>
   mfr: string | null
   operating_temp_max: number | null
@@ -582,6 +609,7 @@ export interface Mosfet {
   drain_source_voltage: number | null
   gate_threshold_voltage: number | null
   in_stock: number | null
+  is_extended_promotional: number | null
   lcsc: Generated<number | null>
   mfr: string | null
   mounting_style: string | null
@@ -598,6 +626,7 @@ export interface OledDisplay {
   description: string | null
   display_width: string | null
   in_stock: number | null
+  is_extended_promotional: number | null
   lcsc: Generated<number | null>
   mfr: string | null
   package: string | null
@@ -613,6 +642,7 @@ export interface PcieM2Connector {
   in_stock: number | null
   is_basic: number | null
   is_preferred: number | null
+  is_extended_promotional: number | null
   is_right_angle: number | null
   key: string | null
   lcsc: Generated<number | null>
@@ -625,6 +655,7 @@ export interface Potentiometer {
   attributes: string | null
   description: string | null
   in_stock: number | null
+  is_extended_promotional: number | null
   is_surface_mount: number | null
   lcsc: Generated<number | null>
   max_resistance: number | null
@@ -644,6 +675,7 @@ export interface Relay {
   in_stock: number | null
   is_basic: number | null
   is_preferred: number | null
+  is_extended_promotional: number | null
   lcsc: Generated<number | null>
   max_switching_current: number | null
   max_switching_voltage: number | null
@@ -666,6 +698,7 @@ export interface SearchIndex {
   mpn: string | null
   package: string | null
   preferred: number | null
+  is_extended_promotional: number | null
   price: string | null
   price1: number | null
   search_text: string | null
@@ -682,6 +715,7 @@ export interface Resistor {
   is_multi_resistor_chip: number | null
   is_potentiometer: number | null
   is_preferred: number | null
+  is_extended_promotional: number | null
   is_surface_mount: number | null
   lcsc: Generated<number | null>
   max_overload_voltage: number | null
@@ -702,6 +736,7 @@ export interface ResistorArray {
   in_stock: number | null
   is_basic: number | null
   is_preferred: number | null
+  is_extended_promotional: number | null
   is_surface_mount: number | null
   lcsc: Generated<number | null>
   mfr: string | null
@@ -726,6 +761,7 @@ export interface Switch {
   is_basic: number | null
   is_latching: number | null
   is_preferred: number | null
+  is_extended_promotional: number | null
   lcsc: Generated<number | null>
   length_mm: number | null
   mfr: string | null
@@ -750,6 +786,7 @@ export interface UsbCConnector {
   in_stock: number | null
   is_basic: number | null
   is_preferred: number | null
+  is_extended_promotional: number | null
   lcsc: Generated<number | null>
   mfr: string | null
   mounting_style: string | null
@@ -767,6 +804,7 @@ export interface VoltageRegulator {
   description: string | null
   dropout_voltage: number | null
   in_stock: number | null
+  is_extended_promotional: number | null
   input_voltage_max: number | null
   input_voltage_min: number | null
   is_low_dropout: number | null
@@ -801,6 +839,7 @@ export interface WifiModule {
   has_spi: number | null
   has_uart: number | null
   in_stock: number | null
+  is_extended_promotional: number | null
   lcsc: Generated<number | null>
   mfr: string | null
   operating_temp_max: number | null
@@ -822,6 +861,7 @@ export interface WireToBoardConnector {
   in_stock: number | null
   is_basic: number | null
   is_preferred: number | null
+  is_extended_promotional: number | null
   is_smd: number | null
   lcsc: Generated<number | null>
   mfr: string | null

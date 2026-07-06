@@ -2,7 +2,9 @@ import type { DerivedTableSpec } from "./types"
 import { voltageRegulatorTableSpec } from "./voltage_regulator"
 import type { VoltageRegulator } from "./voltage_regulator"
 
-export interface Ldo extends Omit<VoltageRegulator, "is_low_dropout"> {}
+export interface Ldo extends Omit<VoltageRegulator, "is_low_dropout"> {
+  is_extended_promotional: boolean
+}
 
 export const ldoTableSpec: DerivedTableSpec<Ldo> = {
   tableName: "ldo",
