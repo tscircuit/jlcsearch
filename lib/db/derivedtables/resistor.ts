@@ -1,7 +1,7 @@
 import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
 import type { DerivedTableSpec } from "./types"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
-import { BaseComponent } from "./component-base"
+import { BaseComponent, isExtendedPromotional } from "./component-base"
 
 export interface Resistor extends BaseComponent {
   resistance: number
@@ -31,6 +31,7 @@ export const resistorTableSpec: DerivedTableSpec<Resistor> = {
     { name: "is_multi_resistor_chip", type: "boolean" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db
@@ -82,6 +83,7 @@ export const resistorTableSpec: DerivedTableSpec<Resistor> = {
         in_stock: c.stock > 0,
         is_basic: Boolean(c.basic),
         is_preferred: Boolean(c.preferred),
+        is_extended_promotional: isExtendedPromotional(c.extra),
         resistance: resistance,
         tolerance_fraction: tolerance,
         power_watts,

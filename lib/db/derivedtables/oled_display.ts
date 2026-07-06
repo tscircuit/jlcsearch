@@ -1,6 +1,6 @@
 import type { DerivedTableSpec } from "./types"
 import type { KyselyDatabaseInstance } from "../kysely-types"
-import { BaseComponent } from "./component-base"
+import { BaseComponent, isExtendedPromotional } from "./component-base"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 
 export interface OLEDDisplay extends BaseComponent {
@@ -19,6 +19,7 @@ export const oledDisplayTableSpec: DerivedTableSpec<OLEDDisplay> = {
     { name: "pixel_resolution", type: "text" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
 
   listCandidateComponents(db: KyselyDatabaseInstance) {
@@ -65,6 +66,7 @@ export const oledDisplayTableSpec: DerivedTableSpec<OLEDDisplay> = {
           in_stock: Boolean((c.stock || 0) > 0),
           is_basic: Boolean(c.basic),
           is_preferred: Boolean(c.preferred),
+          is_extended_promotional: isExtendedPromotional(c.extra),
           package: String(c.package || ""),
           protocol: protocol || undefined,
           display_width,

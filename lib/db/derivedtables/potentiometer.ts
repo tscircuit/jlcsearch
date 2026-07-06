@@ -1,7 +1,7 @@
 import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
 import type { DerivedTableSpec } from "./types"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
-import { BaseComponent } from "./component-base"
+import { BaseComponent, isExtendedPromotional } from "./component-base"
 
 export interface Potentiometer extends BaseComponent {
   max_resistance: number
@@ -19,6 +19,7 @@ export const potentiometerTableSpec: DerivedTableSpec<Potentiometer> = {
     { name: "is_surface_mount", type: "boolean" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db
@@ -67,6 +68,7 @@ export const potentiometerTableSpec: DerivedTableSpec<Potentiometer> = {
         in_stock: c.stock > 0,
         is_basic: Boolean(c.basic),
         is_preferred: Boolean(c.preferred),
+        is_extended_promotional: isExtendedPromotional(c.extra),
         max_resistance: maxResistance,
         pin_variant: pinVariant,
         package: c.package || "",

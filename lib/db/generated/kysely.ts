@@ -192,6 +192,7 @@ export interface Component {
   description: string;
   extra: string | null;
   flag: Generated<number>;
+  is_extended_promotional: Generated<number | null>;
   joints: number;
   last_on_stock: Generated<number>;
   last_update: number;
@@ -712,6 +713,7 @@ export interface Resistor {
   description: string | null;
   in_stock: number | null;
   is_basic: number | null;
+  is_extended_promotional: number | null;
   is_multi_resistor_chip: number | null;
   is_potentiometer: number | null;
   is_preferred: number | null;

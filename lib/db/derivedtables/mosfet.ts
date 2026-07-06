@@ -9,7 +9,7 @@ type UnwrapGenerated<T> = {
 import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import { parseIntOrNull } from "lib/util/parse-int-or-null"
-import { BaseComponent } from "./component-base"
+import { BaseComponent, isExtendedPromotional } from "./component-base"
 
 export interface Mosfet extends BaseComponent {
   package?: string
@@ -35,6 +35,7 @@ export const mosfetTableSpec: DerivedTableSpec<Mosfet> = {
     { name: "mounting_style", type: "text" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   listCandidateComponents(db: KyselyDatabaseInstance) {
     return db
@@ -68,6 +69,7 @@ export const mosfetTableSpec: DerivedTableSpec<Mosfet> = {
           in_stock: Boolean((c.stock || 0) > 0),
           is_basic: Boolean(c.basic),
           is_preferred: Boolean(c.preferred),
+          is_extended_promotional: isExtendedPromotional(c.extra),
           package: String(c.package || ""),
           drain_source_voltage: parseValue(
             attrs["Drain Source Voltage (Vdss)"],
