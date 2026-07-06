@@ -10,12 +10,15 @@ import { componentPackageIndex } from "lib/db/optimizations/component-indexes"
 import { componentBasicIndex } from "lib/db/optimizations/component-basic-index"
 import { componentPreferredIndex } from "lib/db/optimizations/component-preferred-index"
 
+const SKIP_PRUNE_AND_VACUUM =
+  process.env.JLCSEARCH_SKIP_DB_PRUNE_AND_VACUUM === "1"
+
 const OPTIMIZATIONS: DbOptimizationSpec[] = [
   componentSearchFTS,
   componentPackageIndex,
   componentBasicIndex,
   componentPreferredIndex,
-  removeStaleComponents,
+  ...(SKIP_PRUNE_AND_VACUUM ? [] : [removeStaleComponents]),
   componentStockIndex,
   componentInStockColumn,
   componentCategoryIndex,
@@ -39,6 +42,13 @@ async function main() {
   }
 
   await db.destroy()
+
+  if (SKIP_PRUNE_AND_VACUUM) {
+    console.log(
+      "Skipping stale component pruning and VACUUM for CI database setup",
+    )
+    return
+  }
 
   const bunDb = getBunDatabaseClient()
   console.log("Running VACUUM to optimize database...")

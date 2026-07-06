@@ -560,6 +560,17 @@ const renderBreadcrumbs = (pathname: string): string => {
     .join("")
 }
 
+const getRelativeJsonHref = (pathname: string, requestUrl?: string): string => {
+  const url = requestUrl
+    ? new URL(requestUrl, "https://jlcsearch.tscircuit.com")
+    : null
+  const jsonPathname = (url?.pathname ?? pathname).replace(
+    "/list",
+    "/list.json",
+  )
+  return `${jsonPathname}${url?.search ?? ""}`
+}
+
 const renderShell = (
   pathname: string,
   body: string,
@@ -618,7 +629,7 @@ posthog.init('phc_htd8AQjSfVEsFCLQMAiUooG4Q0DKBCjqYuQglc9V3Wo', { api_host:'http
           <a href="https://github.com/tscircuit/jlcsearch">
             <img src="https://img.shields.io/github/stars/tscircuit/jlcsearch?style=social" alt="GitHub stars" class="inline-block" />
           </a>
-          ${pathname.includes("/list") ? `<a href="${escapeHtml((requestUrl || pathname).replace("/list", "/list.json"))}">json</a>` : ""}
+          ${pathname.includes("/list") ? `<a href="${escapeHtml(getRelativeJsonHref(pathname, requestUrl))}">json</a>` : ""}
           <a href="https://raw.githubusercontent.com/tscircuit/jlcsearch/refs/heads/main/docs/openapi.json">OpenAPI</a>
           <a href="https://tscircuit.com">tscircuit</a>
         </div>
