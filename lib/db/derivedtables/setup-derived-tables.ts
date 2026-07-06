@@ -1,5 +1,5 @@
 import { sql } from "kysely"
-import { getDbClient } from "lib/db/get-db-client"
+import { clearDbClientSingleton, getDbClient } from "lib/db/get-db-client"
 import { accelerometerTableSpec } from "lib/db/derivedtables/accelerometer"
 import { adcTableSpec } from "lib/db/derivedtables/adc"
 import { analogMultiplexerTableSpec } from "lib/db/derivedtables/analog_multiplexer"
@@ -215,6 +215,7 @@ export const setupDerivedTables = async ({
   } finally {
     if (shouldDestroy) {
       await activeDb.destroy()
+      clearDbClientSingleton()
     }
   }
 }
