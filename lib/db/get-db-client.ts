@@ -1,7 +1,7 @@
 import type { Database as BunDatabase } from "bun:sqlite"
+import Path from "node:path"
 import type { Kysely } from "kysely"
 import type { BunSqliteDialect } from "kysely-bun-sqlite"
-import Path from "node:path"
 import type { DB } from "./generated/kysely"
 
 let DatabaseCtor: typeof BunDatabase | undefined
@@ -81,6 +81,12 @@ export const getDbClient = () => {
   })
 
   return dbClientSingleton
+}
+
+export const clearDbClientSingleton = (client?: Kysely<DB>) => {
+  if (!client || dbClientSingleton === client) {
+    dbClientSingleton = undefined
+  }
 }
 
 export const getBunDatabaseClient = () => {
