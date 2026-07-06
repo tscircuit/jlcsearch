@@ -1,5 +1,5 @@
 import { sql } from "kysely"
-import { getDbClient } from "lib/db/get-db-client"
+import { createDbClient } from "lib/db/get-db-client"
 import { accelerometerTableSpec } from "lib/db/derivedtables/accelerometer"
 import { adcTableSpec } from "lib/db/derivedtables/adc"
 import { analogMultiplexerTableSpec } from "lib/db/derivedtables/analog_multiplexer"
@@ -16,6 +16,7 @@ import { fuseTableSpec } from "lib/db/derivedtables/fuse"
 import { gasSensorTableSpec } from "lib/db/derivedtables/gas_sensor"
 import { gyroscopeTableSpec } from "lib/db/derivedtables/gyroscope"
 import { headerTableSpec } from "lib/db/derivedtables/header"
+import { imuTableSpec } from "lib/db/derivedtables/imu"
 import { ioExpanderTableSpec } from "lib/db/derivedtables/io_expander"
 import { jstConnectorTableSpec } from "lib/db/derivedtables/jst_connector"
 import { lcdDisplayTableSpec } from "lib/db/derivedtables/lcd_display"
@@ -62,6 +63,7 @@ export const DERIVED_TABLES: DerivedTableSpec<any>[] = [
   mosfetTableSpec,
   gyroscopeTableSpec,
   accelerometerTableSpec,
+  imuTableSpec,
   gasSensorTableSpec,
   ledWithICTableSpec,
   ledDotMatrixDisplayTableSpec,
@@ -91,6 +93,8 @@ const jsonParseOrNull = (strObject: string) => {
     return null
   }
 }
+
+const INSERT_BATCH_SIZE = 100
 
 const createTable = async (
   db: KyselyDatabaseInstance,
@@ -168,15 +172,19 @@ const createTable = async (
           },
     )
 
-    for (const component of mappedComponents) {
-      if (component === null) continue
-      const attrStringified = JSON.stringify(component.attributes ?? {})
+    const rows = mappedComponents
+      .filter((component) => component !== null)
+      .map((component) => ({
+        ...component,
+        attributes: JSON.stringify(component.attributes ?? {}),
+      }))
+
+    for (let i = 0; i < rows.length; i += INSERT_BATCH_SIZE) {
+      const rowBatch = rows.slice(i, i + INSERT_BATCH_SIZE)
+      if (rowBatch.length === 0) continue
       await db
         .insertInto(spec.tableName as any)
-        .values({
-          ...component,
-          attributes: attrStringified,
-        })
+        .values(rowBatch as any)
         .execute()
     }
 
@@ -198,7 +206,7 @@ export const setupDerivedTables = async ({
   resetTable?: string | null
   logger?: Logger
 } = {}) => {
-  const activeDb = db ?? getDbClient()
+  const activeDb = db ?? createDbClient()
   const shouldDestroy = !db
 
   try {

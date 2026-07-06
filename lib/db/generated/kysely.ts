@@ -389,6 +389,30 @@ export interface Gyroscope {
   supply_voltage_min: number | null;
 }
 
+
+export interface Imu {
+  attributes: string | null;
+  axes: string | null;
+  description: string | null;
+  has_accelerometer: number | null;
+  has_gyroscope: number | null;
+  has_magnetometer: number | null;
+  has_i2c: number | null;
+  has_spi: number | null;
+  has_uart: number | null;
+  in_stock: number | null;
+  is_basic: number | null;
+  is_preferred: number | null;
+  lcsc: Generated<number | null>;
+  mfr: string | null;
+  operating_temp_max: number | null;
+  operating_temp_min: number | null;
+  package: string | null;
+  price1: number | null;
+  stock: number | null;
+  supply_voltage_max: number | null;
+  supply_voltage_min: number | null;
+}
 export interface Header {
   attributes: string | null;
   contact_material: string | null;
@@ -912,6 +936,7 @@ export interface DB {
   fuse: Fuse;
   gas_sensor: GasSensor;
   gyroscope: Gyroscope;
+  imu: Imu;
   header: Header;
   io_expander: IoExpander;
   jst_connector: JstConnector;
