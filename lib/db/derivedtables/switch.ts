@@ -11,6 +11,7 @@ export interface Switch extends BaseComponent {
   voltage_rating_v: number | null
   mounting_style: string | null
   is_latching: boolean | null
+  is_extended_promotional: boolean | null
   operating_temp_min: number | null
   operating_temp_max: number | null
   pin_count: number | null
@@ -37,6 +38,7 @@ export const switchTableSpec: DerivedTableSpec<Switch> = {
     { name: "switch_height_mm", type: "real" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   listCandidateComponents(db) {
     return db
@@ -91,6 +93,7 @@ export const switchTableSpec: DerivedTableSpec<Switch> = {
         in_stock: c.stock > 0,
         is_basic: Boolean(c.basic),
         is_preferred: Boolean(c.preferred),
+        is_extended_promotional: Boolean(c.preferred && !c.basic),
         package: c.package || "",
         switch_type: (c as any).subcategory || "",
         circuit: attrs["Circuit"] || null,

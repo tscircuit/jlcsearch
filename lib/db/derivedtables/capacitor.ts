@@ -14,6 +14,7 @@ export interface Capacitor extends BaseComponent {
   esr_ohms: number | null
   ripple_current_amps: number | null
   is_polarized: boolean
+  is_extended_promotional: boolean
   is_surface_mount: boolean
   capacitor_type: string
 }
@@ -34,6 +35,7 @@ export const capacitorTableSpec: DerivedTableSpec<Capacitor> = {
     { name: "capacitor_type", type: "text" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db
@@ -115,6 +117,7 @@ export const capacitorTableSpec: DerivedTableSpec<Capacitor> = {
         in_stock: c.stock > 0,
         is_basic: Boolean(c.basic),
         is_preferred: Boolean(c.preferred),
+        is_extended_promotional: Boolean(c.preferred && !c.basic),
         capacitance_farads: capacitance,
         tolerance_fraction: tolerance,
         voltage_rating: voltage,
