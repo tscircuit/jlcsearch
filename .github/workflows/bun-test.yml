@@ -4,10 +4,13 @@ name: Bun Test
 on:
   pull_request:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 60
 
     steps:
       - name: Checkout code
@@ -21,16 +24,21 @@ jobs:
       - name: Install dependencies
         run: bun install
 
+      - name: Install cf-proxy dependencies
+        run: cd cf-proxy && bun install
+
       - name: Cache setup artifacts
         id: cache-setup
         uses: actions/cache@v4
         with:
           path: ./db.sqlite3
           key: db-sqlite3-${{ hashFiles('scripts/setup-*.ts') }}
+          restore-keys: |
+            db-sqlite3-
 
       - name: Run setup if cache miss
-        if: steps.cache-setup.outputs.cache-hit != 'true'
-        run: bun run setup
+        if: steps.cache-setup.outputs.cache-hit != 'true' && hashFiles('db.sqlite3') == ''
+        run: bun run setup:ci-test-db
 
       - name: Run tests
         run: bun test

@@ -28,6 +28,7 @@
     "setup:replace-db-file": "rm -f ./db.sqlite3 && mv ./cache.sqlite3 ./db.sqlite3",
     "setup:optimize-db": "bun run scripts/setup-db-optimizations.ts",
     "setup:derived-tables": "bun run scripts/setup-derived-tables.ts",
+    "setup:ci-test-db": "bun scripts/setup-ci-test-db.ts",
     "setup:download": "curl -o db.sqlite \"https://jlcsearch.fly.dev/database/$DATABASE_DOWNLOAD_TOKEN\"",
     "generate:openapi": "mkdir -p .tmp && TMPDIR=$(pwd)/.tmp WINTERSPEC_CODEGEN=true bunx winterspec codegen openapi --root . --routes-directory ./routes --platform node --tsconfig tsconfig.json --output docs/openapi.json",
     "format": "biome format --write .",
@@ -37,6 +38,7 @@
   "dependencies": {
     "@tscircuit/footprinter": "^0.0.143",
     "kysely-bun-sqlite": "^0.3.2",
+    "kysely-d1": "^0.4.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "redaxios": "^0.5.1"
