@@ -1,4 +1,4 @@
-import { sql, type Kysely, type RawBuilder } from "kysely"
+import { type Kysely, type RawBuilder, sql } from "kysely"
 import type { DB } from "./db/types"
 import { buildSearchTokenGroups } from "./search-query"
 
@@ -9,6 +9,7 @@ export interface SearchQueryParams {
   limit?: string
   is_basic?: string
   is_preferred?: string
+  is_extended_promotional?: string
 }
 
 interface SearchRow {
@@ -35,6 +36,12 @@ const canFallbackToLikeSearch = (error: unknown): boolean =>
 const isMissingFtsReadinessTable = (error: unknown): boolean =>
   error instanceof Error &&
   /no such table: search_index_fts_meta/i.test(error.message)
+
+const isTruthyParam = (value?: string): boolean =>
+  value === "true" || value === "1"
+
+const isFalseyParam = (value?: string): boolean =>
+  value === "false" || value === "0"
 
 async function isFtsSearchReady(db: Kysely<DB>): Promise<boolean> {
   try {
@@ -108,6 +115,16 @@ export async function searchIndex(
 
   if (params.is_preferred === "true" || params.is_preferred === "1") {
     conditions.push(sql`search_index.preferred = 1`)
+  }
+
+  if (isTruthyParam(params.is_extended_promotional)) {
+    conditions.push(
+      sql`COALESCE(search_index.preferred, 0) = 1 AND COALESCE(search_index.basic, 0) = 0`,
+    )
+  } else if (isFalseyParam(params.is_extended_promotional)) {
+    conditions.push(
+      sql`NOT (COALESCE(search_index.preferred, 0) = 1 AND COALESCE(search_index.basic, 0) = 0)`,
+    )
   }
 
   const raw = params.q?.trim()

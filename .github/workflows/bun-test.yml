@@ -7,7 +7,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 60
 
     steps:
       - name: Checkout code
@@ -19,6 +19,10 @@ jobs:
           bun-version: latest
       
       - name: Install dependencies
+        run: bun install
+
+      - name: Install cf-proxy dependencies
+        working-directory: cf-proxy
         run: bun install
 
       - name: Cache setup artifacts
