@@ -4,13 +4,21 @@ import { platform, arch } from "node:os"
 
 const BINARY_DIR = ".bin"
 const BINARY_NAME = "7zz"
+const SEVEN_ZIP_VERSION = "2601"
 
 // Map of platform-arch combinations to download URLs
 const BINARY_URLS: Record<string, string> = {
-  "linux-x64": "https://7-zip.org/a/7z2408-linux-x64.tar.xz",
-  "linux-arm64": "https://7-zip.org/a/7z2408-linux-arm64.tar.xz",
-  "darwin-x64": "https://7-zip.org/a/7z2408-mac.tar.xz",
-  "darwin-arm64": "https://7-zip.org/a/7z2408-mac.tar.xz",
+  "linux-x64": `https://7-zip.org/a/7z${SEVEN_ZIP_VERSION}-linux-x64.tar.xz`,
+  "linux-arm64": `https://7-zip.org/a/7z${SEVEN_ZIP_VERSION}-linux-arm64.tar.xz`,
+  "darwin-x64": `https://7-zip.org/a/7z${SEVEN_ZIP_VERSION}-mac.tar.xz`,
+  "darwin-arm64": `https://7-zip.org/a/7z${SEVEN_ZIP_VERSION}-mac.tar.xz`,
+}
+
+async function runCommand(command: string[]) {
+  const exitCode = await Bun.spawn(command).exited
+  if (exitCode !== 0) {
+    throw new Error(`Command failed (${exitCode}): ${command.join(" ")}`)
+  }
 }
 
 async function downloadAndExtract7z() {
@@ -39,7 +47,9 @@ async function downloadAndExtract7z() {
   console.log("Downloading 7z...")
   const response = await fetch(downloadUrl)
   if (!response.ok) {
-    throw new Error(`Failed to download: ${response.statusText}`)
+    throw new Error(
+      `Failed to download ${downloadUrl}: ${response.status} ${response.statusText}`,
+    )
   }
 
   // Save the tar.xz file
@@ -48,16 +58,16 @@ async function downloadAndExtract7z() {
 
   // Extract the tar.xz file
   console.log("Extracting 7z binary...")
-  await Bun.spawn(["tar", "xf", tempFile]).exited
+  await runCommand(["tar", "xf", tempFile])
 
   // Move the binary to the right location
-  await Bun.spawn(["mv", "7zz", binaryPath]).exited
+  await runCommand(["mv", "7zz", binaryPath])
 
   // Make the binary executable
   await chmod(binaryPath, 0o755)
 
   // Cleanup
-  await Bun.spawn(["rm", tempFile]).exited
+  await runCommand(["rm", tempFile])
 
   console.log("7z binary setup complete")
 }
