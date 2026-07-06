@@ -107,3 +107,22 @@ test("GET /api/search supports '0402 LED'", async () => {
   expect(res.data.components.every((c: any) => c.package === "0402")).toBe(true)
   expect(res.data.components.some((c: any) => c.lcsc === 965793)).toBe(true)
 })
+
+test("GET /api/search filters extended promotional parts", async () => {
+  const { axios } = await getTestServer()
+  const res = await axios.get(
+    "/api/search?limit=20&is_extended_promotional=true",
+  )
+
+  expect(res.data).toHaveProperty("components")
+  expect(Array.isArray(res.data.components)).toBe(true)
+  expect(res.data.components.length).toBeGreaterThan(0)
+  expect(
+    res.data.components.every(
+      (component: any) =>
+        component.is_extended_promotional &&
+        component.is_preferred &&
+        !component.is_basic,
+    ),
+  ).toBe(true)
+})
