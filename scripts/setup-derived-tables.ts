@@ -5,7 +5,10 @@ const resetTable = resetArg !== -1 ? process.argv[resetArg + 1] : null
 const resetAll = resetArg !== -1 && !resetTable
 
 async function main() {
+  const populate = process.env.CI !== "true"
+
   await setupDerivedTables({
+    populate,
     resetAll,
     resetTable,
     logger: console.log,

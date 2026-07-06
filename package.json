@@ -21,7 +21,7 @@
     "start:origin": "bun scripts/start-server.ts",
     "start:legacy": "bun scripts/start-server.ts",
     "generate:db-types": "bunx kysely-codegen --out-file ./lib/db/generated/kysely.ts --singular --dialect bun-sqlite --url ./db.sqlite3",
-    "setup": "bun run setup:7z && bun run setup:download-cache-fragments && bun run setup:extract-db && bun run setup:replace-db-file && bun run setup:optimize-db && bun run setup:derived-tables",
+    "setup": "bun run scripts/setup-ci-db.ts || (bun run setup:7z && bun run setup:download-cache-fragments && bun run setup:extract-db && bun run setup:replace-db-file && bun run setup:optimize-db && bun run setup:derived-tables)",
     "setup:7z": "bun run scripts/setup-7z.ts",
     "setup:download-cache-fragments": "bun scripts/download-cache-fragments.ts",
     "setup:extract-db": ".bin/7zz x .buildtmp/cache.zip",
