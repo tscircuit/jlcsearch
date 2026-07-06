@@ -5,22 +5,28 @@ const BASE_URL = "https://yaqwsx.github.io/jlcparts/data"
 const OUTPUT_DIR = ".buildtmp"
 
 async function downloadFile(url: string, outputPath: string): Promise<boolean> {
-  try {
-    const response = await fetch(url)
-    if (!response.ok) {
-      if (response.status === 404) {
-        return false
-      }
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    const fileData = await response.arrayBuffer()
-    await Bun.write(outputPath, fileData)
+  const curl = Bun.spawn([
+    "curl",
+    "--fail",
+    "--location",
+    "--max-time",
+    "120",
+    "--output",
+    outputPath,
+    url,
+  ])
+  const exitCode = await curl.exited
+  if (exitCode === 0) {
     console.log(`Downloaded: ${url}`)
     return true
-  } catch (error) {
-    console.error(`Error downloading ${url}:`, error)
+  }
+
+  if (exitCode === 22) {
     return false
   }
+
+  console.error(`Error downloading ${url}: curl exited ${exitCode}`)
+  return false
 }
 
 async function main() {

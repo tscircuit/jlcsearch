@@ -7,10 +7,10 @@ const BINARY_NAME = "7zz"
 
 // Map of platform-arch combinations to download URLs
 const BINARY_URLS: Record<string, string> = {
-  "linux-x64": "https://7-zip.org/a/7z2408-linux-x64.tar.xz",
-  "linux-arm64": "https://7-zip.org/a/7z2408-linux-arm64.tar.xz",
-  "darwin-x64": "https://7-zip.org/a/7z2408-mac.tar.xz",
-  "darwin-arm64": "https://7-zip.org/a/7z2408-mac.tar.xz",
+  "linux-x64": "https://7-zip.org/a/7z2301-linux-x64.tar.xz",
+  "linux-arm64": "https://7-zip.org/a/7z2301-linux-arm64.tar.xz",
+  "darwin-x64": "https://7-zip.org/a/7z2301-mac.tar.xz",
+  "darwin-arm64": "https://7-zip.org/a/7z2301-mac.tar.xz",
 }
 
 async function downloadAndExtract7z() {
@@ -37,14 +37,22 @@ async function downloadAndExtract7z() {
   }
 
   console.log("Downloading 7z...")
-  const response = await fetch(downloadUrl)
-  if (!response.ok) {
-    throw new Error(`Failed to download: ${response.statusText}`)
-  }
-
   // Save the tar.xz file
   const tempFile = "7z-temp.tar.xz"
-  await Bun.write(tempFile, await response.arrayBuffer())
+  const curl = Bun.spawn([
+    "curl",
+    "--fail",
+    "--location",
+    "--max-time",
+    "60",
+    "--output",
+    tempFile,
+    downloadUrl,
+  ])
+  const curlExitCode = await curl.exited
+  if (curlExitCode !== 0) {
+    throw new Error(`Failed to download 7z: curl exited ${curlExitCode}`)
+  }
 
   // Extract the tar.xz file
   console.log("Extracting 7z binary...")
