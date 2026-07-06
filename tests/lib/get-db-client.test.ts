@@ -3,14 +3,21 @@ import { afterEach, expect, test } from "bun:test"
 import { mkdtempSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import Path from "node:path"
-import { getBunDatabaseClient, getResolvedDbPath } from "lib/db/get-db-client"
+import {
+  destroyDbClient,
+  getBunDatabaseClient,
+  getDbClient,
+  getResolvedDbPath,
+} from "lib/db/get-db-client"
 
 let tempDir: string | undefined
 let previousDbPath = process.env.JLCSEARCH_DB_PATH
 
-afterEach(() => {
+afterEach(async () => {
+  await destroyDbClient()
+
   if (previousDbPath === undefined) {
-    delete process.env.JLCSEARCH_DB_PATH
+    process.env.JLCSEARCH_DB_PATH = undefined
   } else {
     process.env.JLCSEARCH_DB_PATH = previousDbPath
   }
@@ -44,4 +51,31 @@ test("getBunDatabaseClient respects JLCSEARCH_DB_PATH", () => {
 
   expect(row?.value).toBe("ok")
   db.close()
+})
+
+test("destroyDbClient allows recreating the singleton after destroy", async () => {
+  tempDir = mkdtempSync(Path.join(tmpdir(), "jlcsearch-db-"))
+  const dbPath = Path.join(tempDir, "singleton.sqlite3")
+
+  const seedDb = new Database(dbPath)
+  seedDb.exec(`
+    CREATE TABLE probe (value TEXT);
+    INSERT INTO probe (value) VALUES ('ok');
+  `)
+  seedDb.close()
+
+  previousDbPath = process.env.JLCSEARCH_DB_PATH
+  process.env.JLCSEARCH_DB_PATH = dbPath
+
+  const firstDb = getDbClient()
+  await destroyDbClient()
+  const secondDb = getDbClient()
+
+  expect(secondDb).not.toBe(firstDb)
+  const row = await secondDb
+    .selectFrom("probe" as never)
+    .select("value" as never)
+    .executeTakeFirst()
+
+  expect(row).toEqual({ value: "ok" })
 })
