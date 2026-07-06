@@ -1,7 +1,7 @@
 import { sql } from "kysely"
 import {
-  buildSearchTokenGroups,
   type SearchTokenGroup,
+  buildSearchTokenGroups,
   tokenizeSearchTerm,
 } from "lib/util/search-token-groups"
 import { withWinterSpec } from "lib/with-winter-spec"
@@ -50,6 +50,7 @@ export default withWinterSpec({
     limit: z.string().optional(),
     is_basic: z.boolean().optional(),
     is_preferred: z.boolean().optional(),
+    is_extended_promotional: z.boolean().optional(),
   }),
   jsonResponse: z.any(),
 } as const)(async (req, ctx) => {
@@ -72,10 +73,14 @@ export default withWinterSpec({
   if (req.query.is_preferred) {
     query = query.where("preferred", "=", 1)
   }
+  if (req.query.is_extended_promotional) {
+    query = query.where("preferred", "=", 1).where("basic", "=", 0)
+  }
 
   const baseQuery = query
   let fallbackLikeTokens: string[] = []
   let fallbackPackageTokens: string[] = []
+  let searchedWithFts = false
 
   if (req.query.q) {
     const rawSearchTerm = req.query.q.trim()
@@ -131,11 +136,19 @@ export default withWinterSpec({
         filteredLikeGroups.length > 0 ? filteredLikeGroups : tokenGroupsForLike
       ).map((group) => group.join("\0"))
 
-      query = query.where(
-        sql`lcsc`,
-        "in",
-        sql`(SELECT CAST(lcsc AS INTEGER) FROM components_fts WHERE components_fts MATCH ${combinedFtsQuery})`,
-      )
+      const componentsFts = await sql<{ name: string }>`
+        SELECT name FROM sqlite_master
+        WHERE type = 'table' AND name = 'components_fts'
+      `.execute(ctx.db)
+
+      if (componentsFts.rows.length > 0) {
+        searchedWithFts = true
+        query = query.where(
+          sql`lcsc`,
+          "in",
+          sql`(SELECT CAST(lcsc AS INTEGER) FROM components_fts WHERE components_fts MATCH ${combinedFtsQuery})`,
+        )
+      }
 
       const packageTokens = searchTokens.filter((token) =>
         /^\d{4}$/.test(token),
@@ -149,7 +162,10 @@ export default withWinterSpec({
 
   const fullComponents = await query.execute()
 
-  if (fallbackLikeTokens.length > 0 && fullComponents.length === 0) {
+  if (
+    fallbackLikeTokens.length > 0 &&
+    (!searchedWithFts || fullComponents.length === 0)
+  ) {
     let fallbackQuery = baseQuery
 
     if (fallbackPackageTokens.length > 0) {
@@ -193,6 +209,7 @@ export default withWinterSpec({
     package: c.package,
     is_basic: Boolean(c.basic),
     is_preferred: Boolean(c.preferred),
+    is_extended_promotional: Boolean(c.preferred && !c.basic),
     description: c.description,
     stock: c.stock,
     price: extractSmallQuantityPrice(c.price),

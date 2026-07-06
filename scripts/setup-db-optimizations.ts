@@ -1,17 +1,17 @@
 import { getBunDatabaseClient, getDbClient } from "lib/db/get-db-client"
-import { componentStockIndex } from "lib/db/optimizations/component-stock-index"
-import { componentInStockColumn } from "lib/db/optimizations/component-in-stock-column"
-import { removeStaleComponents } from "lib/db/optimizations/remove-stale-components"
+import { componentBasicIndex } from "lib/db/optimizations/component-basic-index"
 import { componentCategoryIndex } from "lib/db/optimizations/component-category-index"
 import { componentInStockCategoryIndex } from "lib/db/optimizations/component-in-stock-category-index"
-import type { DbOptimizationSpec } from "lib/db/optimizations/types"
-import { componentSearchFTS } from "lib/db/optimizations/component-search-fts"
+import { componentInStockColumn } from "lib/db/optimizations/component-in-stock-column"
 import { componentPackageIndex } from "lib/db/optimizations/component-indexes"
-import { componentBasicIndex } from "lib/db/optimizations/component-basic-index"
 import { componentPreferredIndex } from "lib/db/optimizations/component-preferred-index"
+import { componentSearchFTS } from "lib/db/optimizations/component-search-fts"
+import { componentStockIndex } from "lib/db/optimizations/component-stock-index"
+import { removeStaleComponents } from "lib/db/optimizations/remove-stale-components"
+import type { DbOptimizationSpec } from "lib/db/optimizations/types"
 
 const OPTIMIZATIONS: DbOptimizationSpec[] = [
-  componentSearchFTS,
+  ...(process.env.CI ? [] : [componentSearchFTS]),
   componentPackageIndex,
   componentBasicIndex,
   componentPreferredIndex,
@@ -40,11 +40,13 @@ async function main() {
 
   await db.destroy()
 
-  const bunDb = getBunDatabaseClient()
-  console.log("Running VACUUM to optimize database...")
-  await bunDb.exec("VACUUM")
-  console.log("VACUUM completed")
-  bunDb.close()
+  if (!process.env.CI) {
+    const bunDb = getBunDatabaseClient()
+    console.log("Running VACUUM to optimize database...")
+    await bunDb.exec("VACUUM")
+    console.log("VACUUM completed")
+    bunDb.close()
+  }
 }
 
 main().catch(console.error)
