@@ -69,6 +69,7 @@ export const resistorArrayTableSpec: DerivedTableSpec<ResistorArray> = {
     { name: "is_surface_mount", type: "boolean" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db
@@ -133,6 +134,7 @@ export const resistorArrayTableSpec: DerivedTableSpec<ResistorArray> = {
         number_of_pins: numberOfPins,
         topology,
         is_surface_mount: Boolean(isSurfaceMount),
+        is_extended_promotional: Boolean(component.preferred) && !Boolean(component.basic),
         attributes,
       }
     }),
