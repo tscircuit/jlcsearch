@@ -2,6 +2,7 @@ import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import type { DerivedTableSpec } from "./types"
 import { BaseComponent } from "./component-base"
+import { isExtendedPromotional } from "lib/util/is-extended-promotional"
 
 export interface ResistorArray extends BaseComponent {
   package: string
@@ -69,6 +70,7 @@ export const resistorArrayTableSpec: DerivedTableSpec<ResistorArray> = {
     { name: "is_surface_mount", type: "boolean" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db
@@ -124,6 +126,7 @@ export const resistorArrayTableSpec: DerivedTableSpec<ResistorArray> = {
         in_stock: component.stock > 0,
         is_basic: Boolean(component.basic),
         is_preferred: Boolean(component.preferred),
+        is_extended_promotional: isExtendedPromotional(component),
         package: component.package ?? "",
         resistance,
         tolerance_fraction: tolerance,
