@@ -57,11 +57,7 @@ export const getResolvedDbPath = (): string => {
     : Path.resolve(process.cwd(), configuredPath)
 }
 
-export const getDbClient = () => {
-  if (dbClientSingleton) {
-    return dbClientSingleton
-  }
-
+export const createDbClient = () => {
   const Database = getDatabaseCtor()
   const KyselyCtorRef = KyselyCtor
   const BunSqliteDialectRef = BunSqliteDialectCtor
@@ -74,11 +70,19 @@ export const getDbClient = () => {
     )
   }
 
-  dbClientSingleton = new KyselyCtorRef<DB>({
+  return new KyselyCtorRef<DB>({
     dialect: new BunSqliteDialectRef({
       database: new Database(getResolvedDbPath()),
     }),
   })
+}
+
+export const getDbClient = () => {
+  if (dbClientSingleton) {
+    return dbClientSingleton
+  }
+
+  dbClientSingleton = createDbClient()
 
   return dbClientSingleton
 }
