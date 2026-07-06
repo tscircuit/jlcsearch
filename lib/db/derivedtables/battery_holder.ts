@@ -1,8 +1,8 @@
-import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
-import type { DerivedTableSpec } from "./types"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
-import { BaseComponent } from "./component-base"
+import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
 import type { KyselyDatabaseInstance } from "../kysely-types"
+import { BaseComponent, isExtendedPromotional } from "./component-base"
+import type { DerivedTableSpec } from "./types"
 
 export interface BatteryHolder extends BaseComponent {
   package: string
@@ -74,6 +74,7 @@ export const batteryHolderTableSpec: DerivedTableSpec<BatteryHolder> = {
           in_stock: Boolean((c.stock || 0) > 0),
           is_basic: Boolean(c.basic),
           is_preferred: Boolean(c.preferred),
+          is_extended_promotional: isExtendedPromotional(c),
           package: String(c.package || ""),
           connector_type: attrs["Connector Type"] || null,
           battery_type: attrs["Battery Type"] || null,

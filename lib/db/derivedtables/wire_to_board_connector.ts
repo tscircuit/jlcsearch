@@ -1,8 +1,8 @@
-import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
-import type { BaseComponent } from "./component-base"
-import type { DerivedTableSpec } from "./types"
+import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
 import type { KyselyDatabaseInstance } from "../kysely-types"
+import { type BaseComponent, isExtendedPromotional } from "./component-base"
+import type { DerivedTableSpec } from "./types"
 
 export interface WireToBoardConnector extends BaseComponent {
   package: string
@@ -100,6 +100,7 @@ export const wireToBoardConnectorTableSpec: DerivedTableSpec<WireToBoardConnecto
             in_stock: Boolean((c.stock || 0) > 0),
             is_basic: Boolean(c.basic),
             is_preferred: Boolean(c.preferred),
+            is_extended_promotional: isExtendedPromotional(c),
             package: String(c.package || ""),
             pitch_mm: pitchMm,
             num_rows: numRows,

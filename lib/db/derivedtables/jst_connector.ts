@@ -1,8 +1,8 @@
-import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
-import type { DerivedTableSpec } from "./types"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
-import { BaseComponent } from "./component-base"
+import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
 import type { KyselyDatabaseInstance } from "../kysely-types"
+import { BaseComponent, isExtendedPromotional } from "./component-base"
+import type { DerivedTableSpec } from "./types"
 
 export interface JstConnector extends BaseComponent {
   package: string
@@ -69,6 +69,7 @@ export const jstConnectorTableSpec: DerivedTableSpec<JstConnector> = {
           in_stock: Boolean((c.stock || 0) > 0),
           is_basic: Boolean(c.basic),
           is_preferred: Boolean(c.preferred),
+          is_extended_promotional: isExtendedPromotional(c),
           package: String(c.package || ""),
           pitch_mm: parseNum(attrs["Pitch"]),
           num_rows: isNaN(numRows) ? null : numRows,

@@ -1,15 +1,15 @@
-import type { DerivedTableSpec } from "./types"
-import type { SelectQueryBuilder, Generated } from "kysely"
+import type { Generated, SelectQueryBuilder } from "kysely"
 import type { Component } from "../generated/kysely"
 import type { KyselyDatabaseInstance } from "../kysely-types"
+import type { DerivedTableSpec } from "./types"
 
 type UnwrapGenerated<T> = {
   [K in keyof T]: T[K] extends Generated<infer U> ? U : T[K]
 }
-import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
+import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
 import { parseIntOrNull } from "lib/util/parse-int-or-null"
-import { BaseComponent } from "./component-base"
+import { BaseComponent, isExtendedPromotional } from "./component-base"
 
 export interface Mosfet extends BaseComponent {
   package?: string
@@ -68,6 +68,7 @@ export const mosfetTableSpec: DerivedTableSpec<Mosfet> = {
           in_stock: Boolean((c.stock || 0) > 0),
           is_basic: Boolean(c.basic),
           is_preferred: Boolean(c.preferred),
+          is_extended_promotional: isExtendedPromotional(c),
           package: String(c.package || ""),
           drain_source_voltage: parseValue(
             attrs["Drain Source Voltage (Vdss)"],

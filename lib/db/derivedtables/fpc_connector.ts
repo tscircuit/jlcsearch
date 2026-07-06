@@ -1,8 +1,8 @@
-import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
-import type { DerivedTableSpec } from "./types"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
-import { BaseComponent } from "./component-base"
+import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
 import type { KyselyDatabaseInstance } from "../kysely-types"
+import { BaseComponent, isExtendedPromotional } from "./component-base"
+import type { DerivedTableSpec } from "./types"
 
 export interface FpcConnector extends BaseComponent {
   pitch_mm: number | null
@@ -55,6 +55,7 @@ export const fpcConnectorTableSpec: DerivedTableSpec<FpcConnector> = {
           in_stock: Boolean((c.stock || 0) > 0),
           is_basic: Boolean(c.basic),
           is_preferred: Boolean(c.preferred),
+          is_extended_promotional: isExtendedPromotional(c),
           pitch_mm: parseNum(attrs["Pitch"]),
           number_of_contacts: isNaN(contacts) ? null : contacts,
           contact_type: attrs["Contact Type"] || null,

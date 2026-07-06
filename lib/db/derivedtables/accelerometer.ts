@@ -1,6 +1,6 @@
-import type { DerivedTableSpec } from "./types"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
-import { BaseComponent } from "./component-base"
+import { BaseComponent, isExtendedPromotional } from "./component-base"
+import type { DerivedTableSpec } from "./types"
 
 export interface Accelerometer extends BaseComponent {
   package: string
@@ -102,6 +102,7 @@ export const accelerometerTableSpec: DerivedTableSpec<Accelerometer> = {
         in_stock: c.stock > 0,
         is_basic: Boolean(c.basic),
         is_preferred: Boolean(c.preferred),
+        is_extended_promotional: isExtendedPromotional(c),
         package: c.package || "",
         supply_voltage_min: voltageMin,
         supply_voltage_max: voltageMax,

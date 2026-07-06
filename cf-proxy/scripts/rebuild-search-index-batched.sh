@@ -43,6 +43,7 @@ run_wrangler d1 execute "$DB_NAME" --remote --command \
      price1 REAL,
      basic INTEGER,
      preferred INTEGER,
+     is_extended_promotional INTEGER,
      category TEXT,
      subcategory TEXT,
      manufacturer_name TEXT,
@@ -70,6 +71,7 @@ INSERT INTO search_index_next (
   price1,
   basic,
   preferred,
+  is_extended_promotional,
   category,
   subcategory,
   manufacturer_name,
@@ -91,6 +93,14 @@ SELECT
   END AS price1,
   basic,
   preferred,
+  CASE
+    WHEN json_valid(extra)
+      AND json_extract(extra, '$.componentLibraryType') IN ('expand', 'expandPrefer')
+    THEN 1
+    WHEN preferred = 1 AND COALESCE(basic, 0) = 0
+    THEN 1
+    ELSE 0
+  END AS is_extended_promotional,
   category,
   subcategory,
   CASE
@@ -133,7 +143,8 @@ run_wrangler d1 execute "$DB_NAME" --remote --command \
    CREATE INDEX IF NOT EXISTS idx_search_index_next_lcsc ON search_index_next(lcsc);
    CREATE INDEX IF NOT EXISTS idx_search_index_next_package ON search_index_next(package);
    CREATE INDEX IF NOT EXISTS idx_search_index_next_basic ON search_index_next(basic);
-   CREATE INDEX IF NOT EXISTS idx_search_index_next_preferred ON search_index_next(preferred);"
+   CREATE INDEX IF NOT EXISTS idx_search_index_next_preferred ON search_index_next(preferred);
+   CREATE INDEX IF NOT EXISTS idx_search_index_next_is_extended_promotional ON search_index_next(is_extended_promotional);"
 
 echo "Validating row count..."
 run_wrangler d1 execute "$DB_NAME" --remote --command \
@@ -157,11 +168,13 @@ run_wrangler d1 execute "$DB_NAME" --remote --command \
    DROP INDEX IF EXISTS idx_search_index_package;
    DROP INDEX IF EXISTS idx_search_index_basic;
    DROP INDEX IF EXISTS idx_search_index_preferred;
+   DROP INDEX IF EXISTS idx_search_index_is_extended_promotional;
    ALTER TABLE search_index_next RENAME TO search_index;
    CREATE INDEX IF NOT EXISTS idx_search_index_stock ON search_index(stock DESC);
    CREATE INDEX IF NOT EXISTS idx_search_index_lcsc ON search_index(lcsc);
    CREATE INDEX IF NOT EXISTS idx_search_index_package ON search_index(package);
    CREATE INDEX IF NOT EXISTS idx_search_index_basic ON search_index(basic);
-   CREATE INDEX IF NOT EXISTS idx_search_index_preferred ON search_index(preferred);"
+   CREATE INDEX IF NOT EXISTS idx_search_index_preferred ON search_index(preferred);
+   CREATE INDEX IF NOT EXISTS idx_search_index_is_extended_promotional ON search_index(is_extended_promotional);"
 
 echo "Done. Old table kept as search_index_old for rollback."
