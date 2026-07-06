@@ -43,6 +43,7 @@ run_wrangler d1 execute "$DB_NAME" --remote --command \
      price1 REAL,
      basic INTEGER,
      preferred INTEGER,
+     extended_promotional INTEGER,
      category TEXT,
      subcategory TEXT,
      manufacturer_name TEXT,
@@ -70,6 +71,7 @@ INSERT INTO search_index_next (
   price1,
   basic,
   preferred,
+  extended_promotional,
   category,
   subcategory,
   manufacturer_name,
@@ -91,6 +93,7 @@ SELECT
   END AS price1,
   basic,
   preferred,
+  extended_promotional,
   category,
   subcategory,
   CASE
@@ -133,7 +136,8 @@ run_wrangler d1 execute "$DB_NAME" --remote --command \
    CREATE INDEX IF NOT EXISTS idx_search_index_next_lcsc ON search_index_next(lcsc);
    CREATE INDEX IF NOT EXISTS idx_search_index_next_package ON search_index_next(package);
    CREATE INDEX IF NOT EXISTS idx_search_index_next_basic ON search_index_next(basic);
-   CREATE INDEX IF NOT EXISTS idx_search_index_next_preferred ON search_index_next(preferred);"
+   CREATE INDEX IF NOT EXISTS idx_search_index_next_preferred ON search_index_next(preferred);
+   CREATE INDEX IF NOT EXISTS idx_search_index_next_extended_promotional ON search_index_next(extended_promotional);"
 
 echo "Validating row count..."
 run_wrangler d1 execute "$DB_NAME" --remote --command \
@@ -162,6 +166,7 @@ run_wrangler d1 execute "$DB_NAME" --remote --command \
    CREATE INDEX IF NOT EXISTS idx_search_index_lcsc ON search_index(lcsc);
    CREATE INDEX IF NOT EXISTS idx_search_index_package ON search_index(package);
    CREATE INDEX IF NOT EXISTS idx_search_index_basic ON search_index(basic);
-   CREATE INDEX IF NOT EXISTS idx_search_index_preferred ON search_index(preferred);"
+   CREATE INDEX IF NOT EXISTS idx_search_index_preferred ON search_index(preferred);
+   CREATE INDEX IF NOT EXISTS idx_search_index_extended_promotional ON search_index(extended_promotional);"
 
 echo "Done. Old table kept as search_index_old for rollback."

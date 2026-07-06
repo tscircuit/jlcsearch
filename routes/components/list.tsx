@@ -25,6 +25,18 @@ const ftsGroupQuery = (group: string[]): string => {
     : `(${tokenQueries.join(" OR ")})`
 }
 
+const extendedPromotionalSql = sql<number>`CASE
+  WHEN json_valid(extra) THEN COALESCE(
+    json_extract(extra, '$.isExtendedPromotional'),
+    json_extract(extra, '$.is_extended_promotional'),
+    json_extract(extra, '$.extendedPromotional'),
+    json_extract(extra, '$.extended_promotional'),
+    json_extract(extra, '$.attributes.isExtendedPromotional'),
+    0
+  )
+  ELSE 0
+END`
+
 export default withWinterSpec({
   auth: "none",
   methods: ["GET"],
@@ -35,6 +47,7 @@ export default withWinterSpec({
     search: z.string().optional(),
     is_basic: z.boolean().optional(),
     is_preferred: z.boolean().optional(),
+    is_extended_promotional: z.boolean().optional(),
   }),
   jsonResponse: z.any(),
 } as const)(async (req, ctx) => {
@@ -51,6 +64,8 @@ export default withWinterSpec({
       "price",
       "extra",
       "basic",
+      "preferred",
+      extendedPromotionalSql.as("extended_promotional"),
     ])
     .limit(limit)
     .orderBy("stock", "desc")
@@ -69,6 +84,9 @@ export default withWinterSpec({
   }
   if (req.query.is_preferred) {
     query = query.where("preferred", "=", 1)
+  }
+  if (req.query.is_extended_promotional) {
+    query = query.where(extendedPromotionalSql, "=", 1)
   }
 
   if (req.query.search) {
@@ -111,6 +129,7 @@ export default withWinterSpec({
     package: c.package,
     is_basic: Boolean(c.basic),
     is_preferred: Boolean(c.preferred),
+    is_extended_promotional: Boolean(c.extended_promotional),
     description: c.description,
     stock: c.stock,
     price: extractSmallQuantityPrice(c.price),
@@ -152,6 +171,17 @@ export default withWinterSpec({
               name="is_preferred"
               value="true"
               checked={req.query.is_preferred}
+            />
+          </label>
+        </div>
+        <div>
+          <label>
+            Extended Promotional:
+            <input
+              type="checkbox"
+              name="is_extended_promotional"
+              value="true"
+              checked={req.query.is_extended_promotional}
             />
           </label>
         </div>

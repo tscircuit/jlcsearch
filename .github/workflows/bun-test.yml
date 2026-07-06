@@ -21,16 +21,12 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: Cache setup artifacts
-        id: cache-setup
-        uses: actions/cache@v4
-        with:
-          path: ./db.sqlite3
-          key: db-sqlite3-${{ hashFiles('scripts/setup-*.ts') }}
+      - name: Install Cloudflare proxy dependencies
+        working-directory: cf-proxy
+        run: bun install
 
-      - name: Run setup if cache miss
-        if: steps.cache-setup.outputs.cache-hit != 'true'
-        run: bun run setup
+      - name: Prepare test database
+        run: JLCSEARCH_DB_PATH=.tmp/test-db.sqlite3 bun run scripts/setup-test-db.ts
 
       - name: Run tests
-        run: bun test
+        run: JLCSEARCH_DB_PATH=.tmp/test-db.sqlite3 bun test
