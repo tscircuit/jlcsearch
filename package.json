@@ -37,6 +37,7 @@
   "dependencies": {
     "@tscircuit/footprinter": "^0.0.143",
     "kysely-bun-sqlite": "^0.3.2",
+    "format-si-unit": "^0.0.10",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "redaxios": "^0.5.1"
