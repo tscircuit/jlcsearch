@@ -10,6 +10,7 @@ import { componentPackageIndex } from "lib/db/optimizations/component-indexes"
 import { componentBasicIndex } from "lib/db/optimizations/component-basic-index"
 import { componentPreferredIndex } from "lib/db/optimizations/component-preferred-index"
 import { componentExtendedPromotionalColumn } from "lib/db/optimizations/component-extended-promotional-column"
+import { ensureComponentSourceCompat } from "lib/db/optimizations/component-source-compat"
 
 const OPTIMIZATIONS: DbOptimizationSpec[] = [
   componentSearchFTS,
@@ -26,6 +27,8 @@ const OPTIMIZATIONS: DbOptimizationSpec[] = [
 
 async function main() {
   const db = getDbClient()
+
+  await ensureComponentSourceCompat(db)
 
   for (const optimization of OPTIMIZATIONS) {
     const isAdded = await optimization.checkIfAdded(db)
