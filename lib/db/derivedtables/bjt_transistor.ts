@@ -5,6 +5,7 @@ import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
 
 export interface BJTTransistor extends BaseComponent {
+  is_extended_promotional: boolean
   package?: string
   current_gain?: number
   collector_current?: number
@@ -26,6 +27,7 @@ export const bjtTransistorTableSpec: DerivedTableSpec<BJTTransistor> = {
     { name: "temperature_range", type: "text" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   listCandidateComponents(db: KyselyDatabaseInstance) {
     return db
@@ -74,6 +76,9 @@ export const bjtTransistorTableSpec: DerivedTableSpec<BJTTransistor> = {
           in_stock: Boolean((c.stock || 0) > 0),
           is_basic: Boolean(c.basic),
           is_preferred: Boolean(c.preferred),
+          is_extended_promotional: Boolean(
+            c.extra && JSON.parse(c.extra).promotional,
+          ),
           package: c.package || "",
           current_gain: current_gain,
           collector_current: collector_current,

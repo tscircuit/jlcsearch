@@ -4,6 +4,7 @@ import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import { BaseComponent } from "./component-base"
 
 export interface Capacitor extends BaseComponent {
+  is_extended_promotional: boolean
   // Extra columns
   capacitance_farads: number
   tolerance_fraction: number
@@ -34,6 +35,7 @@ export const capacitorTableSpec: DerivedTableSpec<Capacitor> = {
     { name: "capacitor_type", type: "text" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db
@@ -115,6 +117,9 @@ export const capacitorTableSpec: DerivedTableSpec<Capacitor> = {
         in_stock: c.stock > 0,
         is_basic: Boolean(c.basic),
         is_preferred: Boolean(c.preferred),
+        is_extended_promotional: Boolean(
+          c.extra && JSON.parse(c.extra).promotional,
+        ),
         capacitance_farads: capacitance,
         tolerance_fraction: tolerance,
         voltage_rating: voltage,

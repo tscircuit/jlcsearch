@@ -4,6 +4,7 @@ import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import { BaseComponent } from "./component-base"
 
 export interface WifiModule extends BaseComponent {
+  is_extended_promotional: boolean
   package: string
   core_processor: string | null
   antenna_type: string | null
@@ -45,6 +46,7 @@ export const wifiModuleTableSpec: DerivedTableSpec<WifiModule> = {
     { name: "has_pwm", type: "boolean" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db
@@ -140,6 +142,9 @@ export const wifiModuleTableSpec: DerivedTableSpec<WifiModule> = {
         in_stock: c.stock > 0,
         is_basic: Boolean(c.basic),
         is_preferred: Boolean(c.preferred),
+        is_extended_promotional: Boolean(
+          c.extra && JSON.parse(c.extra).promotional,
+        ),
         package: c.package || "",
         core_processor: attrs["Core Processor"] || null,
         antenna_type: attrs["Antenna Type"] || null,

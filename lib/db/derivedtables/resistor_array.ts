@@ -4,6 +4,7 @@ import type { DerivedTableSpec } from "./types"
 import { BaseComponent } from "./component-base"
 
 export interface ResistorArray extends BaseComponent {
+  is_extended_promotional: boolean
   package: string
   resistance: number | null
   tolerance_fraction: number | null
@@ -69,6 +70,7 @@ export const resistorArrayTableSpec: DerivedTableSpec<ResistorArray> = {
     { name: "is_surface_mount", type: "boolean" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db
@@ -124,6 +126,9 @@ export const resistorArrayTableSpec: DerivedTableSpec<ResistorArray> = {
         in_stock: component.stock > 0,
         is_basic: Boolean(component.basic),
         is_preferred: Boolean(component.preferred),
+        is_extended_promotional: Boolean(
+          component.extra && JSON.parse(component.extra).promotional,
+        ),
         package: component.package ?? "",
         resistance,
         tolerance_fraction: tolerance,

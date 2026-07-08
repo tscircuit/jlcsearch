@@ -3,6 +3,7 @@ import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import { BaseComponent } from "./component-base"
 
 export interface GasSensor extends BaseComponent {
+  is_extended_promotional: boolean
   package: string
   sensor_type: string | null
   measures_air_quality: boolean
@@ -36,6 +37,7 @@ export const gasSensorTableSpec: DerivedTableSpec<GasSensor> = {
     { name: "measures_explosive_gases", type: "boolean" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   listCandidateComponents(db) {
     return db
@@ -82,6 +84,9 @@ export const gasSensorTableSpec: DerivedTableSpec<GasSensor> = {
         in_stock: c.stock > 0,
         is_basic: Boolean(c.basic),
         is_preferred: Boolean(c.preferred),
+        is_extended_promotional: Boolean(
+          c.extra && JSON.parse(c.extra).promotional,
+        ),
         package: c.package || "",
         sensor_type: sensorType,
         measures_air_quality: measuresAirQuality,

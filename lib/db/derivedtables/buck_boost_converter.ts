@@ -4,6 +4,7 @@ import { BaseComponent } from "./component-base"
 import type { DerivedTableSpec } from "./types"
 
 export interface BuckBoostConverter extends BaseComponent {
+  is_extended_promotional: boolean
   package: string
   input_voltage_min: number | null
   input_voltage_max: number | null
@@ -32,6 +33,7 @@ export const buckBoostConverterTableSpec: DerivedTableSpec<BuckBoostConverter> =
       { name: "number_of_outputs", type: "integer" },
       { name: "is_basic", type: "boolean" },
       { name: "is_preferred", type: "boolean" },
+      { name: "is_extended_promotional", type: "boolean" },
     ],
     listCandidateComponents: (db) =>
       db
@@ -121,6 +123,9 @@ export const buckBoostConverterTableSpec: DerivedTableSpec<BuckBoostConverter> =
             in_stock: c.stock > 0,
             is_basic: Boolean(c.basic),
             is_preferred: Boolean(c.preferred),
+            is_extended_promotional: Boolean(
+              c.extra && JSON.parse(c.extra).promotional,
+            ),
             package: c.package || "",
             input_voltage_min: inputMin,
             input_voltage_max: inputMax,
