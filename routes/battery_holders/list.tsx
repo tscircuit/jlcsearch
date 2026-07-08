@@ -86,6 +86,7 @@ export default withWinterSpec({
           operating_temp_max: h.operating_temp_max ?? undefined,
           stock: h.stock ?? undefined,
           price1: h.price1 ?? undefined,
+          is_extended_promotional: Boolean(h.is_extended_promotional),
         }))
         .filter((h) => h.lcsc !== 0 && h.package !== ""),
     })

@@ -119,6 +119,7 @@ export default withWinterSpec({
           measures_explosive_gases: s.measures_explosive_gases === 1,
           stock: s.stock ?? undefined,
           price1: s.price1 ?? undefined,
+          is_extended_promotional: Boolean(s.is_extended_promotional),
         }))
         .filter((s) => s.lcsc !== 0 && s.package !== ""),
     })

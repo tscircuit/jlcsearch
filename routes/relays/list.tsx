@@ -68,6 +68,7 @@ export default withWinterSpec({
           relay_type: r.relay_type ?? "",
           stock: r.stock ?? undefined,
           price1: r.price1 ?? undefined,
+          is_extended_promotional: Boolean(r.is_extended_promotional),
         }))
         .filter((r) => r.lcsc !== 0 && r.package !== ""),
     })

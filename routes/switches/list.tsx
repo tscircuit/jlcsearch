@@ -103,6 +103,7 @@ export default withWinterSpec({
           switch_height_mm: s.switch_height_mm ?? undefined,
           stock: s.stock ?? undefined,
           price1: s.price1 ?? undefined,
+          is_extended_promotional: Boolean(s.is_extended_promotional),
         }))
         .filter((s) => s.lcsc !== 0 && s.package !== ""),
     })

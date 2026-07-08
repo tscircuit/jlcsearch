@@ -62,6 +62,7 @@ export default withWinterSpec({
         quiescent_current: r.quiescent_current,
         stock: r.stock,
         price1: r.price1,
+          is_extended_promotional: Boolean(r.is_extended_promotional),
       })),
     })
   }

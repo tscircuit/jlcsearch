@@ -60,6 +60,7 @@ export default withWinterSpec({
           has_uart: g.has_uart === 1,
           stock: g.stock ?? undefined,
           price1: g.price1 ?? undefined,
+          is_extended_promotional: Boolean(g.is_extended_promotional),
         }))
         .filter((g) => g.lcsc !== 0 && g.package !== ""),
     })

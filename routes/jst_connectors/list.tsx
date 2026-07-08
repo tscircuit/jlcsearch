@@ -77,6 +77,7 @@ export default withWinterSpec({
           reference_series: c.reference_series ?? undefined,
           stock: c.stock ?? undefined,
           price1: c.price1 ?? undefined,
+          is_extended_promotional: Boolean(c.is_extended_promotional),
         }))
         .filter((c) => c.lcsc !== 0),
     })

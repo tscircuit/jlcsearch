@@ -12,6 +12,7 @@ export interface BatteryHolder extends BaseComponent {
   operating_temp_max: number | null
   is_basic: boolean
   is_preferred: boolean
+  is_extended_promotional: boolean
 }
 
 const BATTERY_CONNECTOR_SUBCATEGORIES = [
@@ -32,6 +33,7 @@ export const batteryHolderTableSpec: DerivedTableSpec<BatteryHolder> = {
     { name: "operating_temp_max", type: "real" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   listCandidateComponents(db: KyselyDatabaseInstance) {
     return db
@@ -74,6 +76,7 @@ export const batteryHolderTableSpec: DerivedTableSpec<BatteryHolder> = {
           in_stock: Boolean((c.stock || 0) > 0),
           is_basic: Boolean(c.basic),
           is_preferred: Boolean(c.preferred),
+          is_extended_promotional: Boolean(c.preferred) && !Boolean(c.basic),
           package: String(c.package || ""),
           connector_type: attrs["Connector Type"] || null,
           battery_type: attrs["Battery Type"] || null,

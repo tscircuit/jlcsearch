@@ -82,6 +82,7 @@ export default withWinterSpec({
           pinVariant: p.pin_variant ?? "two_pin",
           stock: p.stock ?? undefined,
           price1: p.price1 ?? undefined,
+          is_extended_promotional: Boolean(p.is_extended_promotional),
         }))
         .filter((p) => p.lcsc !== 0 && p.package !== ""),
     })

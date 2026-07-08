@@ -47,6 +47,7 @@ export default withWinterSpec({
       "led_with_ic.protocol",
       "led_with_ic.forward_voltage",
       "led_with_ic.forward_current",
+      "led_with_ic.is_extended_promotional",
     ] as const)
     .limit(limit)
     .orderBy("led_with_ic.stock", "desc")
@@ -94,6 +95,7 @@ export default withWinterSpec({
           description: c.description ?? "",
           stock: c.stock ?? 0,
           price1: c.price1 ?? 0,
+          is_extended_promotional: Boolean(c.is_extended_promotional),
           color: c.color ?? undefined,
           protocol: c.protocol ?? "",
           forward_voltage: c.forward_voltage ?? undefined,

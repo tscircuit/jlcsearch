@@ -107,6 +107,7 @@ export default withWinterSpec({
         logic_gates: f.logic_gates ?? null,
         stock: f.stock ?? null,
         price1: f.price1 ?? null,
+          is_extended_promotional: Boolean(f.is_extended_promotional),
       })),
     })
   }
