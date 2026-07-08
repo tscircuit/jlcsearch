@@ -74,6 +74,8 @@ const ensureComponentsFromJlcSourceDb = async (db: KyselyDatabaseInstance) => {
       SELECT DISTINCT category, subcategory
       FROM jlc_components
       WHERE present = 1
+        AND category != ''
+        AND subcategory != ''
     )
   `.execute(db)
 
@@ -131,6 +133,8 @@ const ensureComponentsFromJlcSourceDb = async (db: KyselyDatabaseInstance) => {
         ON c.category = j.category
         AND c.subcategory = j.subcategory
       WHERE j.present = 1
+        AND j.category != ''
+        AND j.subcategory != ''
     ),
     parsed_price AS (
       SELECT
