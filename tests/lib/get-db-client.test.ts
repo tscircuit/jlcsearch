@@ -1,9 +1,15 @@
 import { Database } from "bun:sqlite"
 import { afterEach, expect, test } from "bun:test"
+import { sql } from "kysely"
 import { mkdtempSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import Path from "node:path"
-import { getBunDatabaseClient, getResolvedDbPath } from "lib/db/get-db-client"
+import {
+  destroyDbClient,
+  getBunDatabaseClient,
+  getDbClient,
+  getResolvedDbPath,
+} from "lib/db/get-db-client"
 
 let tempDir: string | undefined
 let previousDbPath = process.env.JLCSEARCH_DB_PATH
@@ -44,4 +50,22 @@ test("getBunDatabaseClient respects JLCSEARCH_DB_PATH", () => {
 
   expect(row?.value).toBe("ok")
   db.close()
+})
+
+test("destroyDbClient clears the singleton before it is reused", async () => {
+  tempDir = mkdtempSync(Path.join(tmpdir(), "jlcsearch-kysely-"))
+  const dbPath = Path.join(tempDir, "custom.sqlite3")
+
+  previousDbPath = process.env.JLCSEARCH_DB_PATH
+  await destroyDbClient()
+  process.env.JLCSEARCH_DB_PATH = dbPath
+
+  const firstClient = getDbClient()
+  await sql`SELECT 1`.execute(firstClient)
+  await destroyDbClient()
+
+  const secondClient = getDbClient()
+  expect(secondClient).not.toBe(firstClient)
+  await sql`SELECT 1`.execute(secondClient)
+  await destroyDbClient()
 })
