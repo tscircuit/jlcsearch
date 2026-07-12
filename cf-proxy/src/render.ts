@@ -27,6 +27,7 @@ const routeLabels: Record<string, string> = {
   "/fpc_connectors/list": "FPC Connectors",
   "/jst_connectors/list": "JST Connectors",
   "/wire_to_board_connectors/list": "Wire to Board Connectors",
+  "/spring_clamp_terminal_blocks/list": "Spring Clamp Terminal Blocks",
   "/battery_holders/list": "Battery Holders",
   "/leds/list": "LEDs",
   "/adcs/list": "ADCs",
@@ -619,7 +620,6 @@ posthog.init('phc_htd8AQjSfVEsFCLQMAiUooG4Q0DKBCjqYuQglc9V3Wo', { api_host:'http
             <img src="https://img.shields.io/github/stars/tscircuit/jlcsearch?style=social" alt="GitHub stars" class="inline-block" />
           </a>
           ${pathname.includes("/list") ? `<a href="${escapeHtml((requestUrl || pathname).replace("/list", "/list.json"))}">json</a>` : ""}
-          <a href="https://raw.githubusercontent.com/tscircuit/jlcsearch/refs/heads/main/docs/openapi.json">OpenAPI</a>
           <a href="https://tscircuit.com">tscircuit</a>
         </div>
       </div>

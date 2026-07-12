@@ -10,7 +10,6 @@ import {
   getDbClient,
   getResolvedDbPath,
 } from "lib/db/get-db-client"
-import { ensureBaseComponentFixtures } from "tests/fixtures/ensure-base-component-fixtures"
 
 let tempDir: string | undefined
 let previousDbPath = process.env.JLCSEARCH_DB_PATH
@@ -69,27 +68,4 @@ test("destroyDbClient clears the singleton before it is reused", async () => {
   expect(secondClient).not.toBe(firstClient)
   await sql`SELECT 1`.execute(secondClient)
   await destroyDbClient()
-})
-
-test("ensureBaseComponentFixtures creates legacy search fixtures when absent", () => {
-  tempDir = mkdtempSync(Path.join(tmpdir(), "jlcsearch-fixtures-"))
-  const dbPath = Path.join(tempDir, "custom.sqlite3")
-
-  previousDbPath = process.env.JLCSEARCH_DB_PATH
-  process.env.JLCSEARCH_DB_PATH = dbPath
-  ensureBaseComponentFixtures()
-
-  const db = new Database(dbPath)
-  const component = db
-    .query("SELECT mfr FROM components WHERE lcsc = 11702")
-    .get() as { mfr: string } | null
-  const ftsComponent = db
-    .query(
-      "SELECT lcsc FROM components_fts WHERE components_fts MATCH 'resistor'",
-    )
-    .get() as { lcsc: string } | null
-
-  expect(component?.mfr).toBe("TEST-5K1")
-  expect(ftsComponent?.lcsc).toBe("11702")
-  db.close()
 })

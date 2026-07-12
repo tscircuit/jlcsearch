@@ -128,7 +128,7 @@ export function addVaryHeader(headers: Headers, value: string): void {
 }
 
 /**
- * Adds CORS headers matching the Fly server implementation.
+ * Adds CORS headers to worker responses.
  */
 export function addCorsHeaders(headers: Headers, origin: string | null): void {
   headers.set("access-control-allow-origin", origin ?? "*")
