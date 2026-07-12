@@ -1,5 +1,6 @@
 import { afterEach } from "bun:test"
 import { setupDerivedTables } from "lib/db/derivedtables/setup-derived-tables"
+import { ensureBaseComponentFixtures } from "./fixtures/ensure-base-component-fixtures"
 
 declare global {
   var deferredCleanupFns: Array<() => void | Promise<void>>
@@ -7,6 +8,7 @@ declare global {
 }
 
 globalThis.deferredCleanupFns ??= []
+ensureBaseComponentFixtures()
 globalThis.derivedTablesSetupPromise ??= setupDerivedTables({ populate: false })
 
 await globalThis.derivedTablesSetupPromise
