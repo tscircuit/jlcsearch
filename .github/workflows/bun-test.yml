@@ -29,9 +29,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ./db.sqlite3
-          # Keep the schema-compatible fixture that includes the base component
-          # tables. The current upstream archive only contains derived tables.
-          key: db-sqlite3-db037f1104c185bc5ce0f4e5500cd90ff19e3f9c5f92449c6f9859af64a7667c
+          key: db-sqlite3-${{ hashFiles('scripts/setup-*.ts') }}
 
       - name: Run setup if cache miss
         if: steps.cache-setup.outputs.cache-hit != 'true'
