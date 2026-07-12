@@ -22,5 +22,10 @@ jobs:
       - name: Install dependencies
         run: bun i
 
+      - name: Install Cloudflare worker dependencies
+        run: bun install --cwd cf-proxy --frozen-lockfile
+
       - name: Run type check
-        run: bunx tsc --noEmit
+        run: |
+          bunx tsc --noEmit
+          bunx tsc --noEmit --project cf-proxy/tsconfig.json

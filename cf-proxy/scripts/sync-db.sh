@@ -53,6 +53,7 @@ DERIVED_TABLES=(
   relay
   resistor
   resistor_array
+  spring_clamp_terminal_block
   switch
   usb_c_connector
   voltage_regulator
