@@ -11,6 +11,8 @@ const componentFixtures = [
 
 export const ensureBaseComponentFixtures = () => {
   const db = new Database(getResolvedDbPath())
+  db.exec("PRAGMA busy_timeout = 30000")
+  db.exec("BEGIN IMMEDIATE")
   const hasComponents = db
     .query(
       "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'components'",
@@ -18,21 +20,22 @@ export const ensureBaseComponentFixtures = () => {
     .get()
 
   if (hasComponents) {
+    db.exec("COMMIT")
     db.close()
     return
   }
 
   db.exec(`
-    CREATE TABLE categories (
+    CREATE TABLE IF NOT EXISTS categories (
       id INTEGER PRIMARY KEY,
       category TEXT NOT NULL,
       subcategory TEXT NOT NULL
     );
-    CREATE TABLE manufacturers (
+    CREATE TABLE IF NOT EXISTS manufacturers (
       id INTEGER PRIMARY KEY,
       manufacturer TEXT NOT NULL
     );
-    CREATE TABLE components (
+    CREATE TABLE IF NOT EXISTS components (
       lcsc INTEGER PRIMARY KEY,
       category_id INTEGER NOT NULL,
       manufacturer_id INTEGER NOT NULL,
@@ -50,7 +53,7 @@ export const ensureBaseComponentFixtures = () => {
       flag INTEGER NOT NULL DEFAULT 0,
       extra TEXT
     );
-    CREATE VIEW v_components AS
+    CREATE VIEW IF NOT EXISTS v_components AS
       SELECT
         components.*,
         categories.category,
@@ -59,20 +62,20 @@ export const ensureBaseComponentFixtures = () => {
       FROM components
       LEFT JOIN categories ON components.category_id = categories.id
       LEFT JOIN manufacturers ON components.manufacturer_id = manufacturers.id;
-    CREATE VIRTUAL TABLE components_fts USING fts5(
+    CREATE VIRTUAL TABLE IF NOT EXISTS components_fts USING fts5(
       mfr,
       description,
       lcsc,
       mfr_chars
     );
-    INSERT INTO categories (id, category, subcategory)
+    INSERT OR IGNORE INTO categories (id, category, subcategory)
       VALUES (1, 'Test Components', 'Test Components');
-    INSERT INTO manufacturers (id, manufacturer)
+    INSERT OR IGNORE INTO manufacturers (id, manufacturer)
       VALUES (1, 'Test Manufacturer');
   `)
 
   const insertComponent = db.prepare(`
-    INSERT INTO components (
+    INSERT OR IGNORE INTO components (
       lcsc, category_id, manufacturer_id, mfr, package, stock, price,
       description, extra
     ) VALUES (?, 1, 1, ?, ?, 100, '[{"price":0.1}]', ?, '{}')
@@ -87,5 +90,6 @@ export const ensureBaseComponentFixtures = () => {
     insertFts.run(mfr, description, String(lcsc), mfr)
   }
 
+  db.exec("COMMIT")
   db.close()
 }
