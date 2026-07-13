@@ -28,6 +28,7 @@ export const relayTableSpec: DerivedTableSpec<Relay> = {
     { name: "max_switching_voltage", type: "real" },
     { name: "pin_number", type: "integer" },
     { name: "is_basic", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
   ],
   listCandidateComponents(db: KyselyDatabaseInstance) {

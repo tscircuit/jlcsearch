@@ -30,6 +30,7 @@ export const boostConverterTableSpec: DerivedTableSpec<BoostConverter> = {
     { name: "topology", type: "text" },
     { name: "number_of_outputs", type: "integer" },
     { name: "is_basic", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
   ],
   listCandidateComponents: (db) =>

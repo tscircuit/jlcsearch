@@ -18,6 +18,7 @@ export const oledDisplayTableSpec: DerivedTableSpec<OLEDDisplay> = {
     { name: "display_width", type: "text" },
     { name: "pixel_resolution", type: "text" },
     { name: "is_basic", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
   ],
 

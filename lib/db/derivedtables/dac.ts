@@ -37,6 +37,7 @@ export const dacTableSpec: DerivedTableSpec<Dac> = {
     { name: "operating_temp_max", type: "real" },
     { name: "nonlinearity_lsb", type: "real" },
     { name: "is_basic", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
   ],
   listCandidateComponents: (db) =>

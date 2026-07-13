@@ -177,12 +177,16 @@ dist
 .vscode
 .aider*
 db.sqlite3
+cache.sqlite3
+.tmp/
 .buildtmp
 .winterspec
 db.backup.sqlite3
 .bin
 .fly.toml.swp
-
+*.txt
+*.py
+*.json
 
 #MANUAL folder gets created on build, ignore it 
 /MANUAL

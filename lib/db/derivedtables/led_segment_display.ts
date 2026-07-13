@@ -25,6 +25,7 @@ export const ledSegmentDisplayTableSpec: DerivedTableSpec<LEDSegmentDisplay> = {
     { name: "size", type: "text" },
     { name: "color", type: "text" },
     { name: "is_basic", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
   ],
 

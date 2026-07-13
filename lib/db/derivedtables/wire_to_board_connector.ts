@@ -60,6 +60,7 @@ export const wireToBoardConnectorTableSpec: DerivedTableSpec<WireToBoardConnecto
       { name: "gender", type: "text" },
       { name: "is_smd", type: "boolean" },
       { name: "is_basic", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
       { name: "is_preferred", type: "boolean" },
     ],
     listCandidateComponents(db: KyselyDatabaseInstance) {

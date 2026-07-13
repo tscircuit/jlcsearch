@@ -41,6 +41,7 @@ export const ledDriverTableSpec: DerivedTableSpec<LedDriver> = {
     { name: "protection_features", type: "text" },
     { name: "mounting_style", type: "text" },
     { name: "is_basic", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
   ],
   listCandidateComponents(db: KyselyDatabaseInstance) {

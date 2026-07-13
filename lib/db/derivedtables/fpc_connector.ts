@@ -19,6 +19,7 @@ export const fpcConnectorTableSpec: DerivedTableSpec<FpcConnector> = {
     { name: "contact_type", type: "text" },
     { name: "locking_feature", type: "text" },
     { name: "is_basic", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
   ],
   listCandidateComponents(db: KyselyDatabaseInstance) {

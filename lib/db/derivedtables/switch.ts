@@ -36,6 +36,7 @@ export const switchTableSpec: DerivedTableSpec<Switch> = {
     { name: "length_mm", type: "real" },
     { name: "switch_height_mm", type: "real" },
     { name: "is_basic", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
   ],
   listCandidateComponents(db) {

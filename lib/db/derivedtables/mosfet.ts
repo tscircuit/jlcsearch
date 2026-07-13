@@ -34,6 +34,7 @@ export const mosfetTableSpec: DerivedTableSpec<Mosfet> = {
     { name: "operating_temp_max", type: "real" },
     { name: "mounting_style", type: "text" },
     { name: "is_basic", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
   ],
   listCandidateComponents(db: KyselyDatabaseInstance) {

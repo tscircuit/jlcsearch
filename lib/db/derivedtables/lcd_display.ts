@@ -18,6 +18,7 @@ export const lcdDisplayTableSpec: DerivedTableSpec<LCDDisplay> = {
     { name: "resolution", type: "text" },
     { name: "display_type", type: "text" },
     { name: "is_basic", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
   ],
   listCandidateComponents(db: KyselyDatabaseInstance) {
@@ -33,7 +34,7 @@ export const lcdDisplayTableSpec: DerivedTableSpec<LCDDisplay> = {
         const extraData = c.extra ? JSON.parse(c.extra) : {}
         const attrs = extraData.attributes || {}
 
-        // Extract display size from description (e.g., "1.8 inch", "2.4\"")
+        // Extract display size from description (e.g., "1.8 inch", "2.4"")
         let display_size = undefined
         const sizeMatch = c.description.match(/(\d+\.?\d*)["\s]*(inch|"|'')?/)
         if (sizeMatch) {

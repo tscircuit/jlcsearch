@@ -25,6 +25,7 @@ export const bjtTransistorTableSpec: DerivedTableSpec<BJTTransistor> = {
     { name: "power_dissipation", type: "integer" },
     { name: "temperature_range", type: "text" },
     { name: "is_basic", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
   ],
   listCandidateComponents(db: KyselyDatabaseInstance) {

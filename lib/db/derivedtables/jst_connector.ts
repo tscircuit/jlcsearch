@@ -21,6 +21,7 @@ export const jstConnectorTableSpec: DerivedTableSpec<JstConnector> = {
     { name: "num_pins", type: "integer" },
     { name: "reference_series", type: "text" },
     { name: "is_basic", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
   ],
   listCandidateComponents(db: KyselyDatabaseInstance) {
