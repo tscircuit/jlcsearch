@@ -431,6 +431,12 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
       number_of_resistors: { field: "number_of_resistors", type: "number" },
     },
   },
+  spring_clamp_terminal_block: {
+    filters: {
+      pitch: { field: "pitch_mm", type: "number" },
+      pins: { field: "num_pins", type: "number" },
+    },
+  },
   usb_c_connector: {
     filters: {
       package: { field: "package", type: "string" },
@@ -496,6 +502,7 @@ export const ROUTE_TO_TABLE: Record<string, string> = {
   "/potentiometers/list": "potentiometer",
   "/relays/list": "relay",
   "/resistor_arrays/list": "resistor_array",
+  "/spring_clamp_terminal_blocks/list": "spring_clamp_terminal_block",
   "/usb_c_connectors/list": "usb_c_connector",
   "/voltage_regulators/list": "voltage_regulator",
   "/wifi_modules/list": "wifi_module",
@@ -538,6 +545,7 @@ export const TABLE_RESPONSE_KEY: Record<string, string> = {
   potentiometer: "potentiometers",
   relay: "relays",
   resistor_array: "resistor_arrays",
+  spring_clamp_terminal_block: "spring_clamp_terminal_blocks",
   usb_c_connector: "usb_c_connectors",
   voltage_regulator: "regulators",
   wifi_module: "wifi_modules",

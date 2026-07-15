@@ -666,6 +666,7 @@ export interface SearchIndex {
   mpn: string | null
   package: string | null
   preferred: number | null
+  is_extended_promotional: number | null
   price: string | null
   price1: number | null
   search_text: string | null
@@ -740,6 +741,26 @@ export interface Switch {
   switch_type: string | null
   voltage_rating_v: number | null
   width_mm: number | null
+}
+
+export interface SpringClampTerminalBlock {
+  attributes: string | null
+  current_rating: number | null
+  description: string | null
+  in_stock: number | null
+  is_basic: number | null
+  is_preferred: number | null
+  lcsc: Generated<number | null>
+  mfr: string | null
+  mounting_style: string | null
+  num_pins: number | null
+  package: string | null
+  pitch_mm: number | null
+  price1: number | null
+  stock: number | null
+  voltage_rating: number | null
+  wire_gauge_awg: string | null
+  wire_gauge_mm2: number | null
 }
 
 export interface UsbCConnector {
@@ -872,6 +893,7 @@ export interface DB {
   resistor: Resistor
   resistor_array: ResistorArray
   search_index: SearchIndex
+  spring_clamp_terminal_block: SpringClampTerminalBlock
   switch: Switch
   usb_c_connector: UsbCConnector
   voltage_regulator: VoltageRegulator

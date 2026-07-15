@@ -27,6 +27,7 @@ const routeLabels: Record<string, string> = {
   "/fpc_connectors/list": "FPC Connectors",
   "/jst_connectors/list": "JST Connectors",
   "/wire_to_board_connectors/list": "Wire to Board Connectors",
+  "/spring_clamp_terminal_blocks/list": "Spring Clamp Terminal Blocks",
   "/battery_holders/list": "Battery Holders",
   "/leds/list": "LEDs",
   "/adcs/list": "ADCs",
@@ -147,6 +148,7 @@ const COLUMN_LABELS: Record<string, string> = {
   in_stock: "In Stock",
   is_basic: "Basic",
   is_preferred: "Preferred",
+  is_extended_promotional: "Extended Promotional",
   capacitance_farads: "Capacitance",
   tolerance_fraction: "Tolerance",
   voltage_rating: "Voltage",
@@ -546,6 +548,9 @@ const renderComponentsFilters = (
   <div>
     <label>Preferred Part:<input type="checkbox" name="is_preferred" value="true"${params.is_preferred === "true" ? " checked" : ""} /></label>
   </div>
+  <div>
+    <label>Extended Promotional:<input type="checkbox" name="is_extended_promotional" value="true"${params.is_extended_promotional === "true" ? " checked" : ""} /></label>
+  </div>
   <button type="submit">Filter</button>
 </form>`
 
@@ -619,7 +624,6 @@ posthog.init('phc_htd8AQjSfVEsFCLQMAiUooG4Q0DKBCjqYuQglc9V3Wo', { api_host:'http
             <img src="https://img.shields.io/github/stars/tscircuit/jlcsearch?style=social" alt="GitHub stars" class="inline-block" />
           </a>
           ${pathname.includes("/list") ? `<a href="${escapeHtml((requestUrl || pathname).replace("/list", "/list.json"))}">json</a>` : ""}
-          <a href="https://raw.githubusercontent.com/tscircuit/jlcsearch/refs/heads/main/docs/openapi.json">OpenAPI</a>
           <a href="https://tscircuit.com">tscircuit</a>
         </div>
       </div>

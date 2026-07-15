@@ -19,6 +19,18 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Generate daily cache key
+        id: cache-date
+        run: echo "bucket=$(($(date -u +%s) / 86400))" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Bun dependencies for 24 hours
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: bun-${{ runner.os }}-${{ github.workflow }}-${{ hashFiles('package.json') }}-${{ steps.cache-date.outputs.bucket }}
+
       - name: Install dependencies
         run: bun install
 

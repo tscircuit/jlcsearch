@@ -1,5 +1,5 @@
 import { sql } from "kysely"
-import { getDbClient } from "lib/db/get-db-client"
+import { destroyDbClient, getDbClient } from "lib/db/get-db-client"
 import { accelerometerTableSpec } from "lib/db/derivedtables/accelerometer"
 import { adcTableSpec } from "lib/db/derivedtables/adc"
 import { analogMultiplexerTableSpec } from "lib/db/derivedtables/analog_multiplexer"
@@ -33,6 +33,7 @@ import { potentiometerTableSpec } from "lib/db/derivedtables/potentiometer"
 import { relayTableSpec } from "lib/db/derivedtables/relay"
 import { resistorArrayTableSpec } from "lib/db/derivedtables/resistor_array"
 import { resistorTableSpec } from "lib/db/derivedtables/resistor"
+import { springClampTerminalBlockTableSpec } from "lib/db/derivedtables/spring-clamp-terminal-block"
 import { switchTableSpec } from "lib/db/derivedtables/switch"
 import type { DerivedTableSpec } from "lib/db/derivedtables/types"
 import { usbCConnectorTableSpec } from "lib/db/derivedtables/usb_c_connector"
@@ -78,6 +79,7 @@ export const DERIVED_TABLES: DerivedTableSpec<any>[] = [
   pcieM2ConnectorTableSpec,
   jstConnectorTableSpec,
   wireToBoardConnectorTableSpec,
+  springClampTerminalBlockTableSpec,
   fpgaTableSpec,
   batteryHolderTableSpec,
 ]
@@ -214,7 +216,7 @@ export const setupDerivedTables = async ({
     }
   } finally {
     if (shouldDestroy) {
-      await activeDb.destroy()
+      await destroyDbClient()
     }
   }
 }

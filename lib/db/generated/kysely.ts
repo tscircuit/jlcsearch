@@ -326,6 +326,26 @@ export interface Fpga {
   type: string | null;
 }
 
+export interface SpringClampTerminalBlock {
+  attributes: string | null;
+  current_rating: number | null;
+  description: string | null;
+  in_stock: number | null;
+  is_basic: number | null;
+  is_preferred: number | null;
+  lcsc: Generated<number | null>;
+  mfr: string | null;
+  mounting_style: string | null;
+  num_pins: number | null;
+  package: string | null;
+  pitch_mm: number | null;
+  price1: number | null;
+  stock: number | null;
+  voltage_rating: number | null;
+  wire_gauge_awg: string | null;
+  wire_gauge_mm2: number | null;
+}
+
 export interface Fuse {
   attributes: string | null;
   current_rating: number | null;
@@ -931,6 +951,7 @@ export interface DB {
   relay: Relay;
   resistor: Resistor;
   resistor_array: ResistorArray;
+  spring_clamp_terminal_block: SpringClampTerminalBlock;
   switch: Switch;
   usb_c_connector: UsbCConnector;
   v_components: VComponent;

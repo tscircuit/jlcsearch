@@ -14,6 +14,12 @@ SELECT
   END AS price1,
   basic,
   preferred,
+  CASE
+    WHEN json_valid(extra)
+      AND lower(CAST(json_extract(extra, '$.is_extended_promotional') AS TEXT)) IN ('1', 'true')
+      THEN 1
+    ELSE 0
+  END AS is_extended_promotional,
   category,
   subcategory,
   CASE
@@ -55,3 +61,4 @@ CREATE INDEX IF NOT EXISTS idx_search_index_basic ON search_index(basic);
 CREATE INDEX IF NOT EXISTS idx_search_index_basic_stock ON search_index(basic, stock DESC);
 CREATE INDEX IF NOT EXISTS idx_search_index_preferred ON search_index(preferred);
 CREATE INDEX IF NOT EXISTS idx_search_index_preferred_stock ON search_index(preferred, stock DESC);
+CREATE INDEX IF NOT EXISTS idx_search_index_extended_promotional_stock ON search_index(is_extended_promotional, stock DESC);
