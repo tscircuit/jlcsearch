@@ -161,6 +161,7 @@ export interface ComponentCatalog {
   category: string | null
   description: string | null
   extra: string | null
+  flag: number | null
   lcsc: Generated<number | null>
   mfr: string | null
   package: string | null
