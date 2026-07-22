@@ -1,4 +1,5 @@
 import type { Kysely } from "kysely"
+import { queryBleCatalog } from "./ble-catalog"
 import type { DB } from "./db/types"
 import {
   getTftDisplayDriverFamily,
@@ -27,6 +28,13 @@ type D1Handler = (db: Kysely<DB>, params: QueryParams) => Promise<D1QueryResult>
 const PROCESSOR_INTERFACES = ["uart", "i2c", "spi", "can", "usb"] as const
 const MICROPHONE_SUBCATEGORIES = ["Microphones", "MEMS Microphones"] as const
 const LCD_DRIVER_SUBCATEGORY = "LCD Drivers"
+
+const isMissingDerivedTableError = (
+  error: unknown,
+  tableName: string,
+): boolean =>
+  error instanceof Error &&
+  error.message.includes(`no such table: ${tableName}`)
 
 const parseFiniteNumber = (value: string | undefined): number | null => {
   if (value === undefined || value === "") return null
@@ -544,13 +552,25 @@ export function getD1Handler(pathname: string): D1Handler | null {
   }
 
   return async (db, params) => {
-    const results = await queryTable(db, tableName, params, config)
-    const filterOptions = await queryFilterOptions(db, tableName, config)
-    const responseKey = TABLE_RESPONSE_KEY[tableName] || tableName + "s"
-    return {
-      data: { [responseKey]: results },
-      tableName,
-      filterOptions,
+    try {
+      const results = await queryTable(db, tableName, params, config)
+      const filterOptions = await queryFilterOptions(db, tableName, config)
+      const responseKey = TABLE_RESPONSE_KEY[tableName] || tableName + "s"
+      return {
+        data: { [responseKey]: results },
+        tableName,
+        filterOptions,
+      }
+    } catch (error) {
+      if (isMissingDerivedTableError(error, tableName)) {
+        if (tableName === "ble_module") {
+          return queryBleCatalog(db, params, "module")
+        }
+        if (tableName === "ble_chip") {
+          return queryBleCatalog(db, params, "chip")
+        }
+      }
+      throw error
     }
   }
 }

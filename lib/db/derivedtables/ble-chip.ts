@@ -1,5 +1,7 @@
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import {
+  BLE_CHIP_MFR_PATTERNS,
+  BLE_CHIP_SUBCATEGORIES,
   isBleChip,
   isLikelyBareBleChip,
   mapBleFields,
@@ -7,39 +9,6 @@ import {
   type BleComponentFields,
 } from "./ble-utils"
 import type { DerivedTableSpec } from "./types"
-
-const BLE_CHIP_SUBCATEGORIES = [
-  "RF Transceiver ICs",
-  "Microcontroller Units (MCUs/MPUs/SOCs)",
-  "Bluetooth Modules",
-] as const
-
-const BLE_CHIP_MFR_PATTERNS = [
-  "NRF5%",
-  "nRF5%",
-  "CC1352%",
-  "CC1354%",
-  "CC254%",
-  "CC264%",
-  "CC265%",
-  "CC267%",
-  "EFR32BG%",
-  "EFR32MG%",
-  "BLUENRG%",
-  "STM32WB%",
-  "STM32WBA%",
-  "N32WB%",
-  "CH57%",
-  "CH58%",
-  "CH59%",
-  "GR55%",
-  "QN90%",
-  "RSL10%",
-  "DA14%",
-  "RA4W1%",
-  "TLSR%",
-  "ESP32%",
-] as const
 
 export type BleChip = BleComponentFields
 

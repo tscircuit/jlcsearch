@@ -10,6 +10,39 @@ interface SourceComponent {
   package: string
 }
 
+export const BLE_CHIP_SUBCATEGORIES = [
+  "RF Transceiver ICs",
+  "Microcontroller Units (MCUs/MPUs/SOCs)",
+  "Bluetooth Modules",
+] as const
+
+export const BLE_CHIP_MFR_PATTERNS = [
+  "NRF5%",
+  "nRF5%",
+  "CC1352%",
+  "CC1354%",
+  "CC254%",
+  "CC264%",
+  "CC265%",
+  "CC267%",
+  "EFR32BG%",
+  "EFR32MG%",
+  "BLUENRG%",
+  "STM32WB%",
+  "STM32WBA%",
+  "N32WB%",
+  "CH57%",
+  "CH58%",
+  "CH59%",
+  "GR55%",
+  "QN90%",
+  "RSL10%",
+  "DA14%",
+  "RA4W1%",
+  "TLSR%",
+  "ESP32%",
+] as const
+
 export interface BleComponentFields extends BaseComponent {
   package: string
   core_processor: string | null
