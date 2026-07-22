@@ -1,6 +1,12 @@
 import type { Kysely } from "kysely"
 import type { DB } from "./db/types"
 import {
+  getTftDisplayDriverFamily,
+  getTftDisplayDriverPatterns,
+  TFT_DISPLAY_DRIVER_FAMILIES,
+  TFT_DISPLAY_DRIVER_SUBCATEGORIES,
+} from "./tft-display-drivers"
+import {
   queryFilterOptions,
   queryTable,
   ROUTE_TO_TABLE,
@@ -52,6 +58,17 @@ const getNonEmptyStrings = (
   rows: Array<Record<string, string | null>>,
   key: string,
 ): string[] => rows.map((row) => row[key]?.trim() ?? "").filter(Boolean)
+
+const selectTftDriverCatalog = (
+  db: Kysely<DB>,
+  driverType: string | undefined,
+) => {
+  const patterns = getTftDisplayDriverPatterns(driverType)
+  return db
+    .selectFrom("component_catalog")
+    .where("subcategory", "in", [...TFT_DISPLAY_DRIVER_SUBCATEGORIES])
+    .where((eb) => eb.or(patterns.map((pattern) => eb("mfr", "like", pattern))))
+}
 
 const getMicrocontrollerListHandler = (
   tableName: "arm_processor" | "risc_v_processor",
@@ -349,6 +366,76 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
             lcsc: driver.lcsc ?? 0,
             mfr: driver.mfr ?? "",
             package: driver.package ?? "",
+            description: driver.description ?? "",
+            is_basic: Boolean(driver.basic),
+            is_preferred: Boolean(driver.preferred),
+            stock: driver.stock ?? 0,
+            price1: extractSmallQuantityPrice(driver.price),
+            attributes: extractAttributes(driver.extra),
+          }))
+          .filter((driver) => driver.lcsc !== 0),
+      },
+    }
+  },
+  "/tft_display_drivers/list": async (db, params) => {
+    let query = selectTftDriverCatalog(db, params.driver_type)
+      .select([
+        "lcsc",
+        "mfr",
+        "package",
+        "description",
+        "stock",
+        "price",
+        "basic",
+        "preferred",
+        "subcategory",
+        "extra",
+      ])
+      .where("stock", ">", 0)
+      .orderBy("stock", "desc")
+      .limit(100)
+
+    if (params.package) {
+      query = query.where("package", "=", params.package)
+    }
+
+    if (params.is_basic === "true" || params.is_basic === "1") {
+      query = query.where("basic", "=", 1)
+    }
+
+    if (params.is_preferred === "true" || params.is_preferred === "1") {
+      query = query.where("preferred", "=", 1)
+    }
+
+    const [packages, tftDrivers] = await Promise.all([
+      selectTftDriverCatalog(db, params.driver_type)
+        .select("package")
+        .distinct()
+        .where("package", "is not", null)
+        .orderBy("package")
+        .execute(),
+      query.execute(),
+    ])
+
+    return {
+      tableName: "tft_display_driver",
+      filterOptions: {
+        package: getNonEmptyStrings(
+          packages as Array<Record<string, string | null>>,
+          "package",
+        ),
+        driver_type: TFT_DISPLAY_DRIVER_FAMILIES.map((family) => family.value),
+      },
+      data: {
+        tft_display_drivers: tftDrivers
+          .map((driver) => ({
+            lcsc: driver.lcsc ?? 0,
+            mfr: driver.mfr ?? "",
+            package: driver.package ?? "",
+            driver_type:
+              getTftDisplayDriverFamily(driver.mfr)?.label ??
+              "TFT Display Driver",
+            catalog_type: driver.subcategory ?? "",
             description: driver.description ?? "",
             is_basic: Boolean(driver.basic),
             is_preferred: Boolean(driver.preferred),
