@@ -5,6 +5,7 @@ import {
   type QueryParams,
   type FilterOptions,
 } from "./handlers"
+import { TFT_DISPLAY_DRIVER_FAMILIES } from "./tft-display-drivers"
 
 const escapeHtml = (value: unknown): string =>
   String(value ?? "")
@@ -57,6 +58,7 @@ const routeLabels: Record<string, string> = {
   "/led_segment_display/list": "LED Segment Display Modules",
   "/lcd_display/list": "LCD Display Modules",
   "/lcd_drivers/list": "LCD Drivers",
+  "/tft_display_drivers/list": "TFT Display Drivers",
   "/switches/list": "Switches",
   "/relays/list": "Relays",
   "/fuses/list": "Fuses",
@@ -509,6 +511,38 @@ const renderCustomFilters = (
           <label>Package:</label>
           <input type="text" name="package" value="${escapeHtml(params.package ?? "")}"${packageListId ? ` list="${escapeHtml(packageListId)}"` : ""} autocomplete="on" />
           ${renderFilterSuggestions(pathname, "package", packageOptions)}
+        </div>
+        <div>
+          <label>Basic Part:<input type="checkbox" name="is_basic" value="true"${params.is_basic === "true" ? " checked" : ""} /></label>
+        </div>
+        <div>
+          <label>Preferred Part:<input type="checkbox" name="is_preferred" value="true"${params.is_preferred === "true" ? " checked" : ""} /></label>
+        </div>
+        <button type="submit">Filter</button>
+      </form>`
+    }
+    case "/tft_display_drivers/list": {
+      const packageOptions = filterOptions.package ?? []
+      const packageListId = getSuggestionListId(
+        pathname,
+        "package",
+        packageOptions,
+      )
+      return `<form method="GET" class="flex flex-row gap-4">
+        <div>
+          <label>Package:</label>
+          <input type="text" name="package" value="${escapeHtml(params.package ?? "")}"${packageListId ? ` list="${escapeHtml(packageListId)}"` : ""} autocomplete="on" />
+          ${renderFilterSuggestions(pathname, "package", packageOptions)}
+        </div>
+        <div>
+          <label>Driver Type:</label>
+          <select name="driver_type">
+            <option value="">All</option>
+            ${TFT_DISPLAY_DRIVER_FAMILIES.map(
+              ({ value, label }) =>
+                `<option value="${escapeHtml(value)}"${params.driver_type === value ? " selected" : ""}>${escapeHtml(label)}</option>`,
+            ).join("")}
+          </select>
         </div>
         <div>
           <label>Basic Part:<input type="checkbox" name="is_basic" value="true"${params.is_basic === "true" ? " checked" : ""} /></label>

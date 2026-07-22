@@ -9,6 +9,7 @@ describe("render helpers", () => {
     expect(html).toContain("JLCPCB In-Stock Parts Engine (Unofficial)")
     expect(html).toContain("/led_with_ic/list")
     expect(html).toContain("/lcd_drivers/list")
+    expect(html).toContain("/tft_display_drivers/list")
     expect(html).toContain("/resistors/list")
     expect(html).toContain("/spring_clamp_terminal_blocks/list")
   })
@@ -72,6 +73,36 @@ describe("render helpers", () => {
     expect(html).toContain('name="is_preferred" value="true" checked')
     expect(html).toContain("HT1621B")
     expect(html).toContain("/lcd_drivers/list.json")
+  })
+
+  it("renders the TFT display driver route with driver type filters", () => {
+    expect(D1_ROUTES).toContain("/tft_display_drivers/list")
+    expect(getD1Handler("/tft_display_drivers/list")).toBeTypeOf("function")
+
+    const html = renderD1TablePage(
+      "/tft_display_drivers/list",
+      {
+        tft_display_drivers: [
+          {
+            lcsc: 15216,
+            mfr: "SSD1963QL9",
+            package: "LQFP-128(14x14)",
+            driver_type: "Display Controller",
+            stock: 604,
+          },
+        ],
+      },
+      { driver_type: "controller", is_preferred: "true" },
+      "https://jlcsearch.tscircuit.com/tft_display_drivers/list?driver_type=controller&is_preferred=true",
+      { package: ["LQFP-128(14x14)"] },
+    )
+
+    expect(html).toContain("<h2>TFT Display Drivers</h2>")
+    expect(html).toContain('name="driver_type"')
+    expect(html).toContain('value="controller" selected')
+    expect(html).toContain("Display Controller")
+    expect(html).toContain("SSD1963QL9")
+    expect(html).toContain("/tft_display_drivers/list.json")
   })
 
   it("renders an HTML table page for a supported D1 route", () => {
