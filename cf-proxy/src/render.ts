@@ -30,6 +30,8 @@ const routeLabels: Record<string, string> = {
   "/wire_to_board_connectors/list": "Wire to Board Connectors",
   "/spring_clamp_terminal_blocks/list": "Spring Clamp Terminal Blocks",
   "/battery_holders/list": "Battery Holders",
+  "/ble_modules/list": "BLE Modules",
+  "/ble_chips/list": "BLE Chips",
   "/leds/list": "LEDs",
   "/adcs/list": "ADCs",
   "/analog_multiplexers/list": "Analog Muxes",
@@ -182,6 +184,7 @@ const COLUMN_LABELS: Record<string, string> = {
   gpio_count: "GPIO",
   clock_frequency_hz: "Clock",
   frequency_ghz: "Frequency",
+  data_rate_mbps: "Data Rate",
   display_type: "Display Type",
   matrix_size: "Matrix Size",
   forward_current: "Forward Current",
@@ -254,6 +257,8 @@ const formatDisplayValue = (column: string, value: unknown): string | null => {
       return `${formatSiUnit(value)}Hz`
     case "frequency_ghz":
       return withUnit(value, "GHz")
+    case "data_rate_mbps":
+      return withUnit(value, "Mbps")
     case "wavelength_nm":
       return withUnit(value, "nm")
     case "luminous_intensity_mcd":
@@ -290,6 +295,8 @@ const formatDisplayValue = (column: string, value: unknown): string | null => {
     case "gate_threshold_voltage":
     case "supply_voltage_min":
     case "supply_voltage_max":
+    case "operating_voltage_min":
+    case "operating_voltage_max":
     case "input_voltage_min":
     case "input_voltage_max":
     case "output_voltage_min":
