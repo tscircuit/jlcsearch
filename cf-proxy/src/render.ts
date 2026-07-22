@@ -56,6 +56,7 @@ const routeLabels: Record<string, string> = {
   "/oled_display/list": " OLED Displays Modules",
   "/led_segment_display/list": "LED Segment Display Modules",
   "/lcd_display/list": "LCD Display Modules",
+  "/lcd_drivers/list": "LCD Drivers",
   "/switches/list": "Switches",
   "/relays/list": "Relays",
   "/fuses/list": "Fuses",
@@ -491,6 +492,29 @@ const renderCustomFilters = (
               })
               .join("")}
           </select>
+        </div>
+        <button type="submit">Filter</button>
+      </form>`
+    }
+    case "/lcd_drivers/list": {
+      const packageOptions = filterOptions.package ?? []
+      const packageListId = getSuggestionListId(
+        pathname,
+        "package",
+        packageOptions,
+      )
+
+      return `<form method="GET" class="flex flex-row gap-4">
+        <div>
+          <label>Package:</label>
+          <input type="text" name="package" value="${escapeHtml(params.package ?? "")}"${packageListId ? ` list="${escapeHtml(packageListId)}"` : ""} autocomplete="on" />
+          ${renderFilterSuggestions(pathname, "package", packageOptions)}
+        </div>
+        <div>
+          <label>Basic Part:<input type="checkbox" name="is_basic" value="true"${params.is_basic === "true" ? " checked" : ""} /></label>
+        </div>
+        <div>
+          <label>Preferred Part:<input type="checkbox" name="is_preferred" value="true"${params.is_preferred === "true" ? " checked" : ""} /></label>
         </div>
         <button type="submit">Filter</button>
       </form>`

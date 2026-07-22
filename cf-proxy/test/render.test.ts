@@ -8,6 +8,7 @@ describe("render helpers", () => {
 
     expect(html).toContain("JLCPCB In-Stock Parts Engine (Unofficial)")
     expect(html).toContain("/led_with_ic/list")
+    expect(html).toContain("/lcd_drivers/list")
     expect(html).toContain("/resistors/list")
     expect(html).toContain("/spring_clamp_terminal_blocks/list")
   })
@@ -40,6 +41,37 @@ describe("render helpers", () => {
     expect(html).toContain('name="pins"')
     expect(html).toContain("WJ142R-5.08-2P")
     expect(html).toContain("/spring_clamp_terminal_blocks/list.json")
+  })
+
+  it("renders the LCD driver catalog route with package and assembly filters", () => {
+    expect(D1_ROUTES).toContain("/lcd_drivers/list")
+    expect(getD1Handler("/lcd_drivers/list")).toBeTypeOf("function")
+
+    const html = renderD1TablePage(
+      "/lcd_drivers/list",
+      {
+        lcd_drivers: [
+          {
+            lcsc: 7873,
+            mfr: "HT1621B",
+            package: "SSOP-48-300mil",
+            is_basic: false,
+            is_preferred: true,
+            stock: 18416,
+          },
+        ],
+      },
+      { package: "SSOP-48-300mil", is_preferred: "true" },
+      "https://jlcsearch.tscircuit.com/lcd_drivers/list?package=SSOP-48-300mil&is_preferred=true",
+      { package: ["SSOP-48-300mil"] },
+    )
+
+    expect(html).toContain("<h2>LCD Drivers</h2>")
+    expect(html).toContain('name="package"')
+    expect(html).toContain('name="is_basic"')
+    expect(html).toContain('name="is_preferred" value="true" checked')
+    expect(html).toContain("HT1621B")
+    expect(html).toContain("/lcd_drivers/list.json")
   })
 
   it("renders an HTML table page for a supported D1 route", () => {

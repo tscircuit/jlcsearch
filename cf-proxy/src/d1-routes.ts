@@ -20,6 +20,7 @@ type D1Handler = (db: Kysely<DB>, params: QueryParams) => Promise<D1QueryResult>
 
 const PROCESSOR_INTERFACES = ["uart", "i2c", "spi", "can", "usb"] as const
 const MICROPHONE_SUBCATEGORIES = ["Microphones", "MEMS Microphones"] as const
+const LCD_DRIVER_SUBCATEGORY = "LCD Drivers"
 
 const parseFiniteNumber = (value: string | undefined): number | null => {
   if (value === undefined || value === "") return null
@@ -34,6 +35,16 @@ const extractSmallQuantityPrice = (price: string | null): number => {
     return Number(priceObj[0]?.price ?? 0) || 0
   } catch {
     return 0
+  }
+}
+
+const extractAttributes = (extra: string | null): string => {
+  if (!extra) return "{}"
+  try {
+    const attributes = JSON.parse(extra)?.attributes
+    return JSON.stringify(attributes ?? {})
+  } catch {
+    return "{}"
   }
 }
 
@@ -278,6 +289,74 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
             price1: extractSmallQuantityPrice(m.price),
           }))
           .filter((m) => m.lcsc !== 0 && m.package !== ""),
+      },
+    }
+  },
+  "/lcd_drivers/list": async (db, params) => {
+    let query = db
+      .selectFrom("component_catalog")
+      .select([
+        "lcsc",
+        "mfr",
+        "package",
+        "description",
+        "stock",
+        "price",
+        "basic",
+        "preferred",
+        "extra",
+      ])
+      .where("stock", ">", 0)
+      .where("subcategory", "=", LCD_DRIVER_SUBCATEGORY)
+      .orderBy("stock", "desc")
+      .limit(100)
+
+    if (params.package) {
+      query = query.where("package", "=", params.package)
+    }
+
+    if (params.is_basic === "true" || params.is_basic === "1") {
+      query = query.where("basic", "=", 1)
+    }
+
+    if (params.is_preferred === "true" || params.is_preferred === "1") {
+      query = query.where("preferred", "=", 1)
+    }
+
+    const [packages, lcdDrivers] = await Promise.all([
+      db
+        .selectFrom("component_catalog")
+        .select("package")
+        .distinct()
+        .where("subcategory", "=", LCD_DRIVER_SUBCATEGORY)
+        .where("package", "is not", null)
+        .orderBy("package")
+        .execute(),
+      query.execute(),
+    ])
+
+    return {
+      tableName: "lcd_driver",
+      filterOptions: {
+        package: getNonEmptyStrings(
+          packages as Array<Record<string, string | null>>,
+          "package",
+        ),
+      },
+      data: {
+        lcd_drivers: lcdDrivers
+          .map((driver) => ({
+            lcsc: driver.lcsc ?? 0,
+            mfr: driver.mfr ?? "",
+            package: driver.package ?? "",
+            description: driver.description ?? "",
+            is_basic: Boolean(driver.basic),
+            is_preferred: Boolean(driver.preferred),
+            stock: driver.stock ?? 0,
+            price1: extractSmallQuantityPrice(driver.price),
+            attributes: extractAttributes(driver.extra),
+          }))
+          .filter((driver) => driver.lcsc !== 0),
       },
     }
   },
