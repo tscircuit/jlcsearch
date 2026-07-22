@@ -5,6 +5,8 @@ import { adcTableSpec } from "lib/db/derivedtables/adc"
 import { analogMultiplexerTableSpec } from "lib/db/derivedtables/analog_multiplexer"
 import { batteryHolderTableSpec } from "lib/db/derivedtables/battery_holder"
 import { bjtTransistorTableSpec } from "lib/db/derivedtables/bjt_transistor"
+import { bleChipTableSpec } from "lib/db/derivedtables/ble-chip"
+import { bleModuleTableSpec } from "lib/db/derivedtables/ble-module"
 import { boostConverterTableSpec } from "lib/db/derivedtables/boost_converter"
 import { buckBoostConverterTableSpec } from "lib/db/derivedtables/buck_boost_converter"
 import { capacitorTableSpec } from "lib/db/derivedtables/capacitor"
@@ -54,6 +56,8 @@ export const DERIVED_TABLES: DerivedTableSpec<any>[] = [
   diodeTableSpec,
   dacTableSpec,
   wifiModuleTableSpec,
+  bleModuleTableSpec,
+  bleChipTableSpec,
   microcontrollerTableSpec,
   voltageRegulatorTableSpec,
   ldoTableSpec,

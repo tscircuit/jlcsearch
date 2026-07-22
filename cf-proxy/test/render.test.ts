@@ -12,7 +12,45 @@ describe("render helpers", () => {
     expect(html).toContain("/tft_display_drivers/list")
     expect(html).toContain("/resistors/list")
     expect(html).toContain("/spring_clamp_terminal_blocks/list")
+    expect(html).toContain("/ble_modules/list")
+    expect(html).toContain("/ble_chips/list")
   })
+
+  it.each([
+    ["/ble_modules/list", "ble_modules", "BLE Modules", "VG6328A"],
+    ["/ble_chips/list", "ble_chips", "BLE Chips", "NRF52832-QFAA-R"],
+  ])(
+    "renders the %s page with BLE filters",
+    (pathname, responseKey, heading, mfr) => {
+      expect(D1_ROUTES).toContain(pathname)
+      expect(getD1Handler(pathname)).toBeTypeOf("function")
+
+      const html = renderD1TablePage(
+        pathname,
+        {
+          [responseKey]: [
+            {
+              lcsc: 77540,
+              mfr,
+              package: "QFN-48-EP(6x6)",
+              bluetooth_version: "5.3",
+              has_spi: true,
+              stock: 100,
+            },
+          ],
+        },
+        { bluetooth_version: "5.3", has_spi: "true" },
+        `https://jlcsearch.tscircuit.com${pathname}?bluetooth_version=5.3&has_spi=true`,
+        { bluetooth_version: ["5.3"] },
+      )
+
+      expect(html).toContain(`<h2>${heading}</h2>`)
+      expect(html).toContain('name="bluetooth_version"')
+      expect(html).toContain('name="has_spi"')
+      expect(html).toContain(mfr)
+      expect(html).toContain(`${pathname}.json`)
+    },
+  )
 
   it("renders the spring clamp route with pitch and pin filters", () => {
     expect(D1_ROUTES).toContain("/spring_clamp_terminal_blocks/list")

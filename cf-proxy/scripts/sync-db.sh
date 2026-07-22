@@ -25,6 +25,8 @@ DERIVED_TABLES=(
   analog_multiplexer
   battery_holder
   bjt_transistor
+  ble_chip
+  ble_module
   boost_converter
   buck_boost_converter
   capacitor

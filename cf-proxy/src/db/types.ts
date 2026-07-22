@@ -95,6 +95,53 @@ export interface BatteryHolder {
   stock: number | null
 }
 
+export interface BleChip {
+  attributes: string | null
+  bluetooth_version: string | null
+  core_processor: string | null
+  data_rate_mbps: number | null
+  description: string | null
+  frequency_ghz: number | null
+  has_i2c: number | null
+  has_spi: number | null
+  has_uart: number | null
+  has_usb: number | null
+  in_stock: number | null
+  is_basic: number | null
+  is_preferred: number | null
+  lcsc: Generated<number | null>
+  mfr: string | null
+  operating_voltage_max: number | null
+  operating_voltage_min: number | null
+  package: string | null
+  price1: number | null
+  stock: number | null
+}
+
+export interface BleModule {
+  antenna_type: string | null
+  attributes: string | null
+  bluetooth_version: string | null
+  core_processor: string | null
+  data_rate_mbps: number | null
+  description: string | null
+  frequency_ghz: number | null
+  has_i2c: number | null
+  has_spi: number | null
+  has_uart: number | null
+  has_usb: number | null
+  in_stock: number | null
+  is_basic: number | null
+  is_preferred: number | null
+  lcsc: Generated<number | null>
+  mfr: string | null
+  operating_voltage_max: number | null
+  operating_voltage_min: number | null
+  package: string | null
+  price1: number | null
+  stock: number | null
+}
+
 export interface BjtTransistor {
   attributes: string | null
   collector_current: number | null
@@ -861,6 +908,8 @@ export interface DB {
   adc: Adc
   analog_multiplexer: AnalogMultiplexer
   battery_holder: BatteryHolder
+  ble_chip: BleChip
+  ble_module: BleModule
   bjt_transistor: BjtTransistor
   boost_converter: BoostConverter
   buck_boost_converter: BuckBoostConverter

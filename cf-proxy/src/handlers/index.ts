@@ -293,6 +293,29 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
       battery_type: { field: "battery_type", type: "string" },
     },
   },
+  ble_chip: {
+    filters: {
+      package: { field: "package", type: "string" },
+      bluetooth_version: { field: "bluetooth_version", type: "string" },
+      core_processor: { field: "core_processor", type: "string" },
+      has_uart: { field: "has_uart", type: "boolean" },
+      has_i2c: { field: "has_i2c", type: "boolean" },
+      has_spi: { field: "has_spi", type: "boolean" },
+      has_usb: { field: "has_usb", type: "boolean" },
+    },
+  },
+  ble_module: {
+    filters: {
+      package: { field: "package", type: "string" },
+      bluetooth_version: { field: "bluetooth_version", type: "string" },
+      core_processor: { field: "core_processor", type: "string" },
+      antenna_type: { field: "antenna_type", type: "string" },
+      has_uart: { field: "has_uart", type: "boolean" },
+      has_i2c: { field: "has_i2c", type: "boolean" },
+      has_spi: { field: "has_spi", type: "boolean" },
+      has_usb: { field: "has_usb", type: "boolean" },
+    },
+  },
   bjt_transistor: {
     filters: {
       package: { field: "package", type: "string" },
@@ -481,6 +504,8 @@ export const ROUTE_TO_TABLE: Record<string, string> = {
   "/adcs/list": "adc",
   "/analog_multiplexers/list": "analog_multiplexer",
   "/battery_holders/list": "battery_holder",
+  "/ble_chips/list": "ble_chip",
+  "/ble_modules/list": "ble_module",
   "/bjt_transistors/list": "bjt_transistor",
   "/boost_converters/list": "boost_converter",
   "/buck_boost_converters/list": "buck_boost_converter",
@@ -524,6 +549,8 @@ export const TABLE_RESPONSE_KEY: Record<string, string> = {
   adc: "adcs",
   analog_multiplexer: "multiplexers",
   battery_holder: "battery_holders",
+  ble_chip: "ble_chips",
+  ble_module: "ble_modules",
   bjt_transistor: "bjt_transistors",
   boost_converter: "boost_converters",
   buck_boost_converter: "buck_boost_converters",
