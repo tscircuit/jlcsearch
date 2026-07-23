@@ -1,6 +1,7 @@
 import { getBunDatabaseClient, getDbClient } from "lib/db/get-db-client"
 import { componentStockIndex } from "lib/db/optimizations/component-stock-index"
 import { componentInStockColumn } from "lib/db/optimizations/component-in-stock-column"
+import { componentExtendedPromotionalColumn } from "lib/db/optimizations/component-extended-promotional-column"
 import { removeStaleComponents } from "lib/db/optimizations/remove-stale-components"
 import { componentCategoryIndex } from "lib/db/optimizations/component-category-index"
 import { componentInStockCategoryIndex } from "lib/db/optimizations/component-in-stock-category-index"
@@ -18,6 +19,7 @@ const OPTIMIZATIONS: DbOptimizationSpec[] = [
   removeStaleComponents,
   componentStockIndex,
   componentInStockColumn,
+  componentExtendedPromotionalColumn,
   componentCategoryIndex,
   componentInStockCategoryIndex,
 ]
