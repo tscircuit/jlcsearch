@@ -206,6 +206,19 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
       diode_type: { field: "diode_type", type: "string" },
     },
   },
+  dimm_connector: {
+    filters: {
+      package: { field: "package", type: "string" },
+      ddr_standard: { field: "ddr_standard", type: "string" },
+      num_pins: { field: "num_pins", type: "number" },
+      pitch: { field: "pitch_mm", type: "number" },
+      height_mm: { field: "height_above_board_mm", type: "number" },
+      mounting_type: { field: "mounting_type", type: "string" },
+      is_right_angle: { field: "is_right_angle", type: "boolean" },
+      is_basic: { field: "is_basic", type: "boolean" },
+      is_preferred: { field: "is_preferred", type: "boolean" },
+    },
+  },
   mosfet: {
     filters: {
       package: { field: "package", type: "string" },
@@ -454,6 +467,19 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
       number_of_resistors: { field: "number_of_resistors", type: "number" },
     },
   },
+  sodimm_connector: {
+    filters: {
+      package: { field: "package", type: "string" },
+      ddr_standard: { field: "ddr_standard", type: "string" },
+      num_pins: { field: "num_pins", type: "number" },
+      pitch: { field: "pitch_mm", type: "number" },
+      height_mm: { field: "height_above_board_mm", type: "number" },
+      mounting_type: { field: "mounting_type", type: "string" },
+      is_right_angle: { field: "is_right_angle", type: "boolean" },
+      is_basic: { field: "is_basic", type: "boolean" },
+      is_preferred: { field: "is_preferred", type: "boolean" },
+    },
+  },
   spring_clamp_terminal_block: {
     filters: {
       pitch: { field: "pitch_mm", type: "number" },
@@ -510,6 +536,7 @@ export const ROUTE_TO_TABLE: Record<string, string> = {
   "/boost_converters/list": "boost_converter",
   "/buck_boost_converters/list": "buck_boost_converter",
   "/dacs/list": "dac",
+  "/dimm_connectors/list": "dimm_connector",
   "/fpc_connectors/list": "fpc_connector",
   "/fpgas/list": "fpga",
   "/fuses/list": "fuse",
@@ -527,6 +554,7 @@ export const ROUTE_TO_TABLE: Record<string, string> = {
   "/potentiometers/list": "potentiometer",
   "/relays/list": "relay",
   "/resistor_arrays/list": "resistor_array",
+  "/sodimm_connectors/list": "sodimm_connector",
   "/spring_clamp_terminal_blocks/list": "spring_clamp_terminal_block",
   "/usb_c_connectors/list": "usb_c_connector",
   "/voltage_regulators/list": "voltage_regulator",
@@ -555,6 +583,7 @@ export const TABLE_RESPONSE_KEY: Record<string, string> = {
   boost_converter: "boost_converters",
   buck_boost_converter: "buck_boost_converters",
   dac: "dacs",
+  dimm_connector: "dimm_connectors",
   fpc_connector: "fpc_connectors",
   fpga: "fpgas",
   fuse: "fuses",
@@ -572,6 +601,7 @@ export const TABLE_RESPONSE_KEY: Record<string, string> = {
   potentiometer: "potentiometers",
   relay: "relays",
   resistor_array: "resistor_arrays",
+  sodimm_connector: "sodimm_connectors",
   spring_clamp_terminal_block: "spring_clamp_terminal_blocks",
   usb_c_connector: "usb_c_connectors",
   voltage_regulator: "regulators",

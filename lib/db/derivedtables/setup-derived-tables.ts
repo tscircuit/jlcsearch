@@ -12,6 +12,10 @@ import { buckBoostConverterTableSpec } from "lib/db/derivedtables/buck_boost_con
 import { capacitorTableSpec } from "lib/db/derivedtables/capacitor"
 import { dacTableSpec } from "lib/db/derivedtables/dac"
 import { diodeTableSpec } from "lib/db/derivedtables/diode"
+import {
+  dimmConnectorTableSpec,
+  sodimmConnectorTableSpec,
+} from "lib/db/derivedtables/memory-connector"
 import { fpgaTableSpec } from "lib/db/derivedtables/fpga"
 import { fpcConnectorTableSpec } from "lib/db/derivedtables/fpc_connector"
 import { fuseTableSpec } from "lib/db/derivedtables/fuse"
@@ -55,6 +59,8 @@ export const DERIVED_TABLES: DerivedTableSpec<any>[] = [
   ioExpanderTableSpec,
   diodeTableSpec,
   dacTableSpec,
+  dimmConnectorTableSpec,
+  sodimmConnectorTableSpec,
   wifiModuleTableSpec,
   bleModuleTableSpec,
   bleChipTableSpec,

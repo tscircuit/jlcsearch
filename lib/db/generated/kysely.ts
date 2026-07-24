@@ -334,6 +334,27 @@ export interface Diode {
   stock: number | null;
 }
 
+export interface DimmConnector {
+  attributes: string | null;
+  ddr_standard: string | null;
+  description: string | null;
+  height_above_board_mm: number | null;
+  in_stock: number | null;
+  is_basic: number | null;
+  is_preferred: number | null;
+  is_right_angle: number | null;
+  lcsc: Generated<number | null>;
+  mfr: string | null;
+  mounting_type: string | null;
+  num_pins: number | null;
+  operating_temp_max: number | null;
+  operating_temp_min: number | null;
+  package: string | null;
+  pitch_mm: number | null;
+  price1: number | null;
+  stock: number | null;
+}
+
 export interface FpcConnector {
   attributes: string | null;
   contact_type: string | null;
@@ -371,6 +392,27 @@ export interface Fpga {
   supply_voltage_max: number | null;
   supply_voltage_min: number | null;
   type: string | null;
+}
+
+export interface SodimmConnector {
+  attributes: string | null;
+  ddr_standard: string | null;
+  description: string | null;
+  height_above_board_mm: number | null;
+  in_stock: number | null;
+  is_basic: number | null;
+  is_preferred: number | null;
+  is_right_angle: number | null;
+  lcsc: Generated<number | null>;
+  mfr: string | null;
+  mounting_type: string | null;
+  num_pins: number | null;
+  operating_temp_max: number | null;
+  operating_temp_min: number | null;
+  package: string | null;
+  pitch_mm: number | null;
+  price1: number | null;
+  stock: number | null;
 }
 
 export interface SpringClampTerminalBlock {
@@ -976,6 +1018,7 @@ export interface DB {
   components_fts_idx: ComponentsFtsIdx;
   dac: Dac;
   diode: Diode;
+  dimm_connector: DimmConnector;
   fpc_connector: FpcConnector;
   fpga: Fpga;
   fuse: Fuse;
@@ -1000,6 +1043,7 @@ export interface DB {
   relay: Relay;
   resistor: Resistor;
   resistor_array: ResistorArray;
+  sodimm_connector: SodimmConnector;
   spring_clamp_terminal_block: SpringClampTerminalBlock;
   switch: Switch;
   usb_c_connector: UsbCConnector;
