@@ -23,6 +23,8 @@ const routeLabels: Record<string, string> = {
   "/capacitors/list": "Capacitors",
   "/potentiometers/list": "Potentiometers",
   "/headers/list": "Headers",
+  "/dimm_connectors/list": "DIMM Connectors",
+  "/sodimm_connectors/list": "SO-DIMM Connectors",
   "/usb_c_connectors/list": "USB-C Connectors",
   "/pcie_m2_connectors/list": "PCIe M.2 Connectors",
   "/fpc_connectors/list": "FPC Connectors",
@@ -199,6 +201,9 @@ const COLUMN_LABELS: Record<string, string> = {
   operating_temp_min: "Min Temp",
   operating_temp_max: "Max Temp",
   pitch_mm: "Pitch",
+  ddr_standard: "DDR Standard",
+  height_above_board_mm: "Height Above Board",
+  height_mm: "Height",
 }
 
 const getColumnLabel = (column: string): string => {
@@ -312,6 +317,7 @@ const formatDisplayValue = (column: string, value: unknown): string | null => {
     case "width_mm":
     case "length_mm":
     case "switch_height_mm":
+    case "height_above_board_mm":
       return withUnit(value, "mm")
     case "operating_temp_min":
     case "operating_temp_max":

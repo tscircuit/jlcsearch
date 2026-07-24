@@ -32,6 +32,7 @@ DERIVED_TABLES=(
   capacitor
   dac
   diode
+  dimm_connector
   fpc_connector
   fpga
   fuse
@@ -55,6 +56,7 @@ DERIVED_TABLES=(
   relay
   resistor
   resistor_array
+  sodimm_connector
   spring_clamp_terminal_block
   switch
   usb_c_connector

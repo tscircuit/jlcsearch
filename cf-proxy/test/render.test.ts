@@ -14,7 +14,70 @@ describe("render helpers", () => {
     expect(html).toContain("/spring_clamp_terminal_blocks/list")
     expect(html).toContain("/ble_modules/list")
     expect(html).toContain("/ble_chips/list")
+    expect(html).toContain("/dimm_connectors/list")
+    expect(html).toContain("/sodimm_connectors/list")
   })
+
+  it.each([
+    [
+      "/dimm_connectors/list",
+      "dimm_connectors",
+      "DIMM Connectors",
+      "90413-15011-21",
+    ],
+    [
+      "/sodimm_connectors/list",
+      "sodimm_connectors",
+      "SO-DIMM Connectors",
+      "ADDR0111-P005A",
+    ],
+  ])(
+    "renders the %s page with memory connector filters",
+    (pathname, responseKey, heading, mfr) => {
+      expect(D1_ROUTES).toContain(pathname)
+      expect(getD1Handler(pathname)).toBeTypeOf("function")
+
+      const html = renderD1TablePage(
+        pathname,
+        {
+          [responseKey]: [
+            {
+              lcsc: 2922442,
+              mfr,
+              ddr_standard: "DDR4",
+              num_pins: 260,
+              pitch_mm: 0.5,
+              height_above_board_mm: 9.2,
+              is_right_angle: true,
+              stock: 100,
+            },
+          ],
+        },
+        {
+          ddr_standard: "DDR4",
+          num_pins: "260",
+          pitch: "0.5",
+          height_mm: "9.2",
+        },
+        `https://jlcsearch.tscircuit.com${pathname}?ddr_standard=DDR4&num_pins=260&pitch=0.5&height_mm=9.2`,
+        {
+          ddr_standard: ["DDR3", "DDR4", "DDR5"],
+          num_pins: ["200", "204", "240", "260", "288"],
+          pitch: ["0.5", "0.6", "0.85", "1"],
+        },
+      )
+
+      expect(html).toContain(`<h2>${heading}</h2>`)
+      expect(html).toContain('name="ddr_standard"')
+      expect(html).toContain('name="num_pins"')
+      expect(html).toContain('name="pitch"')
+      expect(html).toContain('name="height_mm"')
+      expect(html).toContain('name="is_right_angle"')
+      expect(html).toContain(mfr)
+      expect(html).toContain("9.2mm")
+      expect(html).toContain(`${pathname}.json`)
+    },
+  )
 
   it.each([
     ["/ble_modules/list", "ble_modules", "BLE Modules", "VG6328A"],
