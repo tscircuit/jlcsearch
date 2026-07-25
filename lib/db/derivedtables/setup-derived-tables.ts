@@ -104,6 +104,28 @@ const jsonParseOrNull = (strObject: string) => {
   }
 }
 
+const createIndexes = async (
+  db: KyselyDatabaseInstance,
+  spec: DerivedTableSpec<any>,
+) => {
+  for (const index of spec.indexes ?? []) {
+    const columns = index.columns.map(String)
+    if (columns.length === 0) continue
+
+    let indexCreator = db.schema
+      .createIndex(index.name)
+      .ifNotExists()
+      .on(spec.tableName)
+
+    indexCreator =
+      columns.length === 1
+        ? indexCreator.column(columns[0])
+        : indexCreator.columns(columns)
+
+    await indexCreator.execute()
+  }
+}
+
 const createTable = async (
   db: KyselyDatabaseInstance,
   spec: DerivedTableSpec<any>,
@@ -126,6 +148,7 @@ const createTable = async (
 
   if (tableExists.rows.length > 0) {
     if (!resetAll && resetTable !== spec.tableName) {
+      await createIndexes(db, spec)
       logger(
         `Table ${spec.tableName} already exists, skipping (use --reset ${spec.tableName} to recreate this table, or --reset with no parameter to recreate all)`,
       )
@@ -154,6 +177,7 @@ const createTable = async (
   }
 
   await tableCreator.execute()
+  await createIndexes(db, spec)
 
   if (!populate) {
     return

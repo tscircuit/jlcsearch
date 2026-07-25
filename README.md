@@ -59,8 +59,9 @@ To add a component page:
 5. Run `bun run format`, `bunx tsc --noEmit --project cf-proxy/tsconfig.json`,
    and `bun run test --cwd cf-proxy`.
 
-Use `bun deploy` to publish the worker. Use `cf-proxy/scripts/sync-db.sh` to
-rebuild and synchronize derived tables from a prepared local SQLite database.
+Use `bun deploy` to apply pending D1 schema migrations and then publish the
+worker. Use `cf-proxy/scripts/sync-db.sh` to rebuild and synchronize derived
+table data from a prepared local SQLite database.
 
 ## How Does It work?
 As a developer new to this codebase, or a curious user, you may have some questions about the flow of data through the scripts and automations inside this repo.  It all starts with the [jlcparts](https://github.com/yaqwsx/jlcparts) project, which compiles a massive **11GB** sqlite3 database of *everything* [JLCPCB](https://jlcpcb.com) has to offer.  As you can imagine, this would be very resource-intensive and slow to search, so the next steps are scripts that optimize it heavily, although it's more accurate to say that they rebuild it entirely. 

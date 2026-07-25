@@ -22,6 +22,10 @@ export interface DerivedTableSpec<
     name: keyof Resource
     type: string
   }>
+  indexes?: Array<{
+    name: string
+    columns: Array<keyof Resource>
+  }>
   listCandidateComponents: (
     db: KyselyDatabaseInstance,
   ) => SelectQueryBuilder<any, any, any>
