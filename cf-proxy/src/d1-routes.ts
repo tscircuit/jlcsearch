@@ -1,6 +1,10 @@
 import type { Kysely } from "kysely"
 import type { DB } from "./db/types"
 import {
+  createDisplayDriverMaxResolutionResolver,
+  getDisplayDriverMaxResolutionOptions,
+} from "./display-driver-resolution"
+import {
   getTftDisplayDriverFamily,
   getTftDisplayDriverPatterns,
   TFT_DISPLAY_DRIVER_FAMILIES,
@@ -326,7 +330,6 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
       .where("stock", ">", 0)
       .where("subcategory", "=", LCD_DRIVER_SUBCATEGORY)
       .orderBy("stock", "desc")
-      .limit(100)
 
     if (params.package) {
       query = query.where("package", "=", params.package)
@@ -340,7 +343,7 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
       query = query.where("preferred", "=", 1)
     }
 
-    const [packages, lcdDrivers] = await Promise.all([
+    const [packages, resolutionSources, lcdDrivers] = await Promise.all([
       db
         .selectFrom("component_catalog")
         .select("package")
@@ -349,8 +352,21 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
         .where("package", "is not", null)
         .orderBy("package")
         .execute(),
+      db
+        .selectFrom("component_catalog")
+        .select(["mfr", "description", "extra"])
+        .where("stock", ">", 0)
+        .where("subcategory", "=", LCD_DRIVER_SUBCATEGORY)
+        .execute(),
       query.execute(),
     ])
+
+    const maxResolutionFilter =
+      params.max_resolution && params.max_resolution !== "All"
+        ? params.max_resolution
+        : null
+    const resolveMaxResolution =
+      createDisplayDriverMaxResolutionResolver(resolutionSources)
 
     return {
       tableName: "lcd_driver",
@@ -359,6 +375,7 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
           packages as Array<Record<string, string | null>>,
           "package",
         ),
+        max_resolution: getDisplayDriverMaxResolutionOptions(resolutionSources),
       },
       data: {
         lcd_drivers: lcdDrivers
@@ -366,6 +383,7 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
             lcsc: driver.lcsc ?? 0,
             mfr: driver.mfr ?? "",
             package: driver.package ?? "",
+            max_resolution: resolveMaxResolution(driver),
             description: driver.description ?? "",
             is_basic: Boolean(driver.basic),
             is_preferred: Boolean(driver.preferred),
@@ -373,7 +391,13 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
             price1: extractSmallQuantityPrice(driver.price),
             attributes: extractAttributes(driver.extra),
           }))
-          .filter((driver) => driver.lcsc !== 0),
+          .filter(
+            (driver) =>
+              driver.lcsc !== 0 &&
+              (!maxResolutionFilter ||
+                driver.max_resolution === maxResolutionFilter),
+          )
+          .slice(0, 100),
       },
     }
   },
@@ -393,7 +417,6 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
       ])
       .where("stock", ">", 0)
       .orderBy("stock", "desc")
-      .limit(100)
 
     if (params.package) {
       query = query.where("package", "=", params.package)
@@ -407,15 +430,26 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
       query = query.where("preferred", "=", 1)
     }
 
-    const [packages, tftDrivers] = await Promise.all([
+    const [packages, resolutionSources, tftDrivers] = await Promise.all([
       selectTftDriverCatalog(db, params.driver_type)
         .select("package")
         .distinct()
         .where("package", "is not", null)
         .orderBy("package")
         .execute(),
+      selectTftDriverCatalog(db, params.driver_type)
+        .select(["mfr", "description", "extra"])
+        .where("stock", ">", 0)
+        .execute(),
       query.execute(),
     ])
+
+    const maxResolutionFilter =
+      params.max_resolution && params.max_resolution !== "All"
+        ? params.max_resolution
+        : null
+    const resolveMaxResolution =
+      createDisplayDriverMaxResolutionResolver(resolutionSources)
 
     return {
       tableName: "tft_display_driver",
@@ -425,6 +459,7 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
           "package",
         ),
         driver_type: TFT_DISPLAY_DRIVER_FAMILIES.map((family) => family.value),
+        max_resolution: getDisplayDriverMaxResolutionOptions(resolutionSources),
       },
       data: {
         tft_display_drivers: tftDrivers
@@ -436,6 +471,7 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
               getTftDisplayDriverFamily(driver.mfr)?.label ??
               "TFT Display Driver",
             catalog_type: driver.subcategory ?? "",
+            max_resolution: resolveMaxResolution(driver),
             description: driver.description ?? "",
             is_basic: Boolean(driver.basic),
             is_preferred: Boolean(driver.preferred),
@@ -443,7 +479,13 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
             price1: extractSmallQuantityPrice(driver.price),
             attributes: extractAttributes(driver.extra),
           }))
-          .filter((driver) => driver.lcsc !== 0),
+          .filter(
+            (driver) =>
+              driver.lcsc !== 0 &&
+              (!maxResolutionFilter ||
+                driver.max_resolution === maxResolutionFilter),
+          )
+          .slice(0, 100),
       },
     }
   },

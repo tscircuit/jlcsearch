@@ -157,19 +157,30 @@ describe("render helpers", () => {
             lcsc: 7873,
             mfr: "HT1621B",
             package: "SSOP-48-300mil",
+            max_resolution: "32x4",
             is_basic: false,
             is_preferred: true,
             stock: 18416,
           },
         ],
       },
-      { package: "SSOP-48-300mil", is_preferred: "true" },
-      "https://jlcsearch.tscircuit.com/lcd_drivers/list?package=SSOP-48-300mil&is_preferred=true",
-      { package: ["SSOP-48-300mil"] },
+      {
+        package: "SSOP-48-300mil",
+        max_resolution: "32x4",
+        is_preferred: "true",
+      },
+      "https://jlcsearch.tscircuit.com/lcd_drivers/list?package=SSOP-48-300mil&max_resolution=32x4&is_preferred=true",
+      {
+        package: ["SSOP-48-300mil"],
+        max_resolution: ["32x4", "32x8"],
+      },
     )
 
     expect(html).toContain("<h2>LCD Drivers</h2>")
     expect(html).toContain('name="package"')
+    expect(html).toContain('name="max_resolution"')
+    expect(html).toContain('value="32x4" selected')
+    expect(html).toContain(">Max Resolution</th>")
     expect(html).toContain('name="is_basic"')
     expect(html).toContain('name="is_preferred" value="true" checked')
     expect(html).toContain("HT1621B")
@@ -189,18 +200,29 @@ describe("render helpers", () => {
             mfr: "SSD1963QL9",
             package: "LQFP-128(14x14)",
             driver_type: "Display Controller",
+            max_resolution: "864x480",
             stock: 604,
           },
         ],
       },
-      { driver_type: "controller", is_preferred: "true" },
-      "https://jlcsearch.tscircuit.com/tft_display_drivers/list?driver_type=controller&is_preferred=true",
-      { package: ["LQFP-128(14x14)"] },
+      {
+        driver_type: "controller",
+        max_resolution: "864x480",
+        is_preferred: "true",
+      },
+      "https://jlcsearch.tscircuit.com/tft_display_drivers/list?driver_type=controller&max_resolution=864x480&is_preferred=true",
+      {
+        package: ["LQFP-128(14x14)"],
+        max_resolution: ["864x480"],
+      },
     )
 
     expect(html).toContain("<h2>TFT Display Drivers</h2>")
     expect(html).toContain('name="driver_type"')
     expect(html).toContain('value="controller" selected')
+    expect(html).toContain('name="max_resolution"')
+    expect(html).toContain('value="864x480" selected')
+    expect(html).toContain(">Max Resolution</th>")
     expect(html).toContain("Display Controller")
     expect(html).toContain("SSD1963QL9")
     expect(html).toContain("/tft_display_drivers/list.json")

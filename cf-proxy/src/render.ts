@@ -513,6 +513,7 @@ const renderCustomFilters = (
     }
     case "/lcd_drivers/list": {
       const packageOptions = filterOptions.package ?? []
+      const maxResolutionOptions = filterOptions.max_resolution ?? []
       const packageListId = getSuggestionListId(
         pathname,
         "package",
@@ -526,6 +527,18 @@ const renderCustomFilters = (
           ${renderFilterSuggestions(pathname, "package", packageOptions)}
         </div>
         <div>
+          <label>Max Resolution:</label>
+          <select name="max_resolution">
+            <option value="">All</option>
+            ${maxResolutionOptions
+              .map(
+                (option) =>
+                  `<option value="${escapeHtml(option)}"${params.max_resolution === option ? " selected" : ""}>${escapeHtml(option)}</option>`,
+              )
+              .join("")}
+          </select>
+        </div>
+        <div>
           <label>Basic Part:<input type="checkbox" name="is_basic" value="true"${params.is_basic === "true" ? " checked" : ""} /></label>
         </div>
         <div>
@@ -536,6 +549,7 @@ const renderCustomFilters = (
     }
     case "/tft_display_drivers/list": {
       const packageOptions = filterOptions.package ?? []
+      const maxResolutionOptions = filterOptions.max_resolution ?? []
       const packageListId = getSuggestionListId(
         pathname,
         "package",
@@ -555,6 +569,18 @@ const renderCustomFilters = (
               ({ value, label }) =>
                 `<option value="${escapeHtml(value)}"${params.driver_type === value ? " selected" : ""}>${escapeHtml(label)}</option>`,
             ).join("")}
+          </select>
+        </div>
+        <div>
+          <label>Max Resolution:</label>
+          <select name="max_resolution">
+            <option value="">All</option>
+            ${maxResolutionOptions
+              .map(
+                (option) =>
+                  `<option value="${escapeHtml(option)}"${params.max_resolution === option ? " selected" : ""}>${escapeHtml(option)}</option>`,
+              )
+              .join("")}
           </select>
         </div>
         <div>
