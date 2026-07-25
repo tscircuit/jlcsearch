@@ -229,7 +229,7 @@ describe("Worker integration", () => {
     expect(await response.text()).toBe(testBody)
   })
 
-  it("evicts and refreshes the canonical cache entry when cachebust=1 is present", async () => {
+  it("serves the homepage with one-hour caching without using KV", async () => {
     env.USE_D1 = "true"
 
     const url = new URL("https://example.com/")
@@ -244,18 +244,27 @@ describe("Worker integration", () => {
       },
     })
 
+    const response = await SELF.fetch("https://example.com/")
+    const body = await response.text()
+
+    expect(response.headers.get("x-cache")).toBe("D1")
+    expect(response.headers.get("cache-control")).toBe(
+      "public, max-age=3600, s-maxage=3600, must-revalidate",
+    )
+    expect(body).not.toContain(staleBody)
+    expect(body).toContain("JLCPCB In-Stock Parts Engine")
+  })
+
+  it("disables homepage caching when cachebust=1 is present", async () => {
+    env.USE_D1 = "true"
+
     const bustedResponse = await SELF.fetch("https://example.com/?cachebust=1")
     const bustedBody = await bustedResponse.text()
 
-    expect(bustedResponse.headers.get("x-cache")).toBe("BUST")
+    expect(bustedResponse.headers.get("x-cache")).toBe("D1")
     expect(bustedResponse.headers.get("x-cache-bust")).toBe("1")
     expect(bustedResponse.headers.get("cache-control")).toBe("no-store")
-    expect(bustedBody).not.toContain(staleBody)
     expect(bustedBody).toContain("JLCPCB In-Stock Parts Engine")
-
-    const cachedResponse = await SELF.fetch("https://example.com/")
-    expect(cachedResponse.headers.get("x-cache")).toBe("HIT")
-    expect(await cachedResponse.text()).toBe(bustedBody)
   })
 
   it("handles different cache key for different query params", async () => {
