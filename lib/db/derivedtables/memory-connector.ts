@@ -157,6 +157,45 @@ const createMemoryConnectorTableSpec = (
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
   ],
+  indexes: [
+    { name: `idx_${tableName}_stock`, columns: ["stock"] },
+    {
+      name: `idx_${tableName}_package_stock`,
+      columns: ["package", "stock"],
+    },
+    {
+      name: `idx_${tableName}_ddr_standard_stock`,
+      columns: ["ddr_standard", "stock"],
+    },
+    {
+      name: `idx_${tableName}_num_pins_stock`,
+      columns: ["num_pins", "stock"],
+    },
+    {
+      name: `idx_${tableName}_pitch_mm_stock`,
+      columns: ["pitch_mm", "stock"],
+    },
+    {
+      name: `idx_${tableName}_height_above_board_mm_stock`,
+      columns: ["height_above_board_mm", "stock"],
+    },
+    {
+      name: `idx_${tableName}_mounting_type_stock`,
+      columns: ["mounting_type", "stock"],
+    },
+    {
+      name: `idx_${tableName}_is_right_angle_stock`,
+      columns: ["is_right_angle", "stock"],
+    },
+    {
+      name: `idx_${tableName}_is_basic_stock`,
+      columns: ["is_basic", "stock"],
+    },
+    {
+      name: `idx_${tableName}_is_preferred_stock`,
+      columns: ["is_preferred", "stock"],
+    },
+  ],
   listCandidateComponents: (db) =>
     db
       .selectFrom("components")
