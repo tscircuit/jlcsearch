@@ -438,6 +438,27 @@ export interface Header {
   voltage_rating_volt: number | null
 }
 
+export interface HdmiPort {
+  attributes: string | null
+  current_rating_a: number | null
+  description: string | null
+  gender: string | null
+  in_stock: number | null
+  is_basic: number | null
+  is_preferred: number | null
+  lcsc: Generated<number | null>
+  mfr: string | null
+  mounting_style: string | null
+  number_of_pins: number | null
+  number_of_rows: number | null
+  operating_temp_max: number | null
+  operating_temp_min: number | null
+  orientation: string | null
+  package: string | null
+  price1: number | null
+  stock: number | null
+}
+
 export interface IoExpander {
   attributes: string | null
   clock_frequency_hz: number | null
@@ -966,6 +987,7 @@ export interface DB {
   gas_sensor: GasSensor
   gyroscope: Gyroscope
   header: Header
+  hdmi_port: HdmiPort
   io_expander: IoExpander
   jst_connector: JstConnector
   lcd_display: LcdDisplay
