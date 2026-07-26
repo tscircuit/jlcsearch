@@ -22,6 +22,7 @@ import { fuseTableSpec } from "lib/db/derivedtables/fuse"
 import { gasSensorTableSpec } from "lib/db/derivedtables/gas_sensor"
 import { gyroscopeTableSpec } from "lib/db/derivedtables/gyroscope"
 import { headerTableSpec } from "lib/db/derivedtables/header"
+import { hdmiPortTableSpec } from "lib/db/derivedtables/hdmi-port"
 import { ioExpanderTableSpec } from "lib/db/derivedtables/io_expander"
 import { jstConnectorTableSpec } from "lib/db/derivedtables/jst_connector"
 import { lcdDisplayTableSpec } from "lib/db/derivedtables/lcd_display"
@@ -54,6 +55,7 @@ export const DERIVED_TABLES: DerivedTableSpec<any>[] = [
   capacitorTableSpec,
   ledTableSpec,
   headerTableSpec,
+  hdmiPortTableSpec,
   adcTableSpec,
   analogMultiplexerTableSpec,
   ioExpanderTableSpec,

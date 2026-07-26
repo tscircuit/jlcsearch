@@ -385,6 +385,17 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
       sensor_type: { field: "sensor_type", type: "string" },
     },
   },
+  hdmi_port: {
+    filters: {
+      package: { field: "package", type: "string" },
+      mounting_style: { field: "mounting_style", type: "string" },
+      orientation: { field: "orientation", type: "string" },
+      gender: { field: "gender", type: "string" },
+      number_of_pins: { field: "number_of_pins", type: "number" },
+      is_basic: { field: "is_basic", type: "boolean" },
+      is_preferred: { field: "is_preferred", type: "boolean" },
+    },
+  },
   gyroscope: {
     filters: {
       package: { field: "package", type: "string" },
@@ -541,6 +552,7 @@ export const ROUTE_TO_TABLE: Record<string, string> = {
   "/fpgas/list": "fpga",
   "/fuses/list": "fuse",
   "/gas_sensors/list": "gas_sensor",
+  "/hdmi_ports/list": "hdmi_port",
   "/gyroscopes/list": "gyroscope",
   "/io_expanders/list": "io_expander",
   "/jst_connectors/list": "jst_connector",
@@ -588,6 +600,7 @@ export const TABLE_RESPONSE_KEY: Record<string, string> = {
   fpga: "fpgas",
   fuse: "fuses",
   gas_sensor: "gas_sensors",
+  hdmi_port: "hdmi_ports",
   gyroscope: "gyroscopes",
   io_expander: "io_expanders",
   jst_connector: "jst_connectors",

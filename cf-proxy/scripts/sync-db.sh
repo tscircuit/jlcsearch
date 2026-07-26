@@ -39,6 +39,7 @@ DERIVED_TABLES=(
   gas_sensor
   gyroscope
   header
+  hdmi_port
   io_expander
   jst_connector
   lcd_display

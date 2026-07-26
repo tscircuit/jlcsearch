@@ -42,6 +42,7 @@ const routeLabels: Record<string, string> = {
   "/gyroscopes/list": "Gyroscopes",
   "/accelerometers/list": "Accelerometers",
   "/gas_sensors/list": "Gas Sensors",
+  "/hdmi_ports/list": "HDMI Ports",
   "/microphones/list": "Microphones",
   "/diodes/list": "Diodes",
   "/dacs/list": "DACs",
@@ -167,6 +168,8 @@ const COLUMN_LABELS: Record<string, string> = {
   wavelength_nm: "Wavelength",
   luminous_intensity_mcd: "Intensity",
   number_of_contacts: "Contacts",
+  number_of_pins: "Pins",
+  number_of_rows: "Rows",
   num_channels: "Channels",
   num_bits: "Bits",
   num_pins: "Pins",
@@ -281,6 +284,8 @@ const formatDisplayValue = (column: string, value: unknown): string | null => {
     case "pin_count":
     case "channel_count":
     case "number_of_contacts":
+    case "number_of_pins":
+    case "number_of_rows":
     case "gpio_count":
       return formatCount(value)
     case "current_rating":

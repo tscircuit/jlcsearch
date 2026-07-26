@@ -16,6 +16,58 @@ describe("render helpers", () => {
     expect(html).toContain("/ble_chips/list")
     expect(html).toContain("/dimm_connectors/list")
     expect(html).toContain("/sodimm_connectors/list")
+    expect(html).toContain("/hdmi_ports/list")
+  })
+
+  it("renders the HDMI ports page and JSON API link", () => {
+    const pathname = "/hdmi_ports/list"
+
+    expect(D1_ROUTES).toContain(pathname)
+    expect(getD1Handler(pathname)).toBeTypeOf("function")
+
+    const html = renderD1TablePage(
+      pathname,
+      {
+        hdmi_ports: [
+          {
+            lcsc: 720616,
+            mfr: "HDMI-001S",
+            package: "SMD",
+            mounting_style: "Surface Mount",
+            orientation: "Horizontal",
+            gender: "Female",
+            number_of_pins: 19,
+            current_rating_a: 0.5,
+            stock: 16120,
+          },
+        ],
+      },
+      {
+        package: "SMD",
+        mounting_style: "Surface Mount",
+        gender: "Female",
+        number_of_pins: "19",
+      },
+      "https://jlcsearch.tscircuit.com/hdmi_ports/list?package=SMD&mounting_style=Surface+Mount&gender=Female&number_of_pins=19",
+      {
+        package: ["SMD", "Push-Pull"],
+        mounting_style: ["Surface Mount", "Through Hole"],
+        gender: ["Female", "Male"],
+        number_of_pins: ["19"],
+      },
+    )
+
+    expect(html).toContain("<h2>HDMI Ports</h2>")
+    expect(html).toContain('name="package"')
+    expect(html).toContain('name="mounting_style"')
+    expect(html).toContain('name="orientation"')
+    expect(html).toContain('name="gender"')
+    expect(html).toContain('name="number_of_pins"')
+    expect(html).toContain('name="is_basic"')
+    expect(html).toContain('name="is_preferred"')
+    expect(html).toContain("HDMI-001S")
+    expect(html).toContain("500mA")
+    expect(html).toContain("/hdmi_ports/list.json")
   })
 
   it.each([
