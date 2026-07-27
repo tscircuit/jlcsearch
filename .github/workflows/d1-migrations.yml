@@ -1,34 +1,48 @@
-name: Apply D1 Migrations
+name: Build and Sync D1
 
 on:
   push:
     branches: [main]
     paths:
+      - "lib/**"
+      - "scripts/**"
+      - "package.json"
+      - "bunfig.toml"
       - "cf-proxy/migrations/**"
+      - "cf-proxy/scripts/sync-db.sh"
       - "cf-proxy/wrangler.toml"
       - "cf-proxy/package.json"
       - "cf-proxy/bun.lock"
       - ".github/workflows/d1-migrations.yml"
   workflow_dispatch:
+    inputs:
+      derived_tables:
+        description: Comma-separated derived tables to rebuild and upload
+        required: true
+        default: hdmi_port
+        type: string
+      cache_bust_url:
+        description: Production URL to refresh after the D1 upload
+        required: false
+        default: https://jlcsearch.tscircuit.com/hdmi_ports/list.json
+        type: string
 
 permissions:
   contents: read
 
 concurrency:
-  group: production-d1-migrations
+  group: production-d1-sync
   cancel-in-progress: false
 
 jobs:
-  migrate:
-    name: Apply production migrations
+  sync:
+    name: Build database and sync production
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    defaults:
-      run:
-        working-directory: cf-proxy
+    timeout-minutes: 120
     env:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      DERIVED_TABLES_LIST: ${{ inputs.derived_tables || 'hdmi_port' }}
 
     steps:
       - name: Checkout code
@@ -49,12 +63,114 @@ jobs:
             echo "::error::Missing CLOUDFLARE_API_TOKEN repository secret."
             exit 1
           fi
+          if [[ -z "${DERIVED_TABLES_LIST}" ]]; then
+            echo "::error::At least one derived table is required."
+            exit 1
+          fi
 
-      - name: Install dependencies
+      - name: Install database pipeline dependencies
+        run: bun install
+
+      - name: Install Cloudflare worker dependencies
+        working-directory: cf-proxy
         run: bun install --frozen-lockfile
 
+      - name: Generate daily database cache key
+        id: cache-date
+        run: echo "bucket=$(($(date -u +%s) / 86400))" >> "${GITHUB_OUTPUT}"
+
+      - name: Cache prepared SQLite database
+        id: cache-database
+        uses: actions/cache@v4
+        with:
+          path: db.sqlite3
+          key: prepared-db-${{ runner.os }}-${{ steps.cache-date.outputs.bucket }}-${{ hashFiles('package.json', 'bunfig.toml', 'scripts/**', 'lib/**') }}
+
+      - name: Build prepared SQLite database
+        if: steps.cache-database.outputs.cache-hit != 'true'
+        run: bun run setup
+
+      - name: Verify prepared derived tables
+        run: |
+          if [[ ! -s db.sqlite3 ]]; then
+            echo "::error::Database setup did not create db.sqlite3."
+            exit 1
+          fi
+
+          integrity_check="$(sqlite3 db.sqlite3 "PRAGMA integrity_check;")"
+          if [[ "${integrity_check}" != "ok" ]]; then
+            echo "::error::Prepared database failed its integrity check: ${integrity_check}"
+            exit 1
+          fi
+
+          IFS=',' read -ra tables <<< "${DERIVED_TABLES_LIST}"
+          for raw_table in "${tables[@]}"; do
+            table="$(echo "${raw_table}" | xargs)"
+            if [[ ! "${table}" =~ ^[a-z0-9_]+$ ]]; then
+              echo "::error::Invalid derived table name: ${table}"
+              exit 1
+            fi
+
+            table_exists="$(sqlite3 db.sqlite3 "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type='table' AND name='${table}');")"
+            if [[ "${table_exists}" != "1" ]]; then
+              echo "::error::Prepared database does not contain ${table}."
+              exit 1
+            fi
+
+            row_count="$(sqlite3 db.sqlite3 "SELECT COUNT(*) FROM \"${table}\";")"
+            if [[ "${row_count}" == "0" ]]; then
+              echo "::error::Refusing to replace ${table} with an empty table."
+              exit 1
+            fi
+            echo "${table}: ${row_count} prepared rows"
+          done
+
       - name: Apply D1 migrations
+        working-directory: cf-proxy
         run: bunx wrangler d1 migrations apply jlcsearch --remote
 
-      - name: Verify migration status
-        run: bunx wrangler d1 migrations list jlcsearch --remote
+      - name: Upload derived tables to D1
+        env:
+          SOURCE_DB_PATH: ${{ github.workspace }}/db.sqlite3
+        run: ./cf-proxy/scripts/sync-db.sh
+
+      - name: Verify migration status and remote row counts
+        working-directory: cf-proxy
+        run: |
+          bunx wrangler d1 migrations list jlcsearch --remote
+
+          IFS=',' read -ra tables <<< "${DERIVED_TABLES_LIST}"
+          for raw_table in "${tables[@]}"; do
+            table="$(echo "${raw_table}" | xargs)"
+            bunx wrangler d1 execute jlcsearch --remote \
+              --command "SELECT COUNT(*) AS row_count FROM \"${table}\";"
+          done
+
+      - name: Refresh and verify the production API cache
+        env:
+          CACHE_BUST_URL: ${{ inputs.cache_bust_url || 'https://jlcsearch.tscircuit.com/hdmi_ports/list.json' }}
+        shell: bash
+        run: |
+          if [[ -z "${CACHE_BUST_URL}" ]]; then
+            echo "No cache-bust URL supplied; skipping production API refresh."
+            exit 0
+          fi
+
+          separator="?"
+          if [[ "${CACHE_BUST_URL}" == *"?"* ]]; then
+            separator="&"
+          fi
+
+          curl --fail --silent --show-error \
+            "${CACHE_BUST_URL}${separator}cachebust=1" \
+            --output /tmp/d1-sync-response.json
+
+          if [[ "${CACHE_BUST_URL}" == *"/hdmi_ports/list.json"* ]]; then
+            hdmi_port_count="$(jq '.hdmi_ports | length' /tmp/d1-sync-response.json)"
+            if [[ "${hdmi_port_count}" == "0" || "${hdmi_port_count}" == "null" ]]; then
+              echo "::error::Production HDMI API still returned no ports."
+              cat /tmp/d1-sync-response.json
+              exit 1
+            fi
+            echo "Production HDMI API returned ${hdmi_port_count} ports."
+          fi

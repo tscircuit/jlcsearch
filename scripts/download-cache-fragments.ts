@@ -1,26 +1,25 @@
-import { mkdir } from "node:fs/promises"
 import { existsSync } from "node:fs"
+import { mkdir } from "node:fs/promises"
 
 const BASE_URL = "https://yaqwsx.github.io/jlcparts/data"
 const OUTPUT_DIR = ".buildtmp"
 
-async function downloadFile(url: string, outputPath: string): Promise<boolean> {
-  try {
-    const response = await fetch(url)
-    if (!response.ok) {
-      if (response.status === 404) {
-        return false
-      }
-      throw new Error(`HTTP error! status: ${response.status}`)
+async function downloadFile(
+  url: string,
+  outputPath: string,
+): Promise<"downloaded" | "not-found"> {
+  const response = await fetch(url)
+  if (!response.ok) {
+    if (response.status === 404) {
+      return "not-found"
     }
-    const fileData = await response.arrayBuffer()
-    await Bun.write(outputPath, fileData)
-    console.log(`Downloaded: ${url}`)
-    return true
-  } catch (error) {
-    console.error(`Error downloading ${url}:`, error)
-    return false
+    throw new Error(`Failed to download ${url}: HTTP ${response.status}`)
   }
+
+  const fileData = await response.arrayBuffer()
+  await Bun.write(outputPath, fileData)
+  console.log(`Downloaded: ${url}`)
+  return "downloaded"
 }
 
 async function main() {
@@ -31,18 +30,24 @@ async function main() {
 
   console.log(`Downloading into ${OUTPUT_DIR}`)
   // Download initial cache.zip
-  await downloadFile(`${BASE_URL}/cache.zip`, `${OUTPUT_DIR}/cache.zip`)
+  const initialArchive = await downloadFile(
+    `${BASE_URL}/cache.zip`,
+    `${OUTPUT_DIR}/cache.zip`,
+  )
+  if (initialArchive === "not-found") {
+    throw new Error("The initial cache.zip archive does not exist")
+  }
 
   // Download fragments until we get a 404
   let index = 1
   while (true) {
     const paddedIndex = index.toString().padStart(2, "0")
-    const success = await downloadFile(
+    const result = await downloadFile(
       `${BASE_URL}/cache.z${paddedIndex}`,
       `${OUTPUT_DIR}/cache.z${paddedIndex}`,
     )
 
-    if (!success) {
+    if (result === "not-found") {
       console.log(`Stopped at index ${paddedIndex} (404 encountered)`)
       break
     }
@@ -50,4 +55,4 @@ async function main() {
   }
 }
 
-main().catch(console.error)
+await main()
