@@ -18,6 +18,7 @@ SYNC_DERIVED_TABLES="${SYNC_DERIVED_TABLES:-1}"
 SYNC_COMPONENT_CATALOG="${SYNC_COMPONENT_CATALOG:-0}"
 SYNC_SEARCH_INDEX="${SYNC_SEARCH_INDEX:-0}"
 DERIVED_TABLES_LIST="${DERIVED_TABLES_LIST:-}"
+REBUILD_DERIVED_TABLES="${REBUILD_DERIVED_TABLES:-1}"
 
 DERIVED_TABLES=(
   accelerometer
@@ -444,7 +445,11 @@ main() {
   select_derived_tables
 
   if [[ "${SYNC_DERIVED_TABLES}" == "1" ]]; then
-    rebuild_derived_tables
+    if [[ "${REBUILD_DERIVED_TABLES}" == "1" ]]; then
+      rebuild_derived_tables
+    else
+      echo "Using derived tables already prepared in the source database."
+    fi
     create_derived_schema_dump
 
     echo "Importing derived-table schema to D1..."

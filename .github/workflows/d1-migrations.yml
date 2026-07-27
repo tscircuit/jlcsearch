@@ -84,11 +84,17 @@ jobs:
         uses: actions/cache@v4
         with:
           path: db.sqlite3
-          key: prepared-db-${{ runner.os }}-${{ steps.cache-date.outputs.bucket }}-${{ hashFiles('package.json', 'bunfig.toml', 'scripts/**', 'lib/**') }}
+          key: derived-db-${{ runner.os }}-${{ env.DERIVED_TABLES_LIST }}-${{ steps.cache-date.outputs.bucket }}-${{ hashFiles('package.json', 'bunfig.toml', 'scripts/**', 'lib/**') }}
 
       - name: Build prepared SQLite database
         if: steps.cache-database.outputs.cache-hit != 'true'
-        run: bun run setup
+        run: |
+          bun run setup:7z
+          bun run setup:download-cache-fragments
+          bun run setup:extract-db
+          bun run setup:derived-sync-db
+          rm -f cache.sqlite3
+          rm -rf .buildtmp
 
       - name: Verify prepared derived tables
         run: |
@@ -132,6 +138,7 @@ jobs:
       - name: Upload derived tables to D1
         env:
           SOURCE_DB_PATH: ${{ github.workspace }}/db.sqlite3
+          REBUILD_DERIVED_TABLES: "0"
         run: ./cf-proxy/scripts/sync-db.sh
 
       - name: Verify migration status and remote row counts
