@@ -481,7 +481,7 @@ main() {
     import_table_in_batches search_index "${SEARCH_INDEX_BATCH_ROWS}"
   fi
 
-  if [[ -f "${SCRIPT_DIR}/setup-fts5.sql" ]]; then
+  if [[ "${SYNC_SEARCH_INDEX}" == "1" && -f "${SCRIPT_DIR}/setup-fts5.sql" ]]; then
     echo "Setting up FTS5..."
     rebuild_remote_search_fts_index
   fi
