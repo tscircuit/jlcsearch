@@ -6,7 +6,21 @@
 export const extractMinQPrice = (price: string) => {
   try {
     return JSON.parse(price)[0].price as number
-  } catch (e) {
-    return null
+  } catch {
+    const prices = price
+      .split(",")
+      .map((range) => {
+        const [quantityRange, priceText] = range.split(":")
+        const [qFromText] = quantityRange?.split("-") ?? []
+        const qFrom = Number.parseInt(qFromText, 10)
+        const parsedPrice = Number.parseFloat(priceText)
+        return { qFrom, price: parsedPrice }
+      })
+      .filter(
+        (range) => Number.isFinite(range.qFrom) && Number.isFinite(range.price),
+      )
+      .sort((a, b) => a.qFrom - b.qFrom)
+
+    return prices[0]?.price ?? null
   }
 }

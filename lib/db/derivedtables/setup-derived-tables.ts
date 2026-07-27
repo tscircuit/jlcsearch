@@ -228,19 +228,38 @@ export const setupDerivedTables = async ({
   populate = true,
   resetAll = false,
   resetTable = null,
+  tableNames,
   logger = () => {},
 }: {
   db?: KyselyDatabaseInstance
   populate?: boolean
   resetAll?: boolean
   resetTable?: string | null
+  tableNames?: string[]
   logger?: Logger
 } = {}) => {
   const activeDb = db ?? getDbClient()
   const shouldDestroy = !db
+  const requestedTableNames = tableNames
+    ? new Set(tableNames)
+    : new Set(DERIVED_TABLES.map((table) => table.tableName))
+  const knownTableNames = new Set(
+    DERIVED_TABLES.map((table) => table.tableName),
+  )
+  const unknownTableNames = [...requestedTableNames].filter(
+    (tableName) => !knownTableNames.has(tableName),
+  )
+
+  if (unknownTableNames.length > 0) {
+    throw new Error(
+      `Unknown derived table${unknownTableNames.length === 1 ? "" : "s"}: ${unknownTableNames.join(", ")}`,
+    )
+  }
 
   try {
-    for (const tableSpec of DERIVED_TABLES) {
+    for (const tableSpec of DERIVED_TABLES.filter((table) =>
+      requestedTableNames.has(table.tableName),
+    )) {
       logger(`Setting up derived table: ${tableSpec.tableName}`)
       await createTable(activeDb, tableSpec, {
         populate,
