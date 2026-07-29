@@ -19,6 +19,42 @@ describe("render helpers", () => {
     expect(html).toContain("/hdmi_ports/list")
   })
 
+  it.each([
+    ["/arm_processors/list", "arm_processors", "ARM Processors"],
+    ["/risc_v_processors/list", "risc_v_processors", "RISC-V Processors"],
+  ])(
+    "renders the %s page with a manufacturer filter",
+    (pathname, responseKey, heading) => {
+      const html = renderD1TablePage(
+        pathname,
+        {
+          [responseKey]: [
+            {
+              lcsc: 123,
+              mfr: "STM32F401RCT6",
+              manufacturer: "STMicroelectronics",
+              package: "LQFP-64",
+            },
+          ],
+        },
+        { manufacturer: "STMicroelectronics" },
+        `https://jlcsearch.tscircuit.com${pathname}?manufacturer=STMicroelectronics`,
+        {
+          package: ["LQFP-64"],
+          manufacturer: ["NXP Semiconductors", "STMicroelectronics"],
+        },
+      )
+
+      expect(html).toContain(`<h2>${heading}</h2>`)
+      expect(html).toContain('name="manufacturer"')
+      expect(html).toContain(
+        'value="STMicroelectronics" selected>STMicroelectronics</option>',
+      )
+      expect(html).toContain(">Manufacturer</th>")
+      expect(html).toContain(`${pathname}.json?manufacturer=STMicroelectronics`)
+    },
+  )
+
   it("renders the HDMI ports page and JSON API link", () => {
     const pathname = "/hdmi_ports/list"
 
