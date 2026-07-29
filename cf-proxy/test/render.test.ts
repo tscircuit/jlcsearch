@@ -235,6 +235,7 @@ describe("render helpers", () => {
     expect(html).toContain(">Max Resolution</th>")
     expect(html).toContain('name="is_basic"')
     expect(html).toContain('name="is_preferred" value="true" checked')
+    expect(html).toContain('name="is_extended_promotional"')
     expect(html).toContain("HT1621B")
     expect(html).toContain("/lcd_drivers/list.json")
   })
@@ -277,6 +278,7 @@ describe("render helpers", () => {
     expect(html).toContain(">Max Resolution</th>")
     expect(html).toContain("Display Controller")
     expect(html).toContain("SSD1963QL9")
+    expect(html).toContain('name="is_extended_promotional"')
     expect(html).toContain("/tft_display_drivers/list.json")
   })
 

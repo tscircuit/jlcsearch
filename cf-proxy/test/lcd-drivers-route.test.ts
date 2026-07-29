@@ -57,6 +57,7 @@ describe("LCD driver route", () => {
                 price: '[{"qFrom":1,"price":0.464285714}]',
                 basic: 0,
                 preferred: 1,
+                extended_promotional: 1,
                 extra:
                   '{"attributes":{"Display Configurations":"32x4 bit","Interface":"Serial"}}',
               },
@@ -69,6 +70,7 @@ describe("LCD driver route", () => {
                 price: '[{"qFrom":1,"price":0.901428571}]',
                 basic: 0,
                 preferred: 1,
+                extended_promotional: 1,
                 extra:
                   '{"attributes":{"Display Configurations(bit)":"32x8 bit"}}',
               },
@@ -113,6 +115,7 @@ describe("LCD driver route", () => {
               description: "LCD driver",
               is_basic: false,
               is_preferred: true,
+              is_extended_promotional: true,
               stock: 18416,
               price1: 0.464285714,
               attributes:
@@ -134,6 +137,77 @@ describe("LCD driver route", () => {
         "SSOP-48-300mil",
         1,
       ])
+    } finally {
+      await db.destroy()
+    }
+  })
+
+  it("applies the extended promotional catalog filter", async () => {
+    const compiledQueries: CompiledQuery[] = []
+    const driver = new DummyDriver()
+
+    driver.acquireConnection = async () =>
+      ({
+        executeQuery: async (compiledQuery: CompiledQuery) => {
+          compiledQueries.push(compiledQuery)
+
+          if (compiledQuery.sql.includes('select distinct "package"')) {
+            return { rows: [{ package: "SSOP-48-300mil" }] }
+          }
+
+          if (
+            compiledQuery.sql.includes('select "mfr", "description", "extra"')
+          ) {
+            return { rows: [] }
+          }
+
+          return {
+            rows: [
+              {
+                lcsc: 7873,
+                mfr: "HT1621B",
+                package: "SSOP-48-300mil",
+                description: "LCD driver",
+                stock: 18416,
+                price: '[{"qFrom":1,"price":0.464285714}]',
+                basic: 0,
+                preferred: 0,
+                extended_promotional: 1,
+                extra: "{}",
+              },
+            ],
+          }
+        },
+        streamQuery: async function* () {},
+      }) as DatabaseConnection
+
+    const db = new Kysely<DB>({
+      dialect: {
+        createAdapter: () => new SqliteAdapter(),
+        createDriver: () => driver,
+        createIntrospector: (database) => new SqliteIntrospector(database),
+        createQueryCompiler: () => new SqliteQueryCompiler(),
+      },
+    })
+
+    try {
+      const handler = getD1Handler("/lcd_drivers/list")
+      expect(handler).not.toBeNull()
+
+      const result = await handler!(db, {
+        is_extended_promotional: "true",
+      })
+
+      const [lcdDriver] = result.data.lcd_drivers as Array<{
+        is_extended_promotional: boolean
+      }>
+      expect(lcdDriver?.is_extended_promotional).toBe(true)
+
+      const partsQuery = compiledQueries.find((query) =>
+        query.sql.includes('select "lcsc"'),
+      )
+      expect(partsQuery?.sql).toContain('"extended_promotional" = ?')
+      expect(partsQuery?.parameters).toEqual([0, "LCD Drivers", 1])
     } finally {
       await db.destroy()
     }

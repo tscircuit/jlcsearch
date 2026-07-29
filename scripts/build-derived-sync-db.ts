@@ -19,6 +19,23 @@ const tableExists = (database: Database, schema: string, table: string) =>
       .get(table),
   )
 
+const columnExists = (
+  database: Database,
+  schema: string,
+  table: string,
+  column: string,
+) =>
+  Boolean(
+    database
+      .query(
+        `SELECT 1
+         FROM pragma_table_info(?, ?)
+         WHERE name = ?
+         LIMIT 1`,
+      )
+      .get(table, schema, column),
+  )
+
 export const buildDerivedSyncDatabase = async ({
   sourcePath,
   outputPath,
@@ -56,6 +73,17 @@ export const buildDerivedSyncDatabase = async ({
     )
   }
 
+  // "Extended promotional" parts act as basic parts for a limited time. Use the
+  // source column when it exists, otherwise derive it from the library type.
+  const extendedPromotionalExpr = columnExists(
+    database,
+    "source",
+    "jlc_components",
+    "extended_promotional",
+  )
+    ? "j.extended_promotional"
+    : "CASE WHEN j.library_type LIKE '%promo%' THEN 1 ELSE 0 END"
+
   database.exec(`
     CREATE TABLE categories (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -81,6 +109,7 @@ export const buildDerivedSyncDatabase = async ({
       0 AS manufacturer_id,
       CASE WHEN j.library_type = 'base' THEN 1 ELSE 0 END AS basic,
       j.preferred,
+      ${extendedPromotionalExpr} AS extended_promotional,
       j.description,
       j.datasheet,
       j.stock,
