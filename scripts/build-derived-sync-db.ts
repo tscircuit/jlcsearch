@@ -23,11 +23,13 @@ export const buildDerivedSyncDatabase = async ({
   sourcePath,
   outputPath,
   tableNames,
+  includeComponentCatalog = false,
   logger = console.log,
 }: {
   sourcePath: string
   outputPath: string
   tableNames?: string[]
+  includeComponentCatalog?: boolean
   logger?: (message: string) => void
 }) => {
   const resolvedSourcePath = path.resolve(sourcePath)
@@ -121,6 +123,66 @@ export const buildDerivedSyncDatabase = async ({
       AND j.last_on_stock >= unixepoch('now', '-1 year');
   `)
 
+  if (includeComponentCatalog) {
+    database.exec(`
+      CREATE TABLE component_catalog AS
+      SELECT
+        j.lcsc,
+        j.category,
+        j.subcategory,
+        j.mfr,
+        j.package,
+        CASE WHEN j.library_type = 'base' THEN 1 ELSE 0 END AS basic,
+        j.preferred,
+        j.description,
+        j.stock,
+        j.price,
+        json_object(
+          'number', 'C' || j.lcsc,
+          'manufacturer', json_object(
+            'name', coalesce(
+              NULLIF(l.manufacturer, ''),
+              NULLIF(j.manufacturer, '')
+            )
+          ),
+          'title', trim(
+            coalesce(
+              NULLIF(l.manufacturer, ''),
+              NULLIF(j.manufacturer, ''),
+              ''
+            ) || ' ' || j.mfr
+          ),
+          'mpn', j.mfr,
+          'package', j.package,
+          'attributes', json(
+            json_patch(
+              CASE
+                WHEN json_valid(j.attributes) THEN j.attributes
+                ELSE '{}'
+              END,
+              CASE
+                WHEN json_valid(l.attributes) THEN l.attributes
+                ELSE '{}'
+              END
+            )
+          ),
+          'description', j.description,
+          'url', CASE
+            WHEN l.url_slug IS NOT NULL AND l.url_slug != ''
+            THEN 'https://lcsc.com/product-detail/' || l.url_slug || '_C' || j.lcsc || '.html'
+            ELSE NULL
+          END
+        ) AS extra
+      FROM source.jlc_components AS j
+      LEFT JOIN source.lcsc_components AS l ON l.lcsc = j.lcsc
+      WHERE j.present = 1
+        AND j.last_on_stock >= unixepoch('now', '-1 year');
+
+      CREATE INDEX idx_component_catalog_lcsc ON component_catalog(lcsc);
+      CREATE INDEX idx_component_catalog_stock ON component_catalog(stock DESC);
+    `)
+  }
+
   const db = new Kysely<DB>({
     dialect: new BunSqliteDialect({ database }),
   })
@@ -145,11 +207,14 @@ const main = async () => {
   const configuredTables = process.env.DERIVED_TABLES_LIST?.split(",")
     .map((table) => table.trim())
     .filter(Boolean)
+  const includeComponentCatalog =
+    process.env.INCLUDE_COMPONENT_CATALOG?.trim() === "1"
 
   await buildDerivedSyncDatabase({
     sourcePath,
     outputPath,
     tableNames: configuredTables?.length ? configuredTables : undefined,
+    includeComponentCatalog,
   })
 }
 
