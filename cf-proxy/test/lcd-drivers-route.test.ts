@@ -54,7 +54,7 @@ describe("LCD driver route", () => {
                 package: "SSOP-48-300mil",
                 description: "LCD driver",
                 stock: 18416,
-                price: '[{"qFrom":1,"price":0.464285714}]',
+                price: "1-9:0.464285714,10-:0.4",
                 basic: 0,
                 preferred: 1,
                 extra:

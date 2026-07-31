@@ -68,9 +68,13 @@ workflow. On relevant merges to `main`, it downloads the current upstream
 source-db-v2 database, builds and verifies a compact `db.sqlite3` containing
 the requested derived tables, applies D1 migrations, uploads those tables, and
 refreshes the affected production API cache. The workflow can also be run
-manually with a comma-separated `derived_tables` input and an optional
-`cache_bust_url`. It requires the `CLOUDFLARE_ACCOUNT_ID` and
-`CLOUDFLARE_API_TOKEN` repository secrets.
+manually in `derived` or `full_catalog` mode. `derived` accepts a
+comma-separated `derived_tables` input. `full_catalog` rebuilds and uploads the
+component catalog, search index, and FTS index from the current source-db-v2
+snapshot, and requires a numeric `smoke_test_lcsc` that must be present before
+and after the upload. Both modes accept an optional `cache_bust_url`. The
+workflow requires the `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN`
+repository secrets.
 
 ## How Does It work?
 As a developer new to this codebase, or a curious user, you may have some questions about the flow of data through the scripts and automations inside this repo.  It all starts with the [jlcparts](https://github.com/yaqwsx/jlcparts) project, which compiles a massive **11GB** sqlite3 database of *everything* [JLCPCB](https://jlcpcb.com) has to offer.  As you can imagine, this would be very resource-intensive and slow to search, so the next steps are scripts that optimize it heavily, although it's more accurate to say that they rebuild it entirely. 

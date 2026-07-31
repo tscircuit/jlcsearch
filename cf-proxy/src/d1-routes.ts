@@ -44,7 +44,10 @@ const extractSmallQuantityPrice = (price: string | null): number => {
     const priceObj = JSON.parse(price)
     return Number(priceObj[0]?.price ?? 0) || 0
   } catch {
-    return 0
+    const firstTier = price.split(",", 1)[0]
+    const separatorIndex = firstTier.indexOf(":")
+    if (separatorIndex === -1) return 0
+    return Number(firstTier.slice(separatorIndex + 1)) || 0
   }
 }
 

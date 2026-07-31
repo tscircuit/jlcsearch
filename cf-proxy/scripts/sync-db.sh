@@ -19,6 +19,8 @@ SYNC_COMPONENT_CATALOG="${SYNC_COMPONENT_CATALOG:-0}"
 SYNC_SEARCH_INDEX="${SYNC_SEARCH_INDEX:-0}"
 DERIVED_TABLES_LIST="${DERIVED_TABLES_LIST:-}"
 REBUILD_DERIVED_TABLES="${REBUILD_DERIVED_TABLES:-1}"
+REBUILD_COMPONENT_CATALOG="${REBUILD_COMPONENT_CATALOG:-1}"
+REBUILD_SEARCH_INDEX="${REBUILD_SEARCH_INDEX:-1}"
 
 DERIVED_TABLES=(
   accelerometer
@@ -315,7 +317,9 @@ CREATE INDEX IF NOT EXISTS idx_component_catalog_basic ON component_catalog(basi
 CREATE INDEX IF NOT EXISTS idx_component_catalog_preferred ON component_catalog(preferred);
 CREATE INDEX IF NOT EXISTS idx_component_catalog_stock ON component_catalog(stock DESC);
 COMPONENT_CATALOG_SCHEMA
+}
 
+write_component_catalog_schema() {
   cat > component_catalog_schema.sql <<'COMPONENT_CATALOG_SCHEMA_EXPORT'
 DROP TABLE IF EXISTS component_catalog;
 CREATE TABLE component_catalog (
@@ -353,6 +357,17 @@ SELECT
   price,
   CASE
     WHEN json_valid(price) THEN CAST(json_extract(price, '$[0].price') AS REAL)
+    WHEN instr(price, ':') > 0 THEN CAST(
+      substr(
+        price,
+        instr(price, ':') + 1,
+        CASE
+          WHEN instr(price, ',') > 0
+          THEN instr(price, ',') - instr(price, ':') - 1
+          ELSE length(price) - instr(price, ':')
+        END
+      ) AS REAL
+    )
     ELSE NULL
   END AS price1,
   basic,
@@ -399,7 +414,9 @@ CREATE INDEX IF NOT EXISTS idx_search_index_basic_stock ON search_index(basic, s
 CREATE INDEX IF NOT EXISTS idx_search_index_preferred ON search_index(preferred);
 CREATE INDEX IF NOT EXISTS idx_search_index_preferred_stock ON search_index(preferred, stock DESC);
 SEARCH_INDEX_SCHEMA
+}
 
+write_search_index_schema() {
   cat > search_index_schema.sql <<'SEARCH_INDEX_SCHEMA_EXPORT'
 DROP TABLE IF EXISTS search_index;
 CREATE TABLE search_index (
@@ -462,20 +479,32 @@ main() {
 
   if [[ "${SYNC_COMPONENT_CATALOG}" == "1" || "${SYNC_SEARCH_INDEX}" == "1" ]]; then
     write_cleanup_sql
-    materialize_component_catalog
+    if [[ "${REBUILD_COMPONENT_CATALOG}" == "1" ]]; then
+      materialize_component_catalog
+    else
+      echo "Using component_catalog already prepared in the source database."
+      require_table component_catalog
+    fi
 
     echo "Importing cleanup SQL to D1..."
     run_wrangler d1 execute "${DB_NAME}" --remote --file=cleanup_obsolete_objects.sql
   fi
 
   if [[ "${SYNC_COMPONENT_CATALOG}" == "1" ]]; then
+    write_component_catalog_schema
     echo "Importing component catalog schema to D1..."
     run_wrangler d1 execute "${DB_NAME}" --remote --file=component_catalog_schema.sql
     import_table_in_batches component_catalog "${COMPONENT_CATALOG_BATCH_ROWS}"
   fi
 
   if [[ "${SYNC_SEARCH_INDEX}" == "1" ]]; then
-    materialize_search_index
+    if [[ "${REBUILD_SEARCH_INDEX}" == "1" ]]; then
+      materialize_search_index
+    else
+      echo "Using search_index already prepared in the source database."
+      require_table search_index
+    fi
+    write_search_index_schema
     echo "Importing search index schema to D1..."
     run_wrangler d1 execute "${DB_NAME}" --remote --file=search_index_schema.sql
     import_table_in_batches search_index "${SEARCH_INDEX_BATCH_ROWS}"

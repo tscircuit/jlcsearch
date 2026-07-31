@@ -132,6 +132,44 @@ describe("buildDerivedSyncDatabase", () => {
       }),
     ).rejects.toThrow("Unknown derived table: not_a_table")
   })
+
+  test("materializes a component catalog from source-db-v2", async () => {
+    const { sourcePath, outputPath } = await createSourceDatabase()
+
+    await buildDerivedSyncDatabase({
+      sourcePath,
+      outputPath,
+      tableNames: ["hdmi_port"],
+      includeComponentCatalog: true,
+      logger: () => {},
+    })
+
+    const output = new Database(outputPath, { readonly: true })
+    const row = output
+      .query(
+        `SELECT
+          lcsc, mfr, category, subcategory, basic, preferred, stock,
+          json_extract(extra, '$.manufacturer.name') AS manufacturer,
+          json_extract(extra, '$.mpn') AS mpn,
+          json_extract(extra, '$.attributes.Gender') AS gender
+        FROM component_catalog`,
+      )
+      .get() as Record<string, unknown>
+
+    expect(row).toEqual({
+      lcsc: 12345,
+      mfr: "HDMI-19P",
+      category: "Connectors",
+      subcategory: "HDMI Connectors",
+      basic: 1,
+      preferred: 1,
+      stock: 250,
+      manufacturer: "Example Inc.",
+      mpn: "HDMI-19P",
+      gender: "Female",
+    })
+    output.close()
+  })
 })
 
 describe("extractMinQPrice", () => {
