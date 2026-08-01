@@ -710,6 +710,27 @@ export interface PcieM2Connector {
   stock: number | null
 }
 
+export interface PhotoDiode {
+  attributes: string | null
+  dark_current_a: number | null
+  description: string | null
+  in_stock: number | null
+  is_basic: number | null
+  is_preferred: number | null
+  lcsc: Generated<number | null>
+  mfr: string | null
+  operating_temp_max: number | null
+  operating_temp_min: number | null
+  package: string | null
+  peak_wavelength_nm: number | null
+  price1: number | null
+  reception_angle_deg: number | null
+  reverse_voltage: number | null
+  spectral_range_max_nm: number | null
+  spectral_range_min_nm: number | null
+  stock: number | null
+}
+
 export interface Potentiometer {
   attributes: string | null
   description: string | null
@@ -1001,6 +1022,7 @@ export interface DB {
   mosfet: Mosfet
   oled_display: OledDisplay
   pcie_m2_connector: PcieM2Connector
+  photo_diode: PhotoDiode
   potentiometer: Potentiometer
   relay: Relay
   resistor: Resistor

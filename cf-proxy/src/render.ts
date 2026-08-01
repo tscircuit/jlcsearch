@@ -45,6 +45,7 @@ const routeLabels: Record<string, string> = {
   "/hdmi_ports/list": "HDMI Ports",
   "/microphones/list": "Microphones",
   "/diodes/list": "Diodes",
+  "/photo_diodes/list": "Photo Diodes",
   "/dacs/list": "DACs",
   "/wifi_modules/list": "WiFi Modules",
   "/microcontrollers/list": "Microcontrollers",
@@ -166,6 +167,13 @@ const COLUMN_LABELS: Record<string, string> = {
   current_rating_amp: "Current",
   voltage_rating_volt: "Voltage",
   wavelength_nm: "Wavelength",
+  peak_wavelength_nm: "Peak Wavelength",
+  spectral_range_min_nm: "Spectral Range Min",
+  spectral_range_max_nm: "Spectral Range Max",
+  reverse_voltage_min: "Min Reverse Voltage",
+  dark_current_a: "Dark Current",
+  dark_current_max: "Max Dark Current",
+  reception_angle_deg: "Reception Angle",
   luminous_intensity_mcd: "Intensity",
   number_of_contacts: "Contacts",
   number_of_pins: "Pins",
@@ -268,6 +276,9 @@ const formatDisplayValue = (column: string, value: unknown): string | null => {
     case "data_rate_mbps":
       return withUnit(value, "Mbps")
     case "wavelength_nm":
+    case "peak_wavelength_nm":
+    case "spectral_range_min_nm":
+    case "spectral_range_max_nm":
       return withUnit(value, "nm")
     case "luminous_intensity_mcd":
       return withUnit(value, "mcd")
@@ -292,6 +303,7 @@ const formatDisplayValue = (column: string, value: unknown): string | null => {
     case "current_rating_a":
     case "current_rating_amp":
     case "forward_current":
+    case "dark_current_a":
     case "collector_current":
     case "continuous_drain_current":
     case "output_current_max":
@@ -329,6 +341,8 @@ const formatDisplayValue = (column: string, value: unknown): string | null => {
     case "operating_temperature_min":
     case "operating_temperature_max":
       return withUnit(value, "°C")
+    case "reception_angle_deg":
+      return withUnit(value, "°")
     default:
       return null
   }

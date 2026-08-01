@@ -56,6 +56,7 @@ DERIVED_TABLES=(
   mosfet
   oled_display
   pcie_m2_connector
+  photo_diode
   potentiometer
   relay
   resistor

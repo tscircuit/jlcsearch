@@ -206,6 +206,24 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
       diode_type: { field: "diode_type", type: "string" },
     },
   },
+  photo_diode: {
+    filters: {
+      package: { field: "package", type: "string" },
+      peak_wavelength_nm: { field: "peak_wavelength_nm", type: "number" },
+      reverse_voltage_min: {
+        field: "reverse_voltage",
+        type: "number",
+        operator: ">=",
+      },
+      dark_current_max: {
+        field: "dark_current_a",
+        type: "number",
+        operator: "<=",
+      },
+      is_basic: { field: "is_basic", type: "boolean" },
+      is_preferred: { field: "is_preferred", type: "boolean" },
+    },
+  },
   dimm_connector: {
     filters: {
       package: { field: "package", type: "string" },
@@ -534,6 +552,7 @@ export const ROUTE_TO_TABLE: Record<string, string> = {
   "/ldos/list": "ldo",
   "/leds/list": "led",
   "/diodes/list": "diode",
+  "/photo_diodes/list": "photo_diode",
   "/mosfets/list": "mosfet",
   "/switches/list": "switch",
   "/headers/list": "header",
@@ -582,6 +601,7 @@ export const TABLE_RESPONSE_KEY: Record<string, string> = {
   ldo: "ldos",
   led: "leds",
   diode: "diodes",
+  photo_diode: "photo_diodes",
   mosfet: "mosfets",
   switch: "switches",
   header: "headers",
