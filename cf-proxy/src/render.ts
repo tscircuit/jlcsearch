@@ -167,7 +167,7 @@ const COLUMN_LABELS: Record<string, string> = {
   current_rating_amp: "Current",
   voltage_rating_volt: "Voltage",
   wavelength_nm: "Wavelength",
-  wavelength_min: "Min Wavelength",
+  wavelength_min: "Desired Wavelength",
   peak_wavelength_nm: "Peak Wavelength",
   spectral_range_min_nm: "Spectral Range Min",
   spectral_range_max_nm: "Spectral Range Max",
@@ -639,8 +639,11 @@ const renderGenericFilters = (
       if (fieldConfig.type === "boolean") {
         return `<div><label>${escapeHtml(label)}:</label><select name="${escapeHtml(paramName)}"><option value="">All</option><option value="true"${params[paramName] === "true" ? " selected" : ""}>Yes</option><option value="false"${params[paramName] === "false" ? " selected" : ""}>No</option></select></div>`
       }
-      const inputType = fieldConfig.type === "number" ? "number" : "text"
-      const step = fieldConfig.type === "number" ? ' step="any"' : ""
+      const isNumberFilter =
+        fieldConfig.type === "number" ||
+        fieldConfig.type === "number_range_contains"
+      const inputType = isNumberFilter ? "number" : "text"
+      const step = isNumberFilter ? ' step="any"' : ""
       const listId =
         mergedSuggestions.length > 0
           ? `${pathname.replaceAll("/", "-")}-${paramName}-options`

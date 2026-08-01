@@ -53,14 +53,13 @@ describe("render helpers", () => {
       "https://jlcsearch.tscircuit.com/photo_diodes/list?package=SMD-4P%2C2.7x3.2mm&wavelength_min=850",
       {
         package: ["SMD-4P,2.7x3.2mm", "Plugin"],
-        wavelength_min: ["850", "940"],
       },
     )
 
     expect(html).toContain("<h2>Photo Diodes</h2>")
     expect(html).toContain('name="package"')
     expect(html).toContain('name="wavelength_min"')
-    expect(html).toContain("Min Wavelength")
+    expect(html).toContain("Desired Wavelength")
     expect(html).toContain('name="reverse_voltage_min"')
     expect(html).toContain('name="dark_current_max"')
     expect(html).toContain('name="is_basic"')
