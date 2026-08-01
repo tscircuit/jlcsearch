@@ -9,16 +9,13 @@ export interface Env {
   CACHE_KV: KVNamespace
   DB: D1Database
   USE_D1: string
+  VERSION: WorkerVersionMetadata
 }
 
 const CACHE_BUST_QUERY_PARAM = "cachebust"
-const HOME_PAGE_CACHE_MAX_AGE_SECONDS = 60 * 60
-const HOME_PAGE_CACHE_CONTROL = [
-  "public",
-  `max-age=${HOME_PAGE_CACHE_MAX_AGE_SECONDS}`,
-  `s-maxage=${HOME_PAGE_CACHE_MAX_AGE_SECONDS}`,
-  "must-revalidate",
-].join(", ")
+const HOME_PAGE_CACHE_CONTROL = ["public", "max-age=0", "must-revalidate"].join(
+  ", ",
+)
 
 const extractSmallQuantityPrice = (price: string | null): string | number => {
   if (!price) return ""
@@ -168,7 +165,7 @@ export default {
   async fetch(
     request: Request,
     env: Env,
-    ctx: ExecutionContext,
+    _ctx: ExecutionContext,
   ): Promise<Response> {
     const requestUrl = new URL(request.url)
     const url = stripInternalQueryParams(requestUrl)
@@ -196,7 +193,7 @@ export default {
       )
     }
 
-    const cache = new CacheService(env.CACHE_KV)
+    const cache = new CacheService(env.CACHE_KV, env.VERSION.id)
 
     // Check if this is a JSON API request that can be handled by D1
     if (env.USE_D1 === "true") {
@@ -205,7 +202,6 @@ export default {
         request,
         env,
         origin,
-        ctx,
         cache,
         cacheBust,
       )
@@ -221,25 +217,9 @@ export default {
   },
 }
 
-async function refreshStaleD1Entry(
-  cacheUrl: URL,
-  producer: () => Promise<Response>,
-  cache: CacheService,
-): Promise<void> {
-  try {
-    const response = await producer()
-    if (response.ok) {
-      await cache.put(cacheUrl, response)
-    }
-  } catch (error) {
-    console.warn("Background D1 cache refresh failed:", error)
-  }
-}
-
 async function handleCachedD1Response(
   cacheUrl: URL,
   origin: string | null,
-  ctx: ExecutionContext,
   cache: CacheService,
   producer: () => Promise<Response>,
   options: {
@@ -269,7 +249,15 @@ async function handleCachedD1Response(
 
   const staleEntry = cacheResult.type === "stale" ? cacheResult.entry : null
   if (staleEntry) {
-    ctx.waitUntil(refreshStaleD1Entry(cacheUrl, producer, cache))
+    try {
+      const response = await producer()
+      if (response.ok) {
+        const entry = await cache.put(cacheUrl, response)
+        return cache.buildResponse(entry, "REFRESH", origin)
+      }
+    } catch (error) {
+      console.warn("D1 cache refresh failed:", error)
+    }
     return cache.buildResponse(staleEntry, "STALE", origin)
   }
 
@@ -291,7 +279,6 @@ async function tryD1Route(
   request: Request,
   env: Env,
   origin: string | null,
-  ctx: ExecutionContext,
   cache: CacheService,
   cacheBust = false,
 ): Promise<Response | null> {
@@ -314,7 +301,6 @@ async function tryD1Route(
     return handleCachedD1Response(
       url,
       origin,
-      ctx,
       cache,
       async () => handleD1Search(url, env, origin),
       { cacheBust },
@@ -325,7 +311,6 @@ async function tryD1Route(
     return handleCachedD1Response(
       getD1RepresentationCacheUrl(url, isJsonRequest),
       origin,
-      ctx,
       cache,
       async () => handleD1ComponentsList(url, isJsonRequest, env, origin),
       { cacheBust },
@@ -346,7 +331,6 @@ async function tryD1Route(
   return handleCachedD1Response(
     getD1RepresentationCacheUrl(url, isJsonRequest),
     origin,
-    ctx,
     cache,
     async () => handleD1TableRoute(pathname, url, isJsonRequest, env, origin),
     { cacheBust },

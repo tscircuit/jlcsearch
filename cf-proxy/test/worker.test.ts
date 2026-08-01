@@ -5,6 +5,8 @@ import { createSelf, createTestEnv } from "./test-env"
 describe("Worker integration", () => {
   const env = createTestEnv()
   const SELF = createSelf(env)
+  const generateWorkerCacheKey = (url: URL) =>
+    generateCacheKey(url, env.VERSION.id)
 
   beforeEach(async () => {
     env.USE_D1 = "false"
@@ -81,7 +83,7 @@ describe("Worker integration", () => {
       "https://example.com/microcontrollers/list?package=QFN48",
     )
     url.searchParams.set("__format", "html")
-    const cacheKey = await generateCacheKey(url)
+    const cacheKey = await generateWorkerCacheKey(url)
 
     const metadata = {
       cachedAt: new Date().toISOString(),
@@ -114,7 +116,7 @@ describe("Worker integration", () => {
       "https://example.com/risc_v_processors/list?package=QFN48",
     )
     url.searchParams.set("__format", "html")
-    const cacheKey = await generateCacheKey(url)
+    const cacheKey = await generateWorkerCacheKey(url)
 
     await env.CACHE_KV.put(
       cacheKey,
@@ -144,12 +146,12 @@ describe("Worker integration", () => {
   it("serves stale cached D1 derived-table HTML when refresh fails", async () => {
     env.USE_D1 = "true"
 
-    const staleAt = new Date(Date.now() - 20 * 24 * 60 * 60 * 1000)
+    const staleAt = new Date(Date.now() - 10 * 60 * 1000)
     const url = new URL(
       "https://example.com/microcontrollers/list?package=QFN48",
     )
     url.searchParams.set("__format", "html")
-    const cacheKey = await generateCacheKey(url)
+    const cacheKey = await generateWorkerCacheKey(url)
 
     await env.CACHE_KV.put(
       cacheKey,
@@ -183,7 +185,7 @@ describe("Worker integration", () => {
 
     const url = new URL("https://example.com/components/list?search=TYPEC")
     url.searchParams.set("__format", "html")
-    const cacheKey = await generateCacheKey(url)
+    const cacheKey = await generateWorkerCacheKey(url)
 
     const metadata = {
       cachedAt: new Date().toISOString(),
@@ -208,7 +210,7 @@ describe("Worker integration", () => {
 
     const url = new URL("https://example.com/components/list?search=TYPEC")
     url.searchParams.set("__format", "json")
-    const cacheKey = await generateCacheKey(url)
+    const cacheKey = await generateWorkerCacheKey(url)
 
     const metadata = {
       cachedAt: new Date().toISOString(),
@@ -229,11 +231,11 @@ describe("Worker integration", () => {
     expect(await response.text()).toBe(testBody)
   })
 
-  it("serves the homepage with one-hour caching without using KV", async () => {
+  it("serves the homepage without browser caching or KV", async () => {
     env.USE_D1 = "true"
 
     const url = new URL("https://example.com/")
-    const cacheKey = await generateCacheKey(url)
+    const cacheKey = await generateWorkerCacheKey(url)
     const staleBody = "<html><body>stale home page</body></html>"
 
     await env.CACHE_KV.put(cacheKey, staleBody, {
@@ -249,7 +251,7 @@ describe("Worker integration", () => {
 
     expect(response.headers.get("x-cache")).toBe("D1")
     expect(response.headers.get("cache-control")).toBe(
-      "public, max-age=3600, s-maxage=3600, must-revalidate",
+      "public, max-age=0, must-revalidate",
     )
     expect(body).not.toContain(staleBody)
     expect(body).toContain("JLCPCB In-Stock Parts Engine")
@@ -275,8 +277,8 @@ describe("Worker integration", () => {
     const url2 = new URL("https://example.com/components/list?search=other")
     url2.searchParams.set("__format", "json")
 
-    const cacheKey1 = await generateCacheKey(url1)
-    const cacheKey2 = await generateCacheKey(url2)
+    const cacheKey1 = await generateWorkerCacheKey(url1)
+    const cacheKey2 = await generateWorkerCacheKey(url2)
 
     await env.CACHE_KV.put(cacheKey1, '{"q":"test"}', {
       metadata: {

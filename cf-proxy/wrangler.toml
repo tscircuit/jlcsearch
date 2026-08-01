@@ -10,6 +10,9 @@ routes = [
 [vars]
 USE_D1 = "true"  # Feature flag for gradual D1 rollout
 
+[version_metadata]
+binding = "VERSION"
+
 # KV namespace binding - run `wrangler kv:namespace create CACHE_KV` to create
 # Then update the id below with the generated ID
 [[kv_namespaces]]
@@ -30,6 +33,9 @@ routes = []
 
 [env.staging.vars]
 USE_D1 = "true"
+
+[env.staging.version_metadata]
+binding = "VERSION"
 
 [[env.staging.kv_namespaces]]
 binding = "CACHE_KV"
