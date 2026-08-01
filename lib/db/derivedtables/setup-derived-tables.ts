@@ -36,6 +36,7 @@ import { microcontrollerTableSpec } from "lib/db/derivedtables/microcontroller"
 import { mosfetTableSpec } from "lib/db/derivedtables/mosfet"
 import { oledDisplayTableSpec } from "lib/db/derivedtables/oled_display"
 import { pcieM2ConnectorTableSpec } from "lib/db/derivedtables/pcie_m2_connector"
+import { photoDiodeTableSpec } from "lib/db/derivedtables/photo-diode"
 import { potentiometerTableSpec } from "lib/db/derivedtables/potentiometer"
 import { relayTableSpec } from "lib/db/derivedtables/relay"
 import { resistorArrayTableSpec } from "lib/db/derivedtables/resistor_array"
@@ -89,6 +90,7 @@ export const DERIVED_TABLES: DerivedTableSpec<any>[] = [
   fpcConnectorTableSpec,
   usbCConnectorTableSpec,
   pcieM2ConnectorTableSpec,
+  photoDiodeTableSpec,
   jstConnectorTableSpec,
   wireToBoardConnectorTableSpec,
   springClampTerminalBlockTableSpec,

@@ -17,6 +17,58 @@ describe("render helpers", () => {
     expect(html).toContain("/dimm_connectors/list")
     expect(html).toContain("/sodimm_connectors/list")
     expect(html).toContain("/hdmi_ports/list")
+    expect(html).toContain("/photo_diodes/list")
+  })
+
+  it("renders the Photo Diodes page and JSON API link", () => {
+    const pathname = "/photo_diodes/list"
+
+    expect(D1_ROUTES).toContain(pathname)
+    expect(getD1Handler(pathname)).toBeTypeOf("function")
+
+    const html = renderD1TablePage(
+      pathname,
+      {
+        photo_diodes: [
+          {
+            lcsc: 161211,
+            mfr: "PD15-22B/TR8",
+            package: "SMD-4P,2.7x3.2mm",
+            peak_wavelength_nm: 940,
+            spectral_range_min_nm: 730,
+            spectral_range_max_nm: 1100,
+            reverse_voltage: 32,
+            dark_current_a: 10e-9,
+            reception_angle_deg: 60,
+            stock: 47803,
+          },
+        ],
+      },
+      {
+        package: "SMD-4P,2.7x3.2mm",
+        peak_wavelength_nm: "940",
+        reverse_voltage_min: "20",
+        dark_current_max: "0.00000001",
+      },
+      "https://jlcsearch.tscircuit.com/photo_diodes/list?package=SMD-4P%2C2.7x3.2mm&peak_wavelength_nm=940",
+      {
+        package: ["SMD-4P,2.7x3.2mm", "Plugin"],
+        peak_wavelength_nm: ["850", "940"],
+      },
+    )
+
+    expect(html).toContain("<h2>Photo Diodes</h2>")
+    expect(html).toContain('name="package"')
+    expect(html).toContain('name="peak_wavelength_nm"')
+    expect(html).toContain('name="reverse_voltage_min"')
+    expect(html).toContain('name="dark_current_max"')
+    expect(html).toContain('name="is_basic"')
+    expect(html).toContain('name="is_preferred"')
+    expect(html).toContain("PD15-22B/TR8")
+    expect(html).toContain("940nm")
+    expect(html).toContain("10nA")
+    expect(html).toContain("60°")
+    expect(html).toContain("/photo_diodes/list.json")
   })
 
   it("renders the HDMI ports page and JSON API link", () => {
