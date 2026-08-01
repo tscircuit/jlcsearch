@@ -29,7 +29,9 @@ test("photo diode wavelength filter matches detection ranges", async () => {
       (1, 'IR_ONLY', 400, 'SMD', 940, 840, 1100, 20, 1e-9, 0, 0),
       (2, 'UV_TO_IR', 300, 'SMD', 940, 300, 1100, 20, 1e-9, 0, 0),
       (3, 'PEAK_300_ONLY', 200, 'SMD', 300, NULL, NULL, 20, 1e-9, 0, 0),
-      (4, 'UNKNOWN_RANGE', 100, 'SMD', 940, NULL, NULL, 20, 1e-9, 0, 0);
+      (4, 'UNKNOWN_RANGE', 100, 'SMD', 940, NULL, NULL, 20, 1e-9, 0, 0),
+      (5, 'UV_PEAK', 50, 'SMD', 360, 300, 400, 20, 1e-9, 0, 0),
+      (6, 'BLUE_PEAK', 40, 'SMD', 420, 300, 950, 20, 1e-9, 0, 0);
   `)
 
   const db = new Kysely<any>({
@@ -46,14 +48,29 @@ test("photo diode wavelength filter matches detection ranges", async () => {
       mfr: string
     }>
 
-    expect(rows.map((row) => row.lcsc)).toEqual([2, 3])
-    expect(rows.map((row) => row.mfr)).toEqual(["UV_TO_IR", "PEAK_300_ONLY"])
+    expect(rows.map((row) => row.lcsc)).toEqual([3, 5, 6, 2])
+    expect(rows.map((row) => row.mfr)).toEqual([
+      "PEAK_300_ONLY",
+      "UV_PEAK",
+      "BLUE_PEAK",
+      "UV_TO_IR",
+    ])
+
+    const selectiveResult = await handler!(db as any, {
+      wavelength: "355",
+      peak_distance_max: "100",
+      excluded_peak_bands: "400-500, 700-1100",
+    })
+    const selectiveRows = selectiveResult.data.photo_diodes as Array<{
+      lcsc: number
+    }>
+    expect(selectiveRows.map((row) => row.lcsc)).toEqual([5])
 
     const legacyResult = await handler!(db as any, {
       wavelength_min: "300",
     })
     const legacyRows = legacyResult.data.photo_diodes as Array<{ lcsc: number }>
-    expect(legacyRows.map((row) => row.lcsc)).toEqual([2, 3])
+    expect(legacyRows.map((row) => row.lcsc)).toEqual([3, 5, 6, 2])
   } finally {
     await db.destroy()
   }
