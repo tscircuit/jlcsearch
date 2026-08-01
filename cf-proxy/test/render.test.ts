@@ -46,20 +46,21 @@ describe("render helpers", () => {
       },
       {
         package: "SMD-4P,2.7x3.2mm",
-        peak_wavelength_nm: "940",
+        wavelength_min: "850",
         reverse_voltage_min: "20",
         dark_current_max: "0.00000001",
       },
-      "https://jlcsearch.tscircuit.com/photo_diodes/list?package=SMD-4P%2C2.7x3.2mm&peak_wavelength_nm=940",
+      "https://jlcsearch.tscircuit.com/photo_diodes/list?package=SMD-4P%2C2.7x3.2mm&wavelength_min=850",
       {
         package: ["SMD-4P,2.7x3.2mm", "Plugin"],
-        peak_wavelength_nm: ["850", "940"],
+        wavelength_min: ["850", "940"],
       },
     )
 
     expect(html).toContain("<h2>Photo Diodes</h2>")
     expect(html).toContain('name="package"')
-    expect(html).toContain('name="peak_wavelength_nm"')
+    expect(html).toContain('name="wavelength_min"')
+    expect(html).toContain("Min Wavelength")
     expect(html).toContain('name="reverse_voltage_min"')
     expect(html).toContain('name="dark_current_max"')
     expect(html).toContain('name="is_basic"')

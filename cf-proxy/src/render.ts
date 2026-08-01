@@ -167,6 +167,7 @@ const COLUMN_LABELS: Record<string, string> = {
   current_rating_amp: "Current",
   voltage_rating_volt: "Voltage",
   wavelength_nm: "Wavelength",
+  wavelength_min: "Min Wavelength",
   peak_wavelength_nm: "Peak Wavelength",
   spectral_range_min_nm: "Spectral Range Min",
   spectral_range_max_nm: "Spectral Range Max",
