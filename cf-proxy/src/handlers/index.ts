@@ -209,7 +209,11 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
   photo_diode: {
     filters: {
       package: { field: "package", type: "string" },
-      peak_wavelength_nm: { field: "peak_wavelength_nm", type: "number" },
+      wavelength_min: {
+        field: "peak_wavelength_nm",
+        type: "number",
+        operator: ">=",
+      },
       reverse_voltage_min: {
         field: "reverse_voltage",
         type: "number",
