@@ -47,6 +47,8 @@ describe("render helpers", () => {
       {
         package: "SMD-4P,2.7x3.2mm",
         wavelength: "850",
+        peak_distance_max: "100",
+        excluded_peak_bands: "900-1100",
         reverse_voltage_min: "20",
         dark_current_max: "0.00000001",
       },
@@ -60,7 +62,13 @@ describe("render helpers", () => {
     expect(html).toContain('name="package"')
     expect(html).toContain('name="wavelength"')
     expect(html).not.toContain('name="wavelength_min"')
-    expect(html).toContain("Desired Wavelength")
+    expect(html).toContain("Target Wavelength (nm)")
+    expect(html).toContain('name="peak_distance_max"')
+    expect(html).toContain("Max Distance from Peak (nm)")
+    expect(html).toContain('name="excluded_peak_bands"')
+    expect(html).toContain("Excluded Peak Bands (nm)")
+    expect(html).toContain("700-1100, 532")
+    expect(html).toContain("optical filtering may be needed")
     expect(html).toContain('name="reverse_voltage_min"')
     expect(html).toContain('name="dark_current_max"')
     expect(html).toContain('name="is_basic"')

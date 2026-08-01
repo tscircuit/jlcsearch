@@ -11,20 +11,49 @@ interface FilterConfig {
     | "boolean"
     | "number_tolerance"
     | "number_range_contains"
+    | "number_distance_from_param"
+    | "number_excludes_ranges"
   operator?: "=" | ">=" | "<=" | ">" | "<"
   maxField?: string
   fallbackField?: string
+  relativeToParam?: string
+  placeholder?: string
+  helpText?: string
 }
 
 interface TableConfig {
   filters: Record<string, FilterConfig>
   paramAliases?: Record<string, string>
+  targetSort?: {
+    field: string
+    param: string
+  }
+  helpText?: string
 }
 
 export type FilterOptions = Record<string, string[]>
 
 // Allowed operators for sanitization
 const ALLOWED_OPERATORS = new Set(["=", ">=", "<=", ">", "<"])
+
+const parseNumberRanges = (value: string): Array<[number, number]> =>
+  value
+    .split(",")
+    .map((range) => range.trim())
+    .filter(Boolean)
+    .flatMap((range): Array<[number, number]> => {
+      const rangeMatch = range.match(
+        /^(\d+(?:\.\d+)?)\s*(?:-|–|—|\.\.)\s*(\d+(?:\.\d+)?)$/,
+      )
+      if (rangeMatch) {
+        const first = Number(rangeMatch[1])
+        const second = Number(rangeMatch[2])
+        return [[Math.min(first, second), Math.max(first, second)]]
+      }
+
+      const singleValue = Number(range)
+      return Number.isFinite(singleValue) ? [[singleValue, singleValue]] : []
+    })
 
 const isBooleanLikeField = (field: string): boolean =>
   field === "in_stock" ||
@@ -67,7 +96,14 @@ export async function queryTable(
     const value = params[paramName]
     if (value === undefined || value === "" || value === "All") continue
 
-    const { field, type, operator = "=", maxField, fallbackField } = fieldConfig
+    const {
+      field,
+      type,
+      operator = "=",
+      maxField,
+      fallbackField,
+      relativeToParam,
+    } = fieldConfig
 
     // Validate operator
     if (!ALLOWED_OPERATORS.has(operator)) {
@@ -134,19 +170,46 @@ export async function queryTable(
           )
         }
       }
+    } else if (type === "number_distance_from_param") {
+      const maxDistance = parseFloat(value)
+      const relativeValue = relativeToParam
+        ? parseFloat(params[relativeToParam] ?? "")
+        : Number.NaN
+      if (
+        Number.isFinite(maxDistance) &&
+        maxDistance >= 0 &&
+        Number.isFinite(relativeValue)
+      ) {
+        conditions.push(sql`${column} IS NOT NULL`)
+        conditions.push(sql`${column} >= ${relativeValue - maxDistance}`)
+        conditions.push(sql`${column} <= ${relativeValue + maxDistance}`)
+      }
+    } else if (type === "number_excludes_ranges") {
+      for (const [rangeMin, rangeMax] of parseNumberRanges(value)) {
+        conditions.push(
+          sql`${column} IS NOT NULL AND (${column} < ${rangeMin} OR ${column} > ${rangeMax})`,
+        )
+      }
     }
   }
 
   // Build the final query
   const table = sql.id(tableName)
+  const targetSortValue = config.targetSort
+    ? parseFloat(params[config.targetSort.param] ?? "")
+    : Number.NaN
+  const orderBy =
+    config.targetSort && Number.isFinite(targetSortValue)
+      ? sql`${sql.id(config.targetSort.field)} IS NULL ASC, ABS(${sql.id(config.targetSort.field)} - ${targetSortValue}) ASC, stock DESC`
+      : sql`stock DESC`
   let query: RawBuilder<unknown>
 
   if (conditions.length === 0) {
-    query = sql`SELECT * FROM ${table} ORDER BY stock DESC LIMIT 100`
+    query = sql`SELECT * FROM ${table} ORDER BY ${orderBy} LIMIT 100`
   } else {
     // Join conditions with AND
     const whereClause = sql.join(conditions, sql` AND `)
-    query = sql`SELECT * FROM ${table} WHERE ${whereClause} ORDER BY stock DESC LIMIT 100`
+    query = sql`SELECT * FROM ${table} WHERE ${whereClause} ORDER BY ${orderBy} LIMIT 100`
   }
 
   const result = await query.execute(db)
@@ -163,7 +226,9 @@ export async function queryFilterOptions(
   for (const [paramName, fieldConfig] of Object.entries(config.filters)) {
     if (
       fieldConfig.type === "boolean" ||
-      fieldConfig.type === "number_range_contains"
+      fieldConfig.type === "number_range_contains" ||
+      fieldConfig.type === "number_distance_from_param" ||
+      fieldConfig.type === "number_excludes_ranges"
     )
       continue
 
@@ -243,6 +308,9 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
   },
   photo_diode: {
     paramAliases: { wavelength_min: "wavelength" },
+    targetSort: { field: "peak_wavelength_nm", param: "wavelength" },
+    helpText:
+      "These filters use catalog peak wavelength and advertised spectral range, not a full responsivity curve. Verify the datasheet; optical filtering may be needed for out-of-band rejection.",
     filters: {
       package: { field: "package", type: "string" },
       wavelength: {
@@ -250,6 +318,24 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
         maxField: "spectral_range_max_nm",
         fallbackField: "peak_wavelength_nm",
         type: "number_range_contains",
+        placeholder: "355",
+        helpText:
+          "Must be inside the published spectral range. Results are ranked by closeness to peak response.",
+      },
+      peak_distance_max: {
+        field: "peak_wavelength_nm",
+        type: "number_distance_from_param",
+        relativeToParam: "wavelength",
+        placeholder: "100",
+        helpText:
+          "Optional maximum distance between the target and peak wavelengths.",
+      },
+      excluded_peak_bands: {
+        field: "peak_wavelength_nm",
+        type: "number_excludes_ranges",
+        placeholder: "700-1100, 532",
+        helpText:
+          "Comma-separated wavelengths or ranges whose peak response should be excluded.",
       },
       reverse_voltage_min: {
         field: "reverse_voltage",
