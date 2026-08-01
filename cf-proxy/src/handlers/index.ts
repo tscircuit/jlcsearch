@@ -5,8 +5,15 @@ export type QueryParams = Record<string, string>
 
 interface FilterConfig {
   field: string
-  type: "string" | "number" | "boolean" | "number_tolerance"
+  type:
+    | "string"
+    | "number"
+    | "boolean"
+    | "number_tolerance"
+    | "number_range_contains"
   operator?: "=" | ">=" | "<=" | ">" | "<"
+  maxField?: string
+  fallbackField?: string
 }
 
 interface TableConfig {
@@ -59,7 +66,7 @@ export async function queryTable(
     const value = params[paramName]
     if (value === undefined || value === "" || value === "All") continue
 
-    const { field, type, operator = "=" } = fieldConfig
+    const { field, type, operator = "=", maxField, fallbackField } = fieldConfig
 
     // Validate operator
     if (!ALLOWED_OPERATORS.has(operator)) {
@@ -103,6 +110,29 @@ export async function queryTable(
         conditions.push(sql`${column} >= ${numValue - delta}`)
         conditions.push(sql`${column} <= ${numValue + delta}`)
       }
+    } else if (type === "number_range_contains") {
+      const numValue = parseFloat(value)
+      if (!isNaN(numValue)) {
+        if (!maxField) {
+          throw new Error(`Missing maxField for range filter: ${paramName}`)
+        }
+
+        const maxColumn = sql.id(maxField)
+        if (fallbackField) {
+          const fallbackColumn = sql.id(fallbackField)
+          conditions.push(sql`(
+            (${column} IS NOT NULL AND ${maxColumn} IS NOT NULL
+              AND ${column} <= ${numValue} AND ${maxColumn} >= ${numValue})
+            OR
+            ((${column} IS NULL OR ${maxColumn} IS NULL)
+              AND ${fallbackColumn} = ${numValue})
+          )`)
+        } else {
+          conditions.push(
+            sql`${column} <= ${numValue} AND ${maxColumn} >= ${numValue}`,
+          )
+        }
+      }
     }
   }
 
@@ -130,7 +160,11 @@ export async function queryFilterOptions(
   const options: FilterOptions = {}
 
   for (const [paramName, fieldConfig] of Object.entries(config.filters)) {
-    if (fieldConfig.type === "boolean") continue
+    if (
+      fieldConfig.type === "boolean" ||
+      fieldConfig.type === "number_range_contains"
+    )
+      continue
 
     const field = sql.id(fieldConfig.field)
     const table = sql.id(tableName)
@@ -210,9 +244,10 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
     filters: {
       package: { field: "package", type: "string" },
       wavelength_min: {
-        field: "peak_wavelength_nm",
-        type: "number",
-        operator: ">=",
+        field: "spectral_range_min_nm",
+        maxField: "spectral_range_max_nm",
+        fallbackField: "peak_wavelength_nm",
+        type: "number_range_contains",
       },
       reverse_voltage_min: {
         field: "reverse_voltage",
