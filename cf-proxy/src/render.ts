@@ -1,4 +1,5 @@
 import {
+  normalizeTableQueryParams,
   ROUTE_TO_TABLE,
   TABLE_CONFIGS,
   TABLE_RESPONSE_KEY,
@@ -167,7 +168,7 @@ const COLUMN_LABELS: Record<string, string> = {
   current_rating_amp: "Current",
   voltage_rating_volt: "Voltage",
   wavelength_nm: "Wavelength",
-  wavelength_min: "Desired Wavelength",
+  wavelength: "Desired Wavelength",
   peak_wavelength_nm: "Peak Wavelength",
   spectral_range_min_nm: "Spectral Range Min",
   spectral_range_max_nm: "Spectral Range Max",
@@ -626,6 +627,7 @@ const renderGenericFilters = (
   if (!tableName) return ""
   const config = TABLE_CONFIGS[tableName]
   if (!config) return ""
+  const normalizedParams = normalizeTableQueryParams(tableName, params)
 
   const inputs = Object.entries(config.filters)
     .map(([paramName, fieldConfig]) => {
@@ -637,7 +639,7 @@ const renderGenericFilters = (
         ]),
       )
       if (fieldConfig.type === "boolean") {
-        return `<div><label>${escapeHtml(label)}:</label><select name="${escapeHtml(paramName)}"><option value="">All</option><option value="true"${params[paramName] === "true" ? " selected" : ""}>Yes</option><option value="false"${params[paramName] === "false" ? " selected" : ""}>No</option></select></div>`
+        return `<div><label>${escapeHtml(label)}:</label><select name="${escapeHtml(paramName)}"><option value="">All</option><option value="true"${normalizedParams[paramName] === "true" ? " selected" : ""}>Yes</option><option value="false"${normalizedParams[paramName] === "false" ? " selected" : ""}>No</option></select></div>`
       }
       const isNumberFilter =
         fieldConfig.type === "number" ||
@@ -648,7 +650,7 @@ const renderGenericFilters = (
         mergedSuggestions.length > 0
           ? `${pathname.replaceAll("/", "-")}-${paramName}-options`
           : ""
-      return `<div><label>${escapeHtml(label)}:</label><input type="${inputType}" name="${escapeHtml(paramName)}" value="${escapeHtml(params[paramName] ?? "")}"${step}${listId ? ` list="${escapeHtml(listId)}"` : ""} autocomplete="on" />${renderFilterSuggestions(pathname, paramName, mergedSuggestions)}</div>`
+      return `<div><label>${escapeHtml(label)}:</label><input type="${inputType}" name="${escapeHtml(paramName)}" value="${escapeHtml(normalizedParams[paramName] ?? "")}"${step}${listId ? ` list="${escapeHtml(listId)}"` : ""} autocomplete="on" />${renderFilterSuggestions(pathname, paramName, mergedSuggestions)}</div>`
     })
     .join("")
 

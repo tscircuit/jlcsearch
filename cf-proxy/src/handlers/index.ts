@@ -18,6 +18,7 @@ interface FilterConfig {
 
 interface TableConfig {
   filters: Record<string, FilterConfig>
+  paramAliases?: Record<string, string>
 }
 
 export type FilterOptions = Record<string, string[]>
@@ -241,9 +242,10 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
     },
   },
   photo_diode: {
+    paramAliases: { wavelength_min: "wavelength" },
     filters: {
       package: { field: "package", type: "string" },
-      wavelength_min: {
+      wavelength: {
         field: "spectral_range_min_nm",
         maxField: "spectral_range_max_nm",
         fallbackField: "peak_wavelength_nm",
@@ -581,6 +583,24 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
       gender: { field: "gender", type: "string" },
     },
   },
+}
+
+export function normalizeTableQueryParams(
+  tableName: string,
+  params: QueryParams,
+): QueryParams {
+  const aliases = TABLE_CONFIGS[tableName]?.paramAliases
+  if (!aliases) return params
+
+  let normalizedParams = params
+  for (const [alias, canonicalParam] of Object.entries(aliases)) {
+    if (params[canonicalParam] === undefined && params[alias] !== undefined) {
+      if (normalizedParams === params) normalizedParams = { ...params }
+      normalizedParams[canonicalParam] = params[alias]
+    }
+  }
+
+  return normalizedParams
 }
 
 // Map URL paths to table names

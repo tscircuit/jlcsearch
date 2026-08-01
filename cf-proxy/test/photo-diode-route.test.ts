@@ -38,7 +38,7 @@ describe("Photo Diodes route", () => {
       const handler = getD1Handler("/photo_diodes/list")
       expect(handler).not.toBeNull()
 
-      await handler!(db, { wavelength_min: "300" })
+      await handler!(db, { wavelength: "300" })
 
       const partsQuery = compiledQueries.find((query) =>
         query.sql.startsWith('SELECT * FROM "photo_diode"'),
@@ -49,6 +49,14 @@ describe("Photo Diodes route", () => {
       expect(partsQuery?.sql).toContain('"spectral_range_max_nm" >= ?')
       expect(partsQuery?.sql).toContain('"peak_wavelength_nm" = ?')
       expect(partsQuery?.parameters).toEqual([300, 300, 300])
+
+      compiledQueries.length = 0
+      await handler!(db, { wavelength_min: "300" })
+      const legacyPartsQuery = compiledQueries.find((query) =>
+        query.sql.startsWith('SELECT * FROM "photo_diode"'),
+      )
+      expect(legacyPartsQuery?.sql).toBe(partsQuery?.sql)
+      expect(legacyPartsQuery?.parameters).toEqual([300, 300, 300])
     } finally {
       await db.destroy()
     }
