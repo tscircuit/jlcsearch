@@ -40,7 +40,7 @@ test("photo diode wavelength filter matches detection ranges", async () => {
     const handler = getD1Handler("/photo_diodes/list")
     expect(handler).not.toBeNull()
 
-    const result = await handler!(db as any, { wavelength_min: "300" })
+    const result = await handler!(db as any, { wavelength: "300" })
     const rows = result.data.photo_diodes as Array<{
       lcsc: number
       mfr: string
@@ -48,6 +48,12 @@ test("photo diode wavelength filter matches detection ranges", async () => {
 
     expect(rows.map((row) => row.lcsc)).toEqual([2, 3])
     expect(rows.map((row) => row.mfr)).toEqual(["UV_TO_IR", "PEAK_300_ONLY"])
+
+    const legacyResult = await handler!(db as any, {
+      wavelength_min: "300",
+    })
+    const legacyRows = legacyResult.data.photo_diodes as Array<{ lcsc: number }>
+    expect(legacyRows.map((row) => row.lcsc)).toEqual([2, 3])
   } finally {
     await db.destroy()
   }

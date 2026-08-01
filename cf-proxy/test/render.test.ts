@@ -46,11 +46,11 @@ describe("render helpers", () => {
       },
       {
         package: "SMD-4P,2.7x3.2mm",
-        wavelength_min: "850",
+        wavelength: "850",
         reverse_voltage_min: "20",
         dark_current_max: "0.00000001",
       },
-      "https://jlcsearch.tscircuit.com/photo_diodes/list?package=SMD-4P%2C2.7x3.2mm&wavelength_min=850",
+      "https://jlcsearch.tscircuit.com/photo_diodes/list?package=SMD-4P%2C2.7x3.2mm&wavelength=850",
       {
         package: ["SMD-4P,2.7x3.2mm", "Plugin"],
       },
@@ -58,7 +58,8 @@ describe("render helpers", () => {
 
     expect(html).toContain("<h2>Photo Diodes</h2>")
     expect(html).toContain('name="package"')
-    expect(html).toContain('name="wavelength_min"')
+    expect(html).toContain('name="wavelength"')
+    expect(html).not.toContain('name="wavelength_min"')
     expect(html).toContain("Desired Wavelength")
     expect(html).toContain('name="reverse_voltage_min"')
     expect(html).toContain('name="dark_current_max"')
@@ -69,6 +70,14 @@ describe("render helpers", () => {
     expect(html).toContain("10nA")
     expect(html).toContain("60°")
     expect(html).toContain("/photo_diodes/list.json")
+
+    const legacyHtml = renderD1TablePage(
+      pathname,
+      { photo_diodes: [] },
+      { wavelength_min: "300" },
+      "https://jlcsearch.tscircuit.com/photo_diodes/list?wavelength_min=300",
+    )
+    expect(legacyHtml).toContain('name="wavelength" value="300"')
   })
 
   it("renders the HDMI ports page and JSON API link", () => {

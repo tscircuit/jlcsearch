@@ -11,6 +11,7 @@ import {
   TFT_DISPLAY_DRIVER_SUBCATEGORIES,
 } from "./tft-display-drivers"
 import {
+  normalizeTableQueryParams,
   queryFilterOptions,
   queryTable,
   ROUTE_TO_TABLE,
@@ -589,7 +590,8 @@ export function getD1Handler(pathname: string): D1Handler | null {
   }
 
   return async (db, params) => {
-    const results = await queryTable(db, tableName, params, config)
+    const normalizedParams = normalizeTableQueryParams(tableName, params)
+    const results = await queryTable(db, tableName, normalizedParams, config)
     const filterOptions = await queryFilterOptions(db, tableName, config)
     const responseKey = TABLE_RESPONSE_KEY[tableName] || tableName + "s"
     return {
