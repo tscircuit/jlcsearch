@@ -168,7 +168,9 @@ const COLUMN_LABELS: Record<string, string> = {
   current_rating_amp: "Current",
   voltage_rating_volt: "Voltage",
   wavelength_nm: "Wavelength",
-  wavelength: "Desired Wavelength",
+  wavelength: "Target Wavelength (nm)",
+  peak_distance_max: "Max Distance from Peak (nm)",
+  excluded_peak_bands: "Excluded Peak Bands (nm)",
   peak_wavelength_nm: "Peak Wavelength",
   spectral_range_min_nm: "Spectral Range Min",
   spectral_range_max_nm: "Spectral Range Max",
@@ -643,18 +645,28 @@ const renderGenericFilters = (
       }
       const isNumberFilter =
         fieldConfig.type === "number" ||
-        fieldConfig.type === "number_range_contains"
+        fieldConfig.type === "number_range_contains" ||
+        fieldConfig.type === "number_distance_from_param"
       const inputType = isNumberFilter ? "number" : "text"
       const step = isNumberFilter ? ' step="any"' : ""
+      const placeholder = fieldConfig.placeholder
+        ? ` placeholder="${escapeHtml(fieldConfig.placeholder)}"`
+        : ""
+      const helpText = fieldConfig.helpText
+        ? `<small class="block text-gray-600">${escapeHtml(fieldConfig.helpText)}</small>`
+        : ""
       const listId =
         mergedSuggestions.length > 0
           ? `${pathname.replaceAll("/", "-")}-${paramName}-options`
           : ""
-      return `<div><label>${escapeHtml(label)}:</label><input type="${inputType}" name="${escapeHtml(paramName)}" value="${escapeHtml(normalizedParams[paramName] ?? "")}"${step}${listId ? ` list="${escapeHtml(listId)}"` : ""} autocomplete="on" />${renderFilterSuggestions(pathname, paramName, mergedSuggestions)}</div>`
+      return `<div><label>${escapeHtml(label)}:</label><input type="${inputType}" name="${escapeHtml(paramName)}" value="${escapeHtml(normalizedParams[paramName] ?? "")}"${step}${placeholder}${listId ? ` list="${escapeHtml(listId)}"` : ""} autocomplete="on" />${helpText}${renderFilterSuggestions(pathname, paramName, mergedSuggestions)}</div>`
     })
     .join("")
 
-  return `<form method="GET" class="flex flex-row gap-4">${inputs}<button type="submit">Filter</button></form>`
+  const helpText = config.helpText
+    ? `<p class="mt-2 text-sm text-gray-600">${escapeHtml(config.helpText)}</p>`
+    : ""
+  return `<form method="GET" class="flex flex-row gap-4">${inputs}<button type="submit">Filter</button></form>${helpText}`
 }
 
 const renderComponentsFilters = (

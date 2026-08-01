@@ -48,7 +48,8 @@ describe("Photo Diodes route", () => {
       expect(partsQuery?.sql).toContain('"spectral_range_min_nm" <= ?')
       expect(partsQuery?.sql).toContain('"spectral_range_max_nm" >= ?')
       expect(partsQuery?.sql).toContain('"peak_wavelength_nm" = ?')
-      expect(partsQuery?.parameters).toEqual([300, 300, 300])
+      expect(partsQuery?.sql).toContain('ABS("peak_wavelength_nm" - ?) ASC')
+      expect(partsQuery?.parameters).toEqual([300, 300, 300, 300])
 
       compiledQueries.length = 0
       await handler!(db, { wavelength_min: "300" })
@@ -56,7 +57,24 @@ describe("Photo Diodes route", () => {
         query.sql.startsWith('SELECT * FROM "photo_diode"'),
       )
       expect(legacyPartsQuery?.sql).toBe(partsQuery?.sql)
-      expect(legacyPartsQuery?.parameters).toEqual([300, 300, 300])
+      expect(legacyPartsQuery?.parameters).toEqual([300, 300, 300, 300])
+
+      compiledQueries.length = 0
+      await handler!(db, {
+        wavelength: "355",
+        peak_distance_max: "100",
+        excluded_peak_bands: "700-1100, 532",
+      })
+      const bandFilteredQuery = compiledQueries.find((query) =>
+        query.sql.startsWith('SELECT * FROM "photo_diode"'),
+      )
+      expect(bandFilteredQuery?.sql).toContain('"peak_wavelength_nm" >= ?')
+      expect(bandFilteredQuery?.sql).toContain(
+        '("peak_wavelength_nm" < ? OR "peak_wavelength_nm" > ?)',
+      )
+      expect(bandFilteredQuery?.parameters).toEqual([
+        355, 355, 355, 255, 455, 700, 1100, 532, 532, 355,
+      ])
     } finally {
       await db.destroy()
     }
