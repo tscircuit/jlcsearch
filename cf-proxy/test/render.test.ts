@@ -139,6 +139,34 @@ describe("render helpers", () => {
     expect(html).toContain("/hdmi_ports/list.json")
   })
 
+  it("renders ARM processor memory sizes with byte units", () => {
+    const html = renderD1TablePage(
+      "/arm_processors/list",
+      {
+        arm_processors: [
+          {
+            lcsc: 8734,
+            mfr: "STM32F103C8T6",
+            package: "LQFP-48(7x7)",
+            cpu_core: "ARM-M3",
+            cpu_speed_hz: 72_000_000,
+            flash_size_bytes: 64 * 1024,
+            ram_size_bytes: 20 * 1024,
+            eeprom_size_bytes: 4,
+            gpio_count: 37,
+            stock: 214596,
+          },
+        ],
+      },
+      {},
+      "https://jlcsearch.tscircuit.com/arm_processors/list",
+    )
+
+    expect(html).toContain("64KB")
+    expect(html).toContain("20KB")
+    expect(html).toContain("4B")
+  })
+
   it.each([
     [
       "/dimm_connectors/list",
