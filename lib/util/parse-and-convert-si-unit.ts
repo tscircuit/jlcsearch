@@ -113,6 +113,23 @@ const unitMappings: Record<
       mil: 0.0254,
     },
   },
+  B: {
+    baseUnit: "B",
+    variants: {
+      B: 1,
+      Byte: 1,
+      Bytes: 1,
+      KB: 1024,
+      KByte: 1024,
+      KBytes: 1024,
+      MB: 1024 * 1024,
+      MByte: 1024 * 1024,
+      MBytes: 1024 * 1024,
+      GB: 1024 * 1024 * 1024,
+      GByte: 1024 * 1024 * 1024,
+      GBytes: 1024 * 1024 * 1024,
+    },
+  },
 }
 
 function getBaseTscircuitUnit(unit: string): UnitInfo {
@@ -165,6 +182,7 @@ type BaseTscircuitUnit =
   | "Ω"
   | "F"
   | "H"
+  | "B"
 
 export const parseAndConvertSiUnit = <
   T extends
