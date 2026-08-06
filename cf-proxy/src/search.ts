@@ -9,6 +9,7 @@ export interface SearchQueryParams {
   limit?: string
   is_basic?: string
   is_preferred?: string
+  is_extended_promotional?: string
 }
 
 interface SearchRow {
@@ -108,6 +109,16 @@ export async function searchIndex(
 
   if (params.is_preferred === "true" || params.is_preferred === "1") {
     conditions.push(sql`search_index.preferred = 1`)
+  }
+
+  if (
+    params.is_extended_promotional === "true" ||
+    params.is_extended_promotional === "1"
+  ) {
+    // "Extended promotional" (JLCPCB "Preferred Extended") parts are extended
+    // parts (not basic) that JLCPCB currently assembles with no extra setup
+    // fee, so they effectively behave like basic parts.
+    conditions.push(sql`search_index.preferred = 1 AND search_index.basic = 0`)
   }
 
   const raw = params.q?.trim()

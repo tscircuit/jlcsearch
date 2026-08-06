@@ -366,8 +366,9 @@ async function handleD1Search(
       lcsc: row.lcsc ?? 0,
       mfr: row.mfr ?? "",
       package: row.package ?? "",
-      is_basic: Boolean(row.basic),
-      is_preferred: Boolean(row.preferred),
+      is_basic: row.basic === 1,
+      is_preferred: row.preferred === 1,
+      is_extended_promotional: row.preferred === 1 && row.basic === 0,
       description: row.description ?? "",
       stock: row.stock ?? 0,
       price: row.price1 ?? extractSmallQuantityPrice(row.price),
@@ -493,6 +494,7 @@ async function handleD1ComponentsList(
         subcategory: row.subcategory ?? "",
         is_basic: Boolean(row.basic),
         is_preferred: Boolean(row.preferred),
+        is_extended_promotional: Boolean(row.preferred) && !Boolean(row.basic),
       })),
     }
 
