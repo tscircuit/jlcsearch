@@ -4,7 +4,9 @@ import {
   ROUTE_TO_TABLE,
   TABLE_CONFIGS,
   TABLE_RESPONSE_KEY,
+  normalizeTableQueryParams,
 } from "./handlers"
+import { TFT_DISPLAY_DRIVER_FAMILIES } from "./tft-display-drivers"
 
 const escapeHtml = (value: unknown): string =>
   String(value ?? "")
@@ -22,12 +24,17 @@ const routeLabels: Record<string, string> = {
   "/capacitors/list": "Capacitors",
   "/potentiometers/list": "Potentiometers",
   "/headers/list": "Headers",
+  "/dimm_connectors/list": "DIMM Connectors",
+  "/sodimm_connectors/list": "SO-DIMM Connectors",
   "/usb_c_connectors/list": "USB-C Connectors",
   "/pcie_m2_connectors/list": "PCIe M.2 Connectors",
   "/fpc_connectors/list": "FPC Connectors",
   "/jst_connectors/list": "JST Connectors",
   "/wire_to_board_connectors/list": "Wire to Board Connectors",
+  "/spring_clamp_terminal_blocks/list": "Spring Clamp Terminal Blocks",
   "/battery_holders/list": "Battery Holders",
+  "/ble_modules/list": "BLE Modules",
+  "/ble_chips/list": "BLE Chips",
   "/leds/list": "LEDs",
   "/adcs/list": "ADCs",
   "/analog_multiplexers/list": "Analog Muxes",
@@ -36,8 +43,10 @@ const routeLabels: Record<string, string> = {
   "/gyroscopes/list": "Gyroscopes",
   "/accelerometers/list": "Accelerometers",
   "/gas_sensors/list": "Gas Sensors",
+  "/hdmi_ports/list": "HDMI Ports",
   "/microphones/list": "Microphones",
   "/diodes/list": "Diodes",
+  "/photo_diodes/list": "Photo Diodes",
   "/dacs/list": "DACs",
   "/wifi_modules/list": "WiFi Modules",
   "/microcontrollers/list": "Microcontrollers",
@@ -55,6 +64,8 @@ const routeLabels: Record<string, string> = {
   "/oled_display/list": " OLED Displays Modules",
   "/led_segment_display/list": "LED Segment Display Modules",
   "/lcd_display/list": "LCD Display Modules",
+  "/lcd_drivers/list": "LCD Drivers",
+  "/tft_display_drivers/list": "TFT Display Drivers",
   "/switches/list": "Switches",
   "/relays/list": "Relays",
   "/fuses/list": "Fuses",
@@ -158,8 +169,20 @@ const COLUMN_LABELS: Record<string, string> = {
   current_rating_amp: "Current",
   voltage_rating_volt: "Voltage",
   wavelength_nm: "Wavelength",
+  wavelength: "Target Wavelength (nm)",
+  peak_distance_max: "Max Distance from Peak (nm)",
+  excluded_peak_bands: "Excluded Peak Bands (nm)",
+  peak_wavelength_nm: "Peak Wavelength",
+  spectral_range_min_nm: "Spectral Range Min",
+  spectral_range_max_nm: "Spectral Range Max",
+  reverse_voltage_min: "Min Reverse Voltage",
+  dark_current_a: "Dark Current",
+  dark_current_max: "Max Dark Current",
+  reception_angle_deg: "Reception Angle",
   luminous_intensity_mcd: "Intensity",
   number_of_contacts: "Contacts",
+  number_of_pins: "Pins",
+  number_of_rows: "Rows",
   num_channels: "Channels",
   num_bits: "Bits",
   num_pins: "Pins",
@@ -179,6 +202,7 @@ const COLUMN_LABELS: Record<string, string> = {
   gpio_count: "GPIO",
   clock_frequency_hz: "Clock",
   frequency_ghz: "Frequency",
+  data_rate_mbps: "Data Rate",
   display_type: "Display Type",
   matrix_size: "Matrix Size",
   forward_current: "Forward Current",
@@ -193,6 +217,9 @@ const COLUMN_LABELS: Record<string, string> = {
   operating_temp_min: "Min Temp",
   operating_temp_max: "Max Temp",
   pitch_mm: "Pitch",
+  ddr_standard: "DDR Standard",
+  height_above_board_mm: "Height Above Board",
+  height_mm: "Height",
 }
 
 const getColumnLabel = (column: string): string => {
@@ -209,8 +236,12 @@ const withUnit = (value: unknown, unit: string): string => {
 const formatByteSize = (value: unknown): string => {
   const num = typeof value === "number" ? value : Number(value)
   if (!Number.isFinite(num)) return ""
-  if (num >= 1024 * 1024) return `${(num / (1024 * 1024)).toFixed(1)}MB`
-  if (num >= 1024) return `${(num / 1024).toFixed(1)}KB`
+  if (num >= 1024 * 1024) {
+    return `${(num / (1024 * 1024)).toFixed(1).replace(/\.0$/, "")}MB`
+  }
+  if (num >= 1024) {
+    return `${(num / 1024).toFixed(1).replace(/\.0$/, "")}KB`
+  }
   return `${num}B`
 }
 
@@ -251,7 +282,12 @@ const formatDisplayValue = (column: string, value: unknown): string | null => {
       return `${formatSiUnit(value)}Hz`
     case "frequency_ghz":
       return withUnit(value, "GHz")
+    case "data_rate_mbps":
+      return withUnit(value, "Mbps")
     case "wavelength_nm":
+    case "peak_wavelength_nm":
+    case "spectral_range_min_nm":
+    case "spectral_range_max_nm":
       return withUnit(value, "nm")
     case "luminous_intensity_mcd":
       return withUnit(value, "mcd")
@@ -268,12 +304,15 @@ const formatDisplayValue = (column: string, value: unknown): string | null => {
     case "pin_count":
     case "channel_count":
     case "number_of_contacts":
+    case "number_of_pins":
+    case "number_of_rows":
     case "gpio_count":
       return formatCount(value)
     case "current_rating":
     case "current_rating_a":
     case "current_rating_amp":
     case "forward_current":
+    case "dark_current_a":
     case "collector_current":
     case "continuous_drain_current":
     case "output_current_max":
@@ -287,6 +326,8 @@ const formatDisplayValue = (column: string, value: unknown): string | null => {
     case "gate_threshold_voltage":
     case "supply_voltage_min":
     case "supply_voltage_max":
+    case "operating_voltage_min":
+    case "operating_voltage_max":
     case "input_voltage_min":
     case "input_voltage_max":
     case "output_voltage_min":
@@ -302,12 +343,15 @@ const formatDisplayValue = (column: string, value: unknown): string | null => {
     case "width_mm":
     case "length_mm":
     case "switch_height_mm":
+    case "height_above_board_mm":
       return withUnit(value, "mm")
     case "operating_temp_min":
     case "operating_temp_max":
     case "operating_temperature_min":
     case "operating_temperature_max":
       return withUnit(value, "°C")
+    case "reception_angle_deg":
+      return withUnit(value, "°")
     default:
       return null
   }
@@ -495,6 +539,87 @@ const renderCustomFilters = (
         <button type="submit">Filter</button>
       </form>`
     }
+    case "/lcd_drivers/list": {
+      const packageOptions = filterOptions.package ?? []
+      const maxResolutionOptions = filterOptions.max_resolution ?? []
+      const packageListId = getSuggestionListId(
+        pathname,
+        "package",
+        packageOptions,
+      )
+
+      return `<form method="GET" class="flex flex-row gap-4">
+        <div>
+          <label>Package:</label>
+          <input type="text" name="package" value="${escapeHtml(params.package ?? "")}"${packageListId ? ` list="${escapeHtml(packageListId)}"` : ""} autocomplete="on" />
+          ${renderFilterSuggestions(pathname, "package", packageOptions)}
+        </div>
+        <div>
+          <label>Max Resolution:</label>
+          <select name="max_resolution">
+            <option value="">All</option>
+            ${maxResolutionOptions
+              .map(
+                (option) =>
+                  `<option value="${escapeHtml(option)}"${params.max_resolution === option ? " selected" : ""}>${escapeHtml(option)}</option>`,
+              )
+              .join("")}
+          </select>
+        </div>
+        <div>
+          <label>Basic Part:<input type="checkbox" name="is_basic" value="true"${params.is_basic === "true" ? " checked" : ""} /></label>
+        </div>
+        <div>
+          <label>Preferred Part:<input type="checkbox" name="is_preferred" value="true"${params.is_preferred === "true" ? " checked" : ""} /></label>
+        </div>
+        <button type="submit">Filter</button>
+      </form>`
+    }
+    case "/tft_display_drivers/list": {
+      const packageOptions = filterOptions.package ?? []
+      const maxResolutionOptions = filterOptions.max_resolution ?? []
+      const packageListId = getSuggestionListId(
+        pathname,
+        "package",
+        packageOptions,
+      )
+      return `<form method="GET" class="flex flex-row gap-4">
+        <div>
+          <label>Package:</label>
+          <input type="text" name="package" value="${escapeHtml(params.package ?? "")}"${packageListId ? ` list="${escapeHtml(packageListId)}"` : ""} autocomplete="on" />
+          ${renderFilterSuggestions(pathname, "package", packageOptions)}
+        </div>
+        <div>
+          <label>Driver Type:</label>
+          <select name="driver_type">
+            <option value="">All</option>
+            ${TFT_DISPLAY_DRIVER_FAMILIES.map(
+              ({ value, label }) =>
+                `<option value="${escapeHtml(value)}"${params.driver_type === value ? " selected" : ""}>${escapeHtml(label)}</option>`,
+            ).join("")}
+          </select>
+        </div>
+        <div>
+          <label>Max Resolution:</label>
+          <select name="max_resolution">
+            <option value="">All</option>
+            ${maxResolutionOptions
+              .map(
+                (option) =>
+                  `<option value="${escapeHtml(option)}"${params.max_resolution === option ? " selected" : ""}>${escapeHtml(option)}</option>`,
+              )
+              .join("")}
+          </select>
+        </div>
+        <div>
+          <label>Basic Part:<input type="checkbox" name="is_basic" value="true"${params.is_basic === "true" ? " checked" : ""} /></label>
+        </div>
+        <div>
+          <label>Preferred Part:<input type="checkbox" name="is_preferred" value="true"${params.is_preferred === "true" ? " checked" : ""} /></label>
+        </div>
+        <button type="submit">Filter</button>
+      </form>`
+    }
     default:
       return ""
   }
@@ -509,6 +634,7 @@ const renderGenericFilters = (
   if (!tableName) return ""
   const config = TABLE_CONFIGS[tableName]
   if (!config) return ""
+  const normalizedParams = normalizeTableQueryParams(tableName, params)
 
   const inputs = Object.entries(config.filters)
     .map(([paramName, fieldConfig]) => {
@@ -520,19 +646,32 @@ const renderGenericFilters = (
         ]),
       )
       if (fieldConfig.type === "boolean") {
-        return `<div><label>${escapeHtml(label)}:</label><select name="${escapeHtml(paramName)}"><option value="">All</option><option value="true"${params[paramName] === "true" ? " selected" : ""}>Yes</option><option value="false"${params[paramName] === "false" ? " selected" : ""}>No</option></select></div>`
+        return `<div><label>${escapeHtml(label)}:</label><select name="${escapeHtml(paramName)}"><option value="">All</option><option value="true"${normalizedParams[paramName] === "true" ? " selected" : ""}>Yes</option><option value="false"${normalizedParams[paramName] === "false" ? " selected" : ""}>No</option></select></div>`
       }
-      const inputType = fieldConfig.type === "number" ? "number" : "text"
-      const step = fieldConfig.type === "number" ? ' step="any"' : ""
+      const isNumberFilter =
+        fieldConfig.type === "number" ||
+        fieldConfig.type === "number_range_contains" ||
+        fieldConfig.type === "number_distance_from_param"
+      const inputType = isNumberFilter ? "number" : "text"
+      const step = isNumberFilter ? ' step="any"' : ""
+      const placeholder = fieldConfig.placeholder
+        ? ` placeholder="${escapeHtml(fieldConfig.placeholder)}"`
+        : ""
+      const helpText = fieldConfig.helpText
+        ? `<small class="block text-gray-600">${escapeHtml(fieldConfig.helpText)}</small>`
+        : ""
       const listId =
         mergedSuggestions.length > 0
           ? `${pathname.replaceAll("/", "-")}-${paramName}-options`
           : ""
-      return `<div><label>${escapeHtml(label)}:</label><input type="${inputType}" name="${escapeHtml(paramName)}" value="${escapeHtml(params[paramName] ?? "")}"${step}${listId ? ` list="${escapeHtml(listId)}"` : ""} autocomplete="on" />${renderFilterSuggestions(pathname, paramName, mergedSuggestions)}</div>`
+      return `<div><label>${escapeHtml(label)}:</label><input type="${inputType}" name="${escapeHtml(paramName)}" value="${escapeHtml(normalizedParams[paramName] ?? "")}"${step}${placeholder}${listId ? ` list="${escapeHtml(listId)}"` : ""} autocomplete="on" />${helpText}${renderFilterSuggestions(pathname, paramName, mergedSuggestions)}</div>`
     })
     .join("")
 
-  return `<form method="GET" class="flex flex-row gap-4">${inputs}<button type="submit">Filter</button></form>`
+  const helpText = config.helpText
+    ? `<p class="mt-2 text-sm text-gray-600">${escapeHtml(config.helpText)}</p>`
+    : ""
+  return `<form method="GET" class="flex flex-row gap-4">${inputs}<button type="submit">Filter</button></form>${helpText}`
 }
 
 const renderComponentsFilters = (
@@ -623,7 +762,6 @@ posthog.init('phc_htd8AQjSfVEsFCLQMAiUooG4Q0DKBCjqYuQglc9V3Wo', { api_host:'http
             <img src="https://img.shields.io/github/stars/tscircuit/jlcsearch?style=social" alt="GitHub stars" class="inline-block" />
           </a>
           ${pathname.includes("/list") ? `<a href="${escapeHtml((requestUrl || pathname).replace("/list", "/list.json"))}">json</a>` : ""}
-          <a href="https://raw.githubusercontent.com/tscircuit/jlcsearch/refs/heads/main/docs/openapi.json">OpenAPI</a>
           <a href="https://tscircuit.com">tscircuit</a>
         </div>
       </div>

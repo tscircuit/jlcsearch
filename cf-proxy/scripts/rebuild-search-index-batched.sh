@@ -89,6 +89,17 @@ SELECT
   price,
   CASE
     WHEN json_valid(price) THEN CAST(json_extract(price, '$[0].price') AS REAL)
+    WHEN instr(price, ':') > 0 THEN CAST(
+      substr(
+        price,
+        instr(price, ':') + 1,
+        CASE
+          WHEN instr(price, ',') > 0
+          THEN instr(price, ',') - instr(price, ':') - 1
+          ELSE length(price) - instr(price, ':')
+        END
+      ) AS REAL
+    )
     ELSE NULL
   END AS price1,
   basic,

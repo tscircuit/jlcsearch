@@ -5,18 +5,55 @@ export type QueryParams = Record<string, string>
 
 interface FilterConfig {
   field: string
-  type: "string" | "number" | "boolean" | "number_tolerance"
+  type:
+    | "string"
+    | "number"
+    | "boolean"
+    | "number_tolerance"
+    | "number_range_contains"
+    | "number_distance_from_param"
+    | "number_excludes_ranges"
   operator?: "=" | ">=" | "<=" | ">" | "<"
+  maxField?: string
+  fallbackField?: string
+  relativeToParam?: string
+  placeholder?: string
+  helpText?: string
 }
 
 interface TableConfig {
   filters: Record<string, FilterConfig>
+  paramAliases?: Record<string, string>
+  targetSort?: {
+    field: string
+    param: string
+  }
+  helpText?: string
 }
 
 export type FilterOptions = Record<string, string[]>
 
 // Allowed operators for sanitization
 const ALLOWED_OPERATORS = new Set(["=", ">=", "<=", ">", "<"])
+
+const parseNumberRanges = (value: string): Array<[number, number]> =>
+  value
+    .split(",")
+    .map((range) => range.trim())
+    .filter(Boolean)
+    .flatMap((range): Array<[number, number]> => {
+      const rangeMatch = range.match(
+        /^(\d+(?:\.\d+)?)\s*(?:-|–|—|\.\.)\s*(\d+(?:\.\d+)?)$/,
+      )
+      if (rangeMatch) {
+        const first = Number(rangeMatch[1])
+        const second = Number(rangeMatch[2])
+        return [[Math.min(first, second), Math.max(first, second)]]
+      }
+
+      const singleValue = Number(range)
+      return Number.isFinite(singleValue) ? [[singleValue, singleValue]] : []
+    })
 
 const isBooleanLikeField = (field: string): boolean =>
   field === "in_stock" ||
@@ -59,7 +96,14 @@ export async function queryTable(
     const value = params[paramName]
     if (value === undefined || value === "" || value === "All") continue
 
-    const { field, type, operator = "=" } = fieldConfig
+    const {
+      field,
+      type,
+      operator = "=",
+      maxField,
+      fallbackField,
+      relativeToParam,
+    } = fieldConfig
 
     // Validate operator
     if (!ALLOWED_OPERATORS.has(operator)) {
@@ -103,19 +147,69 @@ export async function queryTable(
         conditions.push(sql`${column} >= ${numValue - delta}`)
         conditions.push(sql`${column} <= ${numValue + delta}`)
       }
+    } else if (type === "number_range_contains") {
+      const numValue = parseFloat(value)
+      if (!isNaN(numValue)) {
+        if (!maxField) {
+          throw new Error(`Missing maxField for range filter: ${paramName}`)
+        }
+
+        const maxColumn = sql.id(maxField)
+        if (fallbackField) {
+          const fallbackColumn = sql.id(fallbackField)
+          conditions.push(sql`(
+            (${column} IS NOT NULL AND ${maxColumn} IS NOT NULL
+              AND ${column} <= ${numValue} AND ${maxColumn} >= ${numValue})
+            OR
+            ((${column} IS NULL OR ${maxColumn} IS NULL)
+              AND ${fallbackColumn} = ${numValue})
+          )`)
+        } else {
+          conditions.push(
+            sql`${column} <= ${numValue} AND ${maxColumn} >= ${numValue}`,
+          )
+        }
+      }
+    } else if (type === "number_distance_from_param") {
+      const maxDistance = parseFloat(value)
+      const relativeValue = relativeToParam
+        ? parseFloat(params[relativeToParam] ?? "")
+        : Number.NaN
+      if (
+        Number.isFinite(maxDistance) &&
+        maxDistance >= 0 &&
+        Number.isFinite(relativeValue)
+      ) {
+        conditions.push(sql`${column} IS NOT NULL`)
+        conditions.push(sql`${column} >= ${relativeValue - maxDistance}`)
+        conditions.push(sql`${column} <= ${relativeValue + maxDistance}`)
+      }
+    } else if (type === "number_excludes_ranges") {
+      for (const [rangeMin, rangeMax] of parseNumberRanges(value)) {
+        conditions.push(
+          sql`${column} IS NOT NULL AND (${column} < ${rangeMin} OR ${column} > ${rangeMax})`,
+        )
+      }
     }
   }
 
   // Build the final query
   const table = sql.id(tableName)
+  const targetSortValue = config.targetSort
+    ? parseFloat(params[config.targetSort.param] ?? "")
+    : Number.NaN
+  const orderBy =
+    config.targetSort && Number.isFinite(targetSortValue)
+      ? sql`${sql.id(config.targetSort.field)} IS NULL ASC, ABS(${sql.id(config.targetSort.field)} - ${targetSortValue}) ASC, stock DESC`
+      : sql`stock DESC`
   let query: RawBuilder<unknown>
 
   if (conditions.length === 0) {
-    query = sql`SELECT * FROM ${table} ORDER BY stock DESC LIMIT 100`
+    query = sql`SELECT * FROM ${table} ORDER BY ${orderBy} LIMIT 100`
   } else {
     // Join conditions with AND
     const whereClause = sql.join(conditions, sql` AND `)
-    query = sql`SELECT * FROM ${table} WHERE ${whereClause} ORDER BY stock DESC LIMIT 100`
+    query = sql`SELECT * FROM ${table} WHERE ${whereClause} ORDER BY ${orderBy} LIMIT 100`
   }
 
   const result = await query.execute(db)
@@ -130,7 +224,13 @@ export async function queryFilterOptions(
   const options: FilterOptions = {}
 
   for (const [paramName, fieldConfig] of Object.entries(config.filters)) {
-    if (fieldConfig.type === "boolean") continue
+    if (
+      fieldConfig.type === "boolean" ||
+      fieldConfig.type === "number_range_contains" ||
+      fieldConfig.type === "number_distance_from_param" ||
+      fieldConfig.type === "number_excludes_ranges"
+    )
+      continue
 
     const field = sql.id(fieldConfig.field)
     const table = sql.id(tableName)
@@ -204,6 +304,64 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
     filters: {
       package: { field: "package", type: "string" },
       diode_type: { field: "diode_type", type: "string" },
+    },
+  },
+  photo_diode: {
+    paramAliases: { wavelength_min: "wavelength" },
+    targetSort: { field: "peak_wavelength_nm", param: "wavelength" },
+    helpText:
+      "These filters use catalog peak wavelength and advertised spectral range, not a full responsivity curve. Verify the datasheet; optical filtering may be needed for out-of-band rejection.",
+    filters: {
+      package: { field: "package", type: "string" },
+      wavelength: {
+        field: "spectral_range_min_nm",
+        maxField: "spectral_range_max_nm",
+        fallbackField: "peak_wavelength_nm",
+        type: "number_range_contains",
+        placeholder: "355",
+        helpText:
+          "Must be inside the published spectral range. Results are ranked by closeness to peak response.",
+      },
+      peak_distance_max: {
+        field: "peak_wavelength_nm",
+        type: "number_distance_from_param",
+        relativeToParam: "wavelength",
+        placeholder: "100",
+        helpText:
+          "Optional maximum distance between the target and peak wavelengths.",
+      },
+      excluded_peak_bands: {
+        field: "peak_wavelength_nm",
+        type: "number_excludes_ranges",
+        placeholder: "700-1100, 532",
+        helpText:
+          "Comma-separated wavelengths or ranges whose peak response should be excluded.",
+      },
+      reverse_voltage_min: {
+        field: "reverse_voltage",
+        type: "number",
+        operator: ">=",
+      },
+      dark_current_max: {
+        field: "dark_current_a",
+        type: "number",
+        operator: "<=",
+      },
+      is_basic: { field: "is_basic", type: "boolean" },
+      is_preferred: { field: "is_preferred", type: "boolean" },
+    },
+  },
+  dimm_connector: {
+    filters: {
+      package: { field: "package", type: "string" },
+      ddr_standard: { field: "ddr_standard", type: "string" },
+      num_pins: { field: "num_pins", type: "number" },
+      pitch: { field: "pitch_mm", type: "number" },
+      height_mm: { field: "height_above_board_mm", type: "number" },
+      mounting_type: { field: "mounting_type", type: "string" },
+      is_right_angle: { field: "is_right_angle", type: "boolean" },
+      is_basic: { field: "is_basic", type: "boolean" },
+      is_preferred: { field: "is_preferred", type: "boolean" },
     },
   },
   mosfet: {
@@ -293,6 +451,29 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
       battery_type: { field: "battery_type", type: "string" },
     },
   },
+  ble_chip: {
+    filters: {
+      package: { field: "package", type: "string" },
+      bluetooth_version: { field: "bluetooth_version", type: "string" },
+      core_processor: { field: "core_processor", type: "string" },
+      has_uart: { field: "has_uart", type: "boolean" },
+      has_i2c: { field: "has_i2c", type: "boolean" },
+      has_spi: { field: "has_spi", type: "boolean" },
+      has_usb: { field: "has_usb", type: "boolean" },
+    },
+  },
+  ble_module: {
+    filters: {
+      package: { field: "package", type: "string" },
+      bluetooth_version: { field: "bluetooth_version", type: "string" },
+      core_processor: { field: "core_processor", type: "string" },
+      antenna_type: { field: "antenna_type", type: "string" },
+      has_uart: { field: "has_uart", type: "boolean" },
+      has_i2c: { field: "has_i2c", type: "boolean" },
+      has_spi: { field: "has_spi", type: "boolean" },
+      has_usb: { field: "has_usb", type: "boolean" },
+    },
+  },
   bjt_transistor: {
     filters: {
       package: { field: "package", type: "string" },
@@ -347,6 +528,17 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
     filters: {
       package: { field: "package", type: "string" },
       sensor_type: { field: "sensor_type", type: "string" },
+    },
+  },
+  hdmi_port: {
+    filters: {
+      package: { field: "package", type: "string" },
+      mounting_style: { field: "mounting_style", type: "string" },
+      orientation: { field: "orientation", type: "string" },
+      gender: { field: "gender", type: "string" },
+      number_of_pins: { field: "number_of_pins", type: "number" },
+      is_basic: { field: "is_basic", type: "boolean" },
+      is_preferred: { field: "is_preferred", type: "boolean" },
     },
   },
   gyroscope: {
@@ -431,6 +623,25 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
       number_of_resistors: { field: "number_of_resistors", type: "number" },
     },
   },
+  sodimm_connector: {
+    filters: {
+      package: { field: "package", type: "string" },
+      ddr_standard: { field: "ddr_standard", type: "string" },
+      num_pins: { field: "num_pins", type: "number" },
+      pitch: { field: "pitch_mm", type: "number" },
+      height_mm: { field: "height_above_board_mm", type: "number" },
+      mounting_type: { field: "mounting_type", type: "string" },
+      is_right_angle: { field: "is_right_angle", type: "boolean" },
+      is_basic: { field: "is_basic", type: "boolean" },
+      is_preferred: { field: "is_preferred", type: "boolean" },
+    },
+  },
+  spring_clamp_terminal_block: {
+    filters: {
+      pitch: { field: "pitch_mm", type: "number" },
+      pins: { field: "num_pins", type: "number" },
+    },
+  },
   usb_c_connector: {
     filters: {
       package: { field: "package", type: "string" },
@@ -460,6 +671,24 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
   },
 }
 
+export function normalizeTableQueryParams(
+  tableName: string,
+  params: QueryParams,
+): QueryParams {
+  const aliases = TABLE_CONFIGS[tableName]?.paramAliases
+  if (!aliases) return params
+
+  let normalizedParams = params
+  for (const [alias, canonicalParam] of Object.entries(aliases)) {
+    if (params[canonicalParam] === undefined && params[alias] !== undefined) {
+      if (normalizedParams === params) normalizedParams = { ...params }
+      normalizedParams[canonicalParam] = params[alias]
+    }
+  }
+
+  return normalizedParams
+}
+
 // Map URL paths to table names
 export const ROUTE_TO_TABLE: Record<string, string> = {
   "/resistors/list": "resistor",
@@ -468,6 +697,7 @@ export const ROUTE_TO_TABLE: Record<string, string> = {
   "/ldos/list": "ldo",
   "/leds/list": "led",
   "/diodes/list": "diode",
+  "/photo_diodes/list": "photo_diode",
   "/mosfets/list": "mosfet",
   "/switches/list": "switch",
   "/headers/list": "header",
@@ -475,14 +705,18 @@ export const ROUTE_TO_TABLE: Record<string, string> = {
   "/adcs/list": "adc",
   "/analog_multiplexers/list": "analog_multiplexer",
   "/battery_holders/list": "battery_holder",
+  "/ble_chips/list": "ble_chip",
+  "/ble_modules/list": "ble_module",
   "/bjt_transistors/list": "bjt_transistor",
   "/boost_converters/list": "boost_converter",
   "/buck_boost_converters/list": "buck_boost_converter",
   "/dacs/list": "dac",
+  "/dimm_connectors/list": "dimm_connector",
   "/fpc_connectors/list": "fpc_connector",
   "/fpgas/list": "fpga",
   "/fuses/list": "fuse",
   "/gas_sensors/list": "gas_sensor",
+  "/hdmi_ports/list": "hdmi_port",
   "/gyroscopes/list": "gyroscope",
   "/io_expanders/list": "io_expander",
   "/jst_connectors/list": "jst_connector",
@@ -496,6 +730,8 @@ export const ROUTE_TO_TABLE: Record<string, string> = {
   "/potentiometers/list": "potentiometer",
   "/relays/list": "relay",
   "/resistor_arrays/list": "resistor_array",
+  "/sodimm_connectors/list": "sodimm_connector",
+  "/spring_clamp_terminal_blocks/list": "spring_clamp_terminal_block",
   "/usb_c_connectors/list": "usb_c_connector",
   "/voltage_regulators/list": "voltage_regulator",
   "/wifi_modules/list": "wifi_module",
@@ -510,6 +746,7 @@ export const TABLE_RESPONSE_KEY: Record<string, string> = {
   ldo: "ldos",
   led: "leds",
   diode: "diodes",
+  photo_diode: "photo_diodes",
   mosfet: "mosfets",
   switch: "switches",
   header: "headers",
@@ -517,14 +754,18 @@ export const TABLE_RESPONSE_KEY: Record<string, string> = {
   adc: "adcs",
   analog_multiplexer: "multiplexers",
   battery_holder: "battery_holders",
+  ble_chip: "ble_chips",
+  ble_module: "ble_modules",
   bjt_transistor: "bjt_transistors",
   boost_converter: "boost_converters",
   buck_boost_converter: "buck_boost_converters",
   dac: "dacs",
+  dimm_connector: "dimm_connectors",
   fpc_connector: "fpc_connectors",
   fpga: "fpgas",
   fuse: "fuses",
   gas_sensor: "gas_sensors",
+  hdmi_port: "hdmi_ports",
   gyroscope: "gyroscopes",
   io_expander: "io_expanders",
   jst_connector: "jst_connectors",
@@ -538,6 +779,8 @@ export const TABLE_RESPONSE_KEY: Record<string, string> = {
   potentiometer: "potentiometers",
   relay: "relays",
   resistor_array: "resistor_arrays",
+  sodimm_connector: "sodimm_connectors",
+  spring_clamp_terminal_block: "spring_clamp_terminal_blocks",
   usb_c_connector: "usb_c_connectors",
   voltage_regulator: "regulators",
   wifi_module: "wifi_modules",

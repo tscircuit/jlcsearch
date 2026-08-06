@@ -18,6 +18,9 @@ SYNC_DERIVED_TABLES="${SYNC_DERIVED_TABLES:-1}"
 SYNC_COMPONENT_CATALOG="${SYNC_COMPONENT_CATALOG:-0}"
 SYNC_SEARCH_INDEX="${SYNC_SEARCH_INDEX:-0}"
 DERIVED_TABLES_LIST="${DERIVED_TABLES_LIST:-}"
+REBUILD_DERIVED_TABLES="${REBUILD_DERIVED_TABLES:-1}"
+REBUILD_COMPONENT_CATALOG="${REBUILD_COMPONENT_CATALOG:-1}"
+REBUILD_SEARCH_INDEX="${REBUILD_SEARCH_INDEX:-1}"
 
 DERIVED_TABLES=(
   accelerometer
@@ -25,17 +28,21 @@ DERIVED_TABLES=(
   analog_multiplexer
   battery_holder
   bjt_transistor
+  ble_chip
+  ble_module
   boost_converter
   buck_boost_converter
   capacitor
   dac
   diode
+  dimm_connector
   fpc_connector
   fpga
   fuse
   gas_sensor
   gyroscope
   header
+  hdmi_port
   io_expander
   jst_connector
   lcd_display
@@ -49,10 +56,13 @@ DERIVED_TABLES=(
   mosfet
   oled_display
   pcie_m2_connector
+  photo_diode
   potentiometer
   relay
   resistor
   resistor_array
+  sodimm_connector
+  spring_clamp_terminal_block
   switch
   usb_c_connector
   voltage_regulator
@@ -308,7 +318,9 @@ CREATE INDEX IF NOT EXISTS idx_component_catalog_basic ON component_catalog(basi
 CREATE INDEX IF NOT EXISTS idx_component_catalog_preferred ON component_catalog(preferred);
 CREATE INDEX IF NOT EXISTS idx_component_catalog_stock ON component_catalog(stock DESC);
 COMPONENT_CATALOG_SCHEMA
+}
 
+write_component_catalog_schema() {
   cat > component_catalog_schema.sql <<'COMPONENT_CATALOG_SCHEMA_EXPORT'
 DROP TABLE IF EXISTS component_catalog;
 CREATE TABLE component_catalog (
@@ -346,6 +358,17 @@ SELECT
   price,
   CASE
     WHEN json_valid(price) THEN CAST(json_extract(price, '$[0].price') AS REAL)
+    WHEN instr(price, ':') > 0 THEN CAST(
+      substr(
+        price,
+        instr(price, ':') + 1,
+        CASE
+          WHEN instr(price, ',') > 0
+          THEN instr(price, ',') - instr(price, ':') - 1
+          ELSE length(price) - instr(price, ':')
+        END
+      ) AS REAL
+    )
     ELSE NULL
   END AS price1,
   basic,
@@ -398,7 +421,9 @@ CREATE INDEX IF NOT EXISTS idx_search_index_preferred_stock ON search_index(pref
 CREATE INDEX IF NOT EXISTS idx_search_index_extended_promotional ON search_index(is_extended_promotional);
 CREATE INDEX IF NOT EXISTS idx_search_index_extended_promotional_stock ON search_index(is_extended_promotional, stock DESC);
 SEARCH_INDEX_SCHEMA
+}
 
+write_search_index_schema() {
   cat > search_index_schema.sql <<'SEARCH_INDEX_SCHEMA_EXPORT'
 DROP TABLE IF EXISTS search_index;
 CREATE TABLE search_index (
@@ -447,7 +472,11 @@ main() {
   select_derived_tables
 
   if [[ "${SYNC_DERIVED_TABLES}" == "1" ]]; then
-    rebuild_derived_tables
+    if [[ "${REBUILD_DERIVED_TABLES}" == "1" ]]; then
+      rebuild_derived_tables
+    else
+      echo "Using derived tables already prepared in the source database."
+    fi
     create_derived_schema_dump
 
     echo "Importing derived-table schema to D1..."
@@ -460,26 +489,38 @@ main() {
 
   if [[ "${SYNC_COMPONENT_CATALOG}" == "1" || "${SYNC_SEARCH_INDEX}" == "1" ]]; then
     write_cleanup_sql
-    materialize_component_catalog
+    if [[ "${REBUILD_COMPONENT_CATALOG}" == "1" ]]; then
+      materialize_component_catalog
+    else
+      echo "Using component_catalog already prepared in the source database."
+      require_table component_catalog
+    fi
 
     echo "Importing cleanup SQL to D1..."
     run_wrangler d1 execute "${DB_NAME}" --remote --file=cleanup_obsolete_objects.sql
   fi
 
   if [[ "${SYNC_COMPONENT_CATALOG}" == "1" ]]; then
+    write_component_catalog_schema
     echo "Importing component catalog schema to D1..."
     run_wrangler d1 execute "${DB_NAME}" --remote --file=component_catalog_schema.sql
     import_table_in_batches component_catalog "${COMPONENT_CATALOG_BATCH_ROWS}"
   fi
 
   if [[ "${SYNC_SEARCH_INDEX}" == "1" ]]; then
-    materialize_search_index
+    if [[ "${REBUILD_SEARCH_INDEX}" == "1" ]]; then
+      materialize_search_index
+    else
+      echo "Using search_index already prepared in the source database."
+      require_table search_index
+    fi
+    write_search_index_schema
     echo "Importing search index schema to D1..."
     run_wrangler d1 execute "${DB_NAME}" --remote --file=search_index_schema.sql
     import_table_in_batches search_index "${SEARCH_INDEX_BATCH_ROWS}"
   fi
 
-  if [[ -f "${SCRIPT_DIR}/setup-fts5.sql" ]]; then
+  if [[ "${SYNC_SEARCH_INDEX}" == "1" && -f "${SCRIPT_DIR}/setup-fts5.sql" ]]; then
     echo "Setting up FTS5..."
     rebuild_remote_search_fts_index
   fi

@@ -1,0 +1,257 @@
+name: Build and Sync D1
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "lib/**"
+      - "scripts/**"
+      - "package.json"
+      - "bunfig.toml"
+      - "cf-proxy/migrations/**"
+      - "cf-proxy/scripts/sync-db.sh"
+      - "cf-proxy/wrangler.toml"
+      - "cf-proxy/package.json"
+      - "cf-proxy/bun.lock"
+      - ".github/workflows/d1-migrations.yml"
+  workflow_dispatch:
+    inputs:
+      sync_scope:
+        description: Data set to rebuild and upload
+        required: true
+        default: derived
+        type: choice
+        options:
+          - derived
+          - full_catalog
+      derived_tables:
+        description: Comma-separated derived tables to rebuild and upload
+        required: true
+        default: photo_diode
+        type: string
+      cache_bust_url:
+        description: Production URL to refresh after the D1 upload
+        required: false
+        default: ""
+        type: string
+      smoke_test_lcsc:
+        description: LCSC number that must exist after a full catalog sync
+        required: true
+        default: "7512"
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-d1-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: Build database and sync production
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      SYNC_SCOPE: ${{ inputs.sync_scope || 'derived' }}
+      DERIVED_TABLES_LIST: ${{ inputs.derived_tables || 'photo_diode' }}
+      SMOKE_TEST_LCSC: ${{ inputs.smoke_test_lcsc || '7512' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Verify Cloudflare credentials
+        run: |
+          if [[ -z "${CLOUDFLARE_ACCOUNT_ID}" ]]; then
+            echo "::error::Missing CLOUDFLARE_ACCOUNT_ID repository secret."
+            exit 1
+          fi
+          if [[ -z "${CLOUDFLARE_API_TOKEN}" ]]; then
+            echo "::error::Missing CLOUDFLARE_API_TOKEN repository secret."
+            exit 1
+          fi
+          if [[ "${SYNC_SCOPE}" != "derived" && "${SYNC_SCOPE}" != "full_catalog" ]]; then
+            echo "::error::Unknown sync scope: ${SYNC_SCOPE}"
+            exit 1
+          fi
+          if [[ "${SYNC_SCOPE}" == "derived" && -z "${DERIVED_TABLES_LIST}" ]]; then
+            echo "::error::At least one derived table is required."
+            exit 1
+          fi
+          if [[ "${SYNC_SCOPE}" == "full_catalog" && ! "${SMOKE_TEST_LCSC}" =~ ^[0-9]+$ ]]; then
+            echo "::error::smoke_test_lcsc must be numeric."
+            exit 1
+          fi
+
+      - name: Install database pipeline dependencies
+        run: bun install
+
+      - name: Install Cloudflare worker dependencies
+        working-directory: cf-proxy
+        run: bun install --frozen-lockfile
+
+      - name: Generate daily database cache key
+        id: cache-date
+        run: echo "bucket=$(($(date -u +%s) / 86400))" >> "${GITHUB_OUTPUT}"
+
+      - name: Cache prepared SQLite database
+        id: cache-database
+        uses: actions/cache@v4
+        with:
+          path: db.sqlite3
+          key: prepared-db-${{ runner.os }}-${{ env.SYNC_SCOPE }}-${{ env.DERIVED_TABLES_LIST }}-${{ steps.cache-date.outputs.bucket }}-${{ hashFiles('package.json', 'bunfig.toml', 'scripts/**', 'lib/**') }}
+
+      - name: Build prepared SQLite database
+        if: steps.cache-database.outputs.cache-hit != 'true'
+        run: |
+          bun run setup:7z
+          bun run setup:download-cache-fragments
+          bun run setup:extract-db
+          if [[ "${SYNC_SCOPE}" == "full_catalog" ]]; then
+            INCLUDE_COMPONENT_CATALOG=1 bun run setup:derived-sync-db
+          else
+            bun run setup:derived-sync-db
+          fi
+          rm -f cache.sqlite3
+          rm -rf .buildtmp
+
+      - name: Verify prepared derived tables
+        run: |
+          if [[ ! -s db.sqlite3 ]]; then
+            echo "::error::Database setup did not create db.sqlite3."
+            exit 1
+          fi
+
+          integrity_check="$(sqlite3 db.sqlite3 "PRAGMA integrity_check;")"
+          if [[ "${integrity_check}" != "ok" ]]; then
+            echo "::error::Prepared database failed its integrity check: ${integrity_check}"
+            exit 1
+          fi
+
+          if [[ "${SYNC_SCOPE}" == "full_catalog" ]]; then
+            catalog_exists="$(sqlite3 db.sqlite3 "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type='table' AND name='component_catalog');")"
+            if [[ "${catalog_exists}" != "1" ]]; then
+              echo "::error::Prepared database does not contain component_catalog."
+              exit 1
+            fi
+
+            catalog_count="$(sqlite3 db.sqlite3 "SELECT COUNT(*) FROM component_catalog;")"
+            if [[ "${catalog_count}" == "0" ]]; then
+              echo "::error::Refusing to replace component_catalog with an empty table."
+              exit 1
+            fi
+
+            smoke_test_count="$(sqlite3 db.sqlite3 "SELECT COUNT(*) FROM component_catalog WHERE lcsc=${SMOKE_TEST_LCSC};")"
+            if [[ "${smoke_test_count}" != "1" ]]; then
+              echo "::error::Prepared catalog does not contain C${SMOKE_TEST_LCSC}."
+              exit 1
+            fi
+            echo "component_catalog: ${catalog_count} prepared rows"
+          else
+            IFS=',' read -ra tables <<< "${DERIVED_TABLES_LIST}"
+            for raw_table in "${tables[@]}"; do
+              table="$(echo "${raw_table}" | xargs)"
+              if [[ ! "${table}" =~ ^[a-z0-9_]+$ ]]; then
+                echo "::error::Invalid derived table name: ${table}"
+                exit 1
+              fi
+
+              table_exists="$(sqlite3 db.sqlite3 "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type='table' AND name='${table}');")"
+              if [[ "${table_exists}" != "1" ]]; then
+                echo "::error::Prepared database does not contain ${table}."
+                exit 1
+              fi
+
+              row_count="$(sqlite3 db.sqlite3 "SELECT COUNT(*) FROM \"${table}\";")"
+              if [[ "${row_count}" == "0" ]]; then
+                echo "::error::Refusing to replace ${table} with an empty table."
+                exit 1
+              fi
+              echo "${table}: ${row_count} prepared rows"
+            done
+          fi
+
+      - name: Apply D1 migrations
+        working-directory: cf-proxy
+        run: bunx wrangler d1 migrations apply jlcsearch --remote
+
+      - name: Upload selected data to D1
+        env:
+          SOURCE_DB_PATH: ${{ github.workspace }}/db.sqlite3
+          REBUILD_DERIVED_TABLES: "0"
+          REBUILD_COMPONENT_CATALOG: "0"
+          SYNC_DERIVED_TABLES: ${{ env.SYNC_SCOPE == 'derived' && '1' || '0' }}
+          SYNC_COMPONENT_CATALOG: ${{ env.SYNC_SCOPE == 'full_catalog' && '1' || '0' }}
+          SYNC_SEARCH_INDEX: ${{ env.SYNC_SCOPE == 'full_catalog' && '1' || '0' }}
+        run: ./cf-proxy/scripts/sync-db.sh
+
+      - name: Verify migration status and remote row counts
+        working-directory: cf-proxy
+        run: |
+          bunx wrangler d1 migrations list jlcsearch --remote
+
+          if [[ "${SYNC_SCOPE}" == "full_catalog" ]]; then
+            bunx wrangler d1 execute jlcsearch --remote \
+              --command "SELECT COUNT(*) AS row_count FROM component_catalog;"
+            bunx wrangler d1 execute jlcsearch --remote \
+              --command "SELECT COUNT(*) AS row_count FROM search_index;"
+            bunx wrangler d1 execute jlcsearch --remote \
+              --command "SELECT lcsc, mfr, stock FROM search_index WHERE lcsc=${SMOKE_TEST_LCSC};"
+          else
+            IFS=',' read -ra tables <<< "${DERIVED_TABLES_LIST}"
+            for raw_table in "${tables[@]}"; do
+              table="$(echo "${raw_table}" | xargs)"
+              bunx wrangler d1 execute jlcsearch --remote \
+                --command "SELECT COUNT(*) AS row_count FROM \"${table}\";"
+            done
+          fi
+
+      - name: Refresh and verify the production API cache
+        env:
+          CACHE_BUST_URL: ${{ inputs.cache_bust_url }}
+        shell: bash
+        run: |
+          if [[ -z "${CACHE_BUST_URL}" ]]; then
+            if [[ "${SYNC_SCOPE}" == "full_catalog" ]]; then
+              CACHE_BUST_URL="https://jlcsearch.tscircuit.com/components/list?search=C${SMOKE_TEST_LCSC}&json=true"
+            else
+              CACHE_BUST_URL="https://jlcsearch.tscircuit.com/photo_diodes/list.json"
+            fi
+          fi
+
+          separator="?"
+          if [[ "${CACHE_BUST_URL}" == *"?"* ]]; then
+            separator="&"
+          fi
+
+          curl --fail --silent --show-error \
+            "${CACHE_BUST_URL}${separator}cachebust=1" \
+            --output /tmp/d1-sync-response.json
+
+          if [[ "${CACHE_BUST_URL}" == *"/hdmi_ports/list.json"* ]]; then
+            hdmi_port_count="$(jq '.hdmi_ports | length' /tmp/d1-sync-response.json)"
+            if [[ "${hdmi_port_count}" == "0" || "${hdmi_port_count}" == "null" ]]; then
+              echo "::error::Production HDMI API still returned no ports."
+              cat /tmp/d1-sync-response.json
+              exit 1
+            fi
+            echo "Production HDMI API returned ${hdmi_port_count} ports."
+          fi
+
+          if [[ "${SYNC_SCOPE}" == "full_catalog" ]]; then
+            component_count="$(jq '.components | length' /tmp/d1-sync-response.json)"
+            if [[ "${component_count}" == "0" || "${component_count}" == "null" ]]; then
+              echo "::error::Production component API did not return C${SMOKE_TEST_LCSC}."
+              cat /tmp/d1-sync-response.json
+              exit 1
+            fi
+            echo "Production component API returned C${SMOKE_TEST_LCSC}."
+          fi

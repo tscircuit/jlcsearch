@@ -12,6 +12,13 @@ export interface Env {
 }
 
 const CACHE_BUST_QUERY_PARAM = "cachebust"
+const HOME_PAGE_CACHE_MAX_AGE_SECONDS = 60 * 60
+const HOME_PAGE_CACHE_CONTROL = [
+  "public",
+  `max-age=${HOME_PAGE_CACHE_MAX_AGE_SECONDS}`,
+  `s-maxage=${HOME_PAGE_CACHE_MAX_AGE_SECONDS}`,
+  "must-revalidate",
+].join(", ")
 
 const extractSmallQuantityPrice = (price: string | null): string | number => {
   if (!price) return ""
@@ -289,14 +296,8 @@ async function tryD1Route(
   cacheBust = false,
 ): Promise<Response | null> {
   if (url.pathname === "/") {
-    return handleCachedD1Response(
-      url,
-      origin,
-      ctx,
-      cache,
-      async () => handleD1HomePage(origin),
-      { cacheBust },
-    )
+    const response = handleD1HomePage(origin)
+    return cacheBust ? withCacheBustHeaders(response, origin) : response
   }
 
   const hasJsonSuffix = url.pathname.endsWith(".json")
@@ -401,6 +402,7 @@ const getD1RepresentationCacheUrl = (url: URL, isJsonRequest: boolean): URL => {
 
 function handleD1HomePage(origin: string | null): Response {
   const headers = new Headers({
+    "cache-control": HOME_PAGE_CACHE_CONTROL,
     "content-type": "text/html; charset=utf-8",
     "x-data-source": "d1",
     "x-cache": "D1",

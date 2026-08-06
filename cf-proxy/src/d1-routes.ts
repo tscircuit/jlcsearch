@@ -1,6 +1,17 @@
 import type { Kysely } from "kysely"
 import type { DB } from "./db/types"
 import {
+  createDisplayDriverMaxResolutionResolver,
+  getDisplayDriverMaxResolutionOptions,
+} from "./display-driver-resolution"
+import {
+  getTftDisplayDriverFamily,
+  getTftDisplayDriverPatterns,
+  TFT_DISPLAY_DRIVER_FAMILIES,
+  TFT_DISPLAY_DRIVER_SUBCATEGORIES,
+} from "./tft-display-drivers"
+import {
+  normalizeTableQueryParams,
   queryFilterOptions,
   queryTable,
   ROUTE_TO_TABLE,
@@ -20,6 +31,7 @@ type D1Handler = (db: Kysely<DB>, params: QueryParams) => Promise<D1QueryResult>
 
 const PROCESSOR_INTERFACES = ["uart", "i2c", "spi", "can", "usb"] as const
 const MICROPHONE_SUBCATEGORIES = ["Microphones", "MEMS Microphones"] as const
+const LCD_DRIVER_SUBCATEGORY = "LCD Drivers"
 
 const parseFiniteNumber = (value: string | undefined): number | null => {
   if (value === undefined || value === "") return null
@@ -33,7 +45,20 @@ const extractSmallQuantityPrice = (price: string | null): number => {
     const priceObj = JSON.parse(price)
     return Number(priceObj[0]?.price ?? 0) || 0
   } catch {
-    return 0
+    const firstTier = price.split(",", 1)[0]
+    const separatorIndex = firstTier.indexOf(":")
+    if (separatorIndex === -1) return 0
+    return Number(firstTier.slice(separatorIndex + 1)) || 0
+  }
+}
+
+const extractAttributes = (extra: string | null): string => {
+  if (!extra) return "{}"
+  try {
+    const attributes = JSON.parse(extra)?.attributes
+    return JSON.stringify(attributes ?? {})
+  } catch {
+    return "{}"
   }
 }
 
@@ -41,6 +66,17 @@ const getNonEmptyStrings = (
   rows: Array<Record<string, string | null>>,
   key: string,
 ): string[] => rows.map((row) => row[key]?.trim() ?? "").filter(Boolean)
+
+const selectTftDriverCatalog = (
+  db: Kysely<DB>,
+  driverType: string | undefined,
+) => {
+  const patterns = getTftDisplayDriverPatterns(driverType)
+  return db
+    .selectFrom("component_catalog")
+    .where("subcategory", "in", [...TFT_DISPLAY_DRIVER_SUBCATEGORIES])
+    .where((eb) => eb.or(patterns.map((pattern) => eb("mfr", "like", pattern))))
+}
 
 const getMicrocontrollerListHandler = (
   tableName: "arm_processor" | "risc_v_processor",
@@ -281,6 +317,182 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
       },
     }
   },
+  "/lcd_drivers/list": async (db, params) => {
+    let query = db
+      .selectFrom("component_catalog")
+      .select([
+        "lcsc",
+        "mfr",
+        "package",
+        "description",
+        "stock",
+        "price",
+        "basic",
+        "preferred",
+        "extra",
+      ])
+      .where("stock", ">", 0)
+      .where("subcategory", "=", LCD_DRIVER_SUBCATEGORY)
+      .orderBy("stock", "desc")
+
+    if (params.package) {
+      query = query.where("package", "=", params.package)
+    }
+
+    if (params.is_basic === "true" || params.is_basic === "1") {
+      query = query.where("basic", "=", 1)
+    }
+
+    if (params.is_preferred === "true" || params.is_preferred === "1") {
+      query = query.where("preferred", "=", 1)
+    }
+
+    const [packages, resolutionSources, lcdDrivers] = await Promise.all([
+      db
+        .selectFrom("component_catalog")
+        .select("package")
+        .distinct()
+        .where("subcategory", "=", LCD_DRIVER_SUBCATEGORY)
+        .where("package", "is not", null)
+        .orderBy("package")
+        .execute(),
+      db
+        .selectFrom("component_catalog")
+        .select(["mfr", "description", "extra"])
+        .where("stock", ">", 0)
+        .where("subcategory", "=", LCD_DRIVER_SUBCATEGORY)
+        .execute(),
+      query.execute(),
+    ])
+
+    const maxResolutionFilter =
+      params.max_resolution && params.max_resolution !== "All"
+        ? params.max_resolution
+        : null
+    const resolveMaxResolution =
+      createDisplayDriverMaxResolutionResolver(resolutionSources)
+
+    return {
+      tableName: "lcd_driver",
+      filterOptions: {
+        package: getNonEmptyStrings(
+          packages as Array<Record<string, string | null>>,
+          "package",
+        ),
+        max_resolution: getDisplayDriverMaxResolutionOptions(resolutionSources),
+      },
+      data: {
+        lcd_drivers: lcdDrivers
+          .map((driver) => ({
+            lcsc: driver.lcsc ?? 0,
+            mfr: driver.mfr ?? "",
+            package: driver.package ?? "",
+            max_resolution: resolveMaxResolution(driver),
+            description: driver.description ?? "",
+            is_basic: Boolean(driver.basic),
+            is_preferred: Boolean(driver.preferred),
+            stock: driver.stock ?? 0,
+            price1: extractSmallQuantityPrice(driver.price),
+            attributes: extractAttributes(driver.extra),
+          }))
+          .filter(
+            (driver) =>
+              driver.lcsc !== 0 &&
+              (!maxResolutionFilter ||
+                driver.max_resolution === maxResolutionFilter),
+          )
+          .slice(0, 100),
+      },
+    }
+  },
+  "/tft_display_drivers/list": async (db, params) => {
+    let query = selectTftDriverCatalog(db, params.driver_type)
+      .select([
+        "lcsc",
+        "mfr",
+        "package",
+        "description",
+        "stock",
+        "price",
+        "basic",
+        "preferred",
+        "subcategory",
+        "extra",
+      ])
+      .where("stock", ">", 0)
+      .orderBy("stock", "desc")
+
+    if (params.package) {
+      query = query.where("package", "=", params.package)
+    }
+
+    if (params.is_basic === "true" || params.is_basic === "1") {
+      query = query.where("basic", "=", 1)
+    }
+
+    if (params.is_preferred === "true" || params.is_preferred === "1") {
+      query = query.where("preferred", "=", 1)
+    }
+
+    const [packages, resolutionSources, tftDrivers] = await Promise.all([
+      selectTftDriverCatalog(db, params.driver_type)
+        .select("package")
+        .distinct()
+        .where("package", "is not", null)
+        .orderBy("package")
+        .execute(),
+      selectTftDriverCatalog(db, params.driver_type)
+        .select(["mfr", "description", "extra"])
+        .where("stock", ">", 0)
+        .execute(),
+      query.execute(),
+    ])
+
+    const maxResolutionFilter =
+      params.max_resolution && params.max_resolution !== "All"
+        ? params.max_resolution
+        : null
+    const resolveMaxResolution =
+      createDisplayDriverMaxResolutionResolver(resolutionSources)
+
+    return {
+      tableName: "tft_display_driver",
+      filterOptions: {
+        package: getNonEmptyStrings(
+          packages as Array<Record<string, string | null>>,
+          "package",
+        ),
+        driver_type: TFT_DISPLAY_DRIVER_FAMILIES.map((family) => family.value),
+        max_resolution: getDisplayDriverMaxResolutionOptions(resolutionSources),
+      },
+      data: {
+        tft_display_drivers: tftDrivers
+          .map((driver) => ({
+            lcsc: driver.lcsc ?? 0,
+            mfr: driver.mfr ?? "",
+            package: driver.package ?? "",
+            driver_type:
+              getTftDisplayDriverFamily(driver.mfr)?.label ??
+              "TFT Display Driver",
+            catalog_type: driver.subcategory ?? "",
+            max_resolution: resolveMaxResolution(driver),
+            description: driver.description ?? "",
+            is_basic: Boolean(driver.basic),
+            is_preferred: Boolean(driver.preferred),
+            stock: driver.stock ?? 0,
+            price1: extractSmallQuantityPrice(driver.price),
+            attributes: extractAttributes(driver.extra),
+          }))
+          .filter(
+            (driver) =>
+              driver.lcsc !== 0 &&
+              (!maxResolutionFilter ||
+                driver.max_resolution === maxResolutionFilter),
+          )
+          .slice(0, 100),
+      },
+    }
+  },
   "/categories/list": async (db, params) => {
     let query = db
       .selectFrom("component_catalog")
@@ -378,7 +590,8 @@ export function getD1Handler(pathname: string): D1Handler | null {
   }
 
   return async (db, params) => {
-    const results = await queryTable(db, tableName, params, config)
+    const normalizedParams = normalizeTableQueryParams(tableName, params)
+    const results = await queryTable(db, tableName, normalizedParams, config)
     const filterOptions = await queryFilterOptions(db, tableName, config)
     const responseKey = TABLE_RESPONSE_KEY[tableName] || tableName + "s"
     return {

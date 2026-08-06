@@ -5,17 +5,24 @@ import { adcTableSpec } from "lib/db/derivedtables/adc"
 import { analogMultiplexerTableSpec } from "lib/db/derivedtables/analog_multiplexer"
 import { batteryHolderTableSpec } from "lib/db/derivedtables/battery_holder"
 import { bjtTransistorTableSpec } from "lib/db/derivedtables/bjt_transistor"
+import { bleChipTableSpec } from "lib/db/derivedtables/ble-chip"
+import { bleModuleTableSpec } from "lib/db/derivedtables/ble-module"
 import { boostConverterTableSpec } from "lib/db/derivedtables/boost_converter"
 import { buckBoostConverterTableSpec } from "lib/db/derivedtables/buck_boost_converter"
 import { capacitorTableSpec } from "lib/db/derivedtables/capacitor"
 import { dacTableSpec } from "lib/db/derivedtables/dac"
 import { diodeTableSpec } from "lib/db/derivedtables/diode"
+import {
+  dimmConnectorTableSpec,
+  sodimmConnectorTableSpec,
+} from "lib/db/derivedtables/memory-connector"
 import { fpgaTableSpec } from "lib/db/derivedtables/fpga"
 import { fpcConnectorTableSpec } from "lib/db/derivedtables/fpc_connector"
 import { fuseTableSpec } from "lib/db/derivedtables/fuse"
 import { gasSensorTableSpec } from "lib/db/derivedtables/gas_sensor"
 import { gyroscopeTableSpec } from "lib/db/derivedtables/gyroscope"
 import { headerTableSpec } from "lib/db/derivedtables/header"
+import { hdmiPortTableSpec } from "lib/db/derivedtables/hdmi-port"
 import { ioExpanderTableSpec } from "lib/db/derivedtables/io_expander"
 import { jstConnectorTableSpec } from "lib/db/derivedtables/jst_connector"
 import { lcdDisplayTableSpec } from "lib/db/derivedtables/lcd_display"
@@ -29,10 +36,12 @@ import { microcontrollerTableSpec } from "lib/db/derivedtables/microcontroller"
 import { mosfetTableSpec } from "lib/db/derivedtables/mosfet"
 import { oledDisplayTableSpec } from "lib/db/derivedtables/oled_display"
 import { pcieM2ConnectorTableSpec } from "lib/db/derivedtables/pcie_m2_connector"
+import { photoDiodeTableSpec } from "lib/db/derivedtables/photo-diode"
 import { potentiometerTableSpec } from "lib/db/derivedtables/potentiometer"
 import { relayTableSpec } from "lib/db/derivedtables/relay"
 import { resistorArrayTableSpec } from "lib/db/derivedtables/resistor_array"
 import { resistorTableSpec } from "lib/db/derivedtables/resistor"
+import { springClampTerminalBlockTableSpec } from "lib/db/derivedtables/spring-clamp-terminal-block"
 import { switchTableSpec } from "lib/db/derivedtables/switch"
 import type { DerivedTableSpec } from "lib/db/derivedtables/types"
 import { usbCConnectorTableSpec } from "lib/db/derivedtables/usb_c_connector"
@@ -47,12 +56,17 @@ export const DERIVED_TABLES: DerivedTableSpec<any>[] = [
   capacitorTableSpec,
   ledTableSpec,
   headerTableSpec,
+  hdmiPortTableSpec,
   adcTableSpec,
   analogMultiplexerTableSpec,
   ioExpanderTableSpec,
   diodeTableSpec,
   dacTableSpec,
+  dimmConnectorTableSpec,
+  sodimmConnectorTableSpec,
   wifiModuleTableSpec,
+  bleModuleTableSpec,
+  bleChipTableSpec,
   microcontrollerTableSpec,
   voltageRegulatorTableSpec,
   ldoTableSpec,
@@ -76,8 +90,10 @@ export const DERIVED_TABLES: DerivedTableSpec<any>[] = [
   fpcConnectorTableSpec,
   usbCConnectorTableSpec,
   pcieM2ConnectorTableSpec,
+  photoDiodeTableSpec,
   jstConnectorTableSpec,
   wireToBoardConnectorTableSpec,
+  springClampTerminalBlockTableSpec,
   fpgaTableSpec,
   batteryHolderTableSpec,
 ]
@@ -89,6 +105,28 @@ const jsonParseOrNull = (strObject: string) => {
     return JSON.parse(strObject)
   } catch {
     return null
+  }
+}
+
+const createIndexes = async (
+  db: KyselyDatabaseInstance,
+  spec: DerivedTableSpec<any>,
+) => {
+  for (const index of spec.indexes ?? []) {
+    const columns = index.columns.map(String)
+    if (columns.length === 0) continue
+
+    let indexCreator = db.schema
+      .createIndex(index.name)
+      .ifNotExists()
+      .on(spec.tableName)
+
+    indexCreator =
+      columns.length === 1
+        ? indexCreator.column(columns[0])
+        : indexCreator.columns(columns)
+
+    await indexCreator.execute()
   }
 }
 
@@ -114,6 +152,7 @@ const createTable = async (
 
   if (tableExists.rows.length > 0) {
     if (!resetAll && resetTable !== spec.tableName) {
+      await createIndexes(db, spec)
       logger(
         `Table ${spec.tableName} already exists, skipping (use --reset ${spec.tableName} to recreate this table, or --reset with no parameter to recreate all)`,
       )
@@ -142,6 +181,7 @@ const createTable = async (
   }
 
   await tableCreator.execute()
+  await createIndexes(db, spec)
 
   if (!populate) {
     return
@@ -190,19 +230,38 @@ export const setupDerivedTables = async ({
   populate = true,
   resetAll = false,
   resetTable = null,
+  tableNames,
   logger = () => {},
 }: {
   db?: KyselyDatabaseInstance
   populate?: boolean
   resetAll?: boolean
   resetTable?: string | null
+  tableNames?: string[]
   logger?: Logger
 } = {}) => {
   const activeDb = db ?? getDbClient()
   const shouldDestroy = !db
+  const requestedTableNames = tableNames
+    ? new Set(tableNames)
+    : new Set(DERIVED_TABLES.map((table) => table.tableName))
+  const knownTableNames = new Set(
+    DERIVED_TABLES.map((table) => table.tableName),
+  )
+  const unknownTableNames = [...requestedTableNames].filter(
+    (tableName) => !knownTableNames.has(tableName),
+  )
+
+  if (unknownTableNames.length > 0) {
+    throw new Error(
+      `Unknown derived table${unknownTableNames.length === 1 ? "" : "s"}: ${unknownTableNames.join(", ")}`,
+    )
+  }
 
   try {
-    for (const tableSpec of DERIVED_TABLES) {
+    for (const tableSpec of DERIVED_TABLES.filter((table) =>
+      requestedTableNames.has(table.tableName),
+    )) {
       logger(`Setting up derived table: ${tableSpec.tableName}`)
       await createTable(activeDb, tableSpec, {
         populate,

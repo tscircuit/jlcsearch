@@ -95,6 +95,53 @@ export interface BatteryHolder {
   stock: number | null
 }
 
+export interface BleChip {
+  attributes: string | null
+  bluetooth_version: string | null
+  core_processor: string | null
+  data_rate_mbps: number | null
+  description: string | null
+  frequency_ghz: number | null
+  has_i2c: number | null
+  has_spi: number | null
+  has_uart: number | null
+  has_usb: number | null
+  in_stock: number | null
+  is_basic: number | null
+  is_preferred: number | null
+  lcsc: Generated<number | null>
+  mfr: string | null
+  operating_voltage_max: number | null
+  operating_voltage_min: number | null
+  package: string | null
+  price1: number | null
+  stock: number | null
+}
+
+export interface BleModule {
+  antenna_type: string | null
+  attributes: string | null
+  bluetooth_version: string | null
+  core_processor: string | null
+  data_rate_mbps: number | null
+  description: string | null
+  frequency_ghz: number | null
+  has_i2c: number | null
+  has_spi: number | null
+  has_uart: number | null
+  has_usb: number | null
+  in_stock: number | null
+  is_basic: number | null
+  is_preferred: number | null
+  lcsc: Generated<number | null>
+  mfr: string | null
+  operating_voltage_max: number | null
+  operating_voltage_min: number | null
+  package: string | null
+  price1: number | null
+  stock: number | null
+}
+
 export interface BjtTransistor {
   attributes: string | null
   collector_current: number | null
@@ -240,6 +287,27 @@ export interface Diode {
   stock: number | null
 }
 
+export interface DimmConnector {
+  attributes: string | null
+  ddr_standard: string | null
+  description: string | null
+  height_above_board_mm: number | null
+  in_stock: number | null
+  is_basic: number | null
+  is_preferred: number | null
+  is_right_angle: number | null
+  lcsc: Generated<number | null>
+  mfr: string | null
+  mounting_type: string | null
+  num_pins: number | null
+  operating_temp_max: number | null
+  operating_temp_min: number | null
+  package: string | null
+  pitch_mm: number | null
+  price1: number | null
+  stock: number | null
+}
+
 export interface FpcConnector {
   attributes: string | null
   contact_type: string | null
@@ -368,6 +436,27 @@ export interface Header {
   row_spacing_mm: number | null
   stock: number | null
   voltage_rating_volt: number | null
+}
+
+export interface HdmiPort {
+  attributes: string | null
+  current_rating_a: number | null
+  description: string | null
+  gender: string | null
+  in_stock: number | null
+  is_basic: number | null
+  is_preferred: number | null
+  lcsc: Generated<number | null>
+  mfr: string | null
+  mounting_style: string | null
+  number_of_pins: number | null
+  number_of_rows: number | null
+  operating_temp_max: number | null
+  operating_temp_min: number | null
+  orientation: string | null
+  package: string | null
+  price1: number | null
+  stock: number | null
 }
 
 export interface IoExpander {
@@ -621,6 +710,27 @@ export interface PcieM2Connector {
   stock: number | null
 }
 
+export interface PhotoDiode {
+  attributes: string | null
+  dark_current_a: number | null
+  description: string | null
+  in_stock: number | null
+  is_basic: number | null
+  is_preferred: number | null
+  lcsc: Generated<number | null>
+  mfr: string | null
+  operating_temp_max: number | null
+  operating_temp_min: number | null
+  package: string | null
+  peak_wavelength_nm: number | null
+  price1: number | null
+  reception_angle_deg: number | null
+  reverse_voltage: number | null
+  spectral_range_max_nm: number | null
+  spectral_range_min_nm: number | null
+  stock: number | null
+}
+
 export interface Potentiometer {
   attributes: string | null
   description: string | null
@@ -743,6 +853,47 @@ export interface Switch {
   width_mm: number | null
 }
 
+export interface SodimmConnector {
+  attributes: string | null
+  ddr_standard: string | null
+  description: string | null
+  height_above_board_mm: number | null
+  in_stock: number | null
+  is_basic: number | null
+  is_preferred: number | null
+  is_right_angle: number | null
+  lcsc: Generated<number | null>
+  mfr: string | null
+  mounting_type: string | null
+  num_pins: number | null
+  operating_temp_max: number | null
+  operating_temp_min: number | null
+  package: string | null
+  pitch_mm: number | null
+  price1: number | null
+  stock: number | null
+}
+
+export interface SpringClampTerminalBlock {
+  attributes: string | null
+  current_rating: number | null
+  description: string | null
+  in_stock: number | null
+  is_basic: number | null
+  is_preferred: number | null
+  lcsc: Generated<number | null>
+  mfr: string | null
+  mounting_style: string | null
+  num_pins: number | null
+  package: string | null
+  pitch_mm: number | null
+  price1: number | null
+  stock: number | null
+  voltage_rating: number | null
+  wire_gauge_awg: string | null
+  wire_gauge_mm2: number | null
+}
+
 export interface UsbCConnector {
   attributes: string | null
   current_rating_a: number | null
@@ -842,6 +993,8 @@ export interface DB {
   adc: Adc
   analog_multiplexer: AnalogMultiplexer
   battery_holder: BatteryHolder
+  ble_chip: BleChip
+  ble_module: BleModule
   bjt_transistor: BjtTransistor
   boost_converter: BoostConverter
   buck_boost_converter: BuckBoostConverter
@@ -849,12 +1002,14 @@ export interface DB {
   component_catalog: ComponentCatalog
   dac: Dac
   diode: Diode
+  dimm_connector: DimmConnector
   fpc_connector: FpcConnector
   fpga: Fpga
   fuse: Fuse
   gas_sensor: GasSensor
   gyroscope: Gyroscope
   header: Header
+  hdmi_port: HdmiPort
   io_expander: IoExpander
   jst_connector: JstConnector
   lcd_display: LcdDisplay
@@ -868,11 +1023,14 @@ export interface DB {
   mosfet: Mosfet
   oled_display: OledDisplay
   pcie_m2_connector: PcieM2Connector
+  photo_diode: PhotoDiode
   potentiometer: Potentiometer
   relay: Relay
   resistor: Resistor
   resistor_array: ResistorArray
   search_index: SearchIndex
+  sodimm_connector: SodimmConnector
+  spring_clamp_terminal_block: SpringClampTerminalBlock
   switch: Switch
   usb_c_connector: UsbCConnector
   voltage_regulator: VoltageRegulator

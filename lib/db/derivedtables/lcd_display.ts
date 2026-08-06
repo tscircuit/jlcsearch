@@ -3,6 +3,12 @@ import type { KyselyDatabaseInstance } from "../kysely-types"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import { BaseComponent } from "./component-base"
 
+const LCD_DISPLAY_SUBCATEGORIES = [
+  "LCD Displays Modules",
+  "Liquid Crystal Display Screen",
+  "LCD Screen",
+] as const
+
 export interface LCDDisplay extends BaseComponent {
   package?: string
   display_size?: string
@@ -25,7 +31,7 @@ export const lcdDisplayTableSpec: DerivedTableSpec<LCDDisplay> = {
       .selectFrom("components")
       .innerJoin("categories", "components.category_id", "categories.id")
       .selectAll()
-      .where((eb) => eb("description", "like", "%LCD%"))
+      .where("categories.subcategory", "in", [...LCD_DISPLAY_SUBCATEGORIES])
   },
   mapToTable(components) {
     return components.map((c) => {

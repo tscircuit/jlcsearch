@@ -38,25 +38,43 @@ curl https://jlcsearch.tscircuit.com/resistors/list.json?package=&resistance=1k
 
 ## Development
 
-Prerequisites \& Notes:  The automation scripts in this repo are only set up for macOS and Linux development.  The setup command below will fail if run on Windows, but no worries, you can simply use WSL (although it may be very slow).    [Bun](https://bun.com/) is required, so follow the Installing &rarr; macOS and Linux instructions [here](https://bun.com/docs/installation#macos-and-linux) (same for WSL).  
+[Bun](https://bun.com/) is required. Install dependencies for both the data
+pipeline and Cloudflare worker:
 
-Run `bun i` then `bun run setup` to download the necessary dependencies and vendor data (be aware this can take a while),
-you can then run `bun run start` to start the server.
+```bash
+bun install
+bun install --cwd cf-proxy
+```
 
-All the routes are in the `routes` folder. If you want to add a new page/table,
-you can do the following:
+Run `bun start` to start the Cloudflare worker locally. The production site is
+implemented entirely in `cf-proxy`; there is no separate origin web server.
 
-1. Create a new "derived table" inside `lib/db/derivedtables`, reference `docs`
-   to understand the structure and available properties for different components
-2. Run `bun run scripts/setup-derived-tables.ts --reset led_driver` (if `led_driver` is the name of the table you're adding)
-3. Run `bun run generate:db-types` to generate the new table types
-4. Create a new route inside `routes` to represent the page
-5. Add the new route to the `routes/index.ts` file
-6. Make sure to run `bun run format`
+To add a component page:
 
-AI is incredibly good at performing every step in the process above, end to end.
-I recommend using [aider](https://www.aider.chat/) and adding docs, lib, routes
-and scripts folders to the context.
+1. Add or update its derived-table definition in `lib/db/derivedtables`.
+2. Register the table in `cf-proxy/scripts/sync-db.sh` so it is copied to D1.
+3. Add the D1 type, filter configuration, route mapping, response key, and page
+   label under `cf-proxy/src`.
+4. Add worker rendering and route tests under `cf-proxy/test`.
+5. Run `bun run format`, `bunx tsc --noEmit --project cf-proxy/tsconfig.json`,
+   and `bun run test --cwd cf-proxy`.
+
+Use `bun deploy` to apply pending D1 schema migrations and then publish the
+worker. Use `cf-proxy/scripts/sync-db.sh` to rebuild and synchronize derived
+table data from a prepared local SQLite database.
+
+Production D1 data is populated by the **Build and Sync D1** GitHub Actions
+workflow. On relevant merges to `main`, it downloads the current upstream
+source-db-v2 database, builds and verifies a compact `db.sqlite3` containing
+the requested derived tables, applies D1 migrations, uploads those tables, and
+refreshes the affected production API cache. The workflow can also be run
+manually in `derived` or `full_catalog` mode. `derived` accepts a
+comma-separated `derived_tables` input. `full_catalog` rebuilds and uploads the
+component catalog, search index, and FTS index from the current source-db-v2
+snapshot, and requires a numeric `smoke_test_lcsc` that must be present before
+and after the upload. Both modes accept an optional `cache_bust_url`. The
+workflow requires the `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN`
+repository secrets.
 
 ## How Does It work?
 As a developer new to this codebase, or a curious user, you may have some questions about the flow of data through the scripts and automations inside this repo.  It all starts with the [jlcparts](https://github.com/yaqwsx/jlcparts) project, which compiles a massive **11GB** sqlite3 database of *everything* [JLCPCB](https://jlcpcb.com) has to offer.  As you can imagine, this would be very resource-intensive and slow to search, so the next steps are scripts that optimize it heavily, although it's more accurate to say that they rebuild it entirely. 

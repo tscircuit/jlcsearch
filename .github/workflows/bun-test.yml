@@ -7,7 +7,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 20
 
     steps:
       - name: Checkout code
@@ -17,20 +17,25 @@ jobs:
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
+
+      - name: Generate daily cache key
+        id: cache-date
+        run: echo "bucket=$(($(date -u +%s) / 86400))" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Bun dependencies for 24 hours
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+            cf-proxy/node_modules
+          key: bun-${{ runner.os }}-${{ github.workflow }}-${{ hashFiles('package.json', 'cf-proxy/bun.lock') }}-${{ steps.cache-date.outputs.bucket }}
       
       - name: Install dependencies
         run: bun install
 
-      - name: Cache setup artifacts
-        id: cache-setup
-        uses: actions/cache@v4
-        with:
-          path: ./db.sqlite3
-          key: db-sqlite3-${{ hashFiles('scripts/setup-*.ts') }}
-
-      - name: Run setup if cache miss
-        if: steps.cache-setup.outputs.cache-hit != 'true'
-        run: bun run setup
+      - name: Install Cloudflare proxy dependencies
+        run: bun install --cwd cf-proxy --frozen-lockfile
 
       - name: Run tests
         run: bun test

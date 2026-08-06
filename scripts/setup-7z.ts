@@ -1,16 +1,19 @@
-import { mkdir, chmod } from "node:fs/promises"
 import { existsSync } from "node:fs"
-import { platform, arch } from "node:os"
+import { chmod, mkdir } from "node:fs/promises"
+import { arch, platform } from "node:os"
 
 const BINARY_DIR = ".bin"
 const BINARY_NAME = "7zz"
+const SEVEN_ZIP_VERSION = "26.02"
+const SEVEN_ZIP_ARCHIVE_VERSION = SEVEN_ZIP_VERSION.replace(".", "")
+const RELEASE_BASE_URL = `https://github.com/ip7z/7zip/releases/download/${SEVEN_ZIP_VERSION}`
 
 // Map of platform-arch combinations to download URLs
 const BINARY_URLS: Record<string, string> = {
-  "linux-x64": "https://www.7-zip.org/a/7z2601-linux-x64.tar.xz",
-  "linux-arm64": "https://www.7-zip.org/a/7z2601-linux-arm64.tar.xz",
-  "darwin-x64": "https://www.7-zip.org/a/7z2601-mac.tar.xz",
-  "darwin-arm64": "https://www.7-zip.org/a/7z2601-mac.tar.xz",
+  "linux-x64": `${RELEASE_BASE_URL}/7z${SEVEN_ZIP_ARCHIVE_VERSION}-linux-x64.tar.xz`,
+  "linux-arm64": `${RELEASE_BASE_URL}/7z${SEVEN_ZIP_ARCHIVE_VERSION}-linux-arm64.tar.xz`,
+  "darwin-x64": `${RELEASE_BASE_URL}/7z${SEVEN_ZIP_ARCHIVE_VERSION}-mac.tar.xz`,
+  "darwin-arm64": `${RELEASE_BASE_URL}/7z${SEVEN_ZIP_ARCHIVE_VERSION}-mac.tar.xz`,
 }
 
 async function downloadAndExtract7z() {

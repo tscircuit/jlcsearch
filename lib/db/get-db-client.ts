@@ -84,13 +84,11 @@ export const getDbClient = () => {
 }
 
 export const destroyDbClient = async () => {
-  if (!dbClientSingleton) {
-    return
-  }
+  if (!dbClientSingleton) return
 
-  const db = dbClientSingleton
+  const client = dbClientSingleton
   dbClientSingleton = undefined
-  await db.destroy()
+  await client.destroy()
 }
 
 export const getBunDatabaseClient = () => {
