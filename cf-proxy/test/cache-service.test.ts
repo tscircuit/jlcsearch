@@ -9,20 +9,20 @@ import { CacheService } from "../src/cache-service"
 import { createTestEnv } from "./test-env"
 
 describe("isFresh", () => {
-  it("returns true for entries less than 2 weeks old", () => {
-    const now = new Date("2024-01-15T00:00:00Z")
+  it("returns true for entries less than 5 minutes old", () => {
+    const now = new Date("2024-01-03T12:04:00Z")
     const metadata: CacheMetadata = {
-      cachedAt: "2024-01-03T12:00:00Z", // 11.5 days ago
+      cachedAt: "2024-01-03T12:00:00Z",
       status: 200,
       headers: {},
     }
     expect(isFresh(metadata, now)).toBe(true)
   })
 
-  it("returns false for entries 2 weeks or older", () => {
-    const now = new Date("2024-01-18T00:00:00Z")
+  it("returns false for entries 5 minutes or older", () => {
+    const now = new Date("2024-01-03T12:05:00Z")
     const metadata: CacheMetadata = {
-      cachedAt: "2024-01-03T12:00:00Z", // 14.5 days ago
+      cachedAt: "2024-01-03T12:00:00Z",
       status: 200,
       headers: {},
     }
@@ -31,20 +31,20 @@ describe("isFresh", () => {
 })
 
 describe("isUsableStale", () => {
-  it("returns true for entries less than 1 month old", () => {
-    const now = new Date("2024-01-23T00:00:00Z")
+  it("returns true for entries less than 1 day old", () => {
+    const now = new Date("2024-01-03T12:00:00Z")
     const metadata: CacheMetadata = {
-      cachedAt: "2024-01-03T00:00:00Z", // 20 days ago
+      cachedAt: "2024-01-03T00:00:00Z",
       status: 200,
       headers: {},
     }
     expect(isUsableStale(metadata, now)).toBe(true)
   })
 
-  it("returns false for entries 1 month or older", () => {
-    const now = new Date("2024-02-03T00:00:00Z")
+  it("returns false for entries 1 day or older", () => {
+    const now = new Date("2024-01-04T00:00:00Z")
     const metadata: CacheMetadata = {
-      cachedAt: "2024-01-03T00:00:00Z", // 31 days ago
+      cachedAt: "2024-01-03T00:00:00Z",
       status: 200,
       headers: {},
     }
@@ -86,6 +86,18 @@ describe("CacheService", () => {
         )
       }
     })
+
+    it("isolates entries by deployment namespace", async () => {
+      const env = createTestEnv()
+      const oldDeploymentCache = new CacheService(env.CACHE_KV, "old")
+      const newDeploymentCache = new CacheService(env.CACHE_KV, "new")
+      const url = new URL("https://example.com/test")
+
+      await oldDeploymentCache.put(url, new Response("old response"))
+
+      expect((await oldDeploymentCache.get(url)).type).toBe("fresh")
+      expect((await newDeploymentCache.get(url)).type).toBe("miss")
+    })
   })
 
   describe("buildResponse", () => {
@@ -106,8 +118,30 @@ describe("CacheService", () => {
       expect(response.headers.get("cache-control")).toBe(
         CACHE_CONTROL_HEADER_VALUE,
       )
+      expect(response.headers.get("cache-control")).toContain("max-age=0")
+      expect(response.headers.get("cache-control")).not.toContain(
+        "stale-while-revalidate",
+      )
+      expect(response.headers.get("cache-control")).not.toContain("s-maxage")
       expect(response.headers.get("content-type")).toBe("text/plain")
       expect(response.status).toBe(200)
+    })
+
+    it("exposes the deployment cache namespace", () => {
+      const env = createTestEnv()
+      const versionedCache = new CacheService(env.CACHE_KV, "deployment-123")
+      const entry = {
+        body: "test body",
+        metadata: {
+          cachedAt: "2024-01-15T00:00:00Z",
+          status: 200,
+          headers: {},
+        },
+      }
+
+      const response = versionedCache.buildResponse(entry, "HIT", null)
+
+      expect(response.headers.get("x-cache-version")).toBe("deployment-123")
     })
 
     it("builds response with STALE header", () => {

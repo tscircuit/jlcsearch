@@ -18,13 +18,16 @@ export type CacheResult =
  * Service for caching responses in KV store.
  */
 export class CacheService {
-  constructor(private kv: KVNamespace) {}
+  constructor(
+    private kv: KVNamespace,
+    private namespace = "",
+  ) {}
 
   /**
    * Gets a cached response, indicating whether it's fresh, stale, or a miss.
    */
   async get(url: URL): Promise<CacheResult> {
-    const key = await generateCacheKey(url)
+    const key = await generateCacheKey(url, this.namespace)
     const result = await this.kv.getWithMetadata<CacheMetadata>(key, "text")
 
     if (!result.value || !result.metadata) {
@@ -51,7 +54,7 @@ export class CacheService {
    * Stores a response in the cache.
    */
   async put(url: URL, response: Response): Promise<CacheEntry> {
-    const key = await generateCacheKey(url)
+    const key = await generateCacheKey(url, this.namespace)
     const body = await response.text()
     const metadata = createMetadata(response)
 
@@ -67,7 +70,7 @@ export class CacheService {
    * Deletes a cached response if it exists.
    */
   async delete(url: URL): Promise<void> {
-    const key = await generateCacheKey(url)
+    const key = await generateCacheKey(url, this.namespace)
     await this.kv.delete(key)
   }
 
@@ -76,7 +79,7 @@ export class CacheService {
    */
   buildResponse(
     entry: CacheEntry,
-    cacheStatus: "HIT" | "MISS" | "STALE" | "BUST",
+    cacheStatus: "HIT" | "MISS" | "REFRESH" | "STALE" | "BUST",
     origin: string | null,
     options: {
       noStore?: boolean
@@ -90,6 +93,9 @@ export class CacheService {
     )
     headers.set("x-cache", cacheStatus)
     headers.set("x-cached-at", entry.metadata.cachedAt)
+    if (this.namespace) {
+      headers.set("x-cache-version", this.namespace)
+    }
     if (options.cacheBust) {
       headers.set("x-cache-bust", "1")
     }

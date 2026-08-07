@@ -16,27 +16,23 @@ export interface CacheEntry {
 }
 
 // Cache freshness thresholds in milliseconds
+const FIVE_MINUTES_MS = 5 * 60 * 1000
 const ONE_DAY_MS = 24 * 60 * 60 * 1000
-const TWO_WEEKS_MS = 14 * ONE_DAY_MS
-const ONE_MONTH_MS = 30 * ONE_DAY_MS
 
-export const CACHE_FRESH_SECONDS = 14 * 24 * 60 * 60
-export const CACHE_STALE_WHILE_REVALIDATE_SECONDS =
-  30 * 24 * 60 * 60 - CACHE_FRESH_SECONDS
+export const CACHE_STALE_IF_ERROR_SECONDS = 24 * 60 * 60
 
-// KV TTL in seconds (1 month)
-export const KV_TTL_SECONDS = 30 * 24 * 60 * 60
+// KV TTL in seconds (1 day)
+export const KV_TTL_SECONDS = 24 * 60 * 60
 
 export const CACHE_CONTROL_HEADER_VALUE = [
   "public",
-  `max-age=${CACHE_FRESH_SECONDS}`,
-  `s-maxage=${CACHE_FRESH_SECONDS}`,
-  `stale-while-revalidate=${CACHE_STALE_WHILE_REVALIDATE_SECONDS}`,
-  `stale-if-error=${CACHE_STALE_WHILE_REVALIDATE_SECONDS}`,
+  "max-age=0",
+  "must-revalidate",
+  `stale-if-error=${CACHE_STALE_IF_ERROR_SECONDS}`,
 ].join(", ")
 
 /**
- * Checks if a cached entry is fresh (less than 2 weeks old).
+ * Checks if a cached entry is fresh (less than 5 minutes old).
  */
 export function isFresh(
   metadata: CacheMetadata,
@@ -44,11 +40,11 @@ export function isFresh(
 ): boolean {
   const cachedAt = new Date(metadata.cachedAt)
   const age = now.getTime() - cachedAt.getTime()
-  return age < TWO_WEEKS_MS
+  return age < FIVE_MINUTES_MS
 }
 
 /**
- * Checks if a cached entry is usable as stale (less than 1 month old).
+ * Checks if a cached entry is usable as stale (less than 1 day old).
  */
 export function isUsableStale(
   metadata: CacheMetadata,
@@ -56,7 +52,7 @@ export function isUsableStale(
 ): boolean {
   const cachedAt = new Date(metadata.cachedAt)
   const age = now.getTime() - cachedAt.getTime()
-  return age < ONE_MONTH_MS
+  return age < ONE_DAY_MS
 }
 
 /**

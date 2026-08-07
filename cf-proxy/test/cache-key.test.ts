@@ -60,6 +60,13 @@ describe("generateCacheKey", () => {
     expect(key1).not.toBe(key2)
   })
 
+  it("generates different hashes for different deployment namespaces", async () => {
+    const url = new URL("https://example.com/path")
+    const key1 = await generateCacheKey(url, "deployment-1")
+    const key2 = await generateCacheKey(url, "deployment-2")
+    expect(key1).not.toBe(key2)
+  })
+
   it("generates same hash regardless of query param order", async () => {
     const url1 = new URL("https://example.com/search?a=1&b=2")
     const url2 = new URL("https://example.com/search?b=2&a=1")

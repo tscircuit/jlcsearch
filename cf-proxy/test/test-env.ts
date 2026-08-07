@@ -75,6 +75,11 @@ export const createTestEnv = () => ({
   CACHE_KV: new MemoryKV(),
   USE_D1: "false",
   DB: {} as D1Database,
+  VERSION: {
+    id: "test-worker-version",
+    tag: "",
+    timestamp: "2026-01-01T00:00:00.000Z",
+  } satisfies WorkerVersionMetadata,
 })
 
 export const createSelf = (env: ReturnType<typeof createTestEnv>) => ({

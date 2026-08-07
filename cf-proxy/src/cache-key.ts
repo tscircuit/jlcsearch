@@ -3,10 +3,15 @@ const CACHE_CONTROL_QUERY_PARAMS = new Set(["cachebust"])
 /**
  * Generates a cache key from a URL by hashing the normalized path and sorted query params.
  */
-export async function generateCacheKey(url: URL): Promise<string> {
+export async function generateCacheKey(
+  url: URL,
+  namespace = "",
+): Promise<string> {
   const normalized = normalizeUrl(url)
   const encoder = new TextEncoder()
-  const data = encoder.encode(normalized)
+  const data = encoder.encode(
+    namespace ? `${namespace}:${normalized}` : normalized,
+  )
   const hashBuffer = await crypto.subtle.digest("SHA-256", data)
   const hashArray = Array.from(new Uint8Array(hashBuffer))
   return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("")
