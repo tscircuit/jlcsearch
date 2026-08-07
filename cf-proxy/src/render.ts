@@ -471,6 +471,7 @@ const renderCustomFilters = (
     case "/arm_processors/list":
     case "/risc_v_processors/list": {
       const packageOptions = filterOptions.package ?? []
+      const manufacturerOptions = filterOptions.manufacturer ?? []
       const packageListId = getSuggestionListId(
         pathname,
         "package",
@@ -482,6 +483,18 @@ const renderCustomFilters = (
           <label>Package:</label>
           <input type="text" name="package" value="${escapeHtml(params.package ?? "")}"${packageListId ? ` list="${escapeHtml(packageListId)}"` : ""} autocomplete="on" />
           ${renderFilterSuggestions(pathname, "package", packageOptions)}
+        </div>
+        <div>
+          <label>Manufacturer:</label>
+          <select name="manufacturer">
+            <option value="">All</option>
+            ${manufacturerOptions
+              .map(
+                (option) =>
+                  `<option value="${escapeHtml(option)}"${params.manufacturer === option ? " selected" : ""}>${escapeHtml(option)}</option>`,
+              )
+              .join("")}
+          </select>
         </div>
         <div>
           <label>Min Flash:</label>

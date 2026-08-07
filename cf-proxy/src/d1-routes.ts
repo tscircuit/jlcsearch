@@ -1,4 +1,4 @@
-import type { Kysely } from "kysely"
+import { sql, type Kysely } from "kysely"
 import type { DB } from "./db/types"
 import {
   createDisplayDriverMaxResolutionResolver,
@@ -32,6 +32,19 @@ type D1Handler = (db: Kysely<DB>, params: QueryParams) => Promise<D1QueryResult>
 const PROCESSOR_INTERFACES = ["uart", "i2c", "spi", "can", "usb"] as const
 const MICROPHONE_SUBCATEGORIES = ["Microphones", "MEMS Microphones"] as const
 const LCD_DRIVER_SUBCATEGORY = "LCD Drivers"
+const PROCESSOR_MANUFACTURER = sql<string | null>`
+  CASE
+    WHEN json_valid(component_catalog.extra) THEN
+      CASE json_type(component_catalog.extra, '$.manufacturer')
+        WHEN 'text'
+          THEN json_extract(component_catalog.extra, '$.manufacturer')
+        WHEN 'object'
+          THEN json_extract(component_catalog.extra, '$.manufacturer.name')
+        ELSE NULL
+      END
+    ELSE NULL
+  END
+`
 
 const parseFiniteNumber = (value: string | undefined): number | null => {
   if (value === undefined || value === "") return null
@@ -86,61 +99,93 @@ const getMicrocontrollerListHandler = (
   return async (db, params) => {
     let query = db
       .selectFrom("microcontroller")
-      .selectAll()
+      .leftJoin(
+        "component_catalog",
+        "component_catalog.lcsc",
+        "microcontroller.lcsc",
+      )
+      .selectAll("microcontroller")
+      .select(PROCESSOR_MANUFACTURER.as("manufacturer"))
       .limit(100)
-      .orderBy("stock", "desc")
+      .orderBy("microcontroller.stock", "desc")
 
     query =
       coreFilter === "ARM%"
-        ? query.where("cpu_core", "like", coreFilter)
-        : query.where("cpu_core", "=", coreFilter)
+        ? query.where("microcontroller.cpu_core", "like", coreFilter)
+        : query.where("microcontroller.cpu_core", "=", coreFilter)
 
     if (params.package) {
-      query = query.where("package", "=", params.package)
+      query = query.where("microcontroller.package", "=", params.package)
+    }
+
+    if (params.manufacturer) {
+      query = query.where(PROCESSOR_MANUFACTURER, "=", params.manufacturer)
     }
 
     const flashMin = parseFiniteNumber(params.flash_min)
     if (flashMin !== null) {
-      query = query.where("flash_size_bytes", ">=", flashMin)
+      query = query.where("microcontroller.flash_size_bytes", ">=", flashMin)
     }
 
     const ramMin = parseFiniteNumber(params.ram_min)
     if (ramMin !== null) {
-      query = query.where("ram_size_bytes", ">=", ramMin)
+      query = query.where("microcontroller.ram_size_bytes", ">=", ramMin)
     }
 
     switch (params.interface) {
       case "uart":
-        query = query.where("has_uart", "=", 1)
+        query = query.where("microcontroller.has_uart", "=", 1)
         break
       case "i2c":
-        query = query.where("has_i2c", "=", 1)
+        query = query.where("microcontroller.has_i2c", "=", 1)
         break
       case "spi":
-        query = query.where("has_spi", "=", 1)
+        query = query.where("microcontroller.has_spi", "=", 1)
         break
       case "can":
-        query = query.where("has_can", "=", 1)
+        query = query.where("microcontroller.has_can", "=", 1)
         break
       case "usb":
-        query = query.where("has_usb", "=", 1)
+        query = query.where("microcontroller.has_usb", "=", 1)
         break
     }
 
     let packageQuery = db
       .selectFrom("microcontroller")
-      .select("package")
+      .select("microcontroller.package")
       .distinct()
-      .where("package", "is not", null)
-      .orderBy("package")
+      .where("microcontroller.package", "is not", null)
+      .orderBy("microcontroller.package")
 
     packageQuery =
       coreFilter === "ARM%"
-        ? packageQuery.where("cpu_core", "like", coreFilter)
-        : packageQuery.where("cpu_core", "=", coreFilter)
+        ? packageQuery.where("microcontroller.cpu_core", "like", coreFilter)
+        : packageQuery.where("microcontroller.cpu_core", "=", coreFilter)
 
-    const [packages, mcus] = await Promise.all([
+    let manufacturerQuery = db
+      .selectFrom("microcontroller")
+      .innerJoin(
+        "component_catalog",
+        "component_catalog.lcsc",
+        "microcontroller.lcsc",
+      )
+      .select(PROCESSOR_MANUFACTURER.as("manufacturer"))
+      .distinct()
+      .where(PROCESSOR_MANUFACTURER, "is not", null)
+      .orderBy(PROCESSOR_MANUFACTURER)
+
+    manufacturerQuery =
+      coreFilter === "ARM%"
+        ? manufacturerQuery.where(
+            "microcontroller.cpu_core",
+            "like",
+            coreFilter,
+          )
+        : manufacturerQuery.where("microcontroller.cpu_core", "=", coreFilter)
+
+    const [packages, manufacturers, mcus] = await Promise.all([
       packageQuery.execute(),
+      manufacturerQuery.execute(),
       query.execute(),
     ])
 
@@ -151,12 +196,17 @@ const getMicrocontrollerListHandler = (
           packages as Array<Record<string, string | null>>,
           "package",
         ),
+        manufacturer: getNonEmptyStrings(
+          manufacturers as Array<Record<string, string | null>>,
+          "manufacturer",
+        ),
         interface: [...PROCESSOR_INTERFACES],
       },
       data: {
         [responseKey]: mcus.map((m) => ({
           lcsc: m.lcsc ?? 0,
           mfr: m.mfr ?? "",
+          manufacturer: m.manufacturer ?? "",
           package: m.package ?? "",
           cpu_core: m.cpu_core ?? "",
           cpu_speed_hz: m.cpu_speed_hz ?? 0,
