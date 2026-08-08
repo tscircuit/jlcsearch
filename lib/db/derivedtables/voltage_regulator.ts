@@ -183,6 +183,7 @@ export const voltageRegulatorTableSpec: DerivedTableSpec<VoltageRegulator> = {
         price1: extractMinQPrice(c.price),
         in_stock: c.stock > 0,
         is_basic: Boolean(c.basic),
+        is_extended_promotional: Boolean(c.is_extended_promotional),
         is_preferred: Boolean(c.preferred),
         package: c.package || "",
         output_type: outputType,
