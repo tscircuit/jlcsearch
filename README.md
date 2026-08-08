@@ -64,11 +64,15 @@ worker. Use `cf-proxy/scripts/sync-db.sh` to rebuild and synchronize derived
 table data from a prepared local SQLite database.
 
 Production D1 data is populated by the **Build and Sync D1** GitHub Actions
-workflow. On relevant merges to `main`, it downloads the current upstream
-source-db-v2 database, builds and verifies a compact `db.sqlite3` containing
-the requested derived tables, applies D1 migrations, uploads those tables, and
-refreshes the affected production API cache. The workflow can also be run
-manually in `derived` or `full_catalog` mode. `derived` accepts a
+workflow. Every night at 05:00 UTC, after the upstream jlcparts refresh, it
+performs a `full_catalog` sync and clears the production response cache. API
+clients are instructed to revalidate within 24 hours so the nightly stock
+snapshot is not hidden by an older response. On relevant merges to `main`, it
+downloads the current upstream source-db-v2 database, builds and verifies a
+compact `db.sqlite3` containing the requested derived tables, applies D1
+migrations, uploads those tables, and refreshes the affected production API
+cache. The workflow can also be run manually in `derived` or `full_catalog`
+mode. `derived` accepts a
 comma-separated `derived_tables` input. `full_catalog` rebuilds and uploads the
 component catalog, search index, and FTS index from the current source-db-v2
 snapshot, and requires a numeric `smoke_test_lcsc` that must be present before

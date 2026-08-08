@@ -1,10 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest"
-import {
-  CACHE_CONTROL_HEADER_VALUE,
-  type CacheMetadata,
-  isFresh,
-  isUsableStale,
-} from "../src/cache-entry"
+import { type CacheMetadata, isFresh, isUsableStale } from "../src/cache-entry"
 import { CacheService } from "../src/cache-service"
 import { createTestEnv } from "./test-env"
 
@@ -104,7 +99,7 @@ describe("CacheService", () => {
       expect(response.headers.get("x-cache")).toBe("HIT")
       expect(response.headers.get("x-cached-at")).toBe("2024-01-15T00:00:00Z")
       expect(response.headers.get("cache-control")).toBe(
-        CACHE_CONTROL_HEADER_VALUE,
+        "public, max-age=86400, s-maxage=86400, stale-while-revalidate=3600, stale-if-error=86400",
       )
       expect(response.headers.get("content-type")).toBe("text/plain")
       expect(response.status).toBe(200)
