@@ -368,6 +368,7 @@ async function handleD1Search(
       package: row.package ?? "",
       is_basic: Boolean(row.basic),
       is_preferred: Boolean(row.preferred),
+      is_extended_promotional: Boolean(row.is_extended_promotional),
       description: row.description ?? "",
       stock: row.stock ?? 0,
       price: row.price1 ?? extractSmallQuantityPrice(row.price),
