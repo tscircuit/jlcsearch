@@ -78,7 +78,7 @@ else
 fi
 
 run_wrangler() {
-  "${WRANGLER_CMD[@]}" "$@"
+  bash "${SCRIPT_DIR}/retry-command.sh" "${WRANGLER_CMD[@]}" "$@"
 }
 
 rebuild_remote_search_fts_index() {
@@ -101,6 +101,9 @@ rebuild_remote_search_fts_index() {
 
     echo "  importing FTS rowids ${start}-${end}"
     run_wrangler d1 execute "${DB_NAME}" --remote --command "
+      DELETE FROM search_index_fts
+      WHERE rowid BETWEEN ${start} AND ${end};
+
       INSERT INTO search_index_fts(rowid, search_text)
       SELECT rowid, search_text
       FROM search_index
@@ -143,6 +146,21 @@ require_table() {
   local table="$1"
   if [[ "$(table_exists "$table")" != "1" ]]; then
     echo "Expected table '$table' to exist in the source database."
+    exit 1
+  fi
+}
+
+require_unique_lcsc() {
+  local table="$1"
+  local row_count unique_lcsc_count null_lcsc_count
+
+  require_table "${table}"
+  row_count="$(sqlite3 db.sqlite3 "SELECT COUNT(*) FROM \"${table}\";")"
+  unique_lcsc_count="$(sqlite3 db.sqlite3 "SELECT COUNT(DISTINCT lcsc) FROM \"${table}\";")"
+  null_lcsc_count="$(sqlite3 db.sqlite3 "SELECT COUNT(*) FROM \"${table}\" WHERE lcsc IS NULL;")"
+
+  if [[ "${null_lcsc_count}" != "0" || "${unique_lcsc_count}" != "${row_count}" ]]; then
+    echo "Expected ${table}.lcsc to be unique and non-null before upload."
     exit 1
   fi
 }
@@ -273,6 +291,12 @@ EOF
       continue
     fi
 
+    # All synchronized tables use lcsc as a unique key. OR IGNORE makes
+    # retrying a batch safe when D1 committed it but Wrangler lost the final
+    # import-status response, while preserving search_index rowids for FTS.
+    sed 's/^INSERT INTO /INSERT OR IGNORE INTO /' "${chunk_file}" > "${chunk_file}.retry"
+    mv "${chunk_file}.retry" "${chunk_file}"
+
     echo "  importing rows $((offset + 1))-${batch_end}"
     run_wrangler d1 execute "${DB_NAME}" --remote --file="${chunk_file}"
   done
@@ -324,7 +348,7 @@ write_component_catalog_schema() {
   cat > component_catalog_schema.sql <<'COMPONENT_CATALOG_SCHEMA_EXPORT'
 DROP TABLE IF EXISTS component_catalog;
 CREATE TABLE component_catalog (
-  lcsc INTEGER,
+  lcsc INTEGER NOT NULL UNIQUE,
   category TEXT,
   subcategory TEXT,
   mfr TEXT,
@@ -421,7 +445,7 @@ write_search_index_schema() {
   cat > search_index_schema.sql <<'SEARCH_INDEX_SCHEMA_EXPORT'
 DROP TABLE IF EXISTS search_index;
 CREATE TABLE search_index (
-  lcsc INTEGER,
+  lcsc INTEGER NOT NULL UNIQUE,
   mfr TEXT,
   package TEXT,
   description TEXT,
@@ -492,6 +516,7 @@ main() {
   fi
 
   if [[ "${SYNC_COMPONENT_CATALOG}" == "1" ]]; then
+    require_unique_lcsc component_catalog
     write_component_catalog_schema
     echo "Importing component catalog schema to D1..."
     run_wrangler d1 execute "${DB_NAME}" --remote --file=component_catalog_schema.sql
@@ -505,6 +530,7 @@ main() {
       echo "Using search_index already prepared in the source database."
       require_table search_index
     fi
+    require_unique_lcsc search_index
     write_search_index_schema
     echo "Importing search index schema to D1..."
     run_wrangler d1 execute "${DB_NAME}" --remote --file=search_index_schema.sql

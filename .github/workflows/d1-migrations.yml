@@ -196,7 +196,7 @@ jobs:
           SYNC_SEARCH_INDEX: ${{ env.SYNC_SCOPE == 'full_catalog' && '1' || '0' }}
           COMPONENT_CATALOG_BATCH_ROWS: ${{ env.SYNC_SCOPE == 'full_catalog' && '1000' || '250' }}
           SEARCH_INDEX_BATCH_ROWS: ${{ env.SYNC_SCOPE == 'full_catalog' && '1000' || '250' }}
-        run: bash ./cf-proxy/scripts/retry-command.sh ./cf-proxy/scripts/sync-db.sh
+        run: bash ./cf-proxy/scripts/sync-db.sh
 
       - name: Verify migration status and remote row counts
         working-directory: cf-proxy
