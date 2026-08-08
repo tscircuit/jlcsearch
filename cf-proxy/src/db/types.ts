@@ -770,6 +770,7 @@ export interface SearchIndex {
   basic: number | null
   category: string | null
   description: string | null
+  extended_promotional: number | null
   lcsc: Generated<number | null>
   mfr: string | null
   manufacturer_name: string | null

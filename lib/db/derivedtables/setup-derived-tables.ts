@@ -169,6 +169,7 @@ const createTable = async (
     { name: "stock", type: "integer" },
     { name: "price1", type: "real" },
     { name: "in_stock", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ].concat(spec.extraColumns as any, [{ name: "attributes", type: "text" }])) {
     tableCreator = tableCreator.addColumn(
       col.name as string,
@@ -204,6 +205,9 @@ const createTable = async (
         ? null
         : {
             ...c,
+            is_extended_promotional: Boolean(
+              (components[i] as any).extended_promotional,
+            ),
             attributes: jsonParseOrNull(components[i].extra)?.attributes,
           },
     )
