@@ -170,6 +170,44 @@ describe("buildDerivedSyncDatabase", () => {
     })
     output.close()
   })
+
+  test("materializes a stock snapshot with zeroes for absent parts", async () => {
+    const { sourcePath, outputPath } = await createSourceDatabase()
+    const source = new Database(sourcePath)
+    source
+      .query(
+        `INSERT INTO jlc_components (
+          lcsc, fetched_at, present, sync_seen, category, subcategory, mfr,
+          package, joints, manufacturer, library_type, preferred, last_on_stock,
+          description, datasheet, stock, price, attributes
+        ) VALUES (
+          54321, unixepoch(), 0, 1, 'Connectors',
+          'HDMI Connectors', 'REMOVED', 'SMD', 19, 'Example', 'base', 0,
+          unixepoch(), 'No longer listed', '', 125, '1-:1.00', '{}'
+        )`,
+      )
+      .run()
+    source.close()
+
+    await buildDerivedSyncDatabase({
+      sourcePath,
+      outputPath,
+      tableNames: ["hdmi_port"],
+      includeStockSnapshot: true,
+      logger: () => {},
+    })
+
+    const output = new Database(outputPath, { readonly: true })
+    expect(
+      output
+        .query("SELECT lcsc, stock FROM component_stock ORDER BY lcsc")
+        .all(),
+    ).toEqual([
+      { lcsc: 12345, stock: 250 },
+      { lcsc: 54321, stock: 0 },
+    ])
+    output.close()
+  })
 })
 
 describe("extractMinQPrice", () => {
