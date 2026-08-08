@@ -12,7 +12,7 @@ on:
       - "package.json"
       - "bunfig.toml"
       - "cf-proxy/migrations/**"
-      - "cf-proxy/scripts/sync-db.sh"
+      - "cf-proxy/scripts/**"
       - "cf-proxy/wrangler.toml"
       - "cf-proxy/package.json"
       - "cf-proxy/bun.lock"
@@ -184,7 +184,7 @@ jobs:
 
       - name: Apply D1 migrations
         working-directory: cf-proxy
-        run: bunx wrangler d1 migrations apply jlcsearch --remote
+        run: bash scripts/retry-command.sh bunx wrangler d1 migrations apply jlcsearch --remote
 
       - name: Upload selected data to D1
         env:
@@ -194,25 +194,25 @@ jobs:
           SYNC_DERIVED_TABLES: ${{ env.SYNC_SCOPE == 'derived' && '1' || '0' }}
           SYNC_COMPONENT_CATALOG: ${{ env.SYNC_SCOPE == 'full_catalog' && '1' || '0' }}
           SYNC_SEARCH_INDEX: ${{ env.SYNC_SCOPE == 'full_catalog' && '1' || '0' }}
-        run: ./cf-proxy/scripts/sync-db.sh
+        run: bash ./cf-proxy/scripts/retry-command.sh ./cf-proxy/scripts/sync-db.sh
 
       - name: Verify migration status and remote row counts
         working-directory: cf-proxy
         run: |
-          bunx wrangler d1 migrations list jlcsearch --remote
+          bash scripts/retry-command.sh bunx wrangler d1 migrations list jlcsearch --remote
 
           if [[ "${SYNC_SCOPE}" == "full_catalog" ]]; then
-            bunx wrangler d1 execute jlcsearch --remote \
+            bash scripts/retry-command.sh bunx wrangler d1 execute jlcsearch --remote \
               --command "SELECT COUNT(*) AS row_count FROM component_catalog;"
-            bunx wrangler d1 execute jlcsearch --remote \
+            bash scripts/retry-command.sh bunx wrangler d1 execute jlcsearch --remote \
               --command "SELECT COUNT(*) AS row_count FROM search_index;"
-            bunx wrangler d1 execute jlcsearch --remote \
+            bash scripts/retry-command.sh bunx wrangler d1 execute jlcsearch --remote \
               --command "SELECT lcsc, mfr, stock FROM search_index WHERE lcsc=${SMOKE_TEST_LCSC};"
           else
             IFS=',' read -ra tables <<< "${DERIVED_TABLES_LIST}"
             for raw_table in "${tables[@]}"; do
               table="$(echo "${raw_table}" | xargs)"
-              bunx wrangler d1 execute jlcsearch --remote \
+              bash scripts/retry-command.sh bunx wrangler d1 execute jlcsearch --remote \
                 --command "SELECT COUNT(*) AS row_count FROM \"${table}\";"
             done
           fi
@@ -223,7 +223,8 @@ jobs:
         shell: bash
         run: |
           cache_keys_file="${RUNNER_TEMP}/jlcsearch-cache-keys.json"
-          bunx wrangler kv key list --binding CACHE_KV > "${cache_keys_file}"
+          bash scripts/retry-command.sh bunx wrangler kv key list \
+            --binding CACHE_KV > "${cache_keys_file}"
 
           cache_key_count="$(jq 'length' "${cache_keys_file}")"
           if [[ "${cache_key_count}" == "0" ]]; then
@@ -232,7 +233,8 @@ jobs:
           fi
 
           echo "Deleting ${cache_key_count} cached API responses."
-          bunx wrangler kv bulk delete "${cache_keys_file}" \
+          bash scripts/retry-command.sh bunx wrangler kv bulk delete \
+            "${cache_keys_file}" \
             --binding CACHE_KV \
             --force
 
@@ -255,6 +257,9 @@ jobs:
           fi
 
           curl --fail --silent --show-error \
+            --retry 3 \
+            --retry-all-errors \
+            --retry-delay 10 \
             "${CACHE_BUST_URL}${separator}cachebust=1" \
             --output /tmp/d1-sync-response.json
 

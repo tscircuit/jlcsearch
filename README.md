@@ -71,8 +71,9 @@ snapshot is not hidden by an older response. On relevant merges to `main`, it
 downloads the current upstream source-db-v2 database, builds and verifies a
 compact `db.sqlite3` containing the requested derived tables, applies D1
 migrations, uploads those tables, and refreshes the affected production API
-cache. The workflow can also be run manually in `derived` or `full_catalog`
-mode. `derived` accepts a
+cache. Transient Cloudflare failures during migrations or upload are retried
+up to three times with incremental delays. The workflow can also be run
+manually in `derived` or `full_catalog` mode. `derived` accepts a
 comma-separated `derived_tables` input. `full_catalog` rebuilds and uploads the
 component catalog, search index, and FTS index from the current source-db-v2
 snapshot, and requires a numeric `smoke_test_lcsc` that must be present before
