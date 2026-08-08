@@ -309,6 +309,7 @@ describe("render helpers", () => {
             max_resolution: "32x4",
             is_basic: false,
             is_preferred: true,
+            pcba_type: "Standard",
             stock: 18416,
           },
         ],
@@ -330,6 +331,8 @@ describe("render helpers", () => {
     expect(html).toContain('name="max_resolution"')
     expect(html).toContain('value="32x4" selected')
     expect(html).toContain(">Max Resolution</th>")
+    expect(html).toContain(">PCBA Type</th>")
+    expect(html).toContain(">Standard</td>")
     expect(html).toContain('name="is_basic"')
     expect(html).toContain('name="is_preferred" value="true" checked')
     expect(html).toContain("HT1621B")

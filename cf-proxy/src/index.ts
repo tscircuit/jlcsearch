@@ -1,5 +1,5 @@
 import { CacheService, addCorsHeaders, addVaryHeader } from "./cache-service"
-import { queryComponentCatalog } from "./components"
+import { getPcbaType, queryComponentCatalog } from "./components"
 import { getD1Handler } from "./d1-routes"
 import { getD1Client } from "./db/get-d1-client"
 import { renderD1TablePage, renderHomePage } from "./render"
@@ -368,6 +368,7 @@ async function handleD1Search(
       package: row.package ?? "",
       is_basic: Boolean(row.basic),
       is_preferred: Boolean(row.preferred),
+      pcba_type: getPcbaType(Boolean(row.basic)),
       description: row.description ?? "",
       stock: row.stock ?? 0,
       price: row.price1 ?? extractSmallQuantityPrice(row.price),
@@ -493,6 +494,7 @@ async function handleD1ComponentsList(
         subcategory: row.subcategory ?? "",
         is_basic: Boolean(row.basic),
         is_preferred: Boolean(row.preferred),
+        pcba_type: getPcbaType(Boolean(row.basic)),
       })),
     }
 

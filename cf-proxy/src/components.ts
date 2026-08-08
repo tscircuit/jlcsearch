@@ -10,6 +10,11 @@ export interface ComponentCatalogQueryParams {
   is_preferred?: string
 }
 
+export type PcbaType = "Economic and Standard" | "Standard"
+
+export const getPcbaType = (isBasic: boolean): PcbaType =>
+  isBasic ? "Economic and Standard" : "Standard"
+
 export async function queryComponentCatalog(
   db: Kysely<DB>,
   params: ComponentCatalogQueryParams,
