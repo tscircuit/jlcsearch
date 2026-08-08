@@ -72,11 +72,12 @@ downloads the current upstream source-db-v2 database, builds and verifies a
 compact `db.sqlite3` containing the requested derived tables, applies D1
 migrations, uploads those tables, and refreshes the affected production API
 cache. Transient Cloudflare failures during migrations or upload are retried
-up to three times per D1 command with incremental delays. Upload batches are
+per D1 command with incremental delays. Upload batches are
 idempotent, so a lost import-status response can be retried without duplicating
 rows or restarting completed work. Full-catalog uploads use 1,000-row batches
-and a three-hour job timeout so the component catalog and search index can
-finish before the next upstream refresh. The workflow can also be run
+for catalog tables, 5,000-row batches for FTS, up to six attempts per D1
+command, and a three-hour job timeout so the component catalog and search index
+can finish before the next upstream refresh. The workflow can also be run
 manually in `derived` or `full_catalog` mode. `derived` accepts a
 comma-separated `derived_tables` input. `full_catalog` rebuilds and uploads the
 component catalog, search index, and FTS index from the current source-db-v2

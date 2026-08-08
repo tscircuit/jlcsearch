@@ -13,7 +13,7 @@ DB_NAME="${DB_NAME:-jlcsearch}"
 BATCH_ROWS="${BATCH_ROWS:-250}"
 COMPONENT_CATALOG_BATCH_ROWS="${COMPONENT_CATALOG_BATCH_ROWS:-${BATCH_ROWS}}"
 SEARCH_INDEX_BATCH_ROWS="${SEARCH_INDEX_BATCH_ROWS:-${BATCH_ROWS}}"
-FTS_BATCH_ROWS="${FTS_BATCH_ROWS:-25000}"
+FTS_BATCH_ROWS="${FTS_BATCH_ROWS:-5000}"
 SYNC_DERIVED_TABLES="${SYNC_DERIVED_TABLES:-1}"
 SYNC_COMPONENT_CATALOG="${SYNC_COMPONENT_CATALOG:-0}"
 SYNC_SEARCH_INDEX="${SYNC_SEARCH_INDEX:-0}"
@@ -113,8 +113,10 @@ rebuild_remote_search_fts_index() {
     "
   done
 
+  # FTS5 optimize is optional maintenance and can exceed D1's per-query work
+  # limit on the full catalog. The incrementally built index is ready to query
+  # as soon as every range has been inserted.
   run_wrangler d1 execute "${DB_NAME}" --remote --command "
-    INSERT INTO search_index_fts(search_index_fts) VALUES('optimize');
     UPDATE search_index_fts_meta SET value = '1' WHERE key = 'ready';
   "
 }
