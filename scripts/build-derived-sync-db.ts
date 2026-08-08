@@ -24,12 +24,14 @@ export const buildDerivedSyncDatabase = async ({
   outputPath,
   tableNames,
   includeComponentCatalog = false,
+  includeStockSnapshot = false,
   logger = console.log,
 }: {
   sourcePath: string
   outputPath: string
   tableNames?: string[]
   includeComponentCatalog?: boolean
+  includeStockSnapshot?: boolean
   logger?: (message: string) => void
 }) => {
   const resolvedSourcePath = path.resolve(sourcePath)
@@ -183,6 +185,22 @@ export const buildDerivedSyncDatabase = async ({
     `)
   }
 
+  if (includeStockSnapshot) {
+    database.exec(`
+      CREATE TABLE component_stock (
+        lcsc INTEGER PRIMARY KEY,
+        stock INTEGER NOT NULL
+      );
+
+      INSERT INTO component_stock(lcsc, stock)
+      SELECT
+        lcsc,
+        CASE WHEN present = 1 THEN coalesce(stock, 0) ELSE 0 END
+      FROM source.jlc_components
+      WHERE last_on_stock >= unixepoch('now', '-1 year');
+    `)
+  }
+
   const db = new Kysely<DB>({
     dialect: new BunSqliteDialect({ database }),
   })
@@ -209,12 +227,15 @@ const main = async () => {
     .filter(Boolean)
   const includeComponentCatalog =
     process.env.INCLUDE_COMPONENT_CATALOG?.trim() === "1"
+  const includeStockSnapshot =
+    process.env.INCLUDE_STOCK_SNAPSHOT?.trim() === "1"
 
   await buildDerivedSyncDatabase({
     sourcePath,
     outputPath,
     tableNames: configuredTables?.length ? configuredTables : undefined,
     includeComponentCatalog,
+    includeStockSnapshot,
   })
 }
 

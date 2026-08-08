@@ -65,9 +65,13 @@ table data from a prepared local SQLite database.
 
 Production D1 data is populated by the **Build and Sync D1** GitHub Actions
 workflow. Every night at 05:00 UTC, after the upstream jlcparts refresh, it
-performs a `full_catalog` sync and clears the production response cache. API
-clients are instructed to revalidate within 24 hours so the nightly stock
-snapshot is not hidden by an older response. On relevant merges to `main`, it
+performs a `stock_only` sync and clears the production response cache. The
+stock-only path updates changed values in `component_catalog` and `search_index`
+without rebuilding either table or the FTS index. Its compact stock snapshot
+also sets recently removed parts to zero instead of leaving stale quantities.
+API clients are instructed to revalidate within 24 hours so the nightly stock
+snapshot is not hidden by an older response. On relevant merges to `main`, the
+workflow
 downloads the current upstream source-db-v2 database, builds and verifies a
 compact `db.sqlite3` containing the requested derived tables, applies D1
 migrations, uploads those tables, and refreshes the affected production API
@@ -78,13 +82,14 @@ rows or restarting completed work. Full-catalog uploads use 1,000-row batches
 for catalog tables, 5,000-row batches for FTS, up to six attempts per D1
 command, and a three-hour job timeout so the component catalog and search index
 can finish before the next upstream refresh. The workflow can also be run
-manually in `derived` or `full_catalog` mode. `derived` accepts a
-comma-separated `derived_tables` input. `full_catalog` rebuilds and uploads the
-component catalog, search index, and FTS index from the current source-db-v2
-snapshot, and requires a numeric `smoke_test_lcsc` that must be present before
-and after the upload. Both modes accept an optional `cache_bust_url`. The
-workflow requires the `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN`
-repository secrets.
+manually in `derived`, `stock_only`, or `full_catalog` mode. `derived` accepts a
+comma-separated `derived_tables` input. `stock_only` performs the same in-place
+stock refresh used by the nightly schedule. `full_catalog` rebuilds and uploads
+the component catalog, search index, and FTS index from the current source-db-v2
+snapshot. Catalog and stock syncs require a numeric `smoke_test_lcsc` whose
+remote stock must match the prepared source database. All modes accept an
+optional `cache_bust_url`. The workflow requires the
+`CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` repository secrets.
 
 ## How Does It work?
 As a developer new to this codebase, or a curious user, you may have some questions about the flow of data through the scripts and automations inside this repo.  It all starts with the [jlcparts](https://github.com/yaqwsx/jlcparts) project, which compiles a massive **11GB** sqlite3 database of *everything* [JLCPCB](https://jlcpcb.com) has to offer.  As you can imagine, this would be very resource-intensive and slow to search, so the next steps are scripts that optimize it heavily, although it's more accurate to say that they rebuild it entirely. 

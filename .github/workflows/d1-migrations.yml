@@ -20,12 +20,13 @@ on:
   workflow_dispatch:
     inputs:
       sync_scope:
-        description: Data set to rebuild and upload
+        description: Data set to synchronize
         required: true
-        default: derived
+        default: stock_only
         type: choice
         options:
           - derived
+          - stock_only
           - full_catalog
       derived_tables:
         description: Comma-separated derived tables to rebuild and upload
@@ -38,7 +39,7 @@ on:
         default: ""
         type: string
       smoke_test_lcsc:
-        description: LCSC number that must exist after a full catalog sync
+        description: LCSC number used to verify catalog and stock syncs
         required: true
         default: "7512"
         type: string
@@ -58,7 +59,7 @@ jobs:
     env:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      SYNC_SCOPE: ${{ github.event_name == 'schedule' && 'full_catalog' || inputs.sync_scope || 'derived' }}
+      SYNC_SCOPE: ${{ github.event_name == 'schedule' && 'stock_only' || inputs.sync_scope || 'derived' }}
       DERIVED_TABLES_LIST: ${{ inputs.derived_tables || 'photo_diode' }}
       SMOKE_TEST_LCSC: ${{ inputs.smoke_test_lcsc || '7512' }}
 
@@ -81,7 +82,7 @@ jobs:
             echo "::error::Missing CLOUDFLARE_API_TOKEN repository secret."
             exit 1
           fi
-          if [[ "${SYNC_SCOPE}" != "derived" && "${SYNC_SCOPE}" != "full_catalog" ]]; then
+          if [[ "${SYNC_SCOPE}" != "derived" && "${SYNC_SCOPE}" != "stock_only" && "${SYNC_SCOPE}" != "full_catalog" ]]; then
             echo "::error::Unknown sync scope: ${SYNC_SCOPE}"
             exit 1
           fi
@@ -89,7 +90,7 @@ jobs:
             echo "::error::At least one derived table is required."
             exit 1
           fi
-          if [[ "${SYNC_SCOPE}" == "full_catalog" && ! "${SMOKE_TEST_LCSC}" =~ ^[0-9]+$ ]]; then
+          if [[ "${SYNC_SCOPE}" != "derived" && ! "${SMOKE_TEST_LCSC}" =~ ^[0-9]+$ ]]; then
             echo "::error::smoke_test_lcsc must be numeric."
             exit 1
           fi
@@ -120,6 +121,8 @@ jobs:
           bun run setup:extract-db
           if [[ "${SYNC_SCOPE}" == "full_catalog" ]]; then
             INCLUDE_COMPONENT_CATALOG=1 bun run setup:derived-sync-db
+          elif [[ "${SYNC_SCOPE}" == "stock_only" ]]; then
+            INCLUDE_STOCK_SNAPSHOT=1 bun run setup:derived-sync-db
           else
             bun run setup:derived-sync-db
           fi
@@ -158,6 +161,25 @@ jobs:
               exit 1
             fi
             echo "component_catalog: ${catalog_count} prepared rows"
+          elif [[ "${SYNC_SCOPE}" == "stock_only" ]]; then
+            stock_snapshot_exists="$(sqlite3 db.sqlite3 "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type='table' AND name='component_stock');")"
+            if [[ "${stock_snapshot_exists}" != "1" ]]; then
+              echo "::error::Prepared database does not contain component_stock."
+              exit 1
+            fi
+
+            stock_snapshot_count="$(sqlite3 db.sqlite3 "SELECT COUNT(*) FROM component_stock;")"
+            if [[ "${stock_snapshot_count}" == "0" ]]; then
+              echo "::error::Refusing to sync an empty stock snapshot."
+              exit 1
+            fi
+
+            smoke_test_count="$(sqlite3 db.sqlite3 "SELECT COUNT(*) FROM component_stock WHERE lcsc=${SMOKE_TEST_LCSC};")"
+            if [[ "${smoke_test_count}" != "1" ]]; then
+              echo "::error::Prepared stock snapshot does not contain C${SMOKE_TEST_LCSC}."
+              exit 1
+            fi
+            echo "component_stock: ${stock_snapshot_count} prepared rows"
           else
             IFS=',' read -ra tables <<< "${DERIVED_TABLES_LIST}"
             for raw_table in "${tables[@]}"; do
@@ -187,6 +209,7 @@ jobs:
         run: bash scripts/retry-command.sh bunx wrangler d1 migrations apply jlcsearch --remote
 
       - name: Upload selected data to D1
+        if: env.SYNC_SCOPE != 'stock_only'
         env:
           SOURCE_DB_PATH: ${{ github.workspace }}/db.sqlite3
           REBUILD_DERIVED_TABLES: "0"
@@ -201,6 +224,15 @@ jobs:
           RETRY_BASE_DELAY_SECONDS: ${{ env.SYNC_SCOPE == 'full_catalog' && '20' || '30' }}
         run: bash ./cf-proxy/scripts/sync-db.sh
 
+      - name: Sync stock quantities to D1
+        if: env.SYNC_SCOPE == 'stock_only'
+        env:
+          SOURCE_DB_PATH: ${{ github.workspace }}/db.sqlite3
+          STOCK_BATCH_ROWS: "1000"
+          RETRY_MAX_ATTEMPTS: "6"
+          RETRY_BASE_DELAY_SECONDS: "20"
+        run: bash ./cf-proxy/scripts/sync-stock.sh
+
       - name: Verify migration status and remote row counts
         working-directory: cf-proxy
         run: |
@@ -211,8 +243,25 @@ jobs:
               --command "SELECT COUNT(*) AS row_count FROM component_catalog;"
             bash scripts/retry-command.sh bunx wrangler d1 execute jlcsearch --remote \
               --command "SELECT COUNT(*) AS row_count FROM search_index;"
-            bash scripts/retry-command.sh bunx wrangler d1 execute jlcsearch --remote \
-              --command "SELECT lcsc, mfr, stock FROM search_index WHERE lcsc=${SMOKE_TEST_LCSC};"
+          fi
+
+          if [[ "${SYNC_SCOPE}" != "derived" ]]; then
+            source_stock_table="component_catalog"
+            if [[ "${SYNC_SCOPE}" == "stock_only" ]]; then
+              source_stock_table="component_stock"
+            fi
+            expected_stock="$(sqlite3 ../db.sqlite3 "SELECT stock FROM ${source_stock_table} WHERE lcsc=${SMOKE_TEST_LCSC};")"
+            remote_result_file="${RUNNER_TEMP}/jlcsearch-remote-stock.json"
+            bash scripts/retry-command.sh bunx wrangler d1 execute jlcsearch --remote --json \
+              --command "SELECT lcsc, mfr, stock FROM search_index WHERE lcsc=${SMOKE_TEST_LCSC};" \
+              > "${remote_result_file}"
+            remote_stock="$(jq -r '.[0].results[0].stock // empty' "${remote_result_file}")"
+            if [[ -z "${expected_stock}" || "${remote_stock}" != "${expected_stock}" ]]; then
+              echo "::error::Remote C${SMOKE_TEST_LCSC} stock ${remote_stock:-missing} did not match source stock ${expected_stock:-missing}."
+              cat "${remote_result_file}"
+              exit 1
+            fi
+            echo "Remote C${SMOKE_TEST_LCSC} stock matches source: ${expected_stock}."
           else
             IFS=',' read -ra tables <<< "${DERIVED_TABLES_LIST}"
             for raw_table in "${tables[@]}"; do
@@ -223,7 +272,7 @@ jobs:
           fi
 
       - name: Clear production API cache
-        if: env.SYNC_SCOPE == 'full_catalog'
+        if: env.SYNC_SCOPE != 'derived'
         working-directory: cf-proxy
         shell: bash
         run: |
@@ -249,7 +298,7 @@ jobs:
         shell: bash
         run: |
           if [[ -z "${CACHE_BUST_URL}" ]]; then
-            if [[ "${SYNC_SCOPE}" == "full_catalog" ]]; then
+            if [[ "${SYNC_SCOPE}" != "derived" ]]; then
               CACHE_BUST_URL="https://jlcsearch.tscircuit.com/components/list?search=C${SMOKE_TEST_LCSC}&json=true"
             else
               CACHE_BUST_URL="https://jlcsearch.tscircuit.com/photo_diodes/list.json"
@@ -278,12 +327,38 @@ jobs:
             echo "Production HDMI API returned ${hdmi_port_count} ports."
           fi
 
-          if [[ "${SYNC_SCOPE}" == "full_catalog" ]]; then
+          if [[ "${SYNC_SCOPE}" != "derived" ]]; then
             component_count="$(jq '.components | length' /tmp/d1-sync-response.json)"
             if [[ "${component_count}" == "0" || "${component_count}" == "null" ]]; then
               echo "::error::Production component API did not return C${SMOKE_TEST_LCSC}."
               cat /tmp/d1-sync-response.json
               exit 1
             fi
-            echo "Production component API returned C${SMOKE_TEST_LCSC}."
+            source_stock_table="component_catalog"
+            if [[ "${SYNC_SCOPE}" == "stock_only" ]]; then
+              source_stock_table="component_stock"
+            fi
+            expected_stock="$(sqlite3 db.sqlite3 "SELECT stock FROM ${source_stock_table} WHERE lcsc=${SMOKE_TEST_LCSC};")"
+            api_stock="$(jq -r '.components[0].stock // empty' /tmp/d1-sync-response.json)"
+            if [[ -z "${expected_stock}" || "${api_stock}" != "${expected_stock}" ]]; then
+              echo "::error::Production C${SMOKE_TEST_LCSC} stock ${api_stock:-missing} did not match source stock ${expected_stock:-missing}."
+              cat /tmp/d1-sync-response.json
+              exit 1
+            fi
+            echo "Cache-busted production API returned expected C${SMOKE_TEST_LCSC} stock ${expected_stock}."
+
+            curl --fail --silent --show-error \
+              --retry 3 \
+              --retry-all-errors \
+              --retry-delay 10 \
+              "${CACHE_BUST_URL}" \
+              --output /tmp/d1-sync-cached-response.json
+
+            cached_api_stock="$(jq -r '.components[0].stock // empty' /tmp/d1-sync-cached-response.json)"
+            if [[ "${cached_api_stock}" != "${expected_stock}" ]]; then
+              echo "::error::Cached production C${SMOKE_TEST_LCSC} stock ${cached_api_stock:-missing} did not match source stock ${expected_stock}."
+              cat /tmp/d1-sync-cached-response.json
+              exit 1
+            fi
+            echo "Cached production API returned expected C${SMOKE_TEST_LCSC} stock ${expected_stock}."
           fi
