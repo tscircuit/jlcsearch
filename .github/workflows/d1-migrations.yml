@@ -54,7 +54,7 @@ jobs:
   sync:
     name: Build database and sync production
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 180
     env:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -194,6 +194,8 @@ jobs:
           SYNC_DERIVED_TABLES: ${{ env.SYNC_SCOPE == 'derived' && '1' || '0' }}
           SYNC_COMPONENT_CATALOG: ${{ env.SYNC_SCOPE == 'full_catalog' && '1' || '0' }}
           SYNC_SEARCH_INDEX: ${{ env.SYNC_SCOPE == 'full_catalog' && '1' || '0' }}
+          COMPONENT_CATALOG_BATCH_ROWS: ${{ env.SYNC_SCOPE == 'full_catalog' && '1000' || '250' }}
+          SEARCH_INDEX_BATCH_ROWS: ${{ env.SYNC_SCOPE == 'full_catalog' && '1000' || '250' }}
         run: bash ./cf-proxy/scripts/retry-command.sh ./cf-proxy/scripts/sync-db.sh
 
       - name: Verify migration status and remote row counts
