@@ -776,6 +776,7 @@ export interface SearchIndex {
   mpn: string | null
   package: string | null
   preferred: number | null
+  is_extended_promotional: number | null
   price: string | null
   price1: number | null
   search_text: string | null
