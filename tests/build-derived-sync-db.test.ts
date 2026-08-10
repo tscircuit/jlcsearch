@@ -65,12 +65,39 @@ const createSourceDatabase = async () => {
 
   source
     .query(
+      `INSERT INTO jlc_components (
+        lcsc, fetched_at, present, sync_seen, category, subcategory, mfr,
+        package, joints, manufacturer, library_type, preferred, last_on_stock,
+        description, datasheet, stock, price, attributes
+      ) VALUES (
+        23456, unixepoch(), 1, 1, 'Connectors',
+        'HDMI Connectors', 'HDMI-EXT', 'SMD', 19, 'Example', 'extended', 0,
+        unixepoch(), 'Extended promotional HDMI part', '', 125,
+        '1-:1.50',
+        '{"Connector Type":"HDMI","Number of Pins":"19"}'
+      )`,
+    )
+    .run()
+
+  source
+    .query(
       `INSERT INTO lcsc_components (
         lcsc, fetched_at, manufacturer, attributes, image, url_slug
       ) VALUES (
         12345, unixepoch(), 'Example Inc.',
         '{"Gender":"Female","Mounting Style":"Surface Mount"}',
         'example.jpg', 'hdmi-19p'
+      )`,
+    )
+    .run()
+  source
+    .query(
+      `INSERT INTO lcsc_components (
+        lcsc, fetched_at, manufacturer, attributes, image, url_slug
+      ) VALUES (
+        23456, unixepoch(), 'Example Inc.',
+        '{"Gender":"Female","Mounting Style":"Surface Mount"}',
+        'example-extended.jpg', 'hdmi-ext'
       )`,
     )
     .run()
@@ -104,7 +131,8 @@ describe("buildDerivedSyncDatabase", () => {
         `SELECT
           lcsc, price1, number_of_pins, gender, mounting_style,
           is_basic, is_preferred
-        FROM hdmi_port`,
+        FROM hdmi_port
+        WHERE lcsc = 12345`,
       )
       .get() as Record<string, unknown>
 
@@ -148,24 +176,27 @@ describe("buildDerivedSyncDatabase", () => {
     const row = output
       .query(
         `SELECT
-          lcsc, mfr, category, subcategory, basic, preferred, stock,
+          lcsc, mfr, category, subcategory, basic, preferred,
+          is_extended_promotional, stock,
           json_extract(extra, '$.manufacturer.name') AS manufacturer,
           json_extract(extra, '$.mpn') AS mpn,
           json_extract(extra, '$.attributes.Gender') AS gender
-        FROM component_catalog`,
+        FROM component_catalog
+        WHERE lcsc = 23456`,
       )
       .get() as Record<string, unknown>
 
     expect(row).toEqual({
-      lcsc: 12345,
-      mfr: "HDMI-19P",
+      lcsc: 23456,
+      mfr: "HDMI-EXT",
       category: "Connectors",
       subcategory: "HDMI Connectors",
-      basic: 1,
-      preferred: 1,
-      stock: 250,
+      basic: 0,
+      preferred: 0,
+      is_extended_promotional: 1,
+      stock: 125,
       manufacturer: "Example Inc.",
-      mpn: "HDMI-19P",
+      mpn: "HDMI-EXT",
       gender: "Female",
     })
     output.close()
@@ -204,6 +235,7 @@ describe("buildDerivedSyncDatabase", () => {
         .all(),
     ).toEqual([
       { lcsc: 12345, stock: 250 },
+      { lcsc: 23456, stock: 125 },
       { lcsc: 54321, stock: 0 },
     ])
     output.close()
