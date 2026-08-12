@@ -93,6 +93,8 @@ export const buildDerivedSyncDatabase = async ({
       j.fetched_at AS last_update,
       j.sync_seen AS flag,
       CASE WHEN j.stock > 0 THEN 1 ELSE 0 END AS in_stock,
+      CASE WHEN j.library_type = 'extended' THEN 1 ELSE 0 END AS extended,
+      CASE WHEN j.library_type = 'extended' THEN 1 ELSE 0 END AS is_extended_promotional,
       json_object(
         'attributes',
         json(
@@ -136,6 +138,7 @@ export const buildDerivedSyncDatabase = async ({
         j.package,
         CASE WHEN j.library_type = 'base' THEN 1 ELSE 0 END AS basic,
         j.preferred,
+        CASE WHEN j.library_type = 'extended' THEN 1 ELSE 0 END AS is_extended_promotional,
         j.description,
         j.stock,
         j.price,
