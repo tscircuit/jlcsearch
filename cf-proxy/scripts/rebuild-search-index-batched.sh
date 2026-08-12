@@ -43,6 +43,7 @@ run_wrangler d1 execute "$DB_NAME" --remote --command \
      price1 REAL,
      basic INTEGER,
      preferred INTEGER,
+     component_product_type INTEGER,
      category TEXT,
      subcategory TEXT,
      manufacturer_name TEXT,
@@ -70,6 +71,7 @@ INSERT INTO search_index_next (
   price1,
   basic,
   preferred,
+  component_product_type,
   category,
   subcategory,
   manufacturer_name,
@@ -102,6 +104,7 @@ SELECT
   END AS price1,
   basic,
   preferred,
+  component_product_type,
   category,
   subcategory,
   CASE

@@ -29,6 +29,7 @@ const createSourceDatabase = async () => {
       manufacturer TEXT NOT NULL,
       library_type TEXT NOT NULL,
       preferred INTEGER NOT NULL,
+      component_product_type INTEGER,
       last_on_stock INTEGER NOT NULL,
       description TEXT NOT NULL,
       datasheet TEXT NOT NULL,
@@ -51,12 +52,14 @@ const createSourceDatabase = async () => {
     .query(
       `INSERT INTO jlc_components (
         lcsc, fetched_at, present, sync_seen, category, subcategory, mfr,
-        package, joints, manufacturer, library_type, preferred, last_on_stock,
-        description, datasheet, stock, price, attributes
+        package, joints, manufacturer, library_type, preferred,
+        component_product_type, last_on_stock, description, datasheet, stock,
+        price, attributes
       ) VALUES (
         12345, unixepoch(), 1, 1, 'Connectors',
         'HDMI Connectors', 'HDMI-19P', 'SMD', 19, 'Example', 'base', 1,
-        unixepoch(), 'HDMI Female 19 Pins horizontal attachment', '', 250,
+        0, unixepoch(),
+        'HDMI Female 19 Pins horizontal attachment', '', 250,
         '1-9:1.25,10-:0.75',
         '{"Connector Type":"HDMI","Number of Pins":"19"}'
       )`,
@@ -148,7 +151,8 @@ describe("buildDerivedSyncDatabase", () => {
     const row = output
       .query(
         `SELECT
-          lcsc, mfr, category, subcategory, basic, preferred, stock,
+          lcsc, mfr, category, subcategory, basic, preferred,
+          component_product_type, stock,
           json_extract(extra, '$.manufacturer.name') AS manufacturer,
           json_extract(extra, '$.mpn') AS mpn,
           json_extract(extra, '$.attributes.Gender') AS gender
@@ -163,6 +167,7 @@ describe("buildDerivedSyncDatabase", () => {
       subcategory: "HDMI Connectors",
       basic: 1,
       preferred: 1,
+      component_product_type: 0,
       stock: 250,
       manufacturer: "Example Inc.",
       mpn: "HDMI-19P",
@@ -178,12 +183,13 @@ describe("buildDerivedSyncDatabase", () => {
       .query(
         `INSERT INTO jlc_components (
           lcsc, fetched_at, present, sync_seen, category, subcategory, mfr,
-          package, joints, manufacturer, library_type, preferred, last_on_stock,
-          description, datasheet, stock, price, attributes
+          package, joints, manufacturer, library_type, preferred,
+          component_product_type, last_on_stock, description, datasheet,
+          stock, price, attributes
         ) VALUES (
           54321, unixepoch(), 0, 1, 'Connectors',
           'HDMI Connectors', 'REMOVED', 'SMD', 19, 'Example', 'base', 0,
-          unixepoch(), 'No longer listed', '', 125, '1-:1.00', '{}'
+          NULL, unixepoch(), 'No longer listed', '', 125, '1-:1.00', '{}'
         )`,
       )
       .run()

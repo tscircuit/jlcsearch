@@ -3,7 +3,7 @@ import { queryComponentCatalog } from "./components"
 import { getD1Handler } from "./d1-routes"
 import { getD1Client } from "./db/get-d1-client"
 import { renderD1TablePage, renderHomePage } from "./render"
-import { searchIndex } from "./search"
+import { getPcbaType, searchIndex, serializeSearchResult } from "./search"
 
 export interface Env {
   CACHE_KV: KVNamespace
@@ -20,16 +20,6 @@ const HOME_PAGE_CACHE_CONTROL = [
   "must-revalidate",
 ].join(", ")
 const FOOTPRINTER_STRINGS_API_PREFIX = "/api/footprinter_strings/"
-
-const extractSmallQuantityPrice = (price: string | null): string | number => {
-  if (!price) return ""
-  try {
-    const priceObj = JSON.parse(price)
-    return priceObj[0]?.price || ""
-  } catch {
-    return ""
-  }
-}
 
 const buildD1ErrorResponse = (
   origin: string | null,
@@ -441,16 +431,7 @@ async function handleD1Search(
     const db = getD1Client(env.DB)
     const params = Object.fromEntries(url.searchParams)
     const rows = await searchIndex(db, params)
-    const components = rows.map((row) => ({
-      lcsc: row.lcsc ?? 0,
-      mfr: row.mfr ?? "",
-      package: row.package ?? "",
-      is_basic: Boolean(row.basic),
-      is_preferred: Boolean(row.preferred),
-      description: row.description ?? "",
-      stock: row.stock ?? 0,
-      price: row.price1 ?? extractSmallQuantityPrice(row.price),
-    }))
+    const components = rows.map(serializeSearchResult)
 
     const headers = new Headers({
       "content-type": "application/json",
@@ -572,6 +553,7 @@ async function handleD1ComponentsList(
         subcategory: row.subcategory ?? "",
         is_basic: Boolean(row.basic),
         is_preferred: Boolean(row.preferred),
+        pcba_type: getPcbaType(row.component_product_type),
       })),
     }
 

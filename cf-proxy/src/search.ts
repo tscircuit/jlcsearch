@@ -11,7 +11,7 @@ export interface SearchQueryParams {
   is_preferred?: string
 }
 
-interface SearchRow {
+export interface SearchRow {
   lcsc: number | null
   mfr: string | null
   package: string | null
@@ -21,9 +21,56 @@ interface SearchRow {
   price1: number | null
   basic: number | null
   preferred: number | null
+  component_product_type: number | null
   category: string | null
   subcategory: string | null
 }
+
+const extractSmallQuantityPrice = (price: string | null): string | number => {
+  if (!price) return ""
+  try {
+    const priceRanges = JSON.parse(price)
+    return priceRanges[0]?.price || ""
+  } catch {
+    return ""
+  }
+}
+
+export type PcbaType =
+  | "Economic and Standard"
+  | "Economic Only"
+  | "Standard Only"
+
+enum ComponentProductType {
+  EconomicAndStandard = 0,
+  EconomicOnly = 1,
+  StandardOnly = 2,
+}
+
+const pcbaTypeByComponentProductType: Partial<Record<number, PcbaType>> = {
+  [ComponentProductType.EconomicAndStandard]: "Economic and Standard",
+  [ComponentProductType.EconomicOnly]: "Economic Only",
+  [ComponentProductType.StandardOnly]: "Standard Only",
+}
+
+export const getPcbaType = (
+  componentProductType: number | null,
+): PcbaType | null => {
+  if (componentProductType === null) return null
+  return pcbaTypeByComponentProductType[componentProductType] ?? null
+}
+
+export const serializeSearchResult = (row: SearchRow) => ({
+  lcsc: row.lcsc ?? 0,
+  mfr: row.mfr ?? "",
+  package: row.package ?? "",
+  is_basic: Boolean(row.basic),
+  is_preferred: Boolean(row.preferred),
+  pcba_type: getPcbaType(row.component_product_type),
+  description: row.description ?? "",
+  stock: row.stock ?? 0,
+  price: row.price1 ?? extractSmallQuantityPrice(row.price),
+})
 
 const buildWhereClause = (conditions: RawBuilder<unknown>[]) =>
   conditions.length > 0 ? sql.join(conditions, sql` AND `) : sql`1 = 1`
@@ -151,6 +198,7 @@ export async function searchIndex(
       search_index.price1,
       search_index.basic,
       search_index.preferred,
+      search_index.component_product_type,
       search_index.category,
       search_index.subcategory
     FROM search_index

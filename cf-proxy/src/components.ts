@@ -22,6 +22,7 @@ export async function queryComponentCatalog(
     package: string | null
     basic: number | null
     preferred: number | null
+    component_product_type: number | null
     description: string | null
     stock: number | null
     price: string | null
