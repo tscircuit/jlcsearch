@@ -7,6 +7,7 @@ import {
   type FootprinterStringRow,
   buildFootprinterStringUpsert,
   createFootprinterStringRow,
+  isPermanentEasyEdaMiss,
 } from "../lib/footprinter-strings"
 
 const DATABASE_NAME = "jlcsearch"
@@ -267,6 +268,7 @@ const main = async () => {
   let attempted = 0
   let failed = 0
   let matched = 0
+  let permanentMisses = 0
   let recorded = 0
 
   console.log(
@@ -309,10 +311,20 @@ const main = async () => {
           }
           continue
         }
-        failed += 1
-        console.warn(
-          `C${component.lcsc}: ${message}; leaving it eligible to retry.`,
-        )
+
+        if (isPermanentEasyEdaMiss(error)) {
+          pendingRows.push(createFootprinterStringRow(component.lcsc, null))
+          recorded += 1
+          permanentMisses += 1
+          console.warn(
+            `C${component.lcsc}: ${message}; recording a permanent null result.`,
+          )
+        } else {
+          failed += 1
+          console.warn(
+            `C${component.lcsc}: ${message}; leaving it eligible to retry.`,
+          )
+        }
       }
 
       if (pendingRows.length >= WRITE_BATCH_SIZE) {
@@ -329,7 +341,7 @@ const main = async () => {
   await flushRows(pendingRows)
   const elapsedSeconds = ((Date.now() - startedAt) / 1000).toFixed(1)
   console.log(
-    `Finished cleanly after ${elapsedSeconds}s: ${attempted} attempted, ${recorded} recorded, ${matched} matched, ${failed} failed.`,
+    `Finished cleanly after ${elapsedSeconds}s: ${attempted} attempted, ${recorded} recorded, ${matched} matched, ${permanentMisses} permanent misses, ${failed} retryable failures.`,
   )
 }
 
