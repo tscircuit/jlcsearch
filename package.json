@@ -22,12 +22,15 @@
     "setup:optimize-db": "bun run scripts/setup-db-optimizations.ts",
     "setup:derived-tables": "bun run scripts/setup-derived-tables.ts",
     "setup:derived-sync-db": "bun run scripts/build-derived-sync-db.ts",
+    "populate:footprinter-strings": "bun run scripts/populate-footprinter-strings.ts",
     "format": "biome format --write .",
     "format:check": "biome format ."
   },
   "type": "module",
   "dependencies": {
     "@tscircuit/footprinter": "^0.0.143",
+    "circuit-json-to-footprinter": "^0.0.40",
+    "easyeda": "^0.0.286",
     "format-si-unit": "^0.0.10",
     "kysely-bun-sqlite": "^0.3.2"
   }
