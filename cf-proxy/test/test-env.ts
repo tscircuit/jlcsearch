@@ -77,6 +77,25 @@ export const createTestEnv = () => ({
   DB: {} as D1Database,
 })
 
+export const createFootprinterStringsD1 = (
+  rows: Array<{
+    copper_iou: number | null
+    footprinter_string: string | null
+    lcsc: number
+    updated_at: string
+  }>,
+): D1Database =>
+  ({
+    prepare: () => ({
+      bind: (lcsc: number) => ({
+        all: async () => ({
+          results: rows.filter((row) => row.lcsc === lcsc),
+          meta: { changes: 0 },
+        }),
+      }),
+    }),
+  }) as unknown as D1Database
+
 export const createSelf = (env: ReturnType<typeof createTestEnv>) => ({
   pending: [] as Promise<unknown>[],
   fetch(input: RequestInfo | URL, init?: RequestInit) {

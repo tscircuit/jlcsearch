@@ -36,6 +36,26 @@ curl https://jlcsearch.tscircuit.com/resistors/list.json?package=&resistance=1k
 #      ...
 ```
 
+Look up a generated tscircuit footprinter string by numeric or `C`-prefixed
+LCSC number:
+
+```bash
+curl https://jlcsearch.tscircuit.com/api/footprinter_strings/C2906861
+
+# {
+#   "component_footprinter_details": {
+#     "lcsc": 2906861,
+#     "footprinter_string": "sod723_p0.865mm_pw0.54mm_pl0.57mm",
+#     "copper_iou": 0.9923751612092405,
+#     "updated_at": "2026-08-12 04:34:12"
+#   }
+# }
+```
+
+A `200` response with a null `footprinter_string` means the component was
+processed without a match above 95% copper IoU. A `404` means the component has
+not been processed yet.
+
 ## Development
 
 [Bun](https://bun.com/) is required. Install dependencies for both the data
