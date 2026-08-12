@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       max_runtime_minutes:
-        description: Sequential processing time (1-60 minutes)
+        description: Processing time (1-60 minutes)
         required: true
         default: "60"
         type: string
