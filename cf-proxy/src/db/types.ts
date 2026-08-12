@@ -987,6 +987,13 @@ export interface WireToBoardConnector {
   stock: number | null
 }
 
+export interface FootprinterStrings {
+  copper_iou: number | null
+  footprinter_string: string | null
+  lcsc: number
+  updated_at: Generated<string>
+}
+
 export interface DB {
   accelerometer: Accelerometer
   adc: Adc
@@ -1004,6 +1011,7 @@ export interface DB {
   dimm_connector: DimmConnector
   fpc_connector: FpcConnector
   fpga: Fpga
+  footprinter_strings: FootprinterStrings
   fuse: Fuse
   gas_sensor: GasSensor
   gyroscope: Gyroscope

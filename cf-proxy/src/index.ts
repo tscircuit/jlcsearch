@@ -19,6 +19,7 @@ const HOME_PAGE_CACHE_CONTROL = [
   `s-maxage=${HOME_PAGE_CACHE_MAX_AGE_SECONDS}`,
   "must-revalidate",
 ].join(", ")
+const FOOTPRINTER_STRINGS_API_PREFIX = "/api/footprinter_strings/"
 
 const extractSmallQuantityPrice = (price: string | null): string | number => {
   if (!price) return ""
@@ -83,6 +84,26 @@ const buildD1NotFoundResponse = (
     status: 404,
     headers,
   })
+}
+
+const buildD1InvalidLcscResponse = (origin: string | null): Response => {
+  const headers = new Headers({
+    "cache-control": "no-store",
+    "content-type": "application/json",
+    "x-data-source": "d1",
+    "x-cache": "D1",
+  })
+  addCorsHeaders(headers, origin)
+
+  return new Response(
+    JSON.stringify({
+      error: {
+        error_code: "invalid_lcsc",
+        message: "LCSC must be a positive integer with an optional C prefix",
+      },
+    }),
+    { status: 400, headers },
+  )
 }
 
 const getPreferredContentType = (
@@ -310,6 +331,10 @@ async function tryD1Route(
 
   const pathname = url.pathname.replace(/\.json$/, "")
 
+  if (pathname.startsWith(FOOTPRINTER_STRINGS_API_PREFIX)) {
+    return handleD1FootprinterString(pathname, env, origin)
+  }
+
   if (pathname === "/api/search") {
     return handleCachedD1Response(
       url,
@@ -351,6 +376,60 @@ async function tryD1Route(
     async () => handleD1TableRoute(pathname, url, isJsonRequest, env, origin),
     { cacheBust },
   )
+}
+
+const parseLcscPathParameter = (pathname: string): number | null => {
+  const rawLcsc = pathname.slice(FOOTPRINTER_STRINGS_API_PREFIX.length)
+  const normalizedLcsc = rawLcsc.replace(/^c/i, "")
+  if (!/^\d+$/.test(normalizedLcsc)) return null
+
+  const lcsc = Number(normalizedLcsc)
+  return Number.isSafeInteger(lcsc) && lcsc > 0 ? lcsc : null
+}
+
+async function handleD1FootprinterString(
+  pathname: string,
+  env: Env,
+  origin: string | null,
+): Promise<Response> {
+  const lcsc = parseLcscPathParameter(pathname)
+  if (lcsc === null) return buildD1InvalidLcscResponse(origin)
+
+  try {
+    const db = getD1Client(env.DB)
+    const row = await db
+      .selectFrom("footprinter_strings")
+      .select(["lcsc", "footprinter_string", "copper_iou", "updated_at"])
+      .where("lcsc", "=", lcsc)
+      .executeTakeFirst()
+
+    if (!row) {
+      const response = buildD1NotFoundResponse(origin)
+      response.headers.set("cache-control", "no-store")
+      return response
+    }
+
+    const headers = new Headers({
+      "cache-control": "no-store",
+      "content-type": "application/json",
+      "x-data-source": "d1",
+      "x-cache": "D1",
+    })
+    addCorsHeaders(headers, origin)
+
+    return new Response(
+      JSON.stringify({ component_footprinter_details: row }),
+      { status: 200, headers },
+    )
+  } catch (error) {
+    console.error(`D1 footprinter string lookup failed for C${lcsc}:`, error)
+    return buildD1ErrorResponse(
+      origin,
+      error instanceof Error
+        ? error.message
+        : "Unknown D1 footprinter string lookup error",
+    )
+  }
 }
 
 async function handleD1Search(

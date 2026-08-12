@@ -1,0 +1,80 @@
+name: Populate footprinter strings
+
+on:
+  workflow_dispatch:
+    inputs:
+      max_runtime_minutes:
+        description: Sequential processing time (1-60 minutes)
+        required: true
+        default: "60"
+        type: string
+      retry_null_entries:
+        description: Reprocess rows whose footprinter string is null
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-d1-sync
+  cancel-in-progress: false
+
+jobs:
+  populate:
+    name: Populate production D1
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Validate inputs and credentials
+        env:
+          MAX_RUNTIME_MINUTES: ${{ inputs.max_runtime_minutes }}
+        run: |
+          if [[ -z "${CLOUDFLARE_ACCOUNT_ID}" || -z "${CLOUDFLARE_API_TOKEN}" ]]; then
+            echo "::error::Cloudflare credentials are not configured."
+            exit 1
+          fi
+          if [[ ! "${MAX_RUNTIME_MINUTES}" =~ ^[0-9]+$ ]] || (( MAX_RUNTIME_MINUTES < 1 || MAX_RUNTIME_MINUTES > 60 )); then
+            echo "::error::max_runtime_minutes must be an integer from 1 through 60."
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: |
+          bun install --ignore-scripts
+          bun install --cwd cf-proxy --frozen-lockfile
+
+      - name: Apply production D1 migrations
+        working-directory: cf-proxy
+        run: bash scripts/retry-command.sh bunx wrangler d1 migrations apply jlcsearch --remote
+
+      - name: Populate footprinter strings
+        env:
+          MAX_RUNTIME_MINUTES: ${{ inputs.max_runtime_minutes }}
+          RETRY_NULL_ENTRIES: ${{ inputs.retry_null_entries }}
+        run: |
+          args=(--max-runtime-minutes "${MAX_RUNTIME_MINUTES}")
+          if [[ "${RETRY_NULL_ENTRIES}" == "true" ]]; then
+            args+=(--retry-null-entries)
+          fi
+          bun run populate:footprinter-strings -- "${args[@]}"
+
+      - name: Report production row counts
+        if: always()
+        working-directory: cf-proxy
+        run: |
+          bunx wrangler d1 execute jlcsearch --remote \
+            --command "SELECT COUNT(*) AS attempted, COUNT(footprinter_string) AS matched FROM footprinter_strings;"
