@@ -4,7 +4,27 @@ import {
   COPPER_IOU_THRESHOLD,
   buildFootprinterStringUpsert,
   createFootprinterStringRow,
+  isPermanentEasyEdaMiss,
 } from "../lib/footprinter-strings"
+
+describe("isPermanentEasyEdaMiss", () => {
+  test.each([
+    "Component not found",
+    'No exact EasyEDA component match for "C123"',
+    "Failed to fetch the component details (HTTP 404)",
+  ])("recognizes a definitive source miss: %s", (message) => {
+    expect(isPermanentEasyEdaMiss(new Error(message))).toBe(true)
+  })
+
+  test.each([
+    'EasyEDA API rate limit exceeded while searching for "C123" (HTTP 403)',
+    "Failed to search for the component (HTTP 500)",
+    "The operation timed out",
+    "Wrangler exited with code 1",
+  ])("keeps a transient failure retryable: %s", (message) => {
+    expect(isPermanentEasyEdaMiss(new Error(message))).toBe(false)
+  })
+})
 
 describe("createFootprinterStringRow", () => {
   test("keeps strings strictly above the copper IoU threshold", () => {

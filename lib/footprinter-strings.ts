@@ -11,6 +11,20 @@ export interface FootprinterStringRow {
   lcsc: number
 }
 
+const PERMANENT_EASYEDA_MISS_MESSAGES = [
+  "Component not found",
+  "Failed to fetch the component details (HTTP 404)",
+]
+
+export const isPermanentEasyEdaMiss = (error: unknown): boolean => {
+  const message = error instanceof Error ? error.message : String(error)
+
+  return (
+    PERMANENT_EASYEDA_MISS_MESSAGES.includes(message) ||
+    message.startsWith('No exact EasyEDA component match for "')
+  )
+}
+
 export const createFootprinterStringRow = (
   lcsc: number,
   candidate: FootprinterCandidate | null | undefined,
