@@ -111,6 +111,14 @@ remote stock must match the prepared source database. All modes accept an
 optional `cache_bust_url`. The workflow requires the
 `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` repository secrets.
 
+The manually dispatched **Populate footprinter strings** workflow processes
+the highest-stock unindexed components first. It runs three component
+conversions concurrently behind one shared EasyEDA limiter capped at two
+request starts per second. An EasyEDA 403 pauses all requests for two minutes
+and lowers the rest of that run to one request per second. Production D1 reads
+and writes are batched, and the final log reports request, conversion, D1, and
+CPU timing metrics.
+
 ## How Does It work?
 As a developer new to this codebase, or a curious user, you may have some questions about the flow of data through the scripts and automations inside this repo.  It all starts with the [jlcparts](https://github.com/yaqwsx/jlcparts) project, which compiles a massive **11GB** sqlite3 database of *everything* [JLCPCB](https://jlcpcb.com) has to offer.  As you can imagine, this would be very resource-intensive and slow to search, so the next steps are scripts that optimize it heavily, although it's more accurate to say that they rebuild it entirely. 
 `scripts/setup-db-optimizations.ts` and `scripts/setup-derived-tables.ts` show the various optimizations that are performed, including:

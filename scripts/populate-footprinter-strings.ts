@@ -9,11 +9,19 @@ import {
   createFootprinterStringRow,
   isPermanentEasyEdaMiss,
 } from "../lib/footprinter-strings"
+import {
+  PoliteRateLimitedFetch,
+  RequestDeadlineReachedError,
+  type PoliteRateLimitedFetchMetrics,
+} from "../lib/polite-rate-limited-fetch"
 
 const DATABASE_NAME = "jlcsearch"
 const DEFAULT_RUNTIME_MINUTES = 60
-const QUERY_BATCH_SIZE = 25
-const WRITE_BATCH_SIZE = 10
+const QUERY_BATCH_SIZE = 250
+const WRITE_BATCH_SIZE = 50
+const COMPONENT_CONCURRENCY = 3
+const EASYEDA_REQUESTS_PER_SECOND = 2
+const EASYEDA_REQUESTS_PER_SECOND_AFTER_403 = 1
 const FETCH_TIMEOUT_MS = 20_000
 const RATE_LIMIT_COOLDOWN_MS = 120_000
 const GRACE_PERIOD_MS = 45_000
@@ -42,6 +50,24 @@ interface WranglerResult {
   results?: unknown
   success?: boolean
 }
+
+interface TimingMetrics extends PoliteRateLimitedFetchMetrics {
+  conversionCount: number
+  conversionDurationMs: number
+  d1ReadCount: number
+  d1ReadDurationMs: number
+  d1WriteCount: number
+  d1WriteDurationMs: number
+}
+
+type WranglerOperation = "read" | "write"
+
+type ComponentResult =
+  | { row: FootprinterStringRow; status: "matched" | "no-match" }
+  | { row: FootprinterStringRow; status: "permanent-miss" }
+  | { status: "rate-limited" }
+  | { status: "retryable-failure" }
+  | { status: "stopped" }
 
 let stopRequested = false
 const stopController = new AbortController()
@@ -98,7 +124,12 @@ const parseOptions = (args: readonly string[]): Options => {
   return options
 }
 
-const runWrangler = async (args: readonly string[]): Promise<unknown> => {
+const runWrangler = async (
+  args: readonly string[],
+  operation: WranglerOperation,
+  metrics: TimingMetrics,
+): Promise<unknown> => {
+  const startedAt = Date.now()
   const child = Bun.spawn(["bunx", "wrangler", ...args], {
     cwd: CF_PROXY_DIRECTORY,
     env: process.env,
@@ -107,6 +138,14 @@ const runWrangler = async (args: readonly string[]): Promise<unknown> => {
   })
   const output = await new Response(child.stdout).text()
   const exitCode = await child.exited
+  const durationMs = Date.now() - startedAt
+  if (operation === "read") {
+    metrics.d1ReadCount += 1
+    metrics.d1ReadDurationMs += durationMs
+  } else {
+    metrics.d1WriteCount += 1
+    metrics.d1WriteDurationMs += durationMs
+  }
   if (exitCode !== 0) {
     throw new Error(`Wrangler exited with code ${exitCode}`)
   }
@@ -160,16 +199,21 @@ LIMIT ${QUERY_BATCH_SIZE};`
 const fetchComponents = async (
   cursor: Cursor | null,
   retryNullEntries: boolean,
+  metrics: TimingMetrics,
 ): Promise<ComponentCatalogRow[]> => {
-  const payload = await runWrangler([
-    "d1",
-    "execute",
-    DATABASE_NAME,
-    "--remote",
-    "--json",
-    "--command",
-    buildComponentQuery(cursor, retryNullEntries),
-  ])
+  const payload = await runWrangler(
+    [
+      "d1",
+      "execute",
+      DATABASE_NAME,
+      "--remote",
+      "--json",
+      "--command",
+      buildComponentQuery(cursor, retryNullEntries),
+    ],
+    "read",
+    metrics,
+  )
 
   return getWranglerRows(payload).map((row) => {
     const component = row as ComponentCatalogRow
@@ -181,89 +225,132 @@ const fetchComponents = async (
   })
 }
 
-const fetchWithTimeout: typeof fetch = Object.assign(
-  (input: Parameters<typeof fetch>[0], init: RequestInit = {}) => {
-    const signals = [
-      stopController.signal,
-      AbortSignal.timeout(FETCH_TIMEOUT_MS),
-    ]
-    if (init.signal) signals.push(init.signal)
-
-    return fetch(input, {
-      ...init,
-      signal: AbortSignal.any(signals),
-    })
-  },
-  { preconnect: fetch.preconnect },
-)
-
 const deriveFootprinterRow = async (
   component: ComponentCatalogRow,
+  easyEdaFetch: typeof fetch,
+  metrics: TimingMetrics,
 ): Promise<FootprinterStringRow> => {
   const lcsc = `C${component.lcsc}`
   const rawEasyEdaJson = await fetchEasyEDAComponent(lcsc, {
-    fetch: fetchWithTimeout,
+    fetch: easyEdaFetch,
     includeModelMetadata: false,
   })
-  const circuitJson = convertEasyEdaJsonToCircuitJson(
-    EasyEdaJsonSchema.parse(rawEasyEdaJson),
-    { useModelCdn: false },
-  )
-  const sourceHint = [
-    lcsc,
-    component.mfr,
-    component.package,
-    component.description,
-  ]
-    .filter(Boolean)
-    .join(" ")
-  const discovery = circuitJsonToFootprinter(circuitJson, {
-    maxCandidates: 3,
-    sourceHints: [sourceHint],
-  })
+  const conversionStartedAt = Date.now()
+  metrics.conversionCount += 1
+  try {
+    const circuitJson = convertEasyEdaJsonToCircuitJson(
+      EasyEdaJsonSchema.parse(rawEasyEdaJson),
+      { useModelCdn: false },
+    )
+    const sourceHint = [
+      lcsc,
+      component.mfr,
+      component.package,
+      component.description,
+    ]
+      .filter(Boolean)
+      .join(" ")
+    const discovery = circuitJsonToFootprinter(circuitJson, {
+      maxCandidates: 3,
+      sourceHints: [sourceHint],
+    })
 
-  return createFootprinterStringRow(component.lcsc, discovery.best)
+    return createFootprinterStringRow(component.lcsc, discovery.best)
+  } finally {
+    metrics.conversionDurationMs += Date.now() - conversionStartedAt
+  }
 }
 
-const flushRows = async (rows: FootprinterStringRow[]): Promise<void> => {
+const flushRows = async (
+  rows: FootprinterStringRow[],
+  metrics: TimingMetrics,
+): Promise<void> => {
   if (rows.length === 0) return
 
-  await runWrangler([
-    "d1",
-    "execute",
-    DATABASE_NAME,
-    "--remote",
-    "--json",
-    "--command",
-    buildFootprinterStringUpsert(rows),
-  ])
+  await runWrangler(
+    [
+      "d1",
+      "execute",
+      DATABASE_NAME,
+      "--remote",
+      "--json",
+      "--command",
+      buildFootprinterStringUpsert(rows),
+    ],
+    "write",
+    metrics,
+  )
   console.log(`Saved ${rows.length} footprinter_strings rows.`)
   rows.length = 0
 }
 
-const waitForRateLimit = async (deadline: number): Promise<boolean> => {
-  if (Date.now() + RATE_LIMIT_COOLDOWN_MS + GRACE_PERIOD_MS >= deadline) {
+const processComponent = async (
+  component: ComponentCatalogRow,
+  easyEdaFetch: typeof fetch,
+  metrics: TimingMetrics,
+): Promise<ComponentResult> => {
+  try {
+    const row = await deriveFootprinterRow(component, easyEdaFetch, metrics)
     console.log(
-      "EasyEDA rate limit reached too near the deadline; exiting cleanly.",
+      `C${component.lcsc}: ${row.footprinterString ?? "no >95% match"} (${row.copperIou?.toFixed(4) ?? "no candidate"})`,
     )
-    return false
-  }
+    return {
+      row,
+      status: row.footprinterString === null ? "no-match" : "matched",
+    }
+  } catch (error) {
+    if (error instanceof RequestDeadlineReachedError || stopRequested) {
+      return { status: "stopped" }
+    }
 
-  console.log(
-    "EasyEDA rate limit reached; waiting 120 seconds before continuing.",
-  )
-  const cooldownEndsAt = Date.now() + RATE_LIMIT_COOLDOWN_MS
-  while (!stopRequested && Date.now() < cooldownEndsAt) {
-    await Bun.sleep(Math.min(1_000, cooldownEndsAt - Date.now()))
+    const message = error instanceof Error ? error.message : String(error)
+    if (message.includes("rate limit exceeded")) {
+      console.warn(
+        `C${component.lcsc}: ${message}; leaving it eligible to retry after the global cooldown.`,
+      )
+      return { status: "rate-limited" }
+    }
+
+    if (isPermanentEasyEdaMiss(error)) {
+      console.warn(
+        `C${component.lcsc}: ${message}; recording a permanent null result.`,
+      )
+      return {
+        row: createFootprinterStringRow(component.lcsc, null),
+        status: "permanent-miss",
+      }
+    }
+
+    console.warn(
+      `C${component.lcsc}: ${message}; leaving it eligible to retry.`,
+    )
+    return { status: "retryable-failure" }
   }
-  return !stopRequested
 }
+
+const createTimingMetrics = (): TimingMetrics => ({
+  conversionCount: 0,
+  conversionDurationMs: 0,
+  cooldownCount: 0,
+  d1ReadCount: 0,
+  d1ReadDurationMs: 0,
+  d1WriteCount: 0,
+  d1WriteDurationMs: 0,
+  requestCount: 0,
+  requestDurationMs: 0,
+  throttleWaitMs: 0,
+})
+
+const formatAverage = (durationMs: number, count: number): string =>
+  count === 0 ? "0.0" : (durationMs / count).toFixed(1)
 
 const main = async () => {
   const options = parseOptions(Bun.argv.slice(2))
   const startedAt = Date.now()
   const deadline = startedAt + options.maxRuntimeMinutes * 60_000
-  const pendingRows: FootprinterStringRow[] = []
+  const requestDeadline = deadline - GRACE_PERIOD_MS
+  const cpuStartedAt = process.cpuUsage()
+  const metrics = createTimingMetrics()
   let cursor: Cursor | null = null
   let attempted = 0
   let failed = 0
@@ -271,64 +358,108 @@ const main = async () => {
   let permanentMisses = 0
   let recorded = 0
 
+  const limiter = new PoliteRateLimitedFetch({
+    cooldownMs: RATE_LIMIT_COOLDOWN_MS,
+    cooldownRequestsPerSecond: EASYEDA_REQUESTS_PER_SECOND_AFTER_403,
+    deadline: requestDeadline,
+    fetch: Object.assign(
+      (input: Parameters<typeof fetch>[0], init: RequestInit = {}) => {
+        const signals = [
+          stopController.signal,
+          AbortSignal.timeout(FETCH_TIMEOUT_MS),
+        ]
+        if (init.signal) signals.push(init.signal)
+        return fetch(input, {
+          ...init,
+          signal: AbortSignal.any(signals),
+        })
+      },
+      { preconnect: fetch.preconnect },
+    ),
+    metrics,
+    onCooldown: (cooldownMs, requestsPerSecond) => {
+      console.warn(
+        `EasyEDA returned HTTP 403; pausing all requests for ${cooldownMs / 1_000}s, then limiting to ${requestsPerSecond} request/s.`,
+      )
+    },
+    requestsPerSecond: EASYEDA_REQUESTS_PER_SECOND,
+    signal: stopController.signal,
+  })
+  const easyEdaFetch: typeof fetch = Object.assign(
+    (input: Parameters<typeof fetch>[0], init: RequestInit = {}) =>
+      limiter.fetch(input, init),
+    { preconnect: fetch.preconnect },
+  )
+
   console.log(
-    `Populating footprinter_strings sequentially for up to ${options.maxRuntimeMinutes} minute(s); strings require copper_iou > ${COPPER_IOU_THRESHOLD}.`,
+    `Populating footprinter_strings with ${COMPONENT_CONCURRENCY} concurrent component(s) and a shared ${EASYEDA_REQUESTS_PER_SECOND} request/s EasyEDA limit for up to ${options.maxRuntimeMinutes} minute(s); strings require copper_iou > ${COPPER_IOU_THRESHOLD}.`,
   )
 
   while (!stopRequested && Date.now() + GRACE_PERIOD_MS < deadline) {
-    const components = await fetchComponents(cursor, options.retryNullEntries)
+    const components = await fetchComponents(
+      cursor,
+      options.retryNullEntries,
+      metrics,
+    )
     if (components.length === 0) {
       console.log("No more eligible component_catalog rows were found.")
       break
     }
 
-    for (const component of components) {
-      cursor = { lcsc: component.lcsc, stock: component.stock }
+    for (
+      let offset = 0;
+      offset < components.length;
+      offset += WRITE_BATCH_SIZE
+    ) {
+      const componentGroup = components.slice(offset, offset + WRITE_BATCH_SIZE)
+      const completedRows: FootprinterStringRow[] = []
+      let nextComponentIndex = 0
+
+      const worker = async () => {
+        while (nextComponentIndex < componentGroup.length) {
+          if (
+            stopRequested ||
+            Date.now() >= requestDeadline ||
+            (options.maxComponents !== null &&
+              attempted >= options.maxComponents)
+          ) {
+            return
+          }
+
+          const component = componentGroup[nextComponentIndex]
+          nextComponentIndex += 1
+          cursor = { lcsc: component.lcsc, stock: component.stock }
+          attempted += 1
+
+          const result = await processComponent(
+            component,
+            easyEdaFetch,
+            metrics,
+          )
+          if (result.status === "stopped" || result.status === "rate-limited") {
+            attempted -= 1
+          } else if (result.status === "retryable-failure") {
+            failed += 1
+          } else {
+            completedRows.push(result.row)
+            recorded += 1
+            if (result.status === "matched") matched += 1
+            if (result.status === "permanent-miss") permanentMisses += 1
+          }
+        }
+      }
+
+      await Promise.all(
+        Array.from({ length: COMPONENT_CONCURRENCY }, () => worker()),
+      )
+      await flushRows(completedRows, metrics)
+
       if (
         stopRequested ||
-        Date.now() + GRACE_PERIOD_MS >= deadline ||
+        Date.now() >= requestDeadline ||
         (options.maxComponents !== null && attempted >= options.maxComponents)
       ) {
         break
-      }
-
-      attempted += 1
-      try {
-        const row = await deriveFootprinterRow(component)
-        pendingRows.push(row)
-        recorded += 1
-        if (row.footprinterString !== null) matched += 1
-        console.log(
-          `C${component.lcsc}: ${row.footprinterString ?? "no >95% match"} (${row.copperIou?.toFixed(4) ?? "no candidate"})`,
-        )
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error)
-        if (message.includes("rate limit exceeded")) {
-          attempted -= 1
-          if (!(await waitForRateLimit(deadline))) {
-            stopRequested = true
-            break
-          }
-          continue
-        }
-
-        if (isPermanentEasyEdaMiss(error)) {
-          pendingRows.push(createFootprinterStringRow(component.lcsc, null))
-          recorded += 1
-          permanentMisses += 1
-          console.warn(
-            `C${component.lcsc}: ${message}; recording a permanent null result.`,
-          )
-        } else {
-          failed += 1
-          console.warn(
-            `C${component.lcsc}: ${message}; leaving it eligible to retry.`,
-          )
-        }
-      }
-
-      if (pendingRows.length >= WRITE_BATCH_SIZE) {
-        await flushRows(pendingRows)
       }
     }
 
@@ -338,10 +469,16 @@ const main = async () => {
     }
   }
 
-  await flushRows(pendingRows)
   const elapsedSeconds = ((Date.now() - startedAt) / 1000).toFixed(1)
+  const elapsedMs = Date.now() - startedAt
+  const cpuUsage = process.cpuUsage(cpuStartedAt)
+  const cpuDurationMs = (cpuUsage.user + cpuUsage.system) / 1_000
+  const cpuUtilization = (cpuDurationMs / elapsedMs) * 100
   console.log(
     `Finished cleanly after ${elapsedSeconds}s: ${attempted} attempted, ${recorded} recorded, ${matched} matched, ${permanentMisses} permanent misses, ${failed} retryable failures.`,
+  )
+  console.log(
+    `Timing: EasyEDA ${metrics.requestCount} requests / ${metrics.requestDurationMs}ms (${formatAverage(metrics.requestDurationMs, metrics.requestCount)}ms avg), ${metrics.throttleWaitMs}ms aggregate throttle wait, ${metrics.cooldownCount} cooldown(s); conversion ${metrics.conversionCount} / ${metrics.conversionDurationMs}ms (${formatAverage(metrics.conversionDurationMs, metrics.conversionCount)}ms avg); D1 reads ${metrics.d1ReadCount} / ${metrics.d1ReadDurationMs}ms, writes ${metrics.d1WriteCount} / ${metrics.d1WriteDurationMs}ms; CPU ${cpuDurationMs.toFixed(0)}ms (${cpuUtilization.toFixed(1)}% of one core).`,
   )
 }
 
