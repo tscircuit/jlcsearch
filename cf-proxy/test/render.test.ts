@@ -169,7 +169,6 @@ describe("render helpers", () => {
     expect(html).toContain(">Extended Promotional</th>")
     expect(html).toContain("HDMI-EXT")
   })
-  
   it("renders ARM processor memory sizes with byte units", () => {
     const html = renderD1TablePage(
       "/arm_processors/list",

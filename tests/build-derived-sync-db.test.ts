@@ -63,7 +63,7 @@ const createSourceDatabase = async () => {
     )
     .run()
 
-    source
+  source
     .query(
       `INSERT INTO jlc_components (
         lcsc, fetched_at, present, sync_seen, category, subcategory, mfr,
@@ -196,7 +196,7 @@ describe("buildDerivedSyncDatabase", () => {
       is_extended_promotional: 1,
       stock: 125,
       manufacturer: "Example Inc.",
-      mpn: "HDMI-EXIT",
+      mpn: "HDMI-EXT",
       gender: "Female",
     })
     output.close()
