@@ -113,7 +113,7 @@ optional `cache_bust_url`. The workflow requires the
 
 The manually dispatched **Populate footprinter strings** workflow processes
 the highest-stock unindexed components first. It runs four component
-conversions concurrently behind one shared EasyEDA limiter capped at 2.5
+conversions concurrently behind one shared EasyEDA limiter capped at four
 request starts per second. An EasyEDA 403 pauses all requests for two minutes
 and lowers the rest of that run to one request per second. Production D1 reads
 and writes are batched, and the final log reports request, conversion, D1, and
