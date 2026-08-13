@@ -16,7 +16,7 @@ import {
 } from "../lib/polite-rate-limited-fetch"
 
 const DATABASE_NAME = "jlcsearch"
-const DEFAULT_RUNTIME_MINUTES = 60
+const DEFAULT_RUNTIME_MINUTES = 240
 const QUERY_BATCH_SIZE = 250
 const WRITE_BATCH_SIZE = 50
 const COMPONENT_CONCURRENCY = 8
