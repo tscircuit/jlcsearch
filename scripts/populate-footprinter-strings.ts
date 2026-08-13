@@ -1,7 +1,10 @@
 import { join } from "node:path"
 import { circuitJsonToFootprinter } from "circuit-json-to-footprinter"
 import { EasyEdaJsonSchema, convertEasyEdaJsonToCircuitJson } from "easyeda"
-import { fetchEasyEDAComponent } from "easyeda/browser"
+import {
+  type EasyEdaComponentCacheMetrics,
+  fetchEasyEdaComponentFromCache,
+} from "../lib/easyeda-component-cache-client"
 import {
   COPPER_IOU_THRESHOLD,
   type FootprinterStringRow,
@@ -20,8 +23,10 @@ const DEFAULT_RUNTIME_MINUTES = 240
 const QUERY_BATCH_SIZE = 250
 const WRITE_BATCH_SIZE = 50
 const COMPONENT_CONCURRENCY = 8
-const EASYEDA_REQUESTS_PER_SECOND = 4
-const EASYEDA_REQUESTS_PER_SECOND_AFTER_403 = 1
+const EASYEDA_CACHE_FILLS_PER_SECOND = 2
+const EASYEDA_CACHE_FILLS_PER_SECOND_AFTER_403 = 1
+const EASYEDA_CACHE_ORIGIN =
+  process.env.EASYEDA_CACHE_ORIGIN?.trim() || "https://jlcsearch.tscircuit.com"
 const FETCH_TIMEOUT_MS = 20_000
 const RATE_LIMIT_COOLDOWN_MS = 120_000
 const GRACE_PERIOD_MS = 45_000
@@ -51,7 +56,9 @@ interface WranglerResult {
   success?: boolean
 }
 
-interface TimingMetrics extends PoliteRateLimitedFetchMetrics {
+interface TimingMetrics
+  extends PoliteRateLimitedFetchMetrics,
+    EasyEdaComponentCacheMetrics {
   conversionCount: number
   conversionDurationMs: number
   d1ReadCount: number
@@ -227,13 +234,16 @@ const fetchComponents = async (
 
 const deriveFootprinterRow = async (
   component: ComponentCatalogRow,
-  easyEdaFetch: typeof fetch,
+  cacheProbeFetch: typeof fetch,
+  cacheFillFetch: typeof fetch,
   metrics: TimingMetrics,
 ): Promise<FootprinterStringRow> => {
   const lcsc = `C${component.lcsc}`
-  const rawEasyEdaJson = await fetchEasyEDAComponent(lcsc, {
-    fetch: easyEdaFetch,
-    includeModelMetadata: false,
+  const rawEasyEdaJson = await fetchEasyEdaComponentFromCache(lcsc, {
+    cacheFillFetch,
+    cacheOrigin: EASYEDA_CACHE_ORIGIN,
+    cacheProbeFetch,
+    metrics,
   })
   const conversionStartedAt = Date.now()
   metrics.conversionCount += 1
@@ -286,11 +296,17 @@ const flushRows = async (
 
 const processComponent = async (
   component: ComponentCatalogRow,
-  easyEdaFetch: typeof fetch,
+  cacheProbeFetch: typeof fetch,
+  cacheFillFetch: typeof fetch,
   metrics: TimingMetrics,
 ): Promise<ComponentResult> => {
   try {
-    const row = await deriveFootprinterRow(component, easyEdaFetch, metrics)
+    const row = await deriveFootprinterRow(
+      component,
+      cacheProbeFetch,
+      cacheFillFetch,
+      metrics,
+    )
     console.log(
       `C${component.lcsc}: ${row.footprinterString ?? "no >95% match"} (${row.copperIou?.toFixed(4) ?? "no candidate"})`,
     )
@@ -329,6 +345,8 @@ const processComponent = async (
 }
 
 const createTimingMetrics = (): TimingMetrics => ({
+  cacheHits: 0,
+  cacheMisses: 0,
   conversionCount: 0,
   conversionDurationMs: 0,
   cooldownCount: 0,
@@ -336,6 +354,7 @@ const createTimingMetrics = (): TimingMetrics => ({
   d1ReadDurationMs: 0,
   d1WriteCount: 0,
   d1WriteDurationMs: 0,
+  negativeCacheHits: 0,
   requestCount: 0,
   requestDurationMs: 0,
   throttleWaitMs: 0,
@@ -358,41 +377,43 @@ const main = async () => {
   let permanentMisses = 0
   let recorded = 0
 
+  const abortableFetch: typeof fetch = Object.assign(
+    (input: Parameters<typeof fetch>[0], init: RequestInit = {}) => {
+      const signals = [
+        stopController.signal,
+        AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      ]
+      if (init.signal) signals.push(init.signal)
+      return fetch(input, {
+        ...init,
+        signal: AbortSignal.any(signals),
+      })
+    },
+    { preconnect: fetch.preconnect },
+  )
+
   const limiter = new PoliteRateLimitedFetch({
     cooldownMs: RATE_LIMIT_COOLDOWN_MS,
-    cooldownRequestsPerSecond: EASYEDA_REQUESTS_PER_SECOND_AFTER_403,
+    cooldownRequestsPerSecond: EASYEDA_CACHE_FILLS_PER_SECOND_AFTER_403,
     deadline: requestDeadline,
-    fetch: Object.assign(
-      (input: Parameters<typeof fetch>[0], init: RequestInit = {}) => {
-        const signals = [
-          stopController.signal,
-          AbortSignal.timeout(FETCH_TIMEOUT_MS),
-        ]
-        if (init.signal) signals.push(init.signal)
-        return fetch(input, {
-          ...init,
-          signal: AbortSignal.any(signals),
-        })
-      },
-      { preconnect: fetch.preconnect },
-    ),
+    fetch: abortableFetch,
     metrics,
     onCooldown: (cooldownMs, requestsPerSecond) => {
       console.warn(
-        `EasyEDA returned HTTP 403; pausing all requests for ${cooldownMs / 1_000}s, then limiting to ${requestsPerSecond} request/s.`,
+        `EasyEDA cache fill returned HTTP 403; pausing all fills for ${cooldownMs / 1_000}s, then limiting to ${requestsPerSecond} component fill/s.`,
       )
     },
-    requestsPerSecond: EASYEDA_REQUESTS_PER_SECOND,
+    requestsPerSecond: EASYEDA_CACHE_FILLS_PER_SECOND,
     signal: stopController.signal,
   })
-  const easyEdaFetch: typeof fetch = Object.assign(
+  const cacheFillFetch: typeof fetch = Object.assign(
     (input: Parameters<typeof fetch>[0], init: RequestInit = {}) =>
       limiter.fetch(input, init),
     { preconnect: fetch.preconnect },
   )
 
   console.log(
-    `Populating footprinter_strings with ${COMPONENT_CONCURRENCY} concurrent component(s) and a shared ${EASYEDA_REQUESTS_PER_SECOND} request/s EasyEDA limit for up to ${options.maxRuntimeMinutes} minute(s); strings require copper_iou > ${COPPER_IOU_THRESHOLD}.`,
+    `Populating footprinter_strings with ${COMPONENT_CONCURRENCY} concurrent component(s), the shared EasyEDA R2 cache, and at most ${EASYEDA_CACHE_FILLS_PER_SECOND} cache fill(s)/s (about ${EASYEDA_CACHE_FILLS_PER_SECOND * 2} EasyEDA requests/s) for up to ${options.maxRuntimeMinutes} minute(s); strings require copper_iou > ${COPPER_IOU_THRESHOLD}.`,
   )
 
   while (!stopRequested && Date.now() + GRACE_PERIOD_MS < deadline) {
@@ -433,7 +454,8 @@ const main = async () => {
 
           const result = await processComponent(
             component,
-            easyEdaFetch,
+            abortableFetch,
+            cacheFillFetch,
             metrics,
           )
           if (result.status === "stopped" || result.status === "rate-limited") {
@@ -478,7 +500,7 @@ const main = async () => {
     `Finished cleanly after ${elapsedSeconds}s: ${attempted} attempted, ${recorded} recorded, ${matched} matched, ${permanentMisses} permanent misses, ${failed} retryable failures.`,
   )
   console.log(
-    `Timing: EasyEDA ${metrics.requestCount} requests / ${metrics.requestDurationMs}ms (${formatAverage(metrics.requestDurationMs, metrics.requestCount)}ms avg), ${metrics.throttleWaitMs}ms aggregate throttle wait, ${metrics.cooldownCount} cooldown(s); conversion ${metrics.conversionCount} / ${metrics.conversionDurationMs}ms (${formatAverage(metrics.conversionDurationMs, metrics.conversionCount)}ms avg); D1 reads ${metrics.d1ReadCount} / ${metrics.d1ReadDurationMs}ms, writes ${metrics.d1WriteCount} / ${metrics.d1WriteDurationMs}ms; CPU ${cpuDurationMs.toFixed(0)}ms (${cpuUtilization.toFixed(1)}% of one core).`,
+    `Timing: EasyEDA R2 cache ${metrics.cacheHits} hit(s), ${metrics.negativeCacheHits} negative hit(s), ${metrics.cacheMisses} miss(es); ${metrics.requestCount} rate-limited fill(s) / ${metrics.requestDurationMs}ms (${formatAverage(metrics.requestDurationMs, metrics.requestCount)}ms avg), ${metrics.throttleWaitMs}ms aggregate throttle wait, ${metrics.cooldownCount} cooldown(s); conversion ${metrics.conversionCount} / ${metrics.conversionDurationMs}ms (${formatAverage(metrics.conversionDurationMs, metrics.conversionCount)}ms avg); D1 reads ${metrics.d1ReadCount} / ${metrics.d1ReadDurationMs}ms, writes ${metrics.d1WriteCount} / ${metrics.d1WriteDurationMs}ms; CPU ${cpuDurationMs.toFixed(0)}ms (${cpuUtilization.toFixed(1)}% of one core).`,
   )
 }
 

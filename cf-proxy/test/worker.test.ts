@@ -18,6 +18,7 @@ describe("Worker integration", () => {
     for (const key of keys.keys) {
       await env.CACHE_KV.delete(key.name)
     }
+    await env.EASYEDA_COMPONENT_CACHE.clear()
   })
 
   it("serves /health directly from the worker", async () => {
@@ -104,6 +105,41 @@ describe("Worker integration", () => {
         footprinter_string: "sod723_p0.865mm_pw0.54mm_pl0.57mm",
         copper_iou: 0.9923751612092405,
         updated_at: "2026-08-12 04:34:12",
+      },
+    })
+  })
+
+  it("serves EasyEDA component JSON from the shared R2 cache", async () => {
+    await env.EASYEDA_COMPONENT_CACHE.put(
+      "components/C123.json",
+      JSON.stringify({
+        schemaVersion: 1,
+        status: "found",
+        lcsc: 123,
+        fetchedAt: new Date().toISOString(),
+        easyedaJson: {
+          uuid: "easyeda-uuid",
+          lcsc: { number: "C123" },
+        },
+      }),
+    )
+
+    const response = await SELF.fetch(
+      "https://example.com/api/easyeda_components/C123?cache_only=true",
+    )
+
+    expect(response.status).toBe(200)
+    expect(response.headers.get("x-cache")).toBe("R2-HIT")
+    expect(response.headers.get("x-data-source")).toBe("r2")
+    expect(await response.json()).toEqual({
+      easyeda_component_details: {
+        lcsc: 123,
+        easyeda_uuid: "easyeda-uuid",
+        fetched_at: expect.any(String),
+        easyeda_json: {
+          uuid: "easyeda-uuid",
+          lcsc: { number: "C123" },
+        },
       },
     })
   })

@@ -56,6 +56,28 @@ A `200` response with a null `footprinter_string` means the component was
 processed without a match above 95% copper IoU. A `404` means the component has
 not been processed yet.
 
+Fetch raw EasyEDA component JSON through the shared R2-backed cache:
+
+```bash
+curl https://jlcsearch.tscircuit.com/api/easyeda_components/C2906861
+
+# {
+#   "easyeda_component_details": {
+#     "lcsc": 2906861,
+#     "easyeda_uuid": "...",
+#     "fetched_at": "2026-08-13T16:00:00.000Z",
+#     "easyeda_json": { "...": "..." }
+#   }
+# }
+```
+
+The endpoint normalizes numeric and `C`-prefixed LCSC numbers. It serves fresh
+objects from the shared R2 bucket and fills missing objects from EasyEDA.
+Successful payloads are refreshed after 90 days; definitive not-found results
+are negative-cached for six hours. Callers that only want an existing object
+can add `?cache_only=true`; a `cache_miss` response never contacts EasyEDA.
+The `x-cache` response header reports `R2-HIT`, `R2-MISS`, or `R2-STALE`.
+
 ## Development
 
 [Bun](https://bun.com/) is required. Install dependencies for both the data
@@ -113,12 +135,12 @@ optional `cache_bust_url`. The workflow requires the
 
 The manually dispatched **Populate footprinter strings** workflow processes
 the highest-stock unindexed components first for up to four hours by default.
-It runs eight component
-conversions concurrently behind one shared EasyEDA limiter capped at four
-request starts per second. An EasyEDA 403 pauses all requests for two minutes
-and lowers the rest of that run to one request per second. Production D1 reads
-and writes are batched, and the final log reports request, conversion, D1, and
-CPU timing metrics.
+It runs eight component conversions concurrently and probes the shared EasyEDA
+R2 cache before any upstream request. Cache misses are limited to two component
+fills per second, or about four EasyEDA requests per second. An EasyEDA 403
+pauses all fills for two minutes and lowers the rest of that run to one fill per
+second. Production D1 reads and writes are batched, and the final log reports R2
+hits and misses, fill, conversion, D1, and CPU timing metrics.
 
 ## How Does It work?
 As a developer new to this codebase, or a curious user, you may have some questions about the flow of data through the scripts and automations inside this repo.  It all starts with the [jlcparts](https://github.com/yaqwsx/jlcparts) project, which compiles a massive **11GB** sqlite3 database of *everything* [JLCPCB](https://jlcpcb.com) has to offer.  As you can imagine, this would be very resource-intensive and slow to search, so the next steps are scripts that optimize it heavily, although it's more accurate to say that they rebuild it entirely. 

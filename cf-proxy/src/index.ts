@@ -2,12 +2,14 @@ import { CacheService, addCorsHeaders, addVaryHeader } from "./cache-service"
 import { queryComponentCatalog } from "./components"
 import { getD1Handler } from "./d1-routes"
 import { getD1Client } from "./db/get-d1-client"
+import { handleEasyEdaComponentCache } from "./easyeda-component-cache"
 import { renderD1TablePage, renderHomePage } from "./render"
 import { searchIndex } from "./search"
 
 export interface Env {
   CACHE_KV: KVNamespace
   DB: D1Database
+  EASYEDA_COMPONENT_CACHE: R2Bucket
   USE_D1: string
 }
 
@@ -216,6 +218,13 @@ export default {
         getPreferredContentType(request, url),
       )
     }
+
+    const easyEdaCacheResponse = await handleEasyEdaComponentCache(
+      url,
+      env.EASYEDA_COMPONENT_CACHE,
+      origin,
+    )
+    if (easyEdaCacheResponse) return easyEdaCacheResponse
 
     const cache = new CacheService(env.CACHE_KV)
 
