@@ -13,6 +13,11 @@ import {
   isPermanentEasyEdaMiss,
 } from "../lib/footprinter-strings"
 import {
+  POPULATION_BATCH_RESTART_EXIT_CODE,
+  POPULATION_WASM_RESTART_EXIT_CODE,
+  isManifoldWasmAbort,
+} from "../lib/footprinter-population-restarts"
+import {
   PoliteRateLimitedFetch,
   RequestDeadlineReachedError,
   type PoliteRateLimitedFetchMetrics,
@@ -48,6 +53,7 @@ interface Cursor {
 interface Options {
   maxComponents: number | null
   maxRuntimeMinutes: number
+  restartOnLimit: boolean
   retryNullEntries: boolean
 }
 
@@ -77,12 +83,26 @@ type ComponentResult =
   | { status: "stopped" }
 
 let stopRequested = false
+let wasmRestartRequested = false
 const stopController = new AbortController()
 
 const requestGracefulStop = (signal: string) => {
   console.log(`Received ${signal}; stopping and flushing completed components.`)
   stopRequested = true
-  stopController.abort(signal)
+  if (!stopController.signal.aborted) stopController.abort(signal)
+}
+
+const requestWasmRestart = (lcsc: number) => {
+  if (!wasmRestartRequested) {
+    console.warn(
+      `C${lcsc}: Manifold WASM entered an aborted state; stopping this batch and requesting a fresh process.`,
+    )
+  }
+  wasmRestartRequested = true
+  stopRequested = true
+  if (!stopController.signal.aborted) {
+    stopController.abort(`Manifold WASM aborted while processing C${lcsc}`)
+  }
 }
 
 process.on("SIGINT", () => requestGracefulStop("SIGINT"))
@@ -100,6 +120,7 @@ const parseOptions = (args: readonly string[]): Options => {
   const options: Options = {
     maxComponents: null,
     maxRuntimeMinutes: DEFAULT_RUNTIME_MINUTES,
+    restartOnLimit: false,
     retryNullEntries: false,
   }
 
@@ -107,6 +128,10 @@ const parseOptions = (args: readonly string[]): Options => {
     const argument = args[index]
     if (argument === "--retry-null-entries") {
       options.retryNullEntries = true
+      continue
+    }
+    if (argument === "--restart-on-limit") {
+      options.restartOnLimit = true
       continue
     }
 
@@ -315,11 +340,19 @@ const processComponent = async (
       status: row.footprinterString === null ? "no-match" : "matched",
     }
   } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    if (isManifoldWasmAbort(error)) {
+      console.warn(
+        `C${component.lcsc}: ${message}; leaving it eligible to retry in a fresh process.`,
+      )
+      requestWasmRestart(component.lcsc)
+      return { status: "retryable-failure" }
+    }
+
     if (error instanceof RequestDeadlineReachedError || stopRequested) {
       return { status: "stopped" }
     }
 
-    const message = error instanceof Error ? error.message : String(error)
     if (message.includes("rate limit exceeded")) {
       console.warn(
         `C${component.lcsc}: ${message}; leaving it eligible to retry after the global cooldown.`,
@@ -496,12 +529,25 @@ const main = async () => {
   const cpuUsage = process.cpuUsage(cpuStartedAt)
   const cpuDurationMs = (cpuUsage.user + cpuUsage.system) / 1_000
   const cpuUtilization = (cpuDurationMs / elapsedMs) * 100
+  const reachedComponentLimit =
+    options.maxComponents !== null && attempted >= options.maxComponents
+  const finishReason = wasmRestartRequested
+    ? "for a Manifold WASM restart"
+    : reachedComponentLimit
+      ? "at the component limit"
+      : "cleanly"
   console.log(
-    `Finished cleanly after ${elapsedSeconds}s: ${attempted} attempted, ${recorded} recorded, ${matched} matched, ${permanentMisses} permanent misses, ${failed} retryable failures.`,
+    `Finished ${finishReason} after ${elapsedSeconds}s: ${attempted} attempted, ${recorded} recorded, ${matched} matched, ${permanentMisses} permanent misses, ${failed} retryable failures.`,
   )
   console.log(
     `Timing: EasyEDA R2 cache ${metrics.cacheHits} hit(s), ${metrics.negativeCacheHits} negative hit(s), ${metrics.cacheMisses} miss(es); ${metrics.requestCount} rate-limited fill(s) / ${metrics.requestDurationMs}ms (${formatAverage(metrics.requestDurationMs, metrics.requestCount)}ms avg), ${metrics.throttleWaitMs}ms aggregate throttle wait, ${metrics.cooldownCount} cooldown(s); conversion ${metrics.conversionCount} / ${metrics.conversionDurationMs}ms (${formatAverage(metrics.conversionDurationMs, metrics.conversionCount)}ms avg); D1 reads ${metrics.d1ReadCount} / ${metrics.d1ReadDurationMs}ms, writes ${metrics.d1WriteCount} / ${metrics.d1WriteDurationMs}ms; CPU ${cpuDurationMs.toFixed(0)}ms (${cpuUtilization.toFixed(1)}% of one core).`,
   )
+
+  if (wasmRestartRequested) {
+    process.exitCode = POPULATION_WASM_RESTART_EXIT_CODE
+  } else if (reachedComponentLimit && options.restartOnLimit) {
+    process.exitCode = POPULATION_BATCH_RESTART_EXIT_CODE
+  }
 }
 
 if (import.meta.main) {

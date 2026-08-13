@@ -70,7 +70,7 @@ jobs:
           if [[ "${RETRY_NULL_ENTRIES}" == "true" ]]; then
             args+=(--retry-null-entries)
           fi
-          bun run populate:footprinter-strings -- "${args[@]}"
+          bun run populate:footprinter-strings:supervised -- "${args[@]}"
 
       - name: Report production row counts
         if: always()
