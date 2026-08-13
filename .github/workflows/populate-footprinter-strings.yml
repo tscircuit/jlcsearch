@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       max_runtime_minutes:
-        description: Processing time (1-60 minutes)
+        description: Processing time (1-240 minutes)
         required: true
-        default: "60"
+        default: "240"
         type: string
       retry_null_entries:
         description: Reprocess rows whose footprinter string is null
@@ -25,7 +25,7 @@ jobs:
   populate:
     name: Populate production D1
     runs-on: ubuntu-latest
-    timeout-minutes: 65
+    timeout-minutes: 250
     env:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -47,8 +47,8 @@ jobs:
             echo "::error::Cloudflare credentials are not configured."
             exit 1
           fi
-          if [[ ! "${MAX_RUNTIME_MINUTES}" =~ ^[0-9]+$ ]] || (( MAX_RUNTIME_MINUTES < 1 || MAX_RUNTIME_MINUTES > 60 )); then
-            echo "::error::max_runtime_minutes must be an integer from 1 through 60."
+          if [[ ! "${MAX_RUNTIME_MINUTES}" =~ ^[0-9]+$ ]] || (( MAX_RUNTIME_MINUTES < 1 || MAX_RUNTIME_MINUTES > 240 )); then
+            echo "::error::max_runtime_minutes must be an integer from 1 through 240."
             exit 1
           fi
 
