@@ -5,7 +5,7 @@
     "": {
       "name": "cf-proxy",
       "dependencies": {
-        "easyeda": "^0.0.286",
+        "easyeda": "^0.0.299",
         "kysely": "^0.28.3",
         "kysely-d1": "^0.4.0",
       },
@@ -281,7 +281,7 @@
 
     "devalue": ["devalue@4.3.3", "", {}, "sha512-UH8EL6H2ifcY8TbD2QsxwCC/pr5xSwPvv85LrLXVihmHVC3T3YqTCIwnR5ak0yO1KYqlxrPVOA/JVZJYPy2ATg=="],
 
-    "easyeda": ["easyeda@0.0.286", "", { "peerDependencies": { "typescript": "^5.5.2", "zod": "3" }, "bin": { "easyeda": "dist/main.cjs", "easyeda-converter": "dist/main.cjs" } }, "sha512-FZcQf3TqJmyF69WO1fJvL5G7jtCUWtCBhTC19P+mZfuBGKteGCt9pMCfzLEarIfstIDLJB+xfE72SZpV785qLg=="],
+    "easyeda": ["easyeda@0.0.299", "", { "peerDependencies": { "typescript": "^5.5.2", "zod": "3" }, "bin": { "easyeda-converter": "dist/main.cjs", "easyeda": "dist/main.cjs" } }, "sha512-T3uwCuryNIGKpDWcdee5L6CVXPjqng7VYsNT+l3lqHOclBT0mVwGp5SqEiFKO0STma/P7ky43gZ3Bv+uEU9D9Q=="],
 
     "error-stack-parser-es": ["error-stack-parser-es@1.0.5", "", {}, "sha512-5qucVt2XcuGMcEGgWI7i+yZpmpByQ8J1lHhcL7PwqCwu9FPP3VUXzT4ltHe5i2z9dePwEHcDVOAfSnHsOlCXRA=="],
 
