@@ -104,7 +104,8 @@ describe("buildDerivedSyncDatabase", () => {
         `SELECT
           lcsc, price1, number_of_pins, gender, mounting_style,
           is_basic, is_preferred
-        FROM hdmi_port`,
+        FROM hdmi_port
+        WHERE lcsc = 12345`,
       )
       .get() as Record<string, unknown>
 
@@ -168,6 +169,79 @@ describe("buildDerivedSyncDatabase", () => {
       mpn: "HDMI-19P",
       gender: "Female",
     })
+    output.close()
+  })
+
+  test("distinguishes base, regular extended, and promotional extended rows", async () => {
+    const { sourcePath, outputPath } = await createSourceDatabase()
+    const source = new Database(sourcePath)
+    source
+      .query(
+        `INSERT INTO jlc_components (
+          lcsc, fetched_at, present, sync_seen, category, subcategory, mfr,
+          package, joints, manufacturer, library_type, preferred, last_on_stock,
+          description, datasheet, stock, price, attributes
+        ) VALUES (
+          23456, unixepoch(), 1, 1, 'Connectors',
+          'HDMI Connectors', 'HDMI-EXT', 'SMD', 19, 'Example', 'expand', 1,
+          unixepoch(), 'Extended promotional HDMI part', '', 125,
+          '1-:1.50', '{}'
+        )`,
+      )
+      .run()
+    source
+      .query(
+        `INSERT INTO jlc_components (
+          lcsc, fetched_at, present, sync_seen, category, subcategory, mfr,
+          package, joints, manufacturer, library_type, preferred, last_on_stock,
+          description, datasheet, stock, price, attributes
+        ) VALUES (
+          34567, unixepoch(), 1, 1, 'Connectors',
+          'HDMI Connectors', 'HDMI-REGULAR-EXT', 'SMD', 19, 'Example',
+          'expand', 0, unixepoch(), 'Regular extended HDMI part', '', 100,
+          '1-:1.75', '{}'
+        )`,
+      )
+      .run()
+    source.close()
+
+    await buildDerivedSyncDatabase({
+      sourcePath,
+      outputPath,
+      tableNames: ["hdmi_port"],
+      includeComponentCatalog: true,
+      logger: () => {},
+    })
+
+    const output = new Database(outputPath, { readonly: true })
+    expect(
+      output
+        .query(
+          `SELECT lcsc, basic, preferred, is_extended_promotional
+           FROM component_catalog
+           ORDER BY lcsc`,
+        )
+        .all(),
+    ).toEqual([
+      {
+        lcsc: 12345,
+        basic: 1,
+        preferred: 1,
+        is_extended_promotional: 0,
+      },
+      {
+        lcsc: 23456,
+        basic: 0,
+        preferred: 1,
+        is_extended_promotional: 1,
+      },
+      {
+        lcsc: 34567,
+        basic: 0,
+        preferred: 0,
+        is_extended_promotional: 0,
+      },
+    ])
     output.close()
   })
 
