@@ -206,6 +206,7 @@ export interface BuckBoostConverter {
 export interface ComponentCatalog {
   basic: number | null
   category: string | null
+  extended_promotional: number | null
   description: string | null
   extra: string | null
   lcsc: Generated<number | null>
@@ -769,6 +770,7 @@ export interface SearchIndex {
   attributes: string | null
   basic: number | null
   category: string | null
+  extended_promotional: number | null
   description: string | null
   lcsc: Generated<number | null>
   mfr: string | null

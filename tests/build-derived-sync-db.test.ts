@@ -171,6 +171,49 @@ describe("buildDerivedSyncDatabase", () => {
     output.close()
   })
 
+  test("materializes extended promotional status from source library type and preferred flag", async () => {
+    const { sourcePath, outputPath } = await createSourceDatabase()
+    const source = new Database(sourcePath)
+    source.exec(`
+      INSERT INTO jlc_components (
+        lcsc, fetched_at, present, sync_seen, category, subcategory, mfr,
+        package, joints, manufacturer, library_type, preferred, last_on_stock,
+        description, datasheet, stock, price, attributes
+      ) VALUES
+        (23456, unixepoch(), 1, 1, 'Connectors', 'HDMI Connectors',
+         'PROMO-EXPAND', 'SMD', 19, 'Example', 'expand', 1, unixepoch(),
+         'Promotional extended part', '', 100, '1-:1.00', '{}'),
+        (34567, unixepoch(), 1, 1, 'Connectors', 'HDMI Connectors',
+         'STANDARD-EXPAND', 'SMD', 19, 'Example', 'expand', 0, unixepoch(),
+         'Standard extended part', '', 100, '1-:1.00', '{}');
+    `)
+    source.close()
+
+    await buildDerivedSyncDatabase({
+      sourcePath,
+      outputPath,
+      tableNames: ["hdmi_port"],
+      includeComponentCatalog: true,
+      logger: () => {},
+    })
+
+    const output = new Database(outputPath, { readonly: true })
+    const rows = output
+      .query(
+        `SELECT lcsc, basic, preferred, extended_promotional
+         FROM component_catalog
+         ORDER BY lcsc`,
+      )
+      .all()
+
+    expect(rows).toEqual([
+      { lcsc: 12345, basic: 1, preferred: 1, extended_promotional: 0 },
+      { lcsc: 23456, basic: 0, preferred: 1, extended_promotional: 1 },
+      { lcsc: 34567, basic: 0, preferred: 0, extended_promotional: 0 },
+    ])
+    output.close()
+  })
+
   test("materializes a stock snapshot with zeroes for absent parts", async () => {
     const { sourcePath, outputPath } = await createSourceDatabase()
     const source = new Database(sourcePath)

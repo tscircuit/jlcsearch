@@ -20,6 +20,34 @@ describe("render helpers", () => {
     expect(html).toContain("/photo_diodes/list")
   })
 
+  it("renders the extended promotional components filter", () => {
+    const html = renderD1TablePage(
+      "/components/list",
+      {
+        components: [
+          {
+            lcsc: 12345,
+            mfr: "PROMO-PART",
+            package: "SMD",
+            description: "Promotional extended part",
+            stock: 100,
+            is_basic: false,
+            is_preferred: true,
+            is_extended_promotional: true,
+          },
+        ],
+      },
+      { is_extended_promotional: "true" },
+      "https://jlcsearch.tscircuit.com/components/list?is_extended_promotional=true",
+    )
+
+    expect(html).toContain('name="is_extended_promotional"')
+    expect(html).toContain(
+      'name="is_extended_promotional" value="true" checked',
+    )
+    expect(html).toContain("Extended Promotional")
+  })
+
   it("renders the Photo Diodes page and JSON API link", () => {
     const pathname = "/photo_diodes/list"
 
