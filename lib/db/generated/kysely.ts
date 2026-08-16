@@ -190,6 +190,7 @@ export interface Component {
   category_id: number;
   datasheet: string;
   description: string;
+  extended_promotional: Generated<number>;
   extra: string | null;
   flag: Generated<number>;
   joints: number;
@@ -801,6 +802,7 @@ export interface VComponent {
   category_id: number | null;
   datasheet: string | null;
   description: string | null;
+  extended_promotional: number | null;
   extra: string | null;
   joints: number | null;
   last_on_stock: number | null;
