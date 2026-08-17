@@ -113,8 +113,23 @@ const getPageTitle = (pathname: string): string => {
 const getPageHeading = (pathname: string): string =>
   routeHeadings[pathname] ?? getPageTitle(pathname)
 
+const extractSmallQuantityPrice = (value: string): number => {
+  try {
+    const priceTiers = JSON.parse(value)
+    return Number(priceTiers[0]?.price) || 0
+  } catch {
+    const firstTier = value.split(",", 1)[0]
+    return Number(firstTier?.split(":").at(-1)) || 0
+  }
+}
+
 const formatPrice = (value: unknown): string => {
-  const price = typeof value === "number" ? value : Number(value)
+  const price =
+    typeof value === "number"
+      ? value
+      : typeof value === "string" && value.includes(":")
+        ? extractSmallQuantityPrice(value)
+        : Number(value)
   if (!price) return ""
   return price.toLocaleString("en-US", {
     style: "currency",
