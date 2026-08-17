@@ -20,6 +20,28 @@ describe("render helpers", () => {
     expect(html).toContain("/photo_diodes/list")
   })
 
+  it("renders the first price tier on component search results", () => {
+    const html = renderD1TablePage(
+      "/components/list",
+      {
+        components: [
+          {
+            lcsc: 1848077,
+            mfr: "MSP430G2332IRSA16R",
+            package: "QFN-16-EP(4x4)",
+            stock: 33000,
+            price: "1-9:1.5228,10-29:1.2592,30-99:1.1145,100-499:0.9501",
+          },
+        ],
+      },
+      { search: "MSP430" },
+      "https://jlcsearch.tscircuit.com/components/list?search=MSP430",
+    )
+
+    expect(html).toContain("MSP430G2332IRSA16R")
+    expect(html).toContain("$1.52")
+  })
+
   it("renders the Photo Diodes page and JSON API link", () => {
     const pathname = "/photo_diodes/list"
 
