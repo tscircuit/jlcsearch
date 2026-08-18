@@ -31,7 +31,7 @@
   "dependencies": {
     "@tscircuit/footprinter": "^0.0.143",
     "circuit-json-to-footprinter": "^0.0.40",
-    "easyeda": "^0.0.307",
+    "easyeda": "^0.0.310",
     "format-si-unit": "^0.0.10",
     "kysely-bun-sqlite": "^0.3.2"
   }

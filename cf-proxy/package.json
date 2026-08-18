@@ -10,7 +10,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "easyeda": "^0.0.307",
+    "easyeda": "^0.0.310",
     "kysely": "^0.28.3",
     "kysely-d1": "^0.4.0"
   },
