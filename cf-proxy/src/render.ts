@@ -24,6 +24,7 @@ const routeLabels: Record<string, string> = {
   "/capacitors/list": "Capacitors",
   "/potentiometers/list": "Potentiometers",
   "/headers/list": "Headers",
+  "/barrel_jacks/list": "Barrel Jacks",
   "/dimm_connectors/list": "DIMM Connectors",
   "/sodimm_connectors/list": "SO-DIMM Connectors",
   "/micro_usb_connectors/list": "Micro USB Connectors",
@@ -193,6 +194,10 @@ const COLUMN_LABELS: Record<string, string> = {
   reverse_voltage_min: "Min Reverse Voltage",
   dark_current_a: "Dark Current",
   dark_current_max: "Max Dark Current",
+  inside_diameter_mm: "Inside Diameter",
+  outside_diameter_mm: "Outside Diameter",
+  current_rating_min: "Min Current",
+  voltage_rating_min: "Min Voltage",
   reception_angle_deg: "Reception Angle",
   luminous_intensity_mcd: "Intensity",
   number_of_contacts: "Contacts",
@@ -361,6 +366,8 @@ const formatDisplayValue = (column: string, value: unknown): string | null => {
     case "length_mm":
     case "switch_height_mm":
     case "height_above_board_mm":
+    case "inside_diameter_mm":
+    case "outside_diameter_mm":
       return withUnit(value, "mm")
     case "operating_temp_min":
     case "operating_temp_max":
