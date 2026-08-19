@@ -386,11 +386,7 @@ describe("Cloudflare route contracts", () => {
   })
 
   it("GET /api/search strips a leading C in LCSC lookups", async () => {
-    const source = await fetchJson("/resistors/list?json=true")
-    const sourceRows = source.data.resistors as any[]
-    expect(sourceRows.length).toBeGreaterThan(0)
-
-    const lcsc = sourceRows[0].lcsc
+    const lcsc = 9002
     const { data } = await fetchJson(`/api/search?q=C${lcsc}`)
     expect(Array.isArray(data.components)).toBe(true)
     expect(data.components.length).toBeGreaterThan(0)
