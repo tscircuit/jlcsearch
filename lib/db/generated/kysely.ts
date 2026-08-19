@@ -722,6 +722,28 @@ export interface Manufacturer {
   name: string;
 }
 
+export interface MicroUsbConnector {
+  attributes: string | null;
+  connector_type: string | null;
+  current_rating_a: number | null;
+  description: string | null;
+  gender: string | null;
+  in_stock: number | null;
+  is_basic: number | null;
+  is_preferred: number | null;
+  lcsc: Generated<number | null>;
+  mfr: string | null;
+  mounting_style: string | null;
+  number_of_contacts: number | null;
+  number_of_ports: number | null;
+  operating_temp_max: number | null;
+  operating_temp_min: number | null;
+  package: string | null;
+  price1: number | null;
+  stock: number | null;
+  usb_standard: string | null;
+}
+
 export interface Microcontroller {
   adc_resolution_bits: number | null;
   attributes: string | null;
@@ -1079,6 +1101,7 @@ export interface DB {
   led_with_ic: LedWithIc;
   manufacturers: Manufacturer;
   microcontroller: Microcontroller;
+  micro_usb_connector: MicroUsbConnector;
   mosfet: Mosfet;
   oled_display: OledDisplay;
   pcie_m2_connector: PcieM2Connector;

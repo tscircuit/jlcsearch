@@ -16,8 +16,54 @@ describe("render helpers", () => {
     expect(html).toContain("/ble_chips/list")
     expect(html).toContain("/dimm_connectors/list")
     expect(html).toContain("/sodimm_connectors/list")
+    expect(html).toContain("/micro_usb_connectors/list")
     expect(html).toContain("/hdmi_ports/list")
     expect(html).toContain("/photo_diodes/list")
+  })
+
+  it("renders the Micro USB connectors page and JSON API link", () => {
+    const pathname = "/micro_usb_connectors/list"
+
+    expect(D1_ROUTES).toContain(pathname)
+    expect(getD1Handler(pathname)).toBeTypeOf("function")
+
+    const html = renderD1TablePage(
+      pathname,
+      {
+        micro_usb_connectors: [
+          {
+            lcsc: 132563,
+            mfr: "10118194-0001LF",
+            package: "MICRO-USB-SMD_10118194-0001LF",
+            connector_type: "Micro USB Type-B",
+            usb_standard: "USB 2.0",
+            mounting_style: "Surface Mount, Right Angle",
+            number_of_contacts: 5,
+            gender: "Female",
+            stock: 23_802,
+          },
+        ],
+      },
+      {
+        connector_type: "Micro USB Type-B",
+        usb_standard: "USB 2.0",
+        mounting_style: "Surface Mount, Right Angle",
+        number_of_contacts: "5",
+        gender: "Female",
+      },
+      "https://jlcsearch.tscircuit.com/micro_usb_connectors/list?connector_type=Micro+USB+Type-B",
+    )
+
+    expect(html).toContain("<h2>Micro USB Connectors</h2>")
+    expect(html).toContain('name="connector_type"')
+    expect(html).toContain('name="usb_standard"')
+    expect(html).toContain('name="mounting_style"')
+    expect(html).toContain('name="number_of_contacts"')
+    expect(html).toContain('name="gender"')
+    expect(html).toContain('name="is_basic"')
+    expect(html).toContain('name="is_preferred"')
+    expect(html).toContain("10118194-0001LF")
+    expect(html).toContain("/micro_usb_connectors/list.json")
   })
 
   it("renders the first price tier on component search results", () => {

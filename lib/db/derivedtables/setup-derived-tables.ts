@@ -33,6 +33,7 @@ import { ledTableSpec } from "lib/db/derivedtables/led"
 import { ledWithICTableSpec } from "lib/db/derivedtables/led_with_ic"
 import { ldoTableSpec } from "lib/db/derivedtables/ldo"
 import { microcontrollerTableSpec } from "lib/db/derivedtables/microcontroller"
+import { microUsbConnectorTableSpec } from "lib/db/derivedtables/micro-usb-connector"
 import { mosfetTableSpec } from "lib/db/derivedtables/mosfet"
 import { oledDisplayTableSpec } from "lib/db/derivedtables/oled_display"
 import { pcieM2ConnectorTableSpec } from "lib/db/derivedtables/pcie_m2_connector"
@@ -68,6 +69,7 @@ export const DERIVED_TABLES: DerivedTableSpec<any>[] = [
   bleModuleTableSpec,
   bleChipTableSpec,
   microcontrollerTableSpec,
+  microUsbConnectorTableSpec,
   voltageRegulatorTableSpec,
   ldoTableSpec,
   ledDriverTableSpec,
