@@ -283,6 +283,18 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
       ram_min: { field: "ram_size_bytes", type: "number", operator: ">=" },
     },
   },
+  micro_usb_connector: {
+    filters: {
+      package: { field: "package", type: "string" },
+      connector_type: { field: "connector_type", type: "string" },
+      usb_standard: { field: "usb_standard", type: "string" },
+      mounting_style: { field: "mounting_style", type: "string" },
+      number_of_contacts: { field: "number_of_contacts", type: "number" },
+      gender: { field: "gender", type: "string" },
+      is_basic: { field: "is_basic", type: "boolean" },
+      is_preferred: { field: "is_preferred", type: "boolean" },
+    },
+  },
   ldo: {
     filters: {
       package: { field: "package", type: "string" },
@@ -694,6 +706,7 @@ export const ROUTE_TO_TABLE: Record<string, string> = {
   "/resistors/list": "resistor",
   "/capacitors/list": "capacitor",
   "/microcontrollers/list": "microcontroller",
+  "/micro_usb_connectors/list": "micro_usb_connector",
   "/ldos/list": "ldo",
   "/leds/list": "led",
   "/diodes/list": "diode",
@@ -743,6 +756,7 @@ export const TABLE_RESPONSE_KEY: Record<string, string> = {
   resistor: "resistors",
   capacitor: "capacitors",
   microcontroller: "microcontrollers",
+  micro_usb_connector: "micro_usb_connectors",
   ldo: "ldos",
   led: "leds",
   diode: "diodes",

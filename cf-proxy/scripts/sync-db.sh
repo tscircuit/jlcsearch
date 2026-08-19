@@ -53,6 +53,7 @@ DERIVED_TABLES=(
   led_segment_display
   led_with_ic
   microcontroller
+  micro_usb_connector
   mosfet
   oled_display
   pcie_m2_connector
