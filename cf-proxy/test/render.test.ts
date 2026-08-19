@@ -11,6 +11,7 @@ describe("render helpers", () => {
     expect(html).toContain("/lcd_drivers/list")
     expect(html).toContain("/tft_display_drivers/list")
     expect(html).toContain("/resistors/list")
+    expect(html).toContain("/barrel_jacks/list")
     expect(html).toContain("/spring_clamp_terminal_blocks/list")
     expect(html).toContain("/ble_modules/list")
     expect(html).toContain("/ble_chips/list")
@@ -19,6 +20,59 @@ describe("render helpers", () => {
     expect(html).toContain("/micro_usb_connectors/list")
     expect(html).toContain("/hdmi_ports/list")
     expect(html).toContain("/photo_diodes/list")
+  })
+
+  it("renders the Barrel Jacks page and JSON API link", () => {
+    const pathname = "/barrel_jacks/list"
+
+    expect(D1_ROUTES).toContain(pathname)
+    expect(getD1Handler(pathname)).toBeTypeOf("function")
+
+    const html = renderD1TablePage(
+      pathname,
+      {
+        barrel_jacks: [
+          {
+            lcsc: 16214,
+            mfr: "DC-005 2.0",
+            package: "Plugin",
+            connector_type: "DC Power Receptacle",
+            mounting_style: "Through Hole",
+            orientation: "Right Angle",
+            inside_diameter_mm: 2,
+            outside_diameter_mm: 6.4,
+            current_rating_a: 1,
+            voltage_rating_v: 12,
+            num_pins: 3,
+            stock: 27_206,
+          },
+        ],
+      },
+      {
+        mounting_style: "Through Hole",
+        orientation: "Right Angle",
+        inside_diameter_mm: "2",
+        outside_diameter_mm: "6.4",
+        current_rating_min: "1",
+        voltage_rating_min: "12",
+        num_pins: "3",
+      },
+      "https://jlcsearch.tscircuit.com/barrel_jacks/list?inside_diameter_mm=2&outside_diameter_mm=6.4",
+    )
+
+    expect(html).toContain("<h2>Barrel Jacks</h2>")
+    expect(html).toContain('name="mounting_style"')
+    expect(html).toContain('name="orientation"')
+    expect(html).toContain('name="inside_diameter_mm"')
+    expect(html).toContain('name="outside_diameter_mm"')
+    expect(html).toContain('name="current_rating_min"')
+    expect(html).toContain('name="voltage_rating_min"')
+    expect(html).toContain('name="num_pins"')
+    expect(html).toContain('name="is_basic"')
+    expect(html).toContain('name="is_preferred"')
+    expect(html).toContain("2mm")
+    expect(html).toContain("6.4mm")
+    expect(html).toContain("/barrel_jacks/list.json")
   })
 
   it("renders the Micro USB connectors page and JSON API link", () => {

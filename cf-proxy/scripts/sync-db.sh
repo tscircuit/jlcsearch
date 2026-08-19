@@ -26,6 +26,7 @@ DERIVED_TABLES=(
   accelerometer
   adc
   analog_multiplexer
+  barrel_jack
   battery_holder
   bjt_transistor
   ble_chip

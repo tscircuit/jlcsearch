@@ -457,6 +457,28 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
       num_channels: { field: "num_channels", type: "number" },
     },
   },
+  barrel_jack: {
+    filters: {
+      package: { field: "package", type: "string" },
+      mounting_style: { field: "mounting_style", type: "string" },
+      orientation: { field: "orientation", type: "string" },
+      inside_diameter_mm: { field: "inside_diameter_mm", type: "number" },
+      outside_diameter_mm: { field: "outside_diameter_mm", type: "number" },
+      current_rating_min: {
+        field: "current_rating_a",
+        type: "number",
+        operator: ">=",
+      },
+      voltage_rating_min: {
+        field: "voltage_rating_v",
+        type: "number",
+        operator: ">=",
+      },
+      num_pins: { field: "num_pins", type: "number" },
+      is_basic: { field: "is_basic", type: "boolean" },
+      is_preferred: { field: "is_preferred", type: "boolean" },
+    },
+  },
   battery_holder: {
     filters: {
       package: { field: "package", type: "string" },
@@ -717,6 +739,7 @@ export const ROUTE_TO_TABLE: Record<string, string> = {
   "/accelerometers/list": "accelerometer",
   "/adcs/list": "adc",
   "/analog_multiplexers/list": "analog_multiplexer",
+  "/barrel_jacks/list": "barrel_jack",
   "/battery_holders/list": "battery_holder",
   "/ble_chips/list": "ble_chip",
   "/ble_modules/list": "ble_module",
@@ -767,6 +790,7 @@ export const TABLE_RESPONSE_KEY: Record<string, string> = {
   accelerometer: "accelerometers",
   adc: "adcs",
   analog_multiplexer: "multiplexers",
+  barrel_jack: "barrel_jacks",
   battery_holder: "battery_holders",
   ble_chip: "ble_chips",
   ble_module: "ble_modules",

@@ -78,6 +78,29 @@ export interface AnalogMultiplexer {
   supply_voltage_min: number | null;
 }
 
+export interface BarrelJack {
+  attributes: string | null;
+  connector_type: string | null;
+  current_rating_a: number | null;
+  description: string | null;
+  in_stock: number | null;
+  inside_diameter_mm: number | null;
+  is_basic: number | null;
+  is_preferred: number | null;
+  lcsc: Generated<number | null>;
+  mfr: string | null;
+  mounting_style: string | null;
+  num_pins: number | null;
+  operating_temp_max: number | null;
+  operating_temp_min: number | null;
+  orientation: string | null;
+  outside_diameter_mm: number | null;
+  package: string | null;
+  price1: number | null;
+  stock: number | null;
+  voltage_rating_v: number | null;
+}
+
 export interface BatteryHolder {
   attributes: string | null;
   battery_type: string | null;
@@ -1065,6 +1088,7 @@ export interface DB {
   accelerometer: Accelerometer;
   adc: Adc;
   analog_multiplexer: AnalogMultiplexer;
+  barrel_jack: BarrelJack;
   battery_holder: BatteryHolder;
   ble_chip: BleChip;
   ble_module: BleModule;
