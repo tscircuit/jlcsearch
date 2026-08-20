@@ -3,6 +3,7 @@ import { destroyDbClient, getDbClient } from "lib/db/get-db-client"
 import { accelerometerTableSpec } from "lib/db/derivedtables/accelerometer"
 import { adcTableSpec } from "lib/db/derivedtables/adc"
 import { analogMultiplexerTableSpec } from "lib/db/derivedtables/analog_multiplexer"
+import { barrelJackTableSpec } from "lib/db/derivedtables/barrel-jack"
 import { batteryHolderTableSpec } from "lib/db/derivedtables/battery_holder"
 import { bjtTransistorTableSpec } from "lib/db/derivedtables/bjt_transistor"
 import { bleChipTableSpec } from "lib/db/derivedtables/ble-chip"
@@ -33,6 +34,7 @@ import { ledTableSpec } from "lib/db/derivedtables/led"
 import { ledWithICTableSpec } from "lib/db/derivedtables/led_with_ic"
 import { ldoTableSpec } from "lib/db/derivedtables/ldo"
 import { microcontrollerTableSpec } from "lib/db/derivedtables/microcontroller"
+import { microUsbConnectorTableSpec } from "lib/db/derivedtables/micro-usb-connector"
 import { mosfetTableSpec } from "lib/db/derivedtables/mosfet"
 import { oledDisplayTableSpec } from "lib/db/derivedtables/oled_display"
 import { pcieM2ConnectorTableSpec } from "lib/db/derivedtables/pcie_m2_connector"
@@ -59,6 +61,7 @@ export const DERIVED_TABLES: DerivedTableSpec<any>[] = [
   hdmiPortTableSpec,
   adcTableSpec,
   analogMultiplexerTableSpec,
+  barrelJackTableSpec,
   ioExpanderTableSpec,
   diodeTableSpec,
   dacTableSpec,
@@ -68,6 +71,7 @@ export const DERIVED_TABLES: DerivedTableSpec<any>[] = [
   bleModuleTableSpec,
   bleChipTableSpec,
   microcontrollerTableSpec,
+  microUsbConnectorTableSpec,
   voltageRegulatorTableSpec,
   ldoTableSpec,
   ledDriverTableSpec,
