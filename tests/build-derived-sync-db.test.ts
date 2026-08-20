@@ -103,7 +103,7 @@ describe("buildDerivedSyncDatabase", () => {
       .query(
         `SELECT
           lcsc, price1, number_of_pins, gender, mounting_style,
-          is_basic, is_preferred
+          is_basic, is_preferred, is_extended_promotional
         FROM hdmi_port`,
       )
       .get() as Record<string, unknown>
@@ -116,6 +116,7 @@ describe("buildDerivedSyncDatabase", () => {
       mounting_style: "Surface Mount",
       is_basic: 1,
       is_preferred: 1,
+      is_extended_promotional: 0,
     })
     output.close()
   })
@@ -169,6 +170,99 @@ describe("buildDerivedSyncDatabase", () => {
       gender: "Female",
     })
     output.close()
+  })
+
+  test("derives extended promotional state from library type and preferred source fields", async () => {
+    const { sourcePath, outputPath } = await createSourceDatabase()
+    const source = new Database(sourcePath)
+    source.exec(`
+      INSERT INTO jlc_components (
+        lcsc, fetched_at, present, sync_seen, category, subcategory, mfr,
+        package, joints, manufacturer, library_type, preferred, last_on_stock,
+        description, datasheet, stock, price, attributes
+      ) VALUES
+        (
+          12346, unixepoch(), 1, 1, 'Connectors', 'HDMI Connectors',
+          'PROMO-EXT', 'SMD', 19, 'Example', 'expand', 1, unixepoch(),
+          'HDMI promotional extended part', '', 100, '1-:0.50',
+          '{"Connector Type":"HDMI","Number of Pins":"19"}'
+        ),
+        (
+          12347, unixepoch(), 1, 1, 'Connectors', 'HDMI Connectors',
+          'REGULAR-EXT', 'SMD', 19, 'Example', 'expand', 0, unixepoch(),
+          'HDMI regular extended part', '', 80, '1-:0.60',
+          '{"Connector Type":"HDMI","Number of Pins":"19"}'
+        );
+    `)
+    source.close()
+
+    await buildDerivedSyncDatabase({
+      sourcePath,
+      outputPath,
+      tableNames: ["hdmi_port"],
+      includeStockSnapshot: true,
+      logger: () => {},
+    })
+
+    const output = new Database(outputPath, { readonly: true })
+    expect(
+      output
+        .query(
+          `SELECT lcsc, is_basic, is_preferred, is_extended_promotional
+           FROM hdmi_port
+           ORDER BY lcsc`,
+        )
+        .all(),
+    ).toEqual([
+      {
+        lcsc: 12345,
+        is_basic: 1,
+        is_preferred: 1,
+        is_extended_promotional: 0,
+      },
+      {
+        lcsc: 12346,
+        is_basic: 0,
+        is_preferred: 1,
+        is_extended_promotional: 1,
+      },
+      {
+        lcsc: 12347,
+        is_basic: 0,
+        is_preferred: 0,
+        is_extended_promotional: 0,
+      },
+    ])
+    expect(
+      output
+        .query(
+          `SELECT lcsc, basic, preferred
+           FROM component_stock
+           ORDER BY lcsc`,
+        )
+        .all(),
+    ).toEqual([
+      { lcsc: 12345, basic: 1, preferred: 1 },
+      { lcsc: 12346, basic: 0, preferred: 1 },
+      { lcsc: 12347, basic: 0, preferred: 0 },
+    ])
+    output.close()
+  })
+
+  test("fails closed when the source classification fields disappear", async () => {
+    const { sourcePath, outputPath } = await createSourceDatabase()
+    const source = new Database(sourcePath)
+    source.exec("ALTER TABLE jlc_components DROP COLUMN preferred")
+    source.close()
+
+    expect(
+      buildDerivedSyncDatabase({
+        sourcePath,
+        outputPath,
+        tableNames: ["hdmi_port"],
+        logger: () => {},
+      }),
+    ).rejects.toThrow(/preferred.*refusing to fabricate/i)
   })
 
   test("materializes a stock snapshot with zeroes for absent parts", async () => {
