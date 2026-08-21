@@ -1,15 +1,15 @@
-import type { Kysely } from "kysely"
-import type { DB } from "./db/types"
+import type { Kysely } from "kysely";
+import type { DB } from "./db/types";
 import {
   createDisplayDriverMaxResolutionResolver,
   getDisplayDriverMaxResolutionOptions,
-} from "./display-driver-resolution"
+} from "./display-driver-resolution";
 import {
   getTftDisplayDriverFamily,
   getTftDisplayDriverPatterns,
   TFT_DISPLAY_DRIVER_FAMILIES,
   TFT_DISPLAY_DRIVER_SUBCATEGORIES,
-} from "./tft-display-drivers"
+} from "./tft-display-drivers";
 import {
   normalizeTableQueryParams,
   queryFilterOptions,
@@ -19,64 +19,69 @@ import {
   TABLE_RESPONSE_KEY,
   type FilterOptions,
   type QueryParams,
-} from "./handlers"
+} from "./handlers";
 
 export interface D1QueryResult {
-  data: Record<string, unknown[]>
-  tableName: string
-  filterOptions?: FilterOptions
+  data: Record<string, unknown[]>;
+  tableName: string;
+  filterOptions?: FilterOptions;
 }
 
-type D1Handler = (db: Kysely<DB>, params: QueryParams) => Promise<D1QueryResult>
+type D1Handler = (
+  db: Kysely<DB>,
+  params: QueryParams,
+) => Promise<D1QueryResult>;
 
-const PROCESSOR_INTERFACES = ["uart", "i2c", "spi", "can", "usb"] as const
-const MICROPHONE_SUBCATEGORIES = ["Microphones", "MEMS Microphones"] as const
-const LCD_DRIVER_SUBCATEGORY = "LCD Drivers"
+const PROCESSOR_INTERFACES = ["uart", "i2c", "spi", "can", "usb"] as const;
+const MICROPHONE_SUBCATEGORIES = ["Microphones", "MEMS Microphones"] as const;
+const LCD_DRIVER_SUBCATEGORY = "LCD Drivers";
 
 const parseFiniteNumber = (value: string | undefined): number | null => {
-  if (value === undefined || value === "") return null
-  const parsed = Number(value)
-  return Number.isFinite(parsed) ? parsed : null
-}
+  if (value === undefined || value === "") return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
 
 const extractSmallQuantityPrice = (price: string | null): number => {
-  if (!price) return 0
+  if (!price) return 0;
   try {
-    const priceObj = JSON.parse(price)
-    return Number(priceObj[0]?.price ?? 0) || 0
+    const priceObj = JSON.parse(price);
+    return Number(priceObj[0]?.price ?? 0) || 0;
   } catch {
-    const firstTier = price.split(",", 1)[0]
-    const separatorIndex = firstTier.indexOf(":")
-    if (separatorIndex === -1) return 0
-    return Number(firstTier.slice(separatorIndex + 1)) || 0
+    const firstTier = price.split(",", 1)[0];
+    const separatorIndex = firstTier.indexOf(":");
+    if (separatorIndex === -1) return 0;
+    return Number(firstTier.slice(separatorIndex + 1)) || 0;
   }
-}
+};
 
 const extractAttributes = (extra: string | null): string => {
-  if (!extra) return "{}"
+  if (!extra) return "{}";
   try {
-    const attributes = JSON.parse(extra)?.attributes
-    return JSON.stringify(attributes ?? {})
+    const attributes = JSON.parse(extra)?.attributes;
+    return JSON.stringify(attributes ?? {});
   } catch {
-    return "{}"
+    return "{}";
   }
-}
+};
 
 const getNonEmptyStrings = (
   rows: Array<Record<string, string | null>>,
   key: string,
-): string[] => rows.map((row) => row[key]?.trim() ?? "").filter(Boolean)
+): string[] => rows.map((row) => row[key]?.trim() ?? "").filter(Boolean);
 
 const selectTftDriverCatalog = (
   db: Kysely<DB>,
   driverType: string | undefined,
 ) => {
-  const patterns = getTftDisplayDriverPatterns(driverType)
+  const patterns = getTftDisplayDriverPatterns(driverType);
   return db
     .selectFrom("component_catalog")
     .where("subcategory", "in", [...TFT_DISPLAY_DRIVER_SUBCATEGORIES])
-    .where((eb) => eb.or(patterns.map((pattern) => eb("mfr", "like", pattern))))
-}
+    .where((eb) =>
+      eb.or(patterns.map((pattern) => eb("mfr", "like", pattern))),
+    );
+};
 
 const getMicrocontrollerListHandler = (
   tableName: "arm_processor" | "risc_v_processor",
@@ -88,43 +93,43 @@ const getMicrocontrollerListHandler = (
       .selectFrom("microcontroller")
       .selectAll()
       .limit(100)
-      .orderBy("stock", "desc")
+      .orderBy("stock", "desc");
 
     query =
       coreFilter === "ARM%"
         ? query.where("cpu_core", "like", coreFilter)
-        : query.where("cpu_core", "=", coreFilter)
+        : query.where("cpu_core", "=", coreFilter);
 
     if (params.package) {
-      query = query.where("package", "=", params.package)
+      query = query.where("package", "=", params.package);
     }
 
-    const flashMin = parseFiniteNumber(params.flash_min)
+    const flashMin = parseFiniteNumber(params.flash_min);
     if (flashMin !== null) {
-      query = query.where("flash_size_bytes", ">=", flashMin)
+      query = query.where("flash_size_bytes", ">=", flashMin);
     }
 
-    const ramMin = parseFiniteNumber(params.ram_min)
+    const ramMin = parseFiniteNumber(params.ram_min);
     if (ramMin !== null) {
-      query = query.where("ram_size_bytes", ">=", ramMin)
+      query = query.where("ram_size_bytes", ">=", ramMin);
     }
 
     switch (params.interface) {
       case "uart":
-        query = query.where("has_uart", "=", 1)
-        break
+        query = query.where("has_uart", "=", 1);
+        break;
       case "i2c":
-        query = query.where("has_i2c", "=", 1)
-        break
+        query = query.where("has_i2c", "=", 1);
+        break;
       case "spi":
-        query = query.where("has_spi", "=", 1)
-        break
+        query = query.where("has_spi", "=", 1);
+        break;
       case "can":
-        query = query.where("has_can", "=", 1)
-        break
+        query = query.where("has_can", "=", 1);
+        break;
       case "usb":
-        query = query.where("has_usb", "=", 1)
-        break
+        query = query.where("has_usb", "=", 1);
+        break;
     }
 
     let packageQuery = db
@@ -132,17 +137,17 @@ const getMicrocontrollerListHandler = (
       .select("package")
       .distinct()
       .where("package", "is not", null)
-      .orderBy("package")
+      .orderBy("package");
 
     packageQuery =
       coreFilter === "ARM%"
         ? packageQuery.where("cpu_core", "like", coreFilter)
-        : packageQuery.where("cpu_core", "=", coreFilter)
+        : packageQuery.where("cpu_core", "=", coreFilter);
 
     const [packages, mcus] = await Promise.all([
       packageQuery.execute(),
       query.execute(),
-    ])
+    ]);
 
     return {
       tableName,
@@ -173,9 +178,9 @@ const getMicrocontrollerListHandler = (
           price1: m.price1 ?? 0,
         })),
       },
-    }
-  }
-}
+    };
+  };
+};
 
 const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
   "/analog_switches/list": async (db, params) => {
@@ -184,15 +189,15 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
       .selectAll()
       .where("num_channels", "<=", 2)
       .limit(100)
-      .orderBy("stock", "desc")
+      .orderBy("stock", "desc");
 
     if (params.package) {
-      query = query.where("package", "=", params.package)
+      query = query.where("package", "=", params.package);
     }
 
-    const channels = parseFiniteNumber(params.channels)
+    const channels = parseFiniteNumber(params.channels);
     if (channels !== null) {
-      query = query.where("num_channels", "=", channels)
+      query = query.where("num_channels", "=", channels);
     }
 
     const [packages, channelOptions, switches] = await Promise.all([
@@ -213,7 +218,7 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
         .orderBy("num_channels")
         .execute(),
       query.execute(),
-    ])
+    ]);
 
     return {
       tableName: "analog_switch",
@@ -244,7 +249,7 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
           price1: m.price1 ?? 0,
         })),
       },
-    }
+    };
   },
   "/arm_processors/list": getMicrocontrollerListHandler(
     "arm_processor",
@@ -271,14 +276,14 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
       .where("stock", ">", 0)
       .where("subcategory", "in", [...MICROPHONE_SUBCATEGORIES])
       .orderBy("stock", "desc")
-      .limit(100)
+      .limit(100);
 
     if (params.package) {
-      query = query.where("package", "=", params.package)
+      query = query.where("package", "=", params.package);
     }
 
     if (params.microphone_type && params.microphone_type !== "all") {
-      query = query.where("subcategory", "=", params.microphone_type)
+      query = query.where("subcategory", "=", params.microphone_type);
     }
 
     const [packages, microphones] = await Promise.all([
@@ -291,7 +296,7 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
         .orderBy("package")
         .execute(),
       query.execute(),
-    ])
+    ]);
 
     return {
       tableName: "microphone",
@@ -315,7 +320,7 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
           }))
           .filter((m) => m.lcsc !== 0 && m.package !== ""),
       },
-    }
+    };
   },
   "/lcd_drivers/list": async (db, params) => {
     let query = db
@@ -333,18 +338,18 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
       ])
       .where("stock", ">", 0)
       .where("subcategory", "=", LCD_DRIVER_SUBCATEGORY)
-      .orderBy("stock", "desc")
+      .orderBy("stock", "desc");
 
     if (params.package) {
-      query = query.where("package", "=", params.package)
+      query = query.where("package", "=", params.package);
     }
 
     if (params.is_basic === "true" || params.is_basic === "1") {
-      query = query.where("basic", "=", 1)
+      query = query.where("basic", "=", 1);
     }
 
     if (params.is_preferred === "true" || params.is_preferred === "1") {
-      query = query.where("preferred", "=", 1)
+      query = query.where("preferred", "=", 1);
     }
 
     const [packages, resolutionSources, lcdDrivers] = await Promise.all([
@@ -363,14 +368,14 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
         .where("subcategory", "=", LCD_DRIVER_SUBCATEGORY)
         .execute(),
       query.execute(),
-    ])
+    ]);
 
     const maxResolutionFilter =
       params.max_resolution && params.max_resolution !== "All"
         ? params.max_resolution
-        : null
+        : null;
     const resolveMaxResolution =
-      createDisplayDriverMaxResolutionResolver(resolutionSources)
+      createDisplayDriverMaxResolutionResolver(resolutionSources);
 
     return {
       tableName: "lcd_driver",
@@ -403,7 +408,7 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
           )
           .slice(0, 100),
       },
-    }
+    };
   },
   "/tft_display_drivers/list": async (db, params) => {
     let query = selectTftDriverCatalog(db, params.driver_type)
@@ -420,18 +425,18 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
         "extra",
       ])
       .where("stock", ">", 0)
-      .orderBy("stock", "desc")
+      .orderBy("stock", "desc");
 
     if (params.package) {
-      query = query.where("package", "=", params.package)
+      query = query.where("package", "=", params.package);
     }
 
     if (params.is_basic === "true" || params.is_basic === "1") {
-      query = query.where("basic", "=", 1)
+      query = query.where("basic", "=", 1);
     }
 
     if (params.is_preferred === "true" || params.is_preferred === "1") {
-      query = query.where("preferred", "=", 1)
+      query = query.where("preferred", "=", 1);
     }
 
     const [packages, resolutionSources, tftDrivers] = await Promise.all([
@@ -446,14 +451,14 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
         .where("stock", ">", 0)
         .execute(),
       query.execute(),
-    ])
+    ]);
 
     const maxResolutionFilter =
       params.max_resolution && params.max_resolution !== "All"
         ? params.max_resolution
-        : null
+        : null;
     const resolveMaxResolution =
-      createDisplayDriverMaxResolutionResolver(resolutionSources)
+      createDisplayDriverMaxResolutionResolver(resolutionSources);
 
     return {
       tableName: "tft_display_driver",
@@ -491,7 +496,7 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
           )
           .slice(0, 100),
       },
-    }
+    };
   },
   "/categories/list": async (db, params) => {
     let query = db
@@ -500,19 +505,19 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
       .where("category", "is not", null)
       .groupBy(["category", "subcategory"])
       .orderBy("category")
-      .orderBy("subcategory")
+      .orderBy("subcategory");
 
     if (params.category_name) {
-      query = query.where("category", "=", params.category_name)
+      query = query.where("category", "=", params.category_name);
     }
 
-    const rows = await query.execute()
+    const rows = await query.execute();
     const normalizedRows = rows
       .map((row) => ({
         category: row.category?.trim() ?? "",
         subcategory: row.subcategory?.trim() ?? "",
       }))
-      .filter((row) => row.category !== "")
+      .filter((row) => row.category !== "");
 
     const categories = params.category_name
       ? normalizedRows
@@ -520,12 +525,12 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
           normalizedRows
             .reduce((acc, row) => {
               if (!acc.has(row.category)) {
-                acc.set(row.category, row.subcategory)
+                acc.set(row.category, row.subcategory);
               }
-              return acc
+              return acc;
             }, new Map<string, string>())
             .entries(),
-        ).map(([category, subcategory]) => ({ category, subcategory }))
+        ).map(([category, subcategory]) => ({ category, subcategory }));
 
     return {
       tableName: "category",
@@ -535,7 +540,7 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
         ),
       },
       data: { categories },
-    }
+    };
   },
   "/footprint_index/list": async (db) => {
     const rows = await db
@@ -546,7 +551,7 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
       .groupBy("package")
       .having((eb) => eb.fn.count("lcsc"), ">", 10)
       .orderBy("num_components", "desc")
-      .execute()
+      .execute();
 
     return {
       tableName: "footprint_index",
@@ -560,46 +565,46 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
           }))
           .filter((row) => row.package !== ""),
       },
-    }
+    };
   },
-}
+};
 
 /**
  * Gets a D1 handler for the given pathname if one exists
  */
 export function getD1Handler(pathname: string): D1Handler | null {
   if (SPECIAL_D1_HANDLERS[pathname]) {
-    return SPECIAL_D1_HANDLERS[pathname]
+    return SPECIAL_D1_HANDLERS[pathname];
   }
 
-  const tableName = ROUTE_TO_TABLE[pathname]
+  const tableName = ROUTE_TO_TABLE[pathname];
   if (!tableName) {
-    return null
+    return null;
   }
 
-  const config = TABLE_CONFIGS[tableName]
+  const config = TABLE_CONFIGS[tableName];
   if (!config) {
     return async (db, params) => {
-      const results = await queryTable(db, tableName, params, { filters: {} })
-      const responseKey = TABLE_RESPONSE_KEY[tableName] || tableName + "s"
+      const results = await queryTable(db, tableName, params, { filters: {} });
+      const responseKey = TABLE_RESPONSE_KEY[tableName] || tableName + "s";
       return {
         data: { [responseKey]: results },
         tableName,
-      }
-    }
+      };
+    };
   }
 
   return async (db, params) => {
-    const normalizedParams = normalizeTableQueryParams(tableName, params)
-    const results = await queryTable(db, tableName, normalizedParams, config)
-    const filterOptions = await queryFilterOptions(db, tableName, config)
-    const responseKey = TABLE_RESPONSE_KEY[tableName] || tableName + "s"
+    const normalizedParams = normalizeTableQueryParams(tableName, params);
+    const results = await queryTable(db, tableName, normalizedParams, config);
+    const filterOptions = await queryFilterOptions(db, tableName, config);
+    const responseKey = TABLE_RESPONSE_KEY[tableName] || tableName + "s";
     return {
       data: { [responseKey]: results },
       tableName,
       filterOptions,
-    }
-  }
+    };
+  };
 }
 
 /**
@@ -608,4 +613,4 @@ export function getD1Handler(pathname: string): D1Handler | null {
 export const D1_ROUTES = [
   ...Object.keys(ROUTE_TO_TABLE),
   ...Object.keys(SPECIAL_D1_HANDLERS),
-]
+];

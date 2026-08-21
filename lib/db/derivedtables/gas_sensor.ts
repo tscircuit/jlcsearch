@@ -1,21 +1,21 @@
-import type { DerivedTableSpec } from "./types"
-import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
-import { BaseComponent } from "./component-base"
+import type { DerivedTableSpec } from "./types";
+import { extractMinQPrice } from "lib/util/extract-min-quantity-price";
+import { BaseComponent } from "./component-base";
 
 export interface GasSensor extends BaseComponent {
-  package: string
-  sensor_type: string | null
-  measures_air_quality: boolean
-  measures_co2: boolean
-  measures_oxygen: boolean
-  measures_carbon_monoxide: boolean
-  measures_methane: boolean
-  measures_nitrogen_oxides: boolean
-  measures_sulfur_hexafluoride: boolean
-  measures_volatile_organic_compounds: boolean
-  measures_formaldehyde: boolean
-  measures_hydrogen: boolean
-  measures_explosive_gases: boolean
+  package: string;
+  sensor_type: string | null;
+  measures_air_quality: boolean;
+  measures_co2: boolean;
+  measures_oxygen: boolean;
+  measures_carbon_monoxide: boolean;
+  measures_methane: boolean;
+  measures_nitrogen_oxides: boolean;
+  measures_sulfur_hexafluoride: boolean;
+  measures_volatile_organic_compounds: boolean;
+  measures_formaldehyde: boolean;
+  measures_hydrogen: boolean;
+  measures_explosive_gases: boolean;
 }
 
 export const gasSensorTableSpec: DerivedTableSpec<GasSensor> = {
@@ -42,37 +42,38 @@ export const gasSensorTableSpec: DerivedTableSpec<GasSensor> = {
       .selectFrom("components")
       .innerJoin("categories", "components.category_id", "categories.id")
       .selectAll()
-      .where("categories.subcategory", "=", "Gas Sensors")
+      .where("categories.subcategory", "=", "Gas Sensors");
   },
   mapToTable(components) {
     return components.map((c) => {
-      const desc = (c.description || "").toLowerCase()
-      const name = (c.mfr || "").toLowerCase()
+      const desc = (c.description || "").toLowerCase();
+      const name = (c.mfr || "").toLowerCase();
 
       const measuresAirQuality =
         desc.includes("air quality") ||
-        desc.includes("\u7a7a\u6c14\u8d28\u91cf")
-      const measuresCo2 = desc.includes("co2")
-      const measuresOxygen = desc.includes("oxygen")
-      const measuresCarbonMonoxide = desc.includes("carbon monoxide")
-      const measuresMethane = desc.includes("methane")
-      const measuresNitrogenOxides = desc.includes("nitrogen oxide")
+        desc.includes("\u7a7a\u6c14\u8d28\u91cf");
+      const measuresCo2 = desc.includes("co2");
+      const measuresOxygen = desc.includes("oxygen");
+      const measuresCarbonMonoxide = desc.includes("carbon monoxide");
+      const measuresMethane = desc.includes("methane");
+      const measuresNitrogenOxides = desc.includes("nitrogen oxide");
       const measuresSulfurHexafluoride =
-        desc.includes("sulfur hexafluoride") || name.includes("sf6")
+        desc.includes("sulfur hexafluoride") || name.includes("sf6");
       const measuresVOC =
         desc.includes("volatile") ||
         desc.includes("voc") ||
-        desc.includes("\u6325\u53d1")
+        desc.includes("\u6325\u53d1");
       const measuresFormaldehyde =
         name.includes("ch2o") ||
         desc.includes("ch2o") ||
-        desc.includes("formaldehyde")
-      const measuresHydrogen = name.endsWith("-h2") || desc.includes("hydrogen")
-      const measuresExplosive = desc.includes("explosive")
+        desc.includes("formaldehyde");
+      const measuresHydrogen =
+        name.endsWith("-h2") || desc.includes("hydrogen");
+      const measuresExplosive = desc.includes("explosive");
 
       const sensorType = measuresAirQuality
         ? "Air Quality Sensor"
-        : "Gas Sensor"
+        : "Gas Sensor";
       return {
         lcsc: c.lcsc,
         mfr: c.mfr,
@@ -96,7 +97,7 @@ export const gasSensorTableSpec: DerivedTableSpec<GasSensor> = {
         measures_hydrogen: measuresHydrogen,
         measures_explosive_gases: measuresExplosive,
         attributes: {},
-      }
-    })
+      };
+    });
   },
-}
+};

@@ -1,75 +1,73 @@
-import { CacheService, addCorsHeaders, addVaryHeader } from "./cache-service"
-import { queryComponentCatalog } from "./components"
-import { getD1Handler } from "./d1-routes"
-import { getD1Client } from "./db/get-d1-client"
-import { handleEasyEdaComponentCache } from "./easyeda-component-cache"
-import { renderD1TablePage, renderHomePage } from "./render"
-import { searchIndex } from "./search"
+import { CacheService, addCorsHeaders, addVaryHeader } from "./cache-service";
+import { queryComponentCatalog } from "./components";
+import { getD1Handler } from "./d1-routes";
+import { getD1Client } from "./db/get-d1-client";
+import { handleEasyEdaComponentCache } from "./easyeda-component-cache";
+import { renderD1TablePage, renderHomePage } from "./render";
+import { searchIndex } from "./search";
 
 export interface Env {
-  CACHE_KV: KVNamespace
-  DB: D1Database
-  EASYEDA_COMPONENT_CACHE: R2Bucket
-  USE_D1: string
+  CACHE_KV: KVNamespace;
+  DB: D1Database;
+  EASYEDA_COMPONENT_CACHE: R2Bucket;
+  USE_D1: string;
 }
 
-const CACHE_BUST_QUERY_PARAM = "cachebust"
-const HOME_PAGE_CACHE_MAX_AGE_SECONDS = 60 * 60
+const CACHE_BUST_QUERY_PARAM = "cachebust";
+const HOME_PAGE_CACHE_MAX_AGE_SECONDS = 60 * 60;
 const HOME_PAGE_CACHE_CONTROL = [
   "public",
   `max-age=${HOME_PAGE_CACHE_MAX_AGE_SECONDS}`,
   `s-maxage=${HOME_PAGE_CACHE_MAX_AGE_SECONDS}`,
   "must-revalidate",
-].join(", ")
-const FOOTPRINTER_STRINGS_API_PREFIX = "/api/footprinter_strings/"
+].join(", ");
+const FOOTPRINTER_STRINGS_API_PREFIX = "/api/footprinter_strings/";
 
 const extractSmallQuantityPrice = (price: string | null): string | number => {
-  if (!price) return ""
+  if (!price) return "";
   try {
-    const priceObj = JSON.parse(price)
-    return priceObj[0]?.price || ""
+    const priceObj = JSON.parse(price);
+    return priceObj[0]?.price || "";
   } catch {
-    return ""
+    return "";
   }
-}
+};
 
 const buildD1ErrorResponse = (
   origin: string | null,
   message: string,
   contentType:
-    | "application/json"
-    | "text/html; charset=utf-8" = "application/json",
+    "application/json" | "text/html; charset=utf-8" = "application/json",
 ): Response => {
   const headers = new Headers({
     "content-type": contentType,
     "x-data-source": "d1",
     "x-cache": "D1-ERROR",
-  })
-  addCorsHeaders(headers, origin)
+  });
+  addCorsHeaders(headers, origin);
 
   const body =
     contentType === "application/json"
       ? JSON.stringify({ error: "D1 query failed", message })
-      : `<h1>D1 query failed</h1><p>${message}</p>`
+      : `<h1>D1 query failed</h1><p>${message}</p>`;
 
   return new Response(body, {
     status: 500,
     headers,
-  })
-}
+  });
+};
 
 const buildD1NotFoundResponse = (
   origin: string | null,
   contentType:
-    | "application/json"
-    | "text/html; charset=utf-8" = "application/json",
+    "application/json" | "text/html; charset=utf-8" = "application/json",
 ): Response => {
   const headers = new Headers({
     "content-type": contentType,
     "x-data-source": "d1",
     "x-cache": "D1",
-  })
-  addCorsHeaders(headers, origin)
+  });
+  addCorsHeaders(headers, origin);
 
   const body =
     contentType === "application/json"
@@ -80,13 +78,13 @@ const buildD1NotFoundResponse = (
             message: "Not Found",
           },
         })
-      : "<h1>404 - Not Found</h1><p>The requested page could not be found.</p>"
+      : "<h1>404 - Not Found</h1><p>The requested page could not be found.</p>";
 
   return new Response(body, {
     status: 404,
     headers,
-  })
-}
+  });
+};
 
 const buildD1InvalidLcscResponse = (origin: string | null): Response => {
   const headers = new Headers({
@@ -94,8 +92,8 @@ const buildD1InvalidLcscResponse = (origin: string | null): Response => {
     "content-type": "application/json",
     "x-data-source": "d1",
     "x-cache": "D1",
-  })
-  addCorsHeaders(headers, origin)
+  });
+  addCorsHeaders(headers, origin);
 
   return new Response(
     JSON.stringify({
@@ -105,8 +103,8 @@ const buildD1InvalidLcscResponse = (origin: string | null): Response => {
       },
     }),
     { status: 400, headers },
-  )
-}
+  );
+};
 
 const getPreferredContentType = (
   request: Request,
@@ -117,22 +115,21 @@ const getPreferredContentType = (
     url.searchParams.get("json") === "true" ||
     request.headers.get("accept")?.includes("application/json")
   ) {
-    return "application/json"
+    return "application/json";
   }
 
-  return "text/html; charset=utf-8"
-}
+  return "text/html; charset=utf-8";
+};
 
 const buildMethodNotAllowedResponse = (
   origin: string | null,
   contentType:
-    | "application/json"
-    | "text/html; charset=utf-8" = "application/json",
+    "application/json" | "text/html; charset=utf-8" = "application/json",
 ): Response => {
   const headers = new Headers({
     "content-type": contentType,
-  })
-  addCorsHeaders(headers, origin)
+  });
+  addCorsHeaders(headers, origin);
 
   const body =
     contentType === "application/json"
@@ -142,50 +139,50 @@ const buildMethodNotAllowedResponse = (
             message: "Method Not Allowed",
           },
         })
-      : "<h1>405 - Method Not Allowed</h1><p>The requested method is not supported.</p>"
+      : "<h1>405 - Method Not Allowed</h1><p>The requested method is not supported.</p>";
 
   return new Response(body, {
     status: 405,
     headers,
-  })
-}
+  });
+};
 
 const buildHealthResponse = (origin: string | null): Response => {
   const headers = new Headers({
     "content-type": "application/json",
-  })
-  addCorsHeaders(headers, origin)
+  });
+  addCorsHeaders(headers, origin);
   return new Response(JSON.stringify({ ok: true }), {
     status: 200,
     headers,
-  })
-}
+  });
+};
 
 const isCacheBustRequest = (url: URL): boolean => {
-  const value = url.searchParams.get(CACHE_BUST_QUERY_PARAM)?.toLowerCase()
-  return value === "1" || value === "true"
-}
+  const value = url.searchParams.get(CACHE_BUST_QUERY_PARAM)?.toLowerCase();
+  return value === "1" || value === "true";
+};
 
 const stripInternalQueryParams = (url: URL): URL => {
-  const sanitizedUrl = new URL(url.toString())
-  sanitizedUrl.searchParams.delete(CACHE_BUST_QUERY_PARAM)
-  return sanitizedUrl
-}
+  const sanitizedUrl = new URL(url.toString());
+  sanitizedUrl.searchParams.delete(CACHE_BUST_QUERY_PARAM);
+  return sanitizedUrl;
+};
 
 const withCacheBustHeaders = (
   response: Response,
   origin: string | null,
 ): Response => {
-  const headers = new Headers(response.headers)
-  headers.set("cache-control", "no-store")
-  headers.set("x-cache-bust", "1")
-  addCorsHeaders(headers, origin)
+  const headers = new Headers(response.headers);
+  headers.set("cache-control", "no-store");
+  headers.set("x-cache-bust", "1");
+  addCorsHeaders(headers, origin);
 
   return new Response(response.body, {
     status: response.status,
     headers,
-  })
-}
+  });
+};
 
 export default {
   async fetch(
@@ -193,40 +190,40 @@ export default {
     env: Env,
     ctx: ExecutionContext,
   ): Promise<Response> {
-    const requestUrl = new URL(request.url)
-    const url = stripInternalQueryParams(requestUrl)
-    const cacheBust = isCacheBustRequest(requestUrl)
-    const origin = request.headers.get("origin")
+    const requestUrl = new URL(request.url);
+    const url = stripInternalQueryParams(requestUrl);
+    const cacheBust = isCacheBustRequest(requestUrl);
+    const origin = request.headers.get("origin");
 
     // Handle CORS preflight
     if (request.method === "OPTIONS") {
-      return handleOptions(origin)
+      return handleOptions(origin);
     }
 
     // Health check endpoint for D1
     if (url.pathname === "/_d1/health") {
-      return handleD1Health(env, origin)
+      return handleD1Health(env, origin);
     }
 
     if (url.pathname === "/health") {
-      return buildHealthResponse(origin)
+      return buildHealthResponse(origin);
     }
 
     if (request.method !== "GET") {
       return buildMethodNotAllowedResponse(
         origin,
         getPreferredContentType(request, url),
-      )
+      );
     }
 
     const easyEdaCacheResponse = await handleEasyEdaComponentCache(
       url,
       env.EASYEDA_COMPONENT_CACHE,
       origin,
-    )
-    if (easyEdaCacheResponse) return easyEdaCacheResponse
+    );
+    if (easyEdaCacheResponse) return easyEdaCacheResponse;
 
-    const cache = new CacheService(env.CACHE_KV)
+    const cache = new CacheService(env.CACHE_KV);
 
     // Check if this is a JSON API request that can be handled by D1
     if (env.USE_D1 === "true") {
@@ -238,18 +235,18 @@ export default {
         ctx,
         cache,
         cacheBust,
-      )
+      );
       if (d1Response) {
-        return d1Response
+        return d1Response;
       }
     }
 
     return buildD1NotFoundResponse(
       origin,
       getPreferredContentType(request, url),
-    )
+    );
   },
-}
+};
 
 async function refreshStaleD1Entry(
   cacheUrl: URL,
@@ -257,12 +254,12 @@ async function refreshStaleD1Entry(
   cache: CacheService,
 ): Promise<void> {
   try {
-    const response = await producer()
+    const response = await producer();
     if (response.ok) {
-      await cache.put(cacheUrl, response)
+      await cache.put(cacheUrl, response);
     }
   } catch (error) {
-    console.warn("Background D1 cache refresh failed:", error)
+    console.warn("Background D1 cache refresh failed:", error);
   }
 }
 
@@ -273,43 +270,43 @@ async function handleCachedD1Response(
   cache: CacheService,
   producer: () => Promise<Response>,
   options: {
-    cacheBust?: boolean
+    cacheBust?: boolean;
   } = {},
 ): Promise<Response> {
   if (options.cacheBust) {
-    await cache.delete(cacheUrl)
+    await cache.delete(cacheUrl);
 
-    const response = await producer()
+    const response = await producer();
     if (!response.ok) {
-      return withCacheBustHeaders(response, origin)
+      return withCacheBustHeaders(response, origin);
     }
 
-    const entry = await cache.put(cacheUrl, response)
+    const entry = await cache.put(cacheUrl, response);
     return cache.buildResponse(entry, "BUST", origin, {
       noStore: true,
       cacheBust: true,
-    })
+    });
   }
 
-  const cacheResult = await cache.get(cacheUrl)
+  const cacheResult = await cache.get(cacheUrl);
 
   if (cacheResult.type === "fresh") {
-    return cache.buildResponse(cacheResult.entry, "HIT", origin)
+    return cache.buildResponse(cacheResult.entry, "HIT", origin);
   }
 
-  const staleEntry = cacheResult.type === "stale" ? cacheResult.entry : null
+  const staleEntry = cacheResult.type === "stale" ? cacheResult.entry : null;
   if (staleEntry) {
-    ctx.waitUntil(refreshStaleD1Entry(cacheUrl, producer, cache))
-    return cache.buildResponse(staleEntry, "STALE", origin)
+    ctx.waitUntil(refreshStaleD1Entry(cacheUrl, producer, cache));
+    return cache.buildResponse(staleEntry, "STALE", origin);
   }
 
-  const response = await producer()
+  const response = await producer();
   if (!response.ok) {
-    return response
+    return response;
   }
 
-  const entry = await cache.put(cacheUrl, response)
-  return cache.buildResponse(entry, "MISS", origin)
+  const entry = await cache.put(cacheUrl, response);
+  return cache.buildResponse(entry, "MISS", origin);
 }
 
 /**
@@ -326,22 +323,22 @@ async function tryD1Route(
   cacheBust = false,
 ): Promise<Response | null> {
   if (url.pathname === "/") {
-    const response = handleD1HomePage(origin)
-    return cacheBust ? withCacheBustHeaders(response, origin) : response
+    const response = handleD1HomePage(origin);
+    return cacheBust ? withCacheBustHeaders(response, origin) : response;
   }
 
-  const hasJsonSuffix = url.pathname.endsWith(".json")
+  const hasJsonSuffix = url.pathname.endsWith(".json");
   // Check if this is a JSON request
   const isJsonRequest = Boolean(
     hasJsonSuffix ||
-      url.searchParams.get("json") === "true" ||
-      request.headers.get("accept")?.includes("application/json"),
-  )
+    url.searchParams.get("json") === "true" ||
+    request.headers.get("accept")?.includes("application/json"),
+  );
 
-  const pathname = url.pathname.replace(/\.json$/, "")
+  const pathname = url.pathname.replace(/\.json$/, "");
 
   if (pathname.startsWith(FOOTPRINTER_STRINGS_API_PREFIX)) {
-    return handleD1FootprinterString(pathname, env, origin)
+    return handleD1FootprinterString(pathname, env, origin);
   }
 
   if (pathname === "/api/search") {
@@ -352,7 +349,7 @@ async function tryD1Route(
       cache,
       async () => handleD1Search(url, env, origin),
       { cacheBust },
-    )
+    );
   }
 
   if (pathname === "/components/list") {
@@ -363,18 +360,18 @@ async function tryD1Route(
       cache,
       async () => handleD1ComponentsList(url, isJsonRequest, env, origin),
       { cacheBust },
-    )
+    );
   }
 
-  const handler = getD1Handler(pathname)
+  const handler = getD1Handler(pathname);
   if (!handler) {
     if (pathname.endsWith("/list")) {
       return buildD1NotFoundResponse(
         origin,
         isJsonRequest ? "application/json" : "text/html; charset=utf-8",
-      )
+      );
     }
-    return null
+    return null;
   }
 
   return handleCachedD1Response(
@@ -384,38 +381,38 @@ async function tryD1Route(
     cache,
     async () => handleD1TableRoute(pathname, url, isJsonRequest, env, origin),
     { cacheBust },
-  )
+  );
 }
 
 const parseLcscPathParameter = (pathname: string): number | null => {
-  const rawLcsc = pathname.slice(FOOTPRINTER_STRINGS_API_PREFIX.length)
-  const normalizedLcsc = rawLcsc.replace(/^c/i, "")
-  if (!/^\d+$/.test(normalizedLcsc)) return null
+  const rawLcsc = pathname.slice(FOOTPRINTER_STRINGS_API_PREFIX.length);
+  const normalizedLcsc = rawLcsc.replace(/^c/i, "");
+  if (!/^\d+$/.test(normalizedLcsc)) return null;
 
-  const lcsc = Number(normalizedLcsc)
-  return Number.isSafeInteger(lcsc) && lcsc > 0 ? lcsc : null
-}
+  const lcsc = Number(normalizedLcsc);
+  return Number.isSafeInteger(lcsc) && lcsc > 0 ? lcsc : null;
+};
 
 async function handleD1FootprinterString(
   pathname: string,
   env: Env,
   origin: string | null,
 ): Promise<Response> {
-  const lcsc = parseLcscPathParameter(pathname)
-  if (lcsc === null) return buildD1InvalidLcscResponse(origin)
+  const lcsc = parseLcscPathParameter(pathname);
+  if (lcsc === null) return buildD1InvalidLcscResponse(origin);
 
   try {
-    const db = getD1Client(env.DB)
+    const db = getD1Client(env.DB);
     const row = await db
       .selectFrom("footprinter_strings")
       .select(["lcsc", "footprinter_string", "copper_iou", "updated_at"])
       .where("lcsc", "=", lcsc)
-      .executeTakeFirst()
+      .executeTakeFirst();
 
     if (!row) {
-      const response = buildD1NotFoundResponse(origin)
-      response.headers.set("cache-control", "no-store")
-      return response
+      const response = buildD1NotFoundResponse(origin);
+      response.headers.set("cache-control", "no-store");
+      return response;
     }
 
     const headers = new Headers({
@@ -423,21 +420,21 @@ async function handleD1FootprinterString(
       "content-type": "application/json",
       "x-data-source": "d1",
       "x-cache": "D1",
-    })
-    addCorsHeaders(headers, origin)
+    });
+    addCorsHeaders(headers, origin);
 
     return new Response(
       JSON.stringify({ component_footprinter_details: row }),
       { status: 200, headers },
-    )
+    );
   } catch (error) {
-    console.error(`D1 footprinter string lookup failed for C${lcsc}:`, error)
+    console.error(`D1 footprinter string lookup failed for C${lcsc}:`, error);
     return buildD1ErrorResponse(
       origin,
       error instanceof Error
         ? error.message
         : "Unknown D1 footprinter string lookup error",
-    )
+    );
   }
 }
 
@@ -447,9 +444,9 @@ async function handleD1Search(
   origin: string | null,
 ): Promise<Response> {
   try {
-    const db = getD1Client(env.DB)
-    const params = Object.fromEntries(url.searchParams)
-    const rows = await searchIndex(db, params)
+    const db = getD1Client(env.DB);
+    const params = Object.fromEntries(url.searchParams);
+    const rows = await searchIndex(db, params);
     const components = rows.map((row) => ({
       lcsc: row.lcsc ?? 0,
       mfr: row.mfr ?? "",
@@ -459,33 +456,33 @@ async function handleD1Search(
       description: row.description ?? "",
       stock: row.stock ?? 0,
       price: row.price1 ?? extractSmallQuantityPrice(row.price),
-    }))
+    }));
 
     const headers = new Headers({
       "content-type": "application/json",
       "x-data-source": "d1",
       "x-cache": "D1",
-    })
-    addCorsHeaders(headers, origin)
+    });
+    addCorsHeaders(headers, origin);
 
     return new Response(JSON.stringify({ components }), {
       status: 200,
       headers,
-    })
+    });
   } catch (error) {
-    console.error("D1 search failed:", error)
+    console.error("D1 search failed:", error);
     return buildD1ErrorResponse(
       origin,
       error instanceof Error ? error.message : "Unknown D1 search error",
-    )
+    );
   }
 }
 
 const getD1RepresentationCacheUrl = (url: URL, isJsonRequest: boolean): URL => {
-  const cacheUrl = new URL(url.toString())
-  cacheUrl.searchParams.set("__format", isJsonRequest ? "json" : "html")
-  return cacheUrl
-}
+  const cacheUrl = new URL(url.toString());
+  cacheUrl.searchParams.set("__format", isJsonRequest ? "json" : "html");
+  return cacheUrl;
+};
 
 function handleD1HomePage(origin: string | null): Response {
   const headers = new Headers({
@@ -493,10 +490,10 @@ function handleD1HomePage(origin: string | null): Response {
     "content-type": "text/html; charset=utf-8",
     "x-data-source": "d1",
     "x-cache": "D1",
-  })
-  addCorsHeaders(headers, origin)
+  });
+  addCorsHeaders(headers, origin);
 
-  return new Response(renderHomePage(), { status: 200, headers })
+  return new Response(renderHomePage(), { status: 200, headers });
 }
 
 async function handleD1TableRoute(
@@ -507,34 +504,34 @@ async function handleD1TableRoute(
   origin: string | null,
 ): Promise<Response> {
   try {
-    const db = getD1Client(env.DB)
-    const params = Object.fromEntries(url.searchParams)
-    const handler = getD1Handler(pathname)
+    const db = getD1Client(env.DB);
+    const params = Object.fromEntries(url.searchParams);
+    const handler = getD1Handler(pathname);
     if (!handler) {
       return buildD1NotFoundResponse(
         origin,
         isJsonRequest ? "application/json" : "text/html; charset=utf-8",
-      )
+      );
     }
 
-    const result = await handler(db, params)
+    const result = await handler(db, params);
 
     const headers = new Headers({
       "x-data-source": "d1",
       "x-cache": "D1",
-    })
-    addVaryHeader(headers, "Accept")
-    addCorsHeaders(headers, origin)
+    });
+    addVaryHeader(headers, "Accept");
+    addCorsHeaders(headers, origin);
 
     if (isJsonRequest) {
-      headers.set("content-type", "application/json")
+      headers.set("content-type", "application/json");
       return new Response(JSON.stringify(result.data), {
         status: 200,
         headers,
-      })
+      });
     }
 
-    headers.set("content-type", "text/html; charset=utf-8")
+    headers.set("content-type", "text/html; charset=utf-8");
     return new Response(
       renderD1TablePage(
         pathname,
@@ -547,14 +544,14 @@ async function handleD1TableRoute(
         status: 200,
         headers,
       },
-    )
+    );
   } catch (error) {
-    console.error(`D1 route failed for ${pathname}:`, error)
+    console.error(`D1 route failed for ${pathname}:`, error);
     return buildD1ErrorResponse(
       origin,
       error instanceof Error ? error.message : "Unknown D1 route error",
       isJsonRequest ? "application/json" : "text/html; charset=utf-8",
-    )
+    );
   }
 }
 
@@ -564,11 +561,11 @@ async function handleD1ComponentsList(
   env: Env,
   origin: string | null,
 ): Promise<Response> {
-  const params = Object.fromEntries(url.searchParams)
+  const params = Object.fromEntries(url.searchParams);
 
   try {
-    const db = getD1Client(env.DB)
-    const rows = await queryComponentCatalog(db, params)
+    const db = getD1Client(env.DB);
+    const rows = await queryComponentCatalog(db, params);
     const data = {
       components: rows.map((row) => ({
         lcsc: row.lcsc ?? 0,
@@ -582,38 +579,38 @@ async function handleD1ComponentsList(
         is_basic: Boolean(row.basic),
         is_preferred: Boolean(row.preferred),
       })),
-    }
+    };
 
     const headers = new Headers({
       "x-data-source": "d1",
       "x-cache": "D1",
-    })
-    addVaryHeader(headers, "Accept")
-    addCorsHeaders(headers, origin)
+    });
+    addVaryHeader(headers, "Accept");
+    addCorsHeaders(headers, origin);
 
     if (isJsonRequest) {
-      headers.set("content-type", "application/json")
+      headers.set("content-type", "application/json");
       return new Response(JSON.stringify(data), {
         status: 200,
         headers,
-      })
+      });
     }
 
-    headers.set("content-type", "text/html; charset=utf-8")
+    headers.set("content-type", "text/html; charset=utf-8");
     return new Response(
       renderD1TablePage("/components/list", data, params, url.toString()),
       {
         status: 200,
         headers,
       },
-    )
+    );
   } catch (error) {
-    console.error("D1 components list failed:", error)
+    console.error("D1 components list failed:", error);
     return buildD1ErrorResponse(
       origin,
       error instanceof Error ? error.message : "Unknown D1 components error",
       isJsonRequest ? "application/json" : "text/html; charset=utf-8",
-    )
+    );
   }
 }
 
@@ -626,16 +623,16 @@ async function handleD1Health(
 ): Promise<Response> {
   const headers = new Headers({
     "content-type": "application/json",
-  })
-  addCorsHeaders(headers, origin)
+  });
+  addCorsHeaders(headers, origin);
 
   try {
-    const db = getD1Client(env.DB)
+    const db = getD1Client(env.DB);
     const result = await db
       .selectFrom("resistor")
       .select("lcsc")
       .limit(1)
-      .execute()
+      .execute();
 
     return new Response(
       JSON.stringify({
@@ -645,7 +642,7 @@ async function handleD1Health(
         rows: result.length,
       }),
       { status: 200, headers },
-    )
+    );
   } catch (error) {
     return new Response(
       JSON.stringify({
@@ -655,7 +652,7 @@ async function handleD1Health(
         error: error instanceof Error ? error.message : "Unknown error",
       }),
       { status: 500, headers },
-    )
+    );
   }
 }
 
@@ -663,7 +660,7 @@ async function handleD1Health(
  * Handles CORS preflight OPTIONS requests.
  */
 function handleOptions(origin: string | null): Response {
-  const headers = new Headers()
-  addCorsHeaders(headers, origin)
-  return new Response(null, { status: 204, headers })
+  const headers = new Headers();
+  addCorsHeaders(headers, origin);
+  return new Response(null, { status: 204, headers });
 }

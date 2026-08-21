@@ -1,6 +1,6 @@
-import { sql } from "kysely"
-import type { DbOptimizationSpec } from "./types"
-import type { KyselyDatabaseInstance } from "../kysely-types"
+import { sql } from "kysely";
+import type { DbOptimizationSpec } from "./types";
+import type { KyselyDatabaseInstance } from "../kysely-types";
 
 export const componentInStockColumn: DbOptimizationSpec = {
   name: "add_components_in_stock_column",
@@ -12,9 +12,9 @@ export const componentInStockColumn: DbOptimizationSpec = {
       rows: [ex],
     } = await sql<any>`
       SELECT * FROM components LIMIT 1
-    `.execute(db)
+    `.execute(db);
 
-    return "in_stock" in ex
+    return "in_stock" in ex;
   },
 
   async execute(db: KyselyDatabaseInstance) {
@@ -23,13 +23,13 @@ export const componentInStockColumn: DbOptimizationSpec = {
       ALTER TABLE components 
       ADD COLUMN in_stock boolean 
       GENERATED ALWAYS AS (stock > 0)
-    `.execute(db)
+    `.execute(db);
 
     // Create an index on the new column
     await db.schema
       .createIndex("idx_components_in_stock")
       .on("components")
       .column("in_stock")
-      .execute()
+      .execute();
   },
-}
+};

@@ -1,14 +1,14 @@
-import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
-import type { DerivedTableSpec } from "./types"
-import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
-import { BaseComponent } from "./component-base"
-import type { KyselyDatabaseInstance } from "../kysely-types"
+import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit";
+import type { DerivedTableSpec } from "./types";
+import { extractMinQPrice } from "lib/util/extract-min-quantity-price";
+import { BaseComponent } from "./component-base";
+import type { KyselyDatabaseInstance } from "../kysely-types";
 
 export interface FpcConnector extends BaseComponent {
-  pitch_mm: number | null
-  number_of_contacts: number | null
-  contact_type: string | null
-  locking_feature: string | null
+  pitch_mm: number | null;
+  number_of_contacts: number | null;
+  contact_type: string | null;
+  locking_feature: string | null;
 }
 
 export const fpcConnectorTableSpec: DerivedTableSpec<FpcConnector> = {
@@ -29,22 +29,22 @@ export const fpcConnectorTableSpec: DerivedTableSpec<FpcConnector> = {
       .where("categories.subcategory", "in", [
         "FFC/FPC Connectors",
         "FFC, FPC Connectors",
-      ])
+      ]);
   },
   mapToTable(components) {
     return components.map((c) => {
       try {
-        const extra = c.extra ? JSON.parse(c.extra) : {}
-        const attrs: Record<string, string> = extra.attributes || {}
+        const extra = c.extra ? JSON.parse(c.extra) : {};
+        const attrs: Record<string, string> = extra.attributes || {};
 
         const parseNum = (v: string | undefined): number | null => {
-          if (!v || v === "-") return null
-          return parseAndConvertSiUnit(v).value as number
-        }
+          if (!v || v === "-") return null;
+          return parseAndConvertSiUnit(v).value as number;
+        };
 
         const contacts = parseInt(
           (attrs["Number of Contacts"] || "").replace(/[^0-9]/g, ""),
-        )
+        );
 
         return {
           lcsc: Number(c.lcsc),
@@ -60,10 +60,10 @@ export const fpcConnectorTableSpec: DerivedTableSpec<FpcConnector> = {
           contact_type: attrs["Contact Type"] || null,
           locking_feature: attrs["Locking Feature"] || null,
           attributes: attrs,
-        }
+        };
       } catch {
-        return null
+        return null;
       }
-    })
+    });
   },
-}
+};

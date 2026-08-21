@@ -1,7 +1,7 @@
 export const TFT_DISPLAY_DRIVER_SUBCATEGORIES = [
   "LCD Drivers",
   "LED Drivers",
-] as const
+] as const;
 
 export const TFT_DISPLAY_DRIVER_FAMILIES = [
   {
@@ -44,24 +44,24 @@ export const TFT_DISPLAY_DRIVER_FAMILIES = [
     label: "Backlight Driver",
     patterns: ["AP3041%", "AP5727%", "LP886%", "BD947%", "MAX20078%", "AL335%"],
   },
-] as const
+] as const;
 
 export const getTftDisplayDriverFamily = (mfr: string | null) => {
-  const normalizedMfr = mfr?.toUpperCase() ?? ""
+  const normalizedMfr = mfr?.toUpperCase() ?? "";
   return TFT_DISPLAY_DRIVER_FAMILIES.find((family) =>
     family.patterns.some((pattern) =>
       normalizedMfr.startsWith(pattern.slice(0, -1).toUpperCase()),
     ),
-  )
-}
+  );
+};
 
 export const getTftDisplayDriverPatterns = (
   driverType: string | undefined,
 ): string[] => {
   const selectedFamily = TFT_DISPLAY_DRIVER_FAMILIES.find(
     (family) => family.value === driverType,
-  )
+  );
   return selectedFamily
     ? [...selectedFamily.patterns]
-    : TFT_DISPLAY_DRIVER_FAMILIES.flatMap((family) => [...family.patterns])
-}
+    : TFT_DISPLAY_DRIVER_FAMILIES.flatMap((family) => [...family.patterns]);
+};

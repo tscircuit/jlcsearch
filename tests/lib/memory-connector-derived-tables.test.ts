@@ -1,8 +1,8 @@
-import { expect, test } from "bun:test"
+import { expect, test } from "bun:test";
 import {
   dimmConnectorTableSpec,
   sodimmConnectorTableSpec,
-} from "lib/db/derivedtables/memory-connector"
+} from "lib/db/derivedtables/memory-connector";
 
 const makeComponent = (overrides: Record<string, unknown> = {}) =>
   ({
@@ -26,10 +26,10 @@ const makeComponent = (overrides: Record<string, unknown> = {}) =>
       },
     }),
     ...overrides,
-  }) as any
+  }) as any;
 
 test("DIMM table maps memory connector attributes", () => {
-  const [dimm] = dimmConnectorTableSpec.mapToTable([makeComponent()])
+  const [dimm] = dimmConnectorTableSpec.mapToTable([makeComponent()]);
 
   expect(dimm).toMatchObject({
     lcsc: 2922442,
@@ -45,8 +45,8 @@ test("DIMM table maps memory connector attributes", () => {
     is_right_angle: false,
     is_preferred: true,
     price1: 2.948,
-  })
-})
+  });
+});
 
 test("SO-DIMM table maps right-angle connectors without leaking into DIMMs", () => {
   const component = makeComponent({
@@ -64,12 +64,12 @@ test("SO-DIMM table maps right-angle connectors without leaking into DIMMs", () 
         "DDR SDRAM Standard": "DDR4",
       },
     }),
-  })
+  });
 
-  const [dimm] = dimmConnectorTableSpec.mapToTable([component])
-  const [sodimm] = sodimmConnectorTableSpec.mapToTable([component])
+  const [dimm] = dimmConnectorTableSpec.mapToTable([component]);
+  const [sodimm] = sodimmConnectorTableSpec.mapToTable([component]);
 
-  expect(dimm).toBeNull()
+  expect(dimm).toBeNull();
   expect(sodimm).toMatchObject({
     lcsc: 962123,
     ddr_standard: "DDR4",
@@ -77,8 +77,8 @@ test("SO-DIMM table maps right-angle connectors without leaking into DIMMs", () 
     pitch_mm: 0.5,
     height_above_board_mm: 9.2,
     is_right_angle: true,
-  })
-})
+  });
+});
 
 test("DIMM table recognizes older full-size clamping-plate connectors", () => {
   const component = makeComponent({
@@ -91,18 +91,18 @@ test("DIMM table recognizes older full-size clamping-plate connectors", () => {
         "DDR SDRAM Standard": "DDR3",
       },
     }),
-  })
+  });
 
-  const [dimm] = dimmConnectorTableSpec.mapToTable([component])
-  const [sodimm] = sodimmConnectorTableSpec.mapToTable([component])
+  const [dimm] = dimmConnectorTableSpec.mapToTable([component]);
+  const [sodimm] = sodimmConnectorTableSpec.mapToTable([component]);
 
   expect(dimm).toMatchObject({
     ddr_standard: "DDR3",
     num_pins: 240,
     pitch_mm: 1,
-  })
-  expect(sodimm).toBeNull()
-})
+  });
+  expect(sodimm).toBeNull();
+});
 
 test("SO-DIMM table falls back to description and package metadata", () => {
   const [sodimm] = sodimmConnectorTableSpec.mapToTable([
@@ -112,7 +112,7 @@ test("SO-DIMM table falls back to description and package metadata", () => {
       package: "SMD,P=0.6mm",
       extra: null,
     }),
-  ])
+  ]);
 
   expect(sodimm).toMatchObject({
     ddr_standard: "DDR2",
@@ -121,5 +121,5 @@ test("SO-DIMM table falls back to description and package metadata", () => {
     height_above_board_mm: 14,
     operating_temp_min: -25,
     operating_temp_max: 85,
-  })
-})
+  });
+});

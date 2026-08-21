@@ -1,7 +1,7 @@
 type UnitInfo = {
-  baseUnit: BaseTscircuitUnit
-  conversionFactor: number
-}
+  baseUnit: BaseTscircuitUnit;
+  conversionFactor: number;
+};
 
 const unitMappings: Record<
   string,
@@ -130,7 +130,7 @@ const unitMappings: Record<
       GBytes: 1024 * 1024 * 1024,
     },
   },
-}
+};
 
 function getBaseTscircuitUnit(unit: string): UnitInfo {
   for (const [baseUnit, info] of Object.entries(unitMappings)) {
@@ -138,13 +138,13 @@ function getBaseTscircuitUnit(unit: string): UnitInfo {
       return {
         baseUnit: baseUnit as BaseTscircuitUnit,
         conversionFactor: info.variants[unit]!,
-      }
+      };
     }
   }
   return {
     baseUnit: unit as BaseTscircuitUnit,
     conversionFactor: 1,
-  }
+  };
 }
 
 const si_prefix_multiplier = {
@@ -169,48 +169,34 @@ const si_prefix_multiplier = {
   n: 1e-9,
   pico: 1e-12,
   p: 1e-12,
-}
+};
 type BaseTscircuitUnit =
-  | "ms"
-  | "mm"
-  | "g"
-  | "deg"
-  | "Hz"
-  | "ml"
-  | "V"
-  | "A"
-  | "Ω"
-  | "F"
-  | "H"
-  | "B"
+  "ms" | "mm" | "g" | "deg" | "Hz" | "ml" | "V" | "A" | "Ω" | "F" | "H" | "B";
 
 export const parseAndConvertSiUnit = <
   T extends
-    | string
-    | number
-    | undefined
-    | { x: string | number; y: string | number },
+    string | number | undefined | { x: string | number; y: string | number },
 >(
   v: T,
 ): {
-  parsedUnit: string | null
-  unitOfValue: BaseTscircuitUnit | null
+  parsedUnit: string | null;
+  unitOfValue: BaseTscircuitUnit | null;
   value: T extends { x: string | number; y: string | number }
     ? null | { x: number; y: number }
-    : null | number
+    : null | number;
 } => {
   if (typeof v === "undefined")
-    return { parsedUnit: null, unitOfValue: null, value: null }
+    return { parsedUnit: null, unitOfValue: null, value: null };
   if (typeof v === "string" && v.match(/^[\d\.]+$/))
     return {
       value: Number.parseFloat(v) as any,
       parsedUnit: null,
       unitOfValue: null,
-    }
+    };
   if (typeof v === "number")
-    return { value: v as any, parsedUnit: null, unitOfValue: null }
+    return { value: v as any, parsedUnit: null, unitOfValue: null };
   if (typeof v === "object" && "x" in v && "y" in v) {
-    const { parsedUnit, unitOfValue } = parseAndConvertSiUnit(v.x)
+    const { parsedUnit, unitOfValue } = parseAndConvertSiUnit(v.x);
     return {
       parsedUnit: parsedUnit,
       unitOfValue: unitOfValue,
@@ -218,29 +204,29 @@ export const parseAndConvertSiUnit = <
         x: parseAndConvertSiUnit(v.x as any).value as number,
         y: parseAndConvertSiUnit(v.y as any).value as number,
       } as any,
-    }
+    };
   }
 
   if ((v as string).startsWith("±")) {
-    return parseAndConvertSiUnit<string>(v.slice(1)) as any
+    return parseAndConvertSiUnit<string>(v.slice(1)) as any;
   }
 
   const unit_reversed = v
     .split("")
     .reverse()
     .join("")
-    .match(/[^\d\s]+/)?.[0]
+    .match(/[^\d\s]+/)?.[0];
   if (!unit_reversed) {
-    throw new Error(`Could not determine unit: "${v}"`)
+    throw new Error(`Could not determine unit: "${v}"`);
   }
-  const unit = unit_reversed.split("").reverse().join("")
-  const value = v.slice(0, -unit.length)
+  const unit = unit_reversed.split("").reverse().join("");
+  const value = v.slice(0, -unit.length);
 
-  const { baseUnit, conversionFactor } = getBaseTscircuitUnit(unit)
+  const { baseUnit, conversionFactor } = getBaseTscircuitUnit(unit);
 
   return {
     parsedUnit: unit,
     unitOfValue: baseUnit,
     value: (conversionFactor * Number.parseFloat(value)) as any,
-  }
-}
+  };
+};

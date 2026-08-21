@@ -14,10 +14,10 @@ export const convertToPossibleFootprinterStrings = (jlcPackage: string) => {
     .replace(/ /g, "")
     .replace(/-/g, "_")
     .replace(/=/g, "")
-    .replace(/,/g, "_")
+    .replace(/,/g, "_");
 
   // SOT_23 -> sot23
-  const v2 = v1.replace("_", "")
+  const v2 = v1.replace("_", "");
 
-  return [v1, v2]
-}
+  return [v1, v2];
+};

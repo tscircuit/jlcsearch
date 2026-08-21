@@ -1,13 +1,13 @@
-import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
-import type { DerivedTableSpec } from "./types"
-import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
-import { BaseComponent } from "./component-base"
+import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit";
+import type { DerivedTableSpec } from "./types";
+import { extractMinQPrice } from "lib/util/extract-min-quantity-price";
+import { BaseComponent } from "./component-base";
 
 export interface Potentiometer extends BaseComponent {
-  max_resistance: number
-  pin_variant: "two_pin" | "three_pin"
-  package: string
-  is_surface_mount: boolean
+  max_resistance: number;
+  pin_variant: "two_pin" | "three_pin";
+  package: string;
+  is_surface_mount: boolean;
 }
 
 export const potentiometerTableSpec: DerivedTableSpec<Potentiometer> = {
@@ -42,21 +42,22 @@ export const potentiometerTableSpec: DerivedTableSpec<Potentiometer> = {
       ),
   mapToTable: (components) => {
     return components.map((c): Potentiometer | null => {
-      if (!c.extra) return null
-      const extra = JSON.parse(c.extra ?? "{}")
-      if (!extra.attributes) return null
+      if (!c.extra) return null;
+      const extra = JSON.parse(c.extra ?? "{}");
+      if (!extra.attributes) return null;
 
-      const rawResistance = extra?.attributes?.["Resistance"]
-      const maxResistance = parseAndConvertSiUnit(rawResistance).value as number
+      const rawResistance = extra?.attributes?.["Resistance"];
+      const maxResistance = parseAndConvertSiUnit(rawResistance)
+        .value as number;
 
       // Determine pin variant based on number of pins
-      const numPins = parseInt(extra?.attributes?.["Number of Pins"]) || 3
-      const pinVariant = numPins === 2 ? "two_pin" : "three_pin"
+      const numPins = parseInt(extra?.attributes?.["Number of Pins"]) || 3;
+      const pinVariant = numPins === 2 ? "two_pin" : "three_pin";
 
       // Determine if surface mount
       const isSurfaceMount =
         c.package?.toLowerCase().includes("smd") ||
-        !c.package?.toLowerCase().includes("plugin")
+        !c.package?.toLowerCase().includes("plugin");
 
       return {
         lcsc: c.lcsc,
@@ -72,7 +73,7 @@ export const potentiometerTableSpec: DerivedTableSpec<Potentiometer> = {
         package: c.package || "",
         is_surface_mount: isSurfaceMount,
         attributes: extra.attributes,
-      }
-    })
+      };
+    });
   },
-}
+};

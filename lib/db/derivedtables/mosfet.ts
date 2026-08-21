@@ -1,25 +1,25 @@
-import type { DerivedTableSpec } from "./types"
-import type { SelectQueryBuilder, Generated } from "kysely"
-import type { Component } from "../generated/kysely"
-import type { KyselyDatabaseInstance } from "../kysely-types"
+import type { DerivedTableSpec } from "./types";
+import type { SelectQueryBuilder, Generated } from "kysely";
+import type { Component } from "../generated/kysely";
+import type { KyselyDatabaseInstance } from "../kysely-types";
 
 type UnwrapGenerated<T> = {
-  [K in keyof T]: T[K] extends Generated<infer U> ? U : T[K]
-}
-import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
-import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
-import { parseIntOrNull } from "lib/util/parse-int-or-null"
-import { BaseComponent } from "./component-base"
+  [K in keyof T]: T[K] extends Generated<infer U> ? U : T[K];
+};
+import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit";
+import { extractMinQPrice } from "lib/util/extract-min-quantity-price";
+import { parseIntOrNull } from "lib/util/parse-int-or-null";
+import { BaseComponent } from "./component-base";
 
 export interface Mosfet extends BaseComponent {
-  package?: string
-  drain_source_voltage?: number
-  continuous_drain_current?: number
-  gate_threshold_voltage?: number
-  power_dissipation?: number
-  operating_temp_min?: number
-  operating_temp_max?: number
-  mounting_style?: string
+  package?: string;
+  drain_source_voltage?: number;
+  continuous_drain_current?: number;
+  gate_threshold_voltage?: number;
+  power_dissipation?: number;
+  operating_temp_min?: number;
+  operating_temp_max?: number;
+  mounting_style?: string;
 }
 
 export const mosfetTableSpec: DerivedTableSpec<Mosfet> = {
@@ -46,18 +46,18 @@ export const mosfetTableSpec: DerivedTableSpec<Mosfet> = {
           eb("categories.subcategory", "=", "MOSFETs"),
           eb("description", "like", "%MOSFET%"),
         ]),
-      )
+      );
   },
   mapToTable(components: UnwrapGenerated<Component>[]): (Mosfet | null)[] {
     return components.map((c) => {
       try {
-        const attrs = c.extra ? JSON.parse(c.extra)?.attributes || {} : {}
+        const attrs = c.extra ? JSON.parse(c.extra)?.attributes || {} : {};
 
         const parseValue = (val: string | undefined): number | undefined => {
-          if (!val) return undefined
-          const result = parseAndConvertSiUnit(val)
-          return result?.value || undefined
-        }
+          if (!val) return undefined;
+          const result = parseAndConvertSiUnit(val);
+          return result?.value || undefined;
+        };
 
         return {
           lcsc: Number(c.lcsc),
@@ -87,10 +87,10 @@ export const mosfetTableSpec: DerivedTableSpec<Mosfet> = {
           ),
           mounting_style: attrs["Mounting Style"],
           attributes: attrs,
-        }
+        };
       } catch (e) {
-        return null
+        return null;
       }
-    })
+    });
   },
-}
+};

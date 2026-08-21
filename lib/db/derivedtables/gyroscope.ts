@@ -1,17 +1,17 @@
-import type { DerivedTableSpec } from "./types"
-import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
-import { BaseComponent } from "./component-base"
+import type { DerivedTableSpec } from "./types";
+import { extractMinQPrice } from "lib/util/extract-min-quantity-price";
+import { BaseComponent } from "./component-base";
 
 export interface Gyroscope extends BaseComponent {
-  package: string
-  supply_voltage_min: number | null
-  supply_voltage_max: number | null
-  operating_temp_min: number | null
-  operating_temp_max: number | null
-  axes: string | null
-  has_i2c: boolean
-  has_spi: boolean
-  has_uart: boolean
+  package: string;
+  supply_voltage_min: number | null;
+  supply_voltage_max: number | null;
+  operating_temp_min: number | null;
+  operating_temp_max: number | null;
+  axes: string | null;
+  has_i2c: boolean;
+  has_spi: boolean;
+  has_uart: boolean;
 }
 
 export const gyroscopeTableSpec: DerivedTableSpec<Gyroscope> = {
@@ -43,59 +43,59 @@ export const gyroscopeTableSpec: DerivedTableSpec<Gyroscope> = {
       ),
   mapToTable: (components) => {
     return components.map((c): Gyroscope | null => {
-      if (!c.extra) return null
-      const extra = JSON.parse(c.extra ?? "{}")
-      if (!extra.attributes) return null
+      if (!c.extra) return null;
+      const extra = JSON.parse(c.extra ?? "{}");
+      if (!extra.attributes) return null;
 
-      const attrs = extra.attributes
-      const desc = c.description.toLowerCase()
+      const attrs = extra.attributes;
+      const desc = c.description.toLowerCase();
 
       // Parse voltage range
-      let voltageMin: number | null = null
-      let voltageMax: number | null = null
-      const rawVoltage = attrs["Supply Voltage"]
+      let voltageMin: number | null = null;
+      let voltageMax: number | null = null;
+      const rawVoltage = attrs["Supply Voltage"];
       if (rawVoltage) {
-        const match = rawVoltage.match(/([\d.]+)V~([\d.]+)V/)
+        const match = rawVoltage.match(/([\d.]+)V~([\d.]+)V/);
         if (match) {
-          voltageMin = parseFloat(match[1])
-          voltageMax = parseFloat(match[2])
+          voltageMin = parseFloat(match[1]);
+          voltageMax = parseFloat(match[2]);
         } else {
-          const single = rawVoltage.match(/([\d.]+)V/)
+          const single = rawVoltage.match(/([\d.]+)V/);
           if (single) {
-            voltageMin = voltageMax = parseFloat(single[1])
+            voltageMin = voltageMax = parseFloat(single[1]);
           }
         }
       }
 
       // Parse temperature range
-      let tempMin: number | null = null
-      let tempMax: number | null = null
-      const rawTemp = attrs["Operating Temperature"]
+      let tempMin: number | null = null;
+      let tempMax: number | null = null;
+      const rawTemp = attrs["Operating Temperature"];
       if (rawTemp) {
-        const match = rawTemp.match(/([-\d]+)℃~\+([-\d]+)℃/)
+        const match = rawTemp.match(/([-\d]+)℃~\+([-\d]+)℃/);
         if (match) {
-          tempMin = parseInt(match[1])
-          tempMax = parseInt(match[2])
+          tempMin = parseInt(match[1]);
+          tempMax = parseInt(match[2]);
         }
       }
 
       // Parse axes information
-      const axes = attrs["Axial Direction"] || null
+      const axes = attrs["Axial Direction"] || null;
 
       const interfaceStr = (
         attrs["Interface Type"] ||
         attrs["Interface"] ||
         ""
-      ).toLowerCase()
+      ).toLowerCase();
 
       const hasI2c =
         interfaceStr.includes("i2c") ||
         interfaceStr.includes("i²c") ||
         interfaceStr.includes("iic") ||
-        desc.includes("i2c")
+        desc.includes("i2c");
 
-      const hasSpi = interfaceStr.includes("spi") || desc.includes("spi")
-      const hasUart = interfaceStr.includes("uart") || desc.includes("uart")
+      const hasSpi = interfaceStr.includes("spi") || desc.includes("spi");
+      const hasUart = interfaceStr.includes("uart") || desc.includes("uart");
 
       return {
         lcsc: c.lcsc,
@@ -116,7 +116,7 @@ export const gyroscopeTableSpec: DerivedTableSpec<Gyroscope> = {
         has_spi: hasSpi,
         has_uart: hasUart,
         attributes: attrs,
-      }
-    })
+      };
+    });
   },
-}
+};

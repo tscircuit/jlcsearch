@@ -1,13 +1,13 @@
-import type { DerivedTableSpec } from "./types"
-import type { KyselyDatabaseInstance } from "../kysely-types"
-import { BaseComponent } from "./component-base"
-import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
+import type { DerivedTableSpec } from "./types";
+import type { KyselyDatabaseInstance } from "../kysely-types";
+import { BaseComponent } from "./component-base";
+import { extractMinQPrice } from "lib/util/extract-min-quantity-price";
 
 export interface OLEDDisplay extends BaseComponent {
-  package?: string
-  protocol?: string
-  display_width?: string
-  pixel_resolution?: string
+  package?: string;
+  protocol?: string;
+  display_width?: string;
+  pixel_resolution?: string;
 }
 
 export const oledDisplayTableSpec: DerivedTableSpec<OLEDDisplay> = {
@@ -26,34 +26,34 @@ export const oledDisplayTableSpec: DerivedTableSpec<OLEDDisplay> = {
       .selectFrom("components")
       .innerJoin("categories", "components.category_id", "categories.id")
       .selectAll()
-      .where((eb) => eb("description", "like", "%OLED Display%"))
+      .where((eb) => eb("description", "like", "%OLED Display%"));
   },
 
   mapToTable(components) {
     return components.map((c) => {
       try {
-        const extraData = c.extra ? JSON.parse(c.extra) : {}
-        const attrs = extraData.attributes || {}
+        const extraData = c.extra ? JSON.parse(c.extra) : {};
+        const attrs = extraData.attributes || {};
         // Extract protocol from description or interface attribute
-        let protocol
+        let protocol;
         if (c.description.includes("I2C")) {
-          protocol = "I2C"
+          protocol = "I2C";
         } else if (attrs.Interface) {
-          protocol = attrs.Interface
+          protocol = attrs.Interface;
         }
         // Extract display_width and resolution from description
-        let display_width = undefined
-        let pixel_resolution = undefined
-        const description = c.description || ""
+        let display_width = undefined;
+        let pixel_resolution = undefined;
+        const description = c.description || "";
         // Extract resolution (e.g., "128x64")
-        const resMatch = description.match(/(\d+x\d+)/)
+        const resMatch = description.match(/(\d+x\d+)/);
         if (resMatch) {
-          pixel_resolution = resMatch[1]
+          pixel_resolution = resMatch[1];
         }
         // Extract display_width (e.g., "0.96")
-        const widthMatch = description.match(/\s(\d+\.\d+)\s/)
+        const widthMatch = description.match(/\s(\d+\.\d+)\s/);
         if (widthMatch) {
-          display_width = widthMatch[1]
+          display_width = widthMatch[1];
         }
 
         return {
@@ -70,10 +70,10 @@ export const oledDisplayTableSpec: DerivedTableSpec<OLEDDisplay> = {
           display_width,
           pixel_resolution,
           attributes: attrs,
-        }
+        };
       } catch (e) {
-        return null
+        return null;
       }
-    })
+    });
   },
-}
+};

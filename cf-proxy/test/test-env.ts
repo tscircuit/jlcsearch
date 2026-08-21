@@ -1,23 +1,23 @@
-import worker from "../src/index"
+import worker from "../src/index";
 
-type KVValue = { value: string | null; metadata: unknown }
+type KVValue = { value: string | null; metadata: unknown };
 type R2Value = {
-  body: string
-  customMetadata?: Record<string, string>
-  uploaded: Date
-}
+  body: string;
+  customMetadata?: Record<string, string>;
+  uploaded: Date;
+};
 
 export class MemoryKV {
-  private store = new Map<string, KVValue>()
+  private store = new Map<string, KVValue>();
 
   async get(key: string | string[], _typeOrOptions?: any): Promise<any> {
     if (Array.isArray(key)) {
       return key.reduce<Record<string, string | null>>((acc, item) => {
-        acc[item] = this.store.get(item)?.value ?? null
-        return acc
-      }, {})
+        acc[item] = this.store.get(item)?.value ?? null;
+        return acc;
+      }, {});
     }
-    return this.store.get(key)?.value ?? null
+    return this.store.get(key)?.value ?? null;
   }
 
   async getWithMetadata<T>(
@@ -31,24 +31,24 @@ export class MemoryKV {
           { value: string | null; metadata: T | null; cacheStatus: null }
         >
       >((acc, item) => {
-        const entry = this.store.get(item)
+        const entry = this.store.get(item);
         acc[item] = {
           value: entry?.value ?? null,
           metadata: (entry?.metadata as T) ?? null,
           cacheStatus: null,
-        }
-        return acc
-      }, {})
+        };
+        return acc;
+      }, {});
     }
-    const entry = this.store.get(key)
+    const entry = this.store.get(key);
     if (!entry) {
-      return { value: null, metadata: null, cacheStatus: null }
+      return { value: null, metadata: null, cacheStatus: null };
     }
     return {
       value: entry.value,
       metadata: entry.metadata as T,
       cacheStatus: null,
-    }
+    };
   }
 
   async put(
@@ -56,33 +56,33 @@ export class MemoryKV {
     value: string,
     options?: { metadata?: unknown },
   ): Promise<void> {
-    this.store.set(key, { value, metadata: options?.metadata ?? null })
+    this.store.set(key, { value, metadata: options?.metadata ?? null });
   }
 
   async delete(key: string): Promise<void> {
-    this.store.delete(key)
+    this.store.delete(key);
   }
 
   async list(): Promise<{
-    keys: Array<{ name: string }>
-    list_complete: true
-    cacheStatus: null
+    keys: Array<{ name: string }>;
+    list_complete: true;
+    cacheStatus: null;
   }> {
     return {
       keys: Array.from(this.store.keys()).map((name) => ({ name })),
       list_complete: true,
       cacheStatus: null,
-    }
+    };
   }
 }
 
 export class MemoryR2 {
-  private store = new Map<string, R2Value>()
+  private store = new Map<string, R2Value>();
 
   async get(key: string): Promise<R2ObjectBody | null> {
-    const entry = this.store.get(key)
-    if (!entry) return null
-    const body = entry.body
+    const entry = this.store.get(key);
+    if (!entry) return null;
+    const body = entry.body;
     return {
       key,
       version: "1",
@@ -101,7 +101,7 @@ export class MemoryR2 {
       json: async <T>() => JSON.parse(body) as T,
       blob: () => new Response(body).blob(),
       writeHttpMetadata: () => {},
-    } as unknown as R2ObjectBody
+    } as unknown as R2ObjectBody;
   }
 
   async put(
@@ -124,13 +124,13 @@ export class MemoryR2 {
                       value.byteOffset,
                       value.byteLength,
                     ),
-              )
-    const uploaded = new Date()
+              );
+    const uploaded = new Date();
     this.store.set(key, {
       body,
       customMetadata: options?.customMetadata,
       uploaded,
-    })
+    });
     return {
       key,
       version: "1",
@@ -142,15 +142,16 @@ export class MemoryR2 {
       customMetadata: options?.customMetadata,
       storageClass: "Standard",
       writeHttpMetadata: () => {},
-    } as R2Object
+    } as R2Object;
   }
 
   async delete(key: string | string[]): Promise<void> {
-    for (const item of Array.isArray(key) ? key : [key]) this.store.delete(item)
+    for (const item of Array.isArray(key) ? key : [key])
+      this.store.delete(item);
   }
 
   async clear(): Promise<void> {
-    this.store.clear()
+    this.store.clear();
   }
 }
 
@@ -159,14 +160,14 @@ export const createTestEnv = () => ({
   EASYEDA_COMPONENT_CACHE: new MemoryR2() as MemoryR2 & R2Bucket,
   USE_D1: "false",
   DB: {} as D1Database,
-})
+});
 
 export const createFootprinterStringsD1 = (
   rows: Array<{
-    copper_iou: number | null
-    footprinter_string: string | null
-    lcsc: number
-    updated_at: string
+    copper_iou: number | null;
+    footprinter_string: string | null;
+    lcsc: number;
+    updated_at: string;
   }>,
 ): D1Database =>
   ({
@@ -178,20 +179,20 @@ export const createFootprinterStringsD1 = (
         }),
       }),
     }),
-  }) as unknown as D1Database
+  }) as unknown as D1Database;
 
 export const createSelf = (env: ReturnType<typeof createTestEnv>) => ({
   pending: [] as Promise<unknown>[],
   fetch(input: RequestInfo | URL, init?: RequestInit) {
     return worker.fetch(new Request(input, init), env, {
       waitUntil: (promise: Promise<unknown>) => {
-        this.pending.push(promise)
+        this.pending.push(promise);
       },
       passThroughOnException: () => {},
-    } as ExecutionContext)
+    } as ExecutionContext);
   },
   async flushWaitUntil() {
-    await Promise.allSettled(this.pending)
-    this.pending.length = 0
+    await Promise.allSettled(this.pending);
+    this.pending.length = 0;
   },
-})
+});

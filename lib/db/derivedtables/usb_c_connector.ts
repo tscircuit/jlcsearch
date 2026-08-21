@@ -1,18 +1,18 @@
-import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
-import type { DerivedTableSpec } from "./types"
-import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
-import { BaseComponent } from "./component-base"
-import type { KyselyDatabaseInstance } from "../kysely-types"
+import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit";
+import type { DerivedTableSpec } from "./types";
+import { extractMinQPrice } from "lib/util/extract-min-quantity-price";
+import { BaseComponent } from "./component-base";
+import type { KyselyDatabaseInstance } from "../kysely-types";
 
 export interface UsbCConnector extends BaseComponent {
-  package: string
-  mounting_style: string | null
-  current_rating_a: number | null
-  number_of_ports: number | null
-  number_of_contacts: number | null
-  gender: string | null
-  operating_temp_min: number | null
-  operating_temp_max: number | null
+  package: string;
+  mounting_style: string | null;
+  current_rating_a: number | null;
+  number_of_ports: number | null;
+  number_of_contacts: number | null;
+  gender: string | null;
+  operating_temp_min: number | null;
+  operating_temp_max: number | null;
 }
 
 export const usbCConnectorTableSpec: DerivedTableSpec<UsbCConnector> = {
@@ -34,31 +34,31 @@ export const usbCConnectorTableSpec: DerivedTableSpec<UsbCConnector> = {
       .selectFrom("components")
       .innerJoin("categories", "components.category_id", "categories.id")
       .selectAll()
-      .where("categories.subcategory", "=", "USB Connectors")
+      .where("categories.subcategory", "=", "USB Connectors");
   },
   mapToTable(components) {
     return components.map((c) => {
       try {
-        const extra = c.extra ? JSON.parse(c.extra) : {}
-        const attrs: Record<string, string> = extra.attributes || {}
+        const extra = c.extra ? JSON.parse(c.extra) : {};
+        const attrs: Record<string, string> = extra.attributes || {};
 
         const parseNum = (v: string | undefined): number | null => {
-          if (!v || v === "-") return null
-          return parseAndConvertSiUnit(v).value as number
-        }
+          if (!v || v === "-") return null;
+          return parseAndConvertSiUnit(v).value as number;
+        };
 
-        let tempMin: number | null = null
-        let tempMax: number | null = null
-        const tempRange = attrs["Operating Temperature Range"]
+        let tempMin: number | null = null;
+        let tempMax: number | null = null;
+        const tempRange = attrs["Operating Temperature Range"];
         if (tempRange && tempRange.includes("~")) {
-          const [min, max] = tempRange.split("~")
-          tempMin = parseNum(min)
-          tempMax = parseNum(max)
+          const [min, max] = tempRange.split("~");
+          tempMin = parseNum(min);
+          tempMax = parseNum(max);
         }
 
         const contacts = parseInt(
           (attrs["Number of Contacts"] || "").replace(/[^0-9]/g, ""),
-        )
+        );
 
         return {
           lcsc: Number(c.lcsc),
@@ -78,10 +78,10 @@ export const usbCConnectorTableSpec: DerivedTableSpec<UsbCConnector> = {
           operating_temp_min: tempMin,
           operating_temp_max: tempMax,
           attributes: attrs,
-        }
+        };
       } catch {
-        return null
+        return null;
       }
-    })
+    });
   },
-}
+};

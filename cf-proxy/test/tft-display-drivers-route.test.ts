@@ -6,32 +6,32 @@ import {
   SqliteQueryCompiler,
   type CompiledQuery,
   type DatabaseConnection,
-} from "kysely"
-import { describe, expect, it } from "vitest"
-import { getD1Handler } from "../src/d1-routes"
-import type { DB } from "../src/db/types"
+} from "kysely";
+import { describe, expect, it } from "vitest";
+import { getD1Handler } from "../src/d1-routes";
+import type { DB } from "../src/db/types";
 import {
   createDisplayDriverMaxResolutionResolver,
   getDisplayDriverMaxResolution,
-} from "../src/display-driver-resolution"
-import { getTftDisplayDriverFamily } from "../src/tft-display-drivers"
+} from "../src/display-driver-resolution";
+import { getTftDisplayDriverFamily } from "../src/tft-display-drivers";
 
 describe("TFT display driver route", () => {
   it("classifies TFT support families without including segment LCD drivers", () => {
     expect(getTftDisplayDriverFamily("SSD1963QL9")?.label).toBe(
       "Display Controller",
-    )
+    );
     expect(getTftDisplayDriverFamily("TPS65132B5YFFR")?.label).toBe(
       "Bias / Power",
-    )
+    );
     expect(getTftDisplayDriverFamily("BUF16821AIPWPR")?.label).toBe(
       "Gamma Buffer",
-    )
+    );
     expect(getTftDisplayDriverFamily("AP3041MTR-G1")?.label).toBe(
       "Backlight Driver",
-    )
-    expect(getTftDisplayDriverFamily("HT1621B")).toBeUndefined()
-  })
+    );
+    expect(getTftDisplayDriverFamily("HT1621B")).toBeUndefined();
+  });
 
   it("derives the largest catalog configuration and known TFT maxima", () => {
     expect(
@@ -41,28 +41,28 @@ describe("TFT display driver route", () => {
         extra:
           '{"attributes":{"Display Configurations(bit)":"20x4 bit, 16x8 bit"}}',
       }),
-    ).toBe("16x8")
+    ).toBe("16x8");
     expect(
       getDisplayDriverMaxResolution({
         mfr: "HT1622",
         description: "32x8 bit LQFP-64(7x7) LCD driver",
         extra: "{}",
       }),
-    ).toBe("32x8")
+    ).toBe("32x8");
     expect(
       getDisplayDriverMaxResolution({
         mfr: "SSD1963QL9",
         description: "LQFP-128(14x14) LCD driver",
         extra: "{}",
       }),
-    ).toBe("864x480")
+    ).toBe("864x480");
     expect(
       getDisplayDriverMaxResolution({
         mfr: "LT7689",
         description: "QFN-96-EP(10x10) LCD driver",
         extra: "{}",
       }),
-    ).toBe("1280x1024")
+    ).toBe("1280x1024");
 
     const resolveFromRelatedCatalogRows =
       createDisplayDriverMaxResolutionResolver([
@@ -70,27 +70,27 @@ describe("TFT display driver route", () => {
           mfr: "HT1622-LQFP64",
           extra: '{"attributes":{"Display Configurations(bit)":"32x8 bit"}}',
         },
-      ])
+      ]);
     expect(
       resolveFromRelatedCatalogRows({
         mfr: "HT1622",
         description: "LQFP-64(7x7) LCD driver",
         extra: "{}",
       }),
-    ).toBe("32x8")
-  })
+    ).toBe("32x8");
+  });
 
   it("selects and labels TFT controller families", async () => {
-    const compiledQueries: CompiledQuery[] = []
-    const driver = new DummyDriver()
+    const compiledQueries: CompiledQuery[] = [];
+    const driver = new DummyDriver();
 
     driver.acquireConnection = async () =>
       ({
         executeQuery: async (compiledQuery: CompiledQuery) => {
-          compiledQueries.push(compiledQuery)
+          compiledQueries.push(compiledQuery);
 
           if (compiledQuery.sql.includes('select distinct "package"')) {
-            return { rows: [{ package: "LQFP-128(14x14)" }] }
+            return { rows: [{ package: "LQFP-128(14x14)" }] };
           }
 
           if (
@@ -104,7 +104,7 @@ describe("TFT display driver route", () => {
                   extra: "{}",
                 },
               ],
-            }
+            };
           }
 
           return {
@@ -122,10 +122,10 @@ describe("TFT display driver route", () => {
                 extra: '{"attributes":{"Interface":"8080/6800"}}',
               },
             ],
-          }
+          };
         },
         streamQuery: async function* () {},
-      }) as DatabaseConnection
+      }) as DatabaseConnection;
 
     const db = new Kysely<DB>({
       dialect: {
@@ -134,18 +134,18 @@ describe("TFT display driver route", () => {
         createIntrospector: (database) => new SqliteIntrospector(database),
         createQueryCompiler: () => new SqliteQueryCompiler(),
       },
-    })
+    });
 
     try {
-      const handler = getD1Handler("/tft_display_drivers/list")
-      expect(handler).not.toBeNull()
+      const handler = getD1Handler("/tft_display_drivers/list");
+      expect(handler).not.toBeNull();
 
       const result = await handler!(db, {
         driver_type: "controller",
         package: "LQFP-128(14x14)",
         is_preferred: "true",
         max_resolution: "864x480",
-      })
+      });
 
       expect(result.data.tft_display_drivers).toEqual([
         {
@@ -162,21 +162,21 @@ describe("TFT display driver route", () => {
           price1: 5.845714286,
           attributes: '{"Interface":"8080/6800"}',
         },
-      ])
-      expect(result.filterOptions?.package).toEqual(["LQFP-128(14x14)"])
-      expect(result.filterOptions?.max_resolution).toEqual(["864x480"])
+      ]);
+      expect(result.filterOptions?.package).toEqual(["LQFP-128(14x14)"]);
+      expect(result.filterOptions?.max_resolution).toEqual(["864x480"]);
 
       const partsQuery = compiledQueries.find((query) =>
         query.sql.includes('select "lcsc"'),
-      )
-      expect(partsQuery?.sql).toContain('"subcategory" in (?, ?)')
-      expect(partsQuery?.sql).toContain('"mfr" like ?')
-      expect(partsQuery?.sql).toContain('"package" = ?')
-      expect(partsQuery?.sql).toContain('"preferred" = ?')
-      expect(partsQuery?.parameters).toContain("SSD1963%")
-      expect(partsQuery?.parameters).not.toContain("TPS651%")
+      );
+      expect(partsQuery?.sql).toContain('"subcategory" in (?, ?)');
+      expect(partsQuery?.sql).toContain('"mfr" like ?');
+      expect(partsQuery?.sql).toContain('"package" = ?');
+      expect(partsQuery?.sql).toContain('"preferred" = ?');
+      expect(partsQuery?.parameters).toContain("SSD1963%");
+      expect(partsQuery?.parameters).not.toContain("TPS651%");
     } finally {
-      await db.destroy()
+      await db.destroy();
     }
-  })
-})
+  });
+});

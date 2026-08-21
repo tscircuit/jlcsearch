@@ -1,5 +1,5 @@
-import { expect, test } from "bun:test"
-import { microUsbConnectorTableSpec } from "lib/db/derivedtables/micro-usb-connector"
+import { expect, test } from "bun:test";
+import { microUsbConnectorTableSpec } from "lib/db/derivedtables/micro-usb-connector";
 
 const makeComponent = (overrides: Record<string, unknown> = {}) =>
   ({
@@ -24,10 +24,10 @@ const makeComponent = (overrides: Record<string, unknown> = {}) =>
       },
     }),
     ...overrides,
-  }) as any
+  }) as any;
 
 test("maps Micro USB connector attributes", () => {
-  const [connector] = microUsbConnectorTableSpec.mapToTable([makeComponent()])
+  const [connector] = microUsbConnectorTableSpec.mapToTable([makeComponent()]);
 
   expect(connector).toMatchObject({
     lcsc: 132563,
@@ -43,8 +43,8 @@ test("maps Micro USB connector attributes", () => {
     operating_temp_max: 80,
     is_preferred: true,
     price1: 0.199,
-  })
-})
+  });
+});
 
 test("recognizes Micro USB package names when attributes are incomplete", () => {
   const [connector] = microUsbConnectorTableSpec.mapToTable([
@@ -53,13 +53,13 @@ test("recognizes Micro USB package names when attributes are incomplete", () => 
       package: "MICRO-USB-SMD_U254-051T-4BH83-F1S",
       extra: null,
     }),
-  ])
+  ]);
 
   expect(connector).toMatchObject({
     connector_type: "Micro USB",
     package: "MICRO-USB-SMD_U254-051T-4BH83-F1S",
-  })
-})
+  });
+});
 
 test("excludes USB-C and Mini USB connectors", () => {
   const components = [
@@ -75,10 +75,10 @@ test("excludes USB-C and Mini USB connectors", () => {
       package: "MINI-USB-SMD",
       extra: null,
     }),
-  ]
+  ];
 
   expect(microUsbConnectorTableSpec.mapToTable(components)).toEqual([
     null,
     null,
-  ])
-})
+  ]);
+});

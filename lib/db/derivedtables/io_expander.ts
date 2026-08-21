@@ -1,24 +1,24 @@
-import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
-import type { DerivedTableSpec } from "./types"
-import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
-import { BaseComponent } from "./component-base"
+import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit";
+import type { DerivedTableSpec } from "./types";
+import { extractMinQPrice } from "lib/util/extract-min-quantity-price";
+import { BaseComponent } from "./component-base";
 
 export interface IoExpander extends BaseComponent {
   // Extra columns
-  package: string
-  num_gpios: number | null
-  supply_voltage_min: number | null
-  supply_voltage_max: number | null
-  operating_temp_min: number | null
-  operating_temp_max: number | null
-  has_interrupt: boolean
-  has_i2c: boolean
-  has_spi: boolean
-  has_smbus: boolean
-  clock_frequency_hz: number | null
-  output_type: string | null
-  sink_current_ma: number | null
-  source_current_ma: number | null
+  package: string;
+  num_gpios: number | null;
+  supply_voltage_min: number | null;
+  supply_voltage_max: number | null;
+  operating_temp_min: number | null;
+  operating_temp_max: number | null;
+  has_interrupt: boolean;
+  has_i2c: boolean;
+  has_spi: boolean;
+  has_smbus: boolean;
+  clock_frequency_hz: number | null;
+  output_type: string | null;
+  sink_current_ma: number | null;
+  source_current_ma: number | null;
 }
 
 export const ioExpanderTableSpec: DerivedTableSpec<IoExpander> = {
@@ -51,84 +51,84 @@ export const ioExpanderTableSpec: DerivedTableSpec<IoExpander> = {
       ),
   mapToTable: (components) => {
     return components.map((c): IoExpander | null => {
-      if (!c.extra) return null
-      const extra = JSON.parse(c.extra ?? "{}")
-      if (!extra.attributes) return null
+      if (!c.extra) return null;
+      const extra = JSON.parse(c.extra ?? "{}");
+      if (!extra.attributes) return null;
 
-      const attrs = extra.attributes
-      const desc = c.description.toLowerCase()
+      const attrs = extra.attributes;
+      const desc = c.description.toLowerCase();
 
       // Parse voltage range
-      let voltageMin = null
-      let voltageMax = null
-      const rawVoltage = attrs["Supply Voltage"]
+      let voltageMin = null;
+      let voltageMax = null;
+      const rawVoltage = attrs["Supply Voltage"];
       if (rawVoltage) {
-        const match = rawVoltage.match(/([\d.]+)V~([\d.]+)V/)
+        const match = rawVoltage.match(/([\d.]+)V~([\d.]+)V/);
         if (match) {
-          voltageMin = parseFloat(match[1])
-          voltageMax = parseFloat(match[2])
+          voltageMin = parseFloat(match[1]);
+          voltageMax = parseFloat(match[2]);
         }
       }
 
       // Parse temperature range
-      let tempMin = null
-      let tempMax = null
-      const rawTemp = attrs["Operating Temperature"]
+      let tempMin = null;
+      let tempMax = null;
+      const rawTemp = attrs["Operating Temperature"];
       if (rawTemp) {
-        const match = rawTemp.match(/([-\d]+)℃~\+([-\d]+)℃/)
+        const match = rawTemp.match(/([-\d]+)℃~\+([-\d]+)℃/);
         if (match) {
-          tempMin = parseInt(match[1])
-          tempMax = parseInt(match[2])
+          tempMin = parseInt(match[1]);
+          tempMax = parseInt(match[2]);
         }
       }
 
       // Parse number of GPIOs
-      let numGpios = null
-      const rawGpios = attrs["Number of I/O"] || attrs["Number of GPIOs"]
+      let numGpios = null;
+      const rawGpios = attrs["Number of I/O"] || attrs["Number of GPIOs"];
       if (rawGpios) {
-        const match = rawGpios.match(/(\d+)/)
-        if (match) numGpios = parseInt(match[1])
+        const match = rawGpios.match(/(\d+)/);
+        if (match) numGpios = parseInt(match[1]);
       }
 
       // Parse clock frequency
-      let clockFreq = null
-      const rawClock = attrs["Clock Frequency"]
+      let clockFreq = null;
+      const rawClock = attrs["Clock Frequency"];
       if (rawClock) {
-        const parsed = parseAndConvertSiUnit(rawClock).value
-        if (parsed) clockFreq = parsed as number
+        const parsed = parseAndConvertSiUnit(rawClock).value;
+        if (parsed) clockFreq = parsed as number;
       }
 
       // Parse current ratings
-      let sinkCurrent = null
-      const rawSink = attrs["Output Sink Current"]
+      let sinkCurrent = null;
+      const rawSink = attrs["Output Sink Current"];
       if (rawSink) {
-        const parsed = parseAndConvertSiUnit(rawSink).value
-        if (parsed) sinkCurrent = (parsed as number) * 1000 // Convert to mA
+        const parsed = parseAndConvertSiUnit(rawSink).value;
+        if (parsed) sinkCurrent = (parsed as number) * 1000; // Convert to mA
       }
 
-      let sourceCurrent = null
-      const rawSource = attrs["Output Source current"]
+      let sourceCurrent = null;
+      const rawSource = attrs["Output Source current"];
       if (rawSource) {
-        const parsed = parseAndConvertSiUnit(rawSource).value
-        if (parsed) sourceCurrent = (parsed as number) * 1000 // Convert to mA
+        const parsed = parseAndConvertSiUnit(rawSource).value;
+        if (parsed) sourceCurrent = (parsed as number) * 1000; // Convert to mA
       }
 
       // Determine interfaces
-      const interfaceType = (attrs["Interface"] || "").toLowerCase()
+      const interfaceType = (attrs["Interface"] || "").toLowerCase();
       const hasI2c =
-        interfaceType.includes("i²c") || interfaceType.includes("i2c")
-      const hasSpi = interfaceType.includes("spi")
-      const hasSmbus = interfaceType.includes("smbus")
+        interfaceType.includes("i²c") || interfaceType.includes("i2c");
+      const hasSpi = interfaceType.includes("spi");
+      const hasSmbus = interfaceType.includes("smbus");
 
       // Determine if it has interrupt output
       const hasInterrupt = Boolean(
         attrs["Interrupt Output"]?.toLowerCase().includes("with") ||
-          desc.includes("interrupt") ||
-          desc.includes("irq"),
-      )
+        desc.includes("interrupt") ||
+        desc.includes("irq"),
+      );
 
       // Get output type
-      const outputType = attrs["Output Type"] || null
+      const outputType = attrs["Output Type"] || null;
 
       return {
         lcsc: c.lcsc,
@@ -154,7 +154,7 @@ export const ioExpanderTableSpec: DerivedTableSpec<IoExpander> = {
         sink_current_ma: sinkCurrent,
         source_current_ma: sourceCurrent,
         attributes: attrs,
-      }
-    })
+      };
+    });
   },
-}
+};

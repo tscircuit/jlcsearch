@@ -1,11 +1,11 @@
-import { Database } from "bun:sqlite"
-import { existsSync } from "node:fs"
-import { mkdir, rm } from "node:fs/promises"
-import path from "node:path"
-import { setupDerivedTables } from "lib/db/derivedtables/setup-derived-tables"
-import type { DB } from "lib/db/generated/kysely"
-import { Kysely } from "kysely"
-import { BunSqliteDialect } from "kysely-bun-sqlite"
+import { Database } from "bun:sqlite";
+import { existsSync } from "node:fs";
+import { mkdir, rm } from "node:fs/promises";
+import path from "node:path";
+import { setupDerivedTables } from "lib/db/derivedtables/setup-derived-tables";
+import type { DB } from "lib/db/generated/kysely";
+import { Kysely } from "kysely";
+import { BunSqliteDialect } from "kysely-bun-sqlite";
 
 const tableExists = (database: Database, schema: string, table: string) =>
   Boolean(
@@ -17,7 +17,7 @@ const tableExists = (database: Database, schema: string, table: string) =>
          LIMIT 1`,
       )
       .get(table),
-  )
+  );
 
 export const buildDerivedSyncDatabase = async ({
   sourcePath,
@@ -27,37 +27,37 @@ export const buildDerivedSyncDatabase = async ({
   includeStockSnapshot = false,
   logger = console.log,
 }: {
-  sourcePath: string
-  outputPath: string
-  tableNames?: string[]
-  includeComponentCatalog?: boolean
-  includeStockSnapshot?: boolean
-  logger?: (message: string) => void
+  sourcePath: string;
+  outputPath: string;
+  tableNames?: string[];
+  includeComponentCatalog?: boolean;
+  includeStockSnapshot?: boolean;
+  logger?: (message: string) => void;
 }) => {
-  const resolvedSourcePath = path.resolve(sourcePath)
-  const resolvedOutputPath = path.resolve(outputPath)
+  const resolvedSourcePath = path.resolve(sourcePath);
+  const resolvedOutputPath = path.resolve(outputPath);
 
   if (!existsSync(resolvedSourcePath)) {
-    throw new Error(`Source database does not exist: ${resolvedSourcePath}`)
+    throw new Error(`Source database does not exist: ${resolvedSourcePath}`);
   }
   if (resolvedSourcePath === resolvedOutputPath) {
-    throw new Error("Source and output database paths must be different")
+    throw new Error("Source and output database paths must be different");
   }
 
-  await mkdir(path.dirname(resolvedOutputPath), { recursive: true })
-  await rm(resolvedOutputPath, { force: true })
+  await mkdir(path.dirname(resolvedOutputPath), { recursive: true });
+  await rm(resolvedOutputPath, { force: true });
 
-  const database = new Database(resolvedOutputPath, { create: true })
-  database.run("ATTACH DATABASE ? AS source", [resolvedSourcePath])
+  const database = new Database(resolvedOutputPath, { create: true });
+  database.run("ATTACH DATABASE ? AS source", [resolvedSourcePath]);
 
   if (
     !tableExists(database, "source", "jlc_components") ||
     !tableExists(database, "source", "lcsc_components")
   ) {
-    database.close()
+    database.close();
     throw new Error(
       "Expected a source-db-v2 database with jlc_components and lcsc_components",
-    )
+    );
   }
 
   database.exec(`
@@ -123,7 +123,7 @@ export const buildDerivedSyncDatabase = async ({
     LEFT JOIN source.lcsc_components AS l ON l.lcsc = j.lcsc
     WHERE j.present = 1
       AND j.last_on_stock >= unixepoch('now', '-1 year');
-  `)
+  `);
 
   if (includeComponentCatalog) {
     database.exec(`
@@ -182,7 +182,7 @@ export const buildDerivedSyncDatabase = async ({
 
       CREATE INDEX idx_component_catalog_lcsc ON component_catalog(lcsc);
       CREATE INDEX idx_component_catalog_stock ON component_catalog(stock DESC);
-    `)
+    `);
   }
 
   if (includeStockSnapshot) {
@@ -198,37 +198,37 @@ export const buildDerivedSyncDatabase = async ({
         CASE WHEN present = 1 THEN coalesce(stock, 0) ELSE 0 END
       FROM source.jlc_components
       WHERE last_on_stock >= unixepoch('now', '-1 year');
-    `)
+    `);
   }
 
   const db = new Kysely<DB>({
     dialect: new BunSqliteDialect({ database }),
-  })
+  });
 
   try {
     await setupDerivedTables({
       db,
       tableNames,
       logger,
-    })
-    database.exec("ANALYZE")
+    });
+    database.exec("ANALYZE");
   } finally {
-    await db.destroy()
+    await db.destroy();
   }
-}
+};
 
 const main = async () => {
   const sourcePath =
-    process.env.SOURCE_DB_PATH?.trim() || path.resolve("cache.sqlite3")
+    process.env.SOURCE_DB_PATH?.trim() || path.resolve("cache.sqlite3");
   const outputPath =
-    process.env.OUTPUT_DB_PATH?.trim() || path.resolve("db.sqlite3")
+    process.env.OUTPUT_DB_PATH?.trim() || path.resolve("db.sqlite3");
   const configuredTables = process.env.DERIVED_TABLES_LIST?.split(",")
     .map((table) => table.trim())
-    .filter(Boolean)
+    .filter(Boolean);
   const includeComponentCatalog =
-    process.env.INCLUDE_COMPONENT_CATALOG?.trim() === "1"
+    process.env.INCLUDE_COMPONENT_CATALOG?.trim() === "1";
   const includeStockSnapshot =
-    process.env.INCLUDE_STOCK_SNAPSHOT?.trim() === "1"
+    process.env.INCLUDE_STOCK_SNAPSHOT?.trim() === "1";
 
   await buildDerivedSyncDatabase({
     sourcePath,
@@ -236,9 +236,9 @@ const main = async () => {
     tableNames: configuredTables?.length ? configuredTables : undefined,
     includeComponentCatalog,
     includeStockSnapshot,
-  })
-}
+  });
+};
 
 if (import.meta.main) {
-  await main()
+  await main();
 }

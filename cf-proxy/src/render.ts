@@ -5,8 +5,8 @@ import {
   TABLE_RESPONSE_KEY,
   type QueryParams,
   type FilterOptions,
-} from "./handlers"
-import { TFT_DISPLAY_DRIVER_FAMILIES } from "./tft-display-drivers"
+} from "./handlers";
+import { TFT_DISPLAY_DRIVER_FAMILIES } from "./tft-display-drivers";
 
 const escapeHtml = (value: unknown): string =>
   String(value ?? "")
@@ -14,7 +14,7 @@ const escapeHtml = (value: unknown): string =>
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;")
+    .replaceAll("'", "&#39;");
 
 const routeLabels: Record<string, string> = {
   "/categories/list": "Categories",
@@ -72,7 +72,7 @@ const routeLabels: Record<string, string> = {
   "/relays/list": "Relays",
   "/fuses/list": "Fuses",
   "/bjt_transistors/list": "BJT Transistors",
-}
+};
 
 const FALLBACK_FILTER_OPTIONS: FilterOptions = {
   color: [
@@ -88,42 +88,42 @@ const FALLBACK_FILTER_OPTIONS: FilterOptions = {
     "purple",
     "emerald",
   ],
-}
+};
 
 const routeHeadings: Record<string, string> = {
   "/categories/list": "Categories",
   "/components/list": "Components",
   "/footprint_index/list": "Package Index",
   "/led_with_ic/list": "LEDs with Built-in IC",
-}
+};
 
 const titleCase = (value: string): string =>
   value
     .split(/[_/]+/)
     .filter(Boolean)
     .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
-    .join(" ")
+    .join(" ");
 
 const getPageTitle = (pathname: string): string => {
-  if (routeLabels[pathname]) return routeLabels[pathname]
-  const tableName = ROUTE_TO_TABLE[pathname]
-  if (tableName) return titleCase(tableName)
-  if (pathname === "/components/list") return "JLCPCB Component Search"
-  return "JLCPCB Parts Search"
-}
+  if (routeLabels[pathname]) return routeLabels[pathname];
+  const tableName = ROUTE_TO_TABLE[pathname];
+  if (tableName) return titleCase(tableName);
+  if (pathname === "/components/list") return "JLCPCB Component Search";
+  return "JLCPCB Parts Search";
+};
 
 const getPageHeading = (pathname: string): string =>
-  routeHeadings[pathname] ?? getPageTitle(pathname)
+  routeHeadings[pathname] ?? getPageTitle(pathname);
 
 const extractSmallQuantityPrice = (value: string): number => {
   try {
-    const priceTiers = JSON.parse(value)
-    return Number(priceTiers[0]?.price) || 0
+    const priceTiers = JSON.parse(value);
+    return Number(priceTiers[0]?.price) || 0;
   } catch {
-    const firstTier = value.split(",", 1)[0]
-    return Number(firstTier?.split(":").at(-1)) || 0
+    const firstTier = value.split(",", 1)[0];
+    return Number(firstTier?.split(":").at(-1)) || 0;
   }
-}
+};
 
 const formatPrice = (value: unknown): string => {
   const price =
@@ -131,13 +131,13 @@ const formatPrice = (value: unknown): string => {
       ? value
       : typeof value === "string" && value.includes(":")
         ? extractSmallQuantityPrice(value)
-        : Number(value)
-  if (!price) return ""
+        : Number(value);
+  if (!price) return "";
   return price.toLocaleString("en-US", {
     style: "currency",
     currency: "USD",
-  })
-}
+  });
+};
 
 const SI_PREFIXES = [
   { value: 1e12, symbol: "T" },
@@ -149,24 +149,24 @@ const SI_PREFIXES = [
   { value: 1e-6, symbol: "u" },
   { value: 1e-9, symbol: "n" },
   { value: 1e-12, symbol: "p" },
-]
+];
 
 const formatSiUnit = (value: unknown): string => {
-  const num = typeof value === "number" ? value : Number(value)
-  if (!Number.isFinite(num)) return ""
-  if (num === 0) return "0"
+  const num = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(num)) return "";
+  if (num === 0) return "0";
 
   const prefix =
     SI_PREFIXES.find((candidate) => Math.abs(num) >= candidate.value) ||
-    SI_PREFIXES[SI_PREFIXES.length - 1]
-  const scaled = num / prefix.value
+    SI_PREFIXES[SI_PREFIXES.length - 1];
+  const scaled = num / prefix.value;
   const formatted = scaled
     .toPrecision(3)
     .replace(/\.0+$/, "")
-    .replace(/(\.\d*?)0+$/, "$1")
+    .replace(/(\.\d*?)0+$/, "$1");
 
-  return `${formatted}${prefix.symbol}`
-}
+  return `${formatted}${prefix.symbol}`;
+};
 
 const COLUMN_LABELS: Record<string, string> = {
   lcsc: "LCSC",
@@ -242,82 +242,82 @@ const COLUMN_LABELS: Record<string, string> = {
   ddr_standard: "DDR Standard",
   height_above_board_mm: "Height Above Board",
   height_mm: "Height",
-}
+};
 
 const getColumnLabel = (column: string): string => {
-  if (COLUMN_LABELS[column]) return COLUMN_LABELS[column]
-  return titleCase(column)
-}
+  if (COLUMN_LABELS[column]) return COLUMN_LABELS[column];
+  return titleCase(column);
+};
 
 const withUnit = (value: unknown, unit: string): string => {
-  const num = typeof value === "number" ? value : Number(value)
-  if (!Number.isFinite(num)) return ""
-  return `${num}${unit}`
-}
+  const num = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(num)) return "";
+  return `${num}${unit}`;
+};
 
 const formatByteSize = (value: unknown): string => {
-  const num = typeof value === "number" ? value : Number(value)
-  if (!Number.isFinite(num)) return ""
+  const num = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(num)) return "";
   if (num >= 1024 * 1024) {
-    return `${(num / (1024 * 1024)).toFixed(1).replace(/\.0$/, "")}MB`
+    return `${(num / (1024 * 1024)).toFixed(1).replace(/\.0$/, "")}MB`;
   }
   if (num >= 1024) {
-    return `${(num / 1024).toFixed(1).replace(/\.0$/, "")}KB`
+    return `${(num / 1024).toFixed(1).replace(/\.0$/, "")}KB`;
   }
-  return `${num}B`
-}
+  return `${num}B`;
+};
 
-const ATTRIBUTES_SUMMARY_LENGTH = 10
+const ATTRIBUTES_SUMMARY_LENGTH = 10;
 
 const truncateForSummary = (
   value: string,
   maxLength = ATTRIBUTES_SUMMARY_LENGTH,
 ): string => {
-  if (value.length <= maxLength) return value
-  return `${value.slice(0, maxLength)}...`
-}
+  if (value.length <= maxLength) return value;
+  return `${value.slice(0, maxLength)}...`;
+};
 
 const formatCount = (value: unknown): string => {
-  const num = typeof value === "number" ? value : Number(value)
-  if (!Number.isFinite(num)) return ""
-  return Number.isInteger(num) ? num.toLocaleString("en-US") : String(num)
-}
+  const num = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(num)) return "";
+  return Number.isInteger(num) ? num.toLocaleString("en-US") : String(num);
+};
 
 const formatDisplayValue = (column: string, value: unknown): string | null => {
   switch (column) {
     case "capacitance_farads":
-      return `${formatSiUnit(value)}F`
+      return `${formatSiUnit(value)}F`;
     case "resistance":
-      return `${formatSiUnit(value)}Ω`
+      return `${formatSiUnit(value)}Ω`;
     case "tolerance_fraction": {
-      const num = typeof value === "number" ? value : Number(value)
-      if (!Number.isFinite(num)) return ""
-      return `±${num * 100}%`
+      const num = typeof value === "number" ? value : Number(value);
+      if (!Number.isFinite(num)) return "";
+      return `±${num * 100}%`;
     }
     case "power_watts":
-      return `${formatSiUnit(value)}W`
+      return `${formatSiUnit(value)}W`;
     case "stock":
-      return formatCount(value)
+      return formatCount(value);
     case "cpu_speed_hz":
     case "sampling_rate_hz":
     case "clock_frequency_hz":
-      return `${formatSiUnit(value)}Hz`
+      return `${formatSiUnit(value)}Hz`;
     case "frequency_ghz":
-      return withUnit(value, "GHz")
+      return withUnit(value, "GHz");
     case "data_rate_mbps":
-      return withUnit(value, "Mbps")
+      return withUnit(value, "Mbps");
     case "wavelength_nm":
     case "peak_wavelength_nm":
     case "spectral_range_min_nm":
     case "spectral_range_max_nm":
-      return withUnit(value, "nm")
+      return withUnit(value, "nm");
     case "luminous_intensity_mcd":
-      return withUnit(value, "mcd")
+      return withUnit(value, "mcd");
     case "flash_size_bytes":
     case "ram_size_bytes":
     case "eeprom_size_bytes":
     case "embedded_ram_bits":
-      return formatByteSize(value)
+      return formatByteSize(value);
     case "num_channels":
     case "num_bits":
     case "num_pins":
@@ -329,7 +329,7 @@ const formatDisplayValue = (column: string, value: unknown): string | null => {
     case "number_of_pins":
     case "number_of_rows":
     case "gpio_count":
-      return formatCount(value)
+      return formatCount(value);
     case "current_rating":
     case "current_rating_a":
     case "current_rating_amp":
@@ -339,7 +339,7 @@ const formatDisplayValue = (column: string, value: unknown): string | null => {
     case "continuous_drain_current":
     case "output_current_max":
     case "ripple_current_amps":
-      return `${formatSiUnit(value)}A`
+      return `${formatSiUnit(value)}A`;
     case "voltage_rating":
     case "forward_voltage":
     case "reverse_voltage":
@@ -356,7 +356,7 @@ const formatDisplayValue = (column: string, value: unknown): string | null => {
     case "output_voltage_max":
     case "dropout_voltage":
     case "coil_voltage":
-      return withUnit(value, "V")
+      return withUnit(value, "V");
     case "pitch_mm":
     case "display_size":
     case "pin_length_mm":
@@ -368,85 +368,85 @@ const formatDisplayValue = (column: string, value: unknown): string | null => {
     case "height_above_board_mm":
     case "inside_diameter_mm":
     case "outside_diameter_mm":
-      return withUnit(value, "mm")
+      return withUnit(value, "mm");
     case "operating_temp_min":
     case "operating_temp_max":
     case "operating_temperature_min":
     case "operating_temperature_max":
-      return withUnit(value, "°C")
+      return withUnit(value, "°C");
     case "reception_angle_deg":
-      return withUnit(value, "°")
+      return withUnit(value, "°");
     default:
-      return null
+      return null;
   }
-}
+};
 
 const renderCell = (
   row: Record<string, unknown>,
   column: string,
   value: unknown,
 ): string => {
-  if (value === null || value === undefined || value === "") return ""
+  if (value === null || value === undefined || value === "") return "";
   if (column === "attributes") {
-    const rawValue = String(value)
-    const summary = truncateForSummary(rawValue)
-    return `<details><summary>${escapeHtml(summary)}</summary><div class="mt-1 whitespace-pre-wrap break-all">${escapeHtml(rawValue)}</div></details>`
+    const rawValue = String(value);
+    const summary = truncateForSummary(rawValue);
+    return `<details><summary>${escapeHtml(summary)}</summary><div class="mt-1 whitespace-pre-wrap break-all">${escapeHtml(rawValue)}</div></details>`;
   }
   if (column === "lcsc") {
-    return `<a href="https://jlcpcb.com/partdetail/${escapeHtml(row.mfr)}/C${escapeHtml(value)}">${escapeHtml(value)}</a>`
+    return `<a href="https://jlcpcb.com/partdetail/${escapeHtml(row.mfr)}/C${escapeHtml(value)}">${escapeHtml(value)}</a>`;
   }
   if (column === "price" || column === "price1") {
-    return escapeHtml(formatPrice(value))
+    return escapeHtml(formatPrice(value));
   }
   if (typeof value === "boolean") {
-    return value ? "✓" : ""
+    return value ? "✓" : "";
   }
-  const formatted = formatDisplayValue(column, value)
+  const formatted = formatDisplayValue(column, value);
   if (formatted !== null) {
-    return escapeHtml(formatted)
+    return escapeHtml(formatted);
   }
-  return escapeHtml(value)
-}
+  return escapeHtml(value);
+};
 
 const renderTable = (rows: unknown[]): string => {
-  if (rows.length === 0) return ""
-  const firstRow = rows[0] as Record<string, unknown>
-  const columns = Object.keys(firstRow)
+  if (rows.length === 0) return "";
+  const firstRow = rows[0] as Record<string, unknown>;
+  const columns = Object.keys(firstRow);
   const headerHtml = columns
     .map(
       (column) =>
         `<th class="p-1 border border-gray-300">${escapeHtml(getColumnLabel(column))}</th>`,
     )
-    .join("")
+    .join("");
 
   const bodyHtml = rows
     .map((row) => {
-      const record = row as Record<string, unknown>
+      const record = row as Record<string, unknown>;
       const cells = columns
         .map(
           (column) =>
             `<td class="border border-gray-300 p-1">${renderCell(record, column, record[column])}</td>`,
         )
-        .join("")
-      return `<tr>${cells}</tr>`
+        .join("");
+      return `<tr>${cells}</tr>`;
     })
-    .join("")
+    .join("");
 
-  return `<table class="border border-gray-300 text-xs border-collapse p-1"><thead><tr>${headerHtml}</tr></thead><tbody>${bodyHtml}</tbody></table>`
-}
+  return `<table class="border border-gray-300 text-xs border-collapse p-1"><thead><tr>${headerHtml}</tr></thead><tbody>${bodyHtml}</tbody></table>`;
+};
 
 const renderFilterSuggestions = (
   pathname: string,
   paramName: string,
   options: string[],
 ): string => {
-  if (options.length === 0) return ""
+  if (options.length === 0) return "";
 
-  const listId = `${pathname.replaceAll("/", "-")}-${paramName}-options`
+  const listId = `${pathname.replaceAll("/", "-")}-${paramName}-options`;
   return `<datalist id="${escapeHtml(listId)}">${options
     .map((option) => `<option value="${escapeHtml(option)}"></option>`)
-    .join("")}</datalist>`
-}
+    .join("")}</datalist>`;
+};
 
 const getSuggestionListId = (
   pathname: string,
@@ -455,7 +455,7 @@ const getSuggestionListId = (
 ): string =>
   options.length > 0
     ? `${pathname.replaceAll("/", "-")}-${paramName}-options`
-    : ""
+    : "";
 
 const renderCustomFilters = (
   pathname: string,
@@ -464,13 +464,13 @@ const renderCustomFilters = (
 ): string => {
   switch (pathname) {
     case "/analog_switches/list": {
-      const packageOptions = filterOptions.package ?? []
-      const channelOptions = filterOptions.channels ?? []
+      const packageOptions = filterOptions.package ?? [];
+      const channelOptions = filterOptions.channels ?? [];
       const packageListId = getSuggestionListId(
         pathname,
         "package",
         packageOptions,
-      )
+      );
 
       return `<form method="GET" class="flex flex-row gap-4">
         <div>
@@ -491,16 +491,16 @@ const renderCustomFilters = (
           </select>
         </div>
         <button type="submit">Filter</button>
-      </form>`
+      </form>`;
     }
     case "/arm_processors/list":
     case "/risc_v_processors/list": {
-      const packageOptions = filterOptions.package ?? []
+      const packageOptions = filterOptions.package ?? [];
       const packageListId = getSuggestionListId(
         pathname,
         "package",
         packageOptions,
-      )
+      );
 
       return `<form method="GET" class="flex flex-row gap-4">
         <div>
@@ -529,16 +529,16 @@ const renderCustomFilters = (
           </select>
         </div>
         <button type="submit">Filter</button>
-      </form>`
+      </form>`;
     }
     case "/microphones/list": {
-      const packageOptions = filterOptions.package ?? []
-      const typeOptions = filterOptions.microphone_type ?? ["all"]
+      const packageOptions = filterOptions.package ?? [];
+      const typeOptions = filterOptions.microphone_type ?? ["all"];
       const packageListId = getSuggestionListId(
         pathname,
         "package",
         packageOptions,
-      )
+      );
 
       return `<form method="GET" class="flex flex-row gap-4">
         <div>
@@ -554,23 +554,23 @@ const renderCustomFilters = (
                 const selected =
                   (params.microphone_type ?? "all") === option
                     ? " selected"
-                    : ""
-                return `<option value="${escapeHtml(option)}"${selected}>${escapeHtml(option === "all" ? "All" : option)}</option>`
+                    : "";
+                return `<option value="${escapeHtml(option)}"${selected}>${escapeHtml(option === "all" ? "All" : option)}</option>`;
               })
               .join("")}
           </select>
         </div>
         <button type="submit">Filter</button>
-      </form>`
+      </form>`;
     }
     case "/lcd_drivers/list": {
-      const packageOptions = filterOptions.package ?? []
-      const maxResolutionOptions = filterOptions.max_resolution ?? []
+      const packageOptions = filterOptions.package ?? [];
+      const maxResolutionOptions = filterOptions.max_resolution ?? [];
       const packageListId = getSuggestionListId(
         pathname,
         "package",
         packageOptions,
-      )
+      );
 
       return `<form method="GET" class="flex flex-row gap-4">
         <div>
@@ -597,16 +597,16 @@ const renderCustomFilters = (
           <label>Preferred Part:<input type="checkbox" name="is_preferred" value="true"${params.is_preferred === "true" ? " checked" : ""} /></label>
         </div>
         <button type="submit">Filter</button>
-      </form>`
+      </form>`;
     }
     case "/tft_display_drivers/list": {
-      const packageOptions = filterOptions.package ?? []
-      const maxResolutionOptions = filterOptions.max_resolution ?? []
+      const packageOptions = filterOptions.package ?? [];
+      const maxResolutionOptions = filterOptions.max_resolution ?? [];
       const packageListId = getSuggestionListId(
         pathname,
         "package",
         packageOptions,
-      )
+      );
       return `<form method="GET" class="flex flex-row gap-4">
         <div>
           <label>Package:</label>
@@ -642,61 +642,61 @@ const renderCustomFilters = (
           <label>Preferred Part:<input type="checkbox" name="is_preferred" value="true"${params.is_preferred === "true" ? " checked" : ""} /></label>
         </div>
         <button type="submit">Filter</button>
-      </form>`
+      </form>`;
     }
     default:
-      return ""
+      return "";
   }
-}
+};
 
 const renderGenericFilters = (
   pathname: string,
   params: QueryParams,
   filterOptions: FilterOptions = {},
 ): string => {
-  const tableName = ROUTE_TO_TABLE[pathname]
-  if (!tableName) return ""
-  const config = TABLE_CONFIGS[tableName]
-  if (!config) return ""
-  const normalizedParams = normalizeTableQueryParams(tableName, params)
+  const tableName = ROUTE_TO_TABLE[pathname];
+  if (!tableName) return "";
+  const config = TABLE_CONFIGS[tableName];
+  if (!config) return "";
+  const normalizedParams = normalizeTableQueryParams(tableName, params);
 
   const inputs = Object.entries(config.filters)
     .map(([paramName, fieldConfig]) => {
-      const label = getColumnLabel(paramName)
+      const label = getColumnLabel(paramName);
       const mergedSuggestions = Array.from(
         new Set([
           ...(filterOptions[paramName] ?? []),
           ...(FALLBACK_FILTER_OPTIONS[paramName] ?? []),
         ]),
-      )
+      );
       if (fieldConfig.type === "boolean") {
-        return `<div><label>${escapeHtml(label)}:</label><select name="${escapeHtml(paramName)}"><option value="">All</option><option value="true"${normalizedParams[paramName] === "true" ? " selected" : ""}>Yes</option><option value="false"${normalizedParams[paramName] === "false" ? " selected" : ""}>No</option></select></div>`
+        return `<div><label>${escapeHtml(label)}:</label><select name="${escapeHtml(paramName)}"><option value="">All</option><option value="true"${normalizedParams[paramName] === "true" ? " selected" : ""}>Yes</option><option value="false"${normalizedParams[paramName] === "false" ? " selected" : ""}>No</option></select></div>`;
       }
       const isNumberFilter =
         fieldConfig.type === "number" ||
         fieldConfig.type === "number_range_contains" ||
-        fieldConfig.type === "number_distance_from_param"
-      const inputType = isNumberFilter ? "number" : "text"
-      const step = isNumberFilter ? ' step="any"' : ""
+        fieldConfig.type === "number_distance_from_param";
+      const inputType = isNumberFilter ? "number" : "text";
+      const step = isNumberFilter ? ' step="any"' : "";
       const placeholder = fieldConfig.placeholder
         ? ` placeholder="${escapeHtml(fieldConfig.placeholder)}"`
-        : ""
+        : "";
       const helpText = fieldConfig.helpText
         ? `<small class="block text-gray-600">${escapeHtml(fieldConfig.helpText)}</small>`
-        : ""
+        : "";
       const listId =
         mergedSuggestions.length > 0
           ? `${pathname.replaceAll("/", "-")}-${paramName}-options`
-          : ""
-      return `<div><label>${escapeHtml(label)}:</label><input type="${inputType}" name="${escapeHtml(paramName)}" value="${escapeHtml(normalizedParams[paramName] ?? "")}"${step}${placeholder}${listId ? ` list="${escapeHtml(listId)}"` : ""} autocomplete="on" />${helpText}${renderFilterSuggestions(pathname, paramName, mergedSuggestions)}</div>`
+          : "";
+      return `<div><label>${escapeHtml(label)}:</label><input type="${inputType}" name="${escapeHtml(paramName)}" value="${escapeHtml(normalizedParams[paramName] ?? "")}"${step}${placeholder}${listId ? ` list="${escapeHtml(listId)}"` : ""} autocomplete="on" />${helpText}${renderFilterSuggestions(pathname, paramName, mergedSuggestions)}</div>`;
     })
-    .join("")
+    .join("");
 
   const helpText = config.helpText
     ? `<p class="mt-2 text-sm text-gray-600">${escapeHtml(config.helpText)}</p>`
-    : ""
-  return `<form method="GET" class="flex flex-row gap-4">${inputs}<button type="submit">Filter</button></form>${helpText}`
-}
+    : "";
+  return `<form method="GET" class="flex flex-row gap-4">${inputs}<button type="submit">Filter</button></form>${helpText}`;
+};
 
 const renderComponentsFilters = (
   params: QueryParams,
@@ -711,18 +711,18 @@ const renderComponentsFilters = (
     <label>Preferred Part:<input type="checkbox" name="is_preferred" value="true"${params.is_preferred === "true" ? " checked" : ""} /></label>
   </div>
   <button type="submit">Filter</button>
-</form>`
+</form>`;
 
 const renderBreadcrumbs = (pathname: string): string => {
-  const parts = pathname.split("/").filter(Boolean)
+  const parts = pathname.split("/").filter(Boolean);
   return parts
     .map((part, index) => {
-      const isLast = index === parts.length - 1
-      const href = `/${parts.slice(0, index + 1).join("/")}`
-      return `<span><span class="px-0.5 text-gray-500">/</span>${isLast ? `<a href="${href}">${escapeHtml(part)}</a>` : `<span class="px-0.5 text-gray-500">${escapeHtml(part)}</span>`}</span>`
+      const isLast = index === parts.length - 1;
+      const href = `/${parts.slice(0, index + 1).join("/")}`;
+      return `<span><span class="px-0.5 text-gray-500">/</span>${isLast ? `<a href="${href}">${escapeHtml(part)}</a>` : `<span class="px-0.5 text-gray-500">${escapeHtml(part)}</span>`}</span>`;
     })
-    .join("")
-}
+    .join("");
+};
 
 const renderShell = (
   pathname: string,
@@ -790,7 +790,7 @@ posthog.init('phc_htd8AQjSfVEsFCLQMAiUooG4Q0DKBCjqYuQglc9V3Wo', { api_host:'http
       <footer class="footer text-xs">© ${new Date().getFullYear()} tscircuit. All rights reserved. By using this site, you agree to the<a href="https://tscircuit.com/legal/terms-of-service.html">terms of service</a>. This site is from tscircuit not JLCPCB, we are customers helping other customers.</footer>
     </div>
   </body>
-</html>`
+</html>`;
 
 export const renderHomePage = (): string => {
   const links = Object.entries(routeLabels)
@@ -798,13 +798,13 @@ export const renderHomePage = (): string => {
       ([href, label]) =>
         `<a href="${escapeHtml(href)}">${escapeHtml(label)}</a>`,
     )
-    .join("")
+    .join("");
 
   return renderShell(
     "/",
     `<div><div class="flex flex-wrap gap-4 *:text-lg *:border *:rounded *:p-2 *:border-gray-300 *:w-32 *:text-sm *:text-center">${links}</div></div>`,
-  )
-}
+  );
+};
 
 export const renderD1TablePage = (
   pathname: string,
@@ -816,33 +816,33 @@ export const renderD1TablePage = (
   const responseKey =
     TABLE_RESPONSE_KEY[ROUTE_TO_TABLE[pathname] ?? ""] ||
     Object.keys(data)[0] ||
-    "results"
-  const rows = data[responseKey] ?? []
+    "results";
+  const rows = data[responseKey] ?? [];
 
-  let pageBody = `<div><h2>${escapeHtml(getPageHeading(pathname))}</h2>`
+  let pageBody = `<div><h2>${escapeHtml(getPageHeading(pathname))}</h2>`;
 
   if (pathname === "/components/list") {
-    pageBody += renderComponentsFilters(params)
+    pageBody += renderComponentsFilters(params);
     if (params.subcategory_name) {
-      pageBody += `<div>Filtering by subcategory: ${escapeHtml(params.subcategory_name)}</div>`
+      pageBody += `<div>Filtering by subcategory: ${escapeHtml(params.subcategory_name)}</div>`;
     }
   } else if (pathname === "/categories/list") {
-    pageBody += "<div>Click for subcategories</div>"
+    pageBody += "<div>Click for subcategories</div>";
   } else {
     pageBody +=
       renderCustomFilters(pathname, params, filterOptions) ||
-      renderGenericFilters(pathname, params, filterOptions)
+      renderGenericFilters(pathname, params, filterOptions);
   }
 
   if (rows.length > 0) {
-    pageBody += renderTable(rows)
+    pageBody += renderTable(rows);
   }
-  pageBody += "</div>"
+  pageBody += "</div>";
 
   const title =
     pathname === "/components/list" && params.search
       ? `${params.search} - JLCPCB Component Search`
-      : getPageTitle(pathname)
+      : getPageTitle(pathname);
 
-  return renderShell(pathname, pageBody, title, requestUrl)
-}
+  return renderShell(pathname, pageBody, title, requestUrl);
+};

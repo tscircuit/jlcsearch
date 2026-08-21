@@ -1,19 +1,19 @@
-import { Database } from "bun:sqlite"
-import { afterEach, describe, expect, test } from "bun:test"
-import { mkdtemp, rm } from "node:fs/promises"
-import { tmpdir } from "node:os"
-import path from "node:path"
-import { extractMinQPrice } from "../lib/util/extract-min-quantity-price"
-import { buildDerivedSyncDatabase } from "../scripts/build-derived-sync-db"
+import { Database } from "bun:sqlite";
+import { afterEach, describe, expect, test } from "bun:test";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { extractMinQPrice } from "../lib/util/extract-min-quantity-price";
+import { buildDerivedSyncDatabase } from "../scripts/build-derived-sync-db";
 
-const tempDirectories: string[] = []
+const tempDirectories: string[] = [];
 
 const createSourceDatabase = async () => {
-  const directory = await mkdtemp(path.join(tmpdir(), "jlcsearch-source-v2-"))
-  tempDirectories.push(directory)
-  const sourcePath = path.join(directory, "source.sqlite3")
-  const outputPath = path.join(directory, "derived.sqlite3")
-  const source = new Database(sourcePath, { create: true })
+  const directory = await mkdtemp(path.join(tmpdir(), "jlcsearch-source-v2-"));
+  tempDirectories.push(directory);
+  const sourcePath = path.join(directory, "source.sqlite3");
+  const outputPath = path.join(directory, "derived.sqlite3");
+  const source = new Database(sourcePath, { create: true });
 
   source.exec(`
     CREATE TABLE jlc_components (
@@ -45,7 +45,7 @@ const createSourceDatabase = async () => {
       image TEXT,
       url_slug TEXT
     );
-  `)
+  `);
 
   source
     .query(
@@ -61,7 +61,7 @@ const createSourceDatabase = async () => {
         '{"Connector Type":"HDMI","Number of Pins":"19"}'
       )`,
     )
-    .run()
+    .run();
 
   source
     .query(
@@ -73,32 +73,32 @@ const createSourceDatabase = async () => {
         'example.jpg', 'hdmi-19p'
       )`,
     )
-    .run()
-  source.close()
+    .run();
+  source.close();
 
-  return { sourcePath, outputPath }
-}
+  return { sourcePath, outputPath };
+};
 
 afterEach(async () => {
   await Promise.all(
     tempDirectories
       .splice(0)
       .map((directory) => rm(directory, { recursive: true, force: true })),
-  )
-})
+  );
+});
 
 describe("buildDerivedSyncDatabase", () => {
   test("converts source-db-v2 rows into a populated HDMI derived table", async () => {
-    const { sourcePath, outputPath } = await createSourceDatabase()
+    const { sourcePath, outputPath } = await createSourceDatabase();
 
     await buildDerivedSyncDatabase({
       sourcePath,
       outputPath,
       tableNames: ["hdmi_port"],
       logger: () => {},
-    })
+    });
 
-    const output = new Database(outputPath, { readonly: true })
+    const output = new Database(outputPath, { readonly: true });
     const row = output
       .query(
         `SELECT
@@ -106,7 +106,7 @@ describe("buildDerivedSyncDatabase", () => {
           is_basic, is_preferred
         FROM hdmi_port`,
       )
-      .get() as Record<string, unknown>
+      .get() as Record<string, unknown>;
 
     expect(row).toEqual({
       lcsc: 12345,
@@ -116,12 +116,12 @@ describe("buildDerivedSyncDatabase", () => {
       mounting_style: "Surface Mount",
       is_basic: 1,
       is_preferred: 1,
-    })
-    output.close()
-  })
+    });
+    output.close();
+  });
 
   test("rejects unknown derived tables", async () => {
-    const { sourcePath, outputPath } = await createSourceDatabase()
+    const { sourcePath, outputPath } = await createSourceDatabase();
 
     expect(
       buildDerivedSyncDatabase({
@@ -130,11 +130,11 @@ describe("buildDerivedSyncDatabase", () => {
         tableNames: ["not_a_table"],
         logger: () => {},
       }),
-    ).rejects.toThrow("Unknown derived table: not_a_table")
-  })
+    ).rejects.toThrow("Unknown derived table: not_a_table");
+  });
 
   test("materializes a component catalog from source-db-v2", async () => {
-    const { sourcePath, outputPath } = await createSourceDatabase()
+    const { sourcePath, outputPath } = await createSourceDatabase();
 
     await buildDerivedSyncDatabase({
       sourcePath,
@@ -142,9 +142,9 @@ describe("buildDerivedSyncDatabase", () => {
       tableNames: ["hdmi_port"],
       includeComponentCatalog: true,
       logger: () => {},
-    })
+    });
 
-    const output = new Database(outputPath, { readonly: true })
+    const output = new Database(outputPath, { readonly: true });
     const row = output
       .query(
         `SELECT
@@ -154,7 +154,7 @@ describe("buildDerivedSyncDatabase", () => {
           json_extract(extra, '$.attributes.Gender') AS gender
         FROM component_catalog`,
       )
-      .get() as Record<string, unknown>
+      .get() as Record<string, unknown>;
 
     expect(row).toEqual({
       lcsc: 12345,
@@ -167,13 +167,13 @@ describe("buildDerivedSyncDatabase", () => {
       manufacturer: "Example Inc.",
       mpn: "HDMI-19P",
       gender: "Female",
-    })
-    output.close()
-  })
+    });
+    output.close();
+  });
 
   test("materializes a stock snapshot with zeroes for absent parts", async () => {
-    const { sourcePath, outputPath } = await createSourceDatabase()
-    const source = new Database(sourcePath)
+    const { sourcePath, outputPath } = await createSourceDatabase();
+    const source = new Database(sourcePath);
     source
       .query(
         `INSERT INTO jlc_components (
@@ -186,8 +186,8 @@ describe("buildDerivedSyncDatabase", () => {
           unixepoch(), 'No longer listed', '', 125, '1-:1.00', '{}'
         )`,
       )
-      .run()
-    source.close()
+      .run();
+    source.close();
 
     await buildDerivedSyncDatabase({
       sourcePath,
@@ -195,9 +195,9 @@ describe("buildDerivedSyncDatabase", () => {
       tableNames: ["hdmi_port"],
       includeStockSnapshot: true,
       logger: () => {},
-    })
+    });
 
-    const output = new Database(outputPath, { readonly: true })
+    const output = new Database(outputPath, { readonly: true });
     expect(
       output
         .query("SELECT lcsc, stock FROM component_stock ORDER BY lcsc")
@@ -205,13 +205,13 @@ describe("buildDerivedSyncDatabase", () => {
     ).toEqual([
       { lcsc: 12345, stock: 250 },
       { lcsc: 54321, stock: 0 },
-    ])
-    output.close()
-  })
-})
+    ]);
+    output.close();
+  });
+});
 
 describe("extractMinQPrice", () => {
   test("reads source-db-v2 price CSV", () => {
-    expect(extractMinQPrice("10-:0.75,1-9:1.25")).toBe(1.25)
-  })
-})
+    expect(extractMinQPrice("10-:0.75,1-9:1.25")).toBe(1.25);
+  });
+});

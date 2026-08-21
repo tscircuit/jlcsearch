@@ -1,9 +1,9 @@
-import { Database } from "bun:sqlite"
-import { expect, test } from "bun:test"
-import { Kysely } from "kysely"
-import { BunSqliteDialect } from "kysely-bun-sqlite"
-import { hdmiPortTableSpec } from "lib/db/derivedtables/hdmi-port"
-import { setupDerivedTables } from "lib/db/derivedtables/setup-derived-tables"
+import { Database } from "bun:sqlite";
+import { expect, test } from "bun:test";
+import { Kysely } from "kysely";
+import { BunSqliteDialect } from "kysely-bun-sqlite";
+import { hdmiPortTableSpec } from "lib/db/derivedtables/hdmi-port";
+import { setupDerivedTables } from "lib/db/derivedtables/setup-derived-tables";
 
 const makeComponent = (overrides: Record<string, unknown> = {}) =>
   ({
@@ -29,7 +29,7 @@ const makeComponent = (overrides: Record<string, unknown> = {}) =>
       },
     }),
     ...overrides,
-  }) as any
+  }) as any;
 
 const EXPECTED_INDEX_COLUMNS = [
   "stock",
@@ -40,10 +40,10 @@ const EXPECTED_INDEX_COLUMNS = [
   "number_of_pins,stock",
   "is_basic,stock",
   "is_preferred,stock",
-]
+];
 
 test("HDMI port table maps connector attributes", () => {
-  const [port] = hdmiPortTableSpec.mapToTable([makeComponent()])
+  const [port] = hdmiPortTableSpec.mapToTable([makeComponent()]);
 
   expect(port).toMatchObject({
     lcsc: 720616,
@@ -59,8 +59,8 @@ test("HDMI port table maps connector attributes", () => {
     operating_temp_max: 85,
     is_preferred: true,
     price1: 0.162173913,
-  })
-})
+  });
+});
 
 test("HDMI port table excludes neighboring D-Sub connectors", () => {
   const [port] = hdmiPortTableSpec.mapToTable([
@@ -76,28 +76,28 @@ test("HDMI port table excludes neighboring D-Sub connectors", () => {
         },
       }),
     }),
-  ])
+  ]);
 
-  expect(port).toBeNull()
-})
+  expect(port).toBeNull();
+});
 
 test("HDMI port table selects dedicated and legacy connector categories", async () => {
-  const database = new Database(":memory:")
+  const database = new Database(":memory:");
   const db = new Kysely<any>({
     dialect: new BunSqliteDialect({ database }),
-  })
+  });
 
   try {
     await db.schema
       .createTable("categories")
       .addColumn("id", "integer", (column) => column.primaryKey())
       .addColumn("subcategory", "text", (column) => column.notNull())
-      .execute()
+      .execute();
     await db.schema
       .createTable("components")
       .addColumn("lcsc", "integer", (column) => column.primaryKey())
       .addColumn("category_id", "integer", (column) => column.notNull())
-      .execute()
+      .execute();
 
     await db
       .insertInto("categories")
@@ -107,7 +107,7 @@ test("HDMI port table selects dedicated and legacy connector categories", async 
         { id: 3, subcategory: "Audio & Video Connectors" },
         { id: 4, subcategory: "USB Connectors" },
       ])
-      .execute()
+      .execute();
     await db
       .insertInto("components")
       .values([
@@ -116,73 +116,73 @@ test("HDMI port table selects dedicated and legacy connector categories", async 
         { lcsc: 3, category_id: 3 },
         { lcsc: 4, category_id: 4 },
       ])
-      .execute()
+      .execute();
 
     const candidates = await hdmiPortTableSpec
       .listCandidateComponents(db)
-      .execute()
+      .execute();
 
-    expect(candidates.map((candidate) => candidate.lcsc)).toEqual([1, 2, 3])
+    expect(candidates.map((candidate) => candidate.lcsc)).toEqual([1, 2, 3]);
   } finally {
-    await db.destroy()
+    await db.destroy();
   }
-})
+});
 
 test("HDMI port schema and migration create query indexes idempotently", async () => {
   expect(
     hdmiPortTableSpec.indexes?.map((index) => index.columns.join(",")),
-  ).toEqual(EXPECTED_INDEX_COLUMNS)
+  ).toEqual(EXPECTED_INDEX_COLUMNS);
 
-  const database = new Database(":memory:")
+  const database = new Database(":memory:");
   const db = new Kysely<any>({
     dialect: new BunSqliteDialect({ database }),
-  })
+  });
 
   try {
-    await setupDerivedTables({ db, populate: false })
+    await setupDerivedTables({ db, populate: false });
 
     const table = database
       .query(
         "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'hdmi_port'",
       )
-      .get()
+      .get();
     const indexes = database
       .query(
         "SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = 'hdmi_port' AND name NOT LIKE 'sqlite_%'",
       )
-      .all()
+      .all();
 
-    expect(table).not.toBeNull()
-    expect(indexes).toHaveLength(EXPECTED_INDEX_COLUMNS.length)
+    expect(table).not.toBeNull();
+    expect(indexes).toHaveLength(EXPECTED_INDEX_COLUMNS.length);
   } finally {
-    await db.destroy()
+    await db.destroy();
   }
 
-  const migrationDatabase = new Database(":memory:")
+  const migrationDatabase = new Database(":memory:");
   const migrationPath = new URL(
     "../../cf-proxy/migrations/0002_hdmi_port.sql",
     import.meta.url,
-  )
-  const migration = await Bun.file(migrationPath).text()
+  );
+  const migration = await Bun.file(migrationPath).text();
 
   try {
-    migrationDatabase.exec(migration)
-    migrationDatabase.exec(migration)
+    migrationDatabase.exec(migration);
+    migrationDatabase.exec(migration);
 
     const table = migrationDatabase
       .query(
         "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'hdmi_port'",
       )
-      .get()
+      .get();
     const indexes = migrationDatabase
       .query(
         "SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = 'hdmi_port' AND name NOT LIKE 'sqlite_%'",
       )
-      .all()
+      .all();
 
-    expect(table).not.toBeNull()
-    expect(indexes).toHaveLength(EXPECTED_INDEX_COLUMNS.length)
+    expect(table).not.toBeNull();
+    expect(indexes).toHaveLength(EXPECTED_INDEX_COLUMNS.length);
   } finally {
-    migrationDatabase.close()
+    migrationDatabase.close();
   }
-})
+});

@@ -1,14 +1,14 @@
-import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
+import { extractMinQPrice } from "lib/util/extract-min-quantity-price";
 import {
   isLikelyBareBleChip,
   mapBleFields,
   readComponentAttributes,
   type BleComponentFields,
-} from "./ble-utils"
-import type { DerivedTableSpec } from "./types"
+} from "./ble-utils";
+import type { DerivedTableSpec } from "./types";
 
 export interface BleModule extends BleComponentFields {
-  antenna_type: string | null
+  antenna_type: string | null;
 }
 
 export const bleModuleTableSpec: DerivedTableSpec<BleModule> = {
@@ -37,8 +37,8 @@ export const bleModuleTableSpec: DerivedTableSpec<BleModule> = {
       .where("categories.subcategory", "=", "Bluetooth Modules"),
   mapToTable: (components) =>
     components.map((component): BleModule | null => {
-      const attributes = readComponentAttributes(component.extra)
-      if (!attributes || isLikelyBareBleChip(component)) return null
+      const attributes = readComponentAttributes(component.extra);
+      if (!attributes || isLikelyBareBleChip(component)) return null;
 
       return {
         ...mapBleFields(component, attributes),
@@ -48,6 +48,6 @@ export const bleModuleTableSpec: DerivedTableSpec<BleModule> = {
           attributes["Antenna Type"].trim() !== "-"
             ? attributes["Antenna Type"].trim()
             : null,
-      }
+      };
     }),
-}
+};

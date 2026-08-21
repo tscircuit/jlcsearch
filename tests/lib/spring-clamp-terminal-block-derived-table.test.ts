@@ -1,5 +1,5 @@
-import { expect, test } from "bun:test"
-import { springClampTerminalBlockTableSpec } from "lib/db/derivedtables/spring-clamp-terminal-block"
+import { expect, test } from "bun:test";
+import { springClampTerminalBlockTableSpec } from "lib/db/derivedtables/spring-clamp-terminal-block";
 
 test("spring clamp terminal block table maps searchable attributes", () => {
   const [block] = springClampTerminalBlockTableSpec.mapToTable([
@@ -24,7 +24,7 @@ test("spring clamp terminal block table maps searchable attributes", () => {
         },
       }),
     } as any,
-  ])
+  ]);
 
   expect(block).toMatchObject({
     lcsc: 35616,
@@ -35,5 +35,5 @@ test("spring clamp terminal block table maps searchable attributes", () => {
     wire_gauge_mm2: 1.5,
     wire_gauge_awg: "14~22",
     mounting_style: "Through Hole",
-  })
-})
+  });
+});

@@ -6,23 +6,23 @@ import {
   SqliteQueryCompiler,
   type CompiledQuery,
   type DatabaseConnection,
-} from "kysely"
-import { describe, expect, it } from "vitest"
-import { getD1Handler } from "../src/d1-routes"
-import type { DB } from "../src/db/types"
+} from "kysely";
+import { describe, expect, it } from "vitest";
+import { getD1Handler } from "../src/d1-routes";
+import type { DB } from "../src/db/types";
 
 describe("LCD driver route", () => {
   it("queries LCD driver chips and applies catalog filters", async () => {
-    const compiledQueries: CompiledQuery[] = []
-    const driver = new DummyDriver()
+    const compiledQueries: CompiledQuery[] = [];
+    const driver = new DummyDriver();
 
     driver.acquireConnection = async () =>
       ({
         executeQuery: async (compiledQuery: CompiledQuery) => {
-          compiledQueries.push(compiledQuery)
+          compiledQueries.push(compiledQuery);
 
           if (compiledQuery.sql.includes('select distinct "package"')) {
-            return { rows: [{ package: "SSOP-48-300mil" }] }
+            return { rows: [{ package: "SSOP-48-300mil" }] };
           }
 
           if (
@@ -43,7 +43,7 @@ describe("LCD driver route", () => {
                     '{"attributes":{"Display Configurations(bit)":"32x8 bit"}}',
                 },
               ],
-            }
+            };
           }
 
           return {
@@ -73,10 +73,10 @@ describe("LCD driver route", () => {
                   '{"attributes":{"Display Configurations(bit)":"32x8 bit"}}',
               },
             ],
-          }
+          };
         },
         streamQuery: async function* () {},
-      }) as DatabaseConnection
+      }) as DatabaseConnection;
 
     const db = new Kysely<DB>({
       dialect: {
@@ -85,17 +85,17 @@ describe("LCD driver route", () => {
         createIntrospector: (database) => new SqliteIntrospector(database),
         createQueryCompiler: () => new SqliteQueryCompiler(),
       },
-    })
+    });
 
     try {
-      const handler = getD1Handler("/lcd_drivers/list")
-      expect(handler).not.toBeNull()
+      const handler = getD1Handler("/lcd_drivers/list");
+      expect(handler).not.toBeNull();
 
       const result = await handler!(db, {
         package: "SSOP-48-300mil",
         is_preferred: "true",
         max_resolution: "32x4",
-      })
+      });
 
       expect(result).toEqual({
         tableName: "lcd_driver",
@@ -120,22 +120,22 @@ describe("LCD driver route", () => {
             },
           ],
         },
-      })
+      });
 
       const partsQuery = compiledQueries.find((query) =>
         query.sql.includes('select "lcsc"'),
-      )
-      expect(partsQuery?.sql).toContain('"subcategory" = ?')
-      expect(partsQuery?.sql).toContain('"package" = ?')
-      expect(partsQuery?.sql).toContain('"preferred" = ?')
+      );
+      expect(partsQuery?.sql).toContain('"subcategory" = ?');
+      expect(partsQuery?.sql).toContain('"package" = ?');
+      expect(partsQuery?.sql).toContain('"preferred" = ?');
       expect(partsQuery?.parameters).toEqual([
         0,
         "LCD Drivers",
         "SSOP-48-300mil",
         1,
-      ])
+      ]);
     } finally {
-      await db.destroy()
+      await db.destroy();
     }
-  })
-})
+  });
+});

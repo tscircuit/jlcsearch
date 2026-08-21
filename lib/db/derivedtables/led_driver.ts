@@ -1,29 +1,29 @@
-import type { DerivedTableSpec } from "./types"
-import type { SelectQueryBuilder, Generated } from "kysely"
-import type { Component } from "../generated/kysely"
-import type { KyselyDatabaseInstance } from "../kysely-types"
+import type { DerivedTableSpec } from "./types";
+import type { SelectQueryBuilder, Generated } from "kysely";
+import type { Component } from "../generated/kysely";
+import type { KyselyDatabaseInstance } from "../kysely-types";
 
 type UnwrapGenerated<T> = {
-  [K in keyof T]: T[K] extends Generated<infer U> ? U : T[K]
-}
-import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
-import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
-import { parseIntOrNull } from "lib/util/parse-int-or-null"
-import { BaseComponent } from "./component-base"
+  [K in keyof T]: T[K] extends Generated<infer U> ? U : T[K];
+};
+import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit";
+import { extractMinQPrice } from "lib/util/extract-min-quantity-price";
+import { parseIntOrNull } from "lib/util/parse-int-or-null";
+import { BaseComponent } from "./component-base";
 
 export interface LedDriver extends BaseComponent {
   // Optional LED driver specific fields
-  package?: string
-  supply_voltage_min?: number
-  supply_voltage_max?: number
-  output_current_max?: number
-  channel_count?: number
-  dimming_method?: string
-  efficiency_percent?: number
-  operating_temp_min?: number
-  operating_temp_max?: number
-  protection_features?: string
-  mounting_style?: string
+  package?: string;
+  supply_voltage_min?: number;
+  supply_voltage_max?: number;
+  output_current_max?: number;
+  channel_count?: number;
+  dimming_method?: string;
+  efficiency_percent?: number;
+  operating_temp_min?: number;
+  operating_temp_max?: number;
+  protection_features?: string;
+  mounting_style?: string;
 }
 
 export const ledDriverTableSpec: DerivedTableSpec<LedDriver> = {
@@ -54,19 +54,19 @@ export const ledDriverTableSpec: DerivedTableSpec<LedDriver> = {
           eb("description", "like", "%LED Driver%"),
           eb("description", "like", "%LED Controller%"),
         ]),
-      )
+      );
   },
   mapToTable(components: UnwrapGenerated<Component>[]): (LedDriver | null)[] {
     return components.map((c) => {
       try {
-        const attrs = c.extra ? JSON.parse(c.extra)?.attributes || {} : {}
+        const attrs = c.extra ? JSON.parse(c.extra)?.attributes || {} : {};
 
         // Helper to parse voltage/current values that might be in various formats
         const parseValue = (val: string | undefined): number | undefined => {
-          if (!val) return undefined
-          const result = parseAndConvertSiUnit(val)
-          return result?.value || undefined
-        }
+          if (!val) return undefined;
+          const result = parseAndConvertSiUnit(val);
+          return result?.value || undefined;
+        };
 
         return {
           lcsc: Number(c.lcsc),
@@ -98,10 +98,10 @@ export const ledDriverTableSpec: DerivedTableSpec<LedDriver> = {
           protection_features: attrs["Protection Features"],
           mounting_style: attrs["Mounting Style"],
           attributes: attrs,
-        }
+        };
       } catch (e) {
-        return null
+        return null;
       }
-    })
+    });
   },
-}
+};

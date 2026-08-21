@@ -1,6 +1,6 @@
-import { expect, test } from "bun:test"
-import { bleChipTableSpec } from "lib/db/derivedtables/ble-chip"
-import { bleModuleTableSpec } from "lib/db/derivedtables/ble-module"
+import { expect, test } from "bun:test";
+import { bleChipTableSpec } from "lib/db/derivedtables/ble-chip";
+import { bleModuleTableSpec } from "lib/db/derivedtables/ble-module";
 
 const makeComponent = (overrides: Record<string, unknown> = {}) =>
   ({
@@ -24,10 +24,10 @@ const makeComponent = (overrides: Record<string, unknown> = {}) =>
       },
     }),
     ...overrides,
-  }) as any
+  }) as any;
 
 test("BLE chip table maps Bluetooth radio attributes", () => {
-  const [chip] = bleChipTableSpec.mapToTable([makeComponent()])
+  const [chip] = bleChipTableSpec.mapToTable([makeComponent()]);
 
   expect(chip).toMatchObject({
     lcsc: 77540,
@@ -44,8 +44,8 @@ test("BLE chip table maps Bluetooth radio attributes", () => {
     has_usb: true,
     is_preferred: true,
     price1: 2.5,
-  })
-})
+  });
+});
 
 test("BLE chip table rejects non-Bluetooth RF transceivers", () => {
   const [chip] = bleChipTableSpec.mapToTable([
@@ -59,10 +59,10 @@ test("BLE chip table rejects non-Bluetooth RF transceivers", () => {
         },
       }),
     }),
-  ])
+  ]);
 
-  expect(chip).toBeNull()
-})
+  expect(chip).toBeNull();
+});
 
 test.each(["CC2500RGPR", "ESP32-S2"])(
   "BLE chip table does not classify %s as BLE",
@@ -73,11 +73,11 @@ test.each(["CC2500RGPR", "ESP32-S2"])(
         description: "2.4GHz RF transceiver",
         extra: JSON.stringify({ attributes: {} }),
       }),
-    ])
+    ]);
 
-    expect(chip).toBeNull()
+    expect(chip).toBeNull();
   },
-)
+);
 
 test("BLE chip table recognizes BLE SoC families when metadata is sparse", () => {
   const [chip] = bleChipTableSpec.mapToTable([
@@ -85,10 +85,10 @@ test("BLE chip table recognizes BLE SoC families when metadata is sparse", () =>
       description: "",
       extra: JSON.stringify({ attributes: {} }),
     }),
-  ])
+  ]);
 
-  expect(chip?.mfr).toBe("NRF52832-QFAA-R")
-})
+  expect(chip?.mfr).toBe("NRF52832-QFAA-R");
+});
 
 test("BLE module table maps module-specific attributes", () => {
   const [module] = bleModuleTableSpec.mapToTable([
@@ -107,7 +107,7 @@ test("BLE module table maps module-specific attributes", () => {
         },
       }),
     }),
-  ])
+  ]);
 
   expect(module).toMatchObject({
     lcsc: 20539408,
@@ -119,8 +119,8 @@ test("BLE module table maps module-specific attributes", () => {
     operating_voltage_max: 3.3,
     has_uart: true,
     has_i2c: true,
-  })
-})
+  });
+});
 
 test("BLE module and chip tables split bare ICs miscategorized as modules", () => {
   const component = makeComponent({
@@ -130,14 +130,14 @@ test("BLE module and chip tables split bare ICs miscategorized as modules", () =
     description: "",
     source_subcategory: "Bluetooth Modules",
     extra: JSON.stringify({ attributes: {} }),
-  })
+  });
 
-  const [module] = bleModuleTableSpec.mapToTable([component])
-  const [chip] = bleChipTableSpec.mapToTable([component])
+  const [module] = bleModuleTableSpec.mapToTable([component]);
+  const [chip] = bleChipTableSpec.mapToTable([component]);
 
-  expect(module).toBeNull()
-  expect(chip?.mfr).toBe("GR5513BENDU")
-})
+  expect(module).toBeNull();
+  expect(chip?.mfr).toBe("GR5513BENDU");
+});
 
 test("BLE module table keeps packaged ESP32 modules out of the chip table", () => {
   const component = makeComponent({
@@ -145,11 +145,11 @@ test("BLE module table keeps packaged ESP32 modules out of the chip table", () =
     mfr: "ESP32-WROOM-32E-N8R2",
     package: "LCC-38(18x25.5)",
     source_subcategory: "Bluetooth Modules",
-  })
+  });
 
-  const [module] = bleModuleTableSpec.mapToTable([component])
-  const [chip] = bleChipTableSpec.mapToTable([component])
+  const [module] = bleModuleTableSpec.mapToTable([component]);
+  const [chip] = bleChipTableSpec.mapToTable([component]);
 
-  expect(module?.mfr).toBe("ESP32-WROOM-32E-N8R2")
-  expect(chip).toBeNull()
-})
+  expect(module?.mfr).toBe("ESP32-WROOM-32E-N8R2");
+  expect(chip).toBeNull();
+});

@@ -1,24 +1,24 @@
-import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
-import type { DerivedTableSpec } from "./types"
-import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
-import { BaseComponent } from "./component-base"
+import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit";
+import type { DerivedTableSpec } from "./types";
+import { extractMinQPrice } from "lib/util/extract-min-quantity-price";
+import { BaseComponent } from "./component-base";
 
 export interface AnalogMultiplexer extends BaseComponent {
   // Extra columns
-  package: string
-  num_channels: number | null
-  num_bits: number | null
-  on_resistance_ohms: number | null
-  supply_voltage_min: number | null
-  supply_voltage_max: number | null
-  has_enable: boolean
-  has_spi: boolean
-  has_i2c: boolean
-  has_parallel_interface: boolean
-  leakage_current_na: number | null
-  operating_temp_min: number | null
-  operating_temp_max: number | null
-  channel_type: "single" | "differential" | "unknown"
+  package: string;
+  num_channels: number | null;
+  num_bits: number | null;
+  on_resistance_ohms: number | null;
+  supply_voltage_min: number | null;
+  supply_voltage_max: number | null;
+  has_enable: boolean;
+  has_spi: boolean;
+  has_i2c: boolean;
+  has_parallel_interface: boolean;
+  leakage_current_na: number | null;
+  operating_temp_min: number | null;
+  operating_temp_max: number | null;
+  channel_type: "single" | "differential" | "unknown";
 }
 
 export const analogMultiplexerTableSpec: DerivedTableSpec<AnalogMultiplexer> = {
@@ -54,86 +54,86 @@ export const analogMultiplexerTableSpec: DerivedTableSpec<AnalogMultiplexer> = {
       ),
   mapToTable: (components) => {
     return components.map((c): AnalogMultiplexer | null => {
-      if (!c.extra) return null
-      const extra = JSON.parse(c.extra ?? "{}")
-      if (!extra.attributes) return null
+      if (!c.extra) return null;
+      const extra = JSON.parse(c.extra ?? "{}");
+      if (!extra.attributes) return null;
 
-      const attrs = extra.attributes
-      const desc = c.description.toLowerCase()
+      const attrs = extra.attributes;
+      const desc = c.description.toLowerCase();
 
       // Parse number of channels
-      let numChannels = null
-      const rawChannels = attrs["Number of Channels"]
+      let numChannels = null;
+      const rawChannels = attrs["Number of Channels"];
       if (rawChannels) {
-        const match = rawChannels.match(/(\d+)/)
-        if (match) numChannels = parseInt(match[1])
+        const match = rawChannels.match(/(\d+)/);
+        if (match) numChannels = parseInt(match[1]);
       }
 
       // Parse number of bits (address lines)
-      let numBits = null
+      let numBits = null;
       if (numChannels) {
-        numBits = Math.ceil(Math.log2(numChannels))
+        numBits = Math.ceil(Math.log2(numChannels));
       }
 
       // Parse on-state resistance
-      let onResistance = null
-      const rawResistance = attrs["On-State Resistance (Max)"]
+      let onResistance = null;
+      const rawResistance = attrs["On-State Resistance (Max)"];
       if (rawResistance) {
-        const match = rawResistance.match(/(\d+(?:\.\d+)?)Ω/)
-        if (match) onResistance = parseFloat(match[1])
+        const match = rawResistance.match(/(\d+(?:\.\d+)?)Ω/);
+        if (match) onResistance = parseFloat(match[1]);
       }
 
       // Parse voltage range
-      let voltageMin = null
-      let voltageMax = null
-      const rawVoltage = attrs["Supply Voltage"]
+      let voltageMin = null;
+      let voltageMax = null;
+      const rawVoltage = attrs["Supply Voltage"];
       if (rawVoltage) {
-        const match = rawVoltage.match(/([\d.]+)V~([\d.]+)V/)
+        const match = rawVoltage.match(/([\d.]+)V~([\d.]+)V/);
         if (match) {
-          voltageMin = parseFloat(match[1])
-          voltageMax = parseFloat(match[2])
+          voltageMin = parseFloat(match[1]);
+          voltageMax = parseFloat(match[2]);
         }
       }
 
       // Parse leakage current
-      let leakageCurrent = null
-      const rawLeakage = attrs["Leakage Current"]
+      let leakageCurrent = null;
+      const rawLeakage = attrs["Leakage Current"];
       if (rawLeakage) {
-        const parsed = parseAndConvertSiUnit(rawLeakage).value as number
-        if (parsed) leakageCurrent = parsed * 1e9 // Convert to nanoamps
+        const parsed = parseAndConvertSiUnit(rawLeakage).value as number;
+        if (parsed) leakageCurrent = parsed * 1e9; // Convert to nanoamps
       }
 
       // Parse temperature range
-      let tempMin = null
-      let tempMax = null
-      const rawTemp = attrs["Operating Temperature"]
+      let tempMin = null;
+      let tempMax = null;
+      const rawTemp = attrs["Operating Temperature"];
       if (rawTemp) {
-        const match = rawTemp.match(/([-\d]+)℃~\+([-\d]+)℃/)
+        const match = rawTemp.match(/([-\d]+)℃~\+([-\d]+)℃/);
         if (match) {
-          tempMin = parseInt(match[1])
-          tempMax = parseInt(match[2])
+          tempMin = parseInt(match[1]);
+          tempMax = parseInt(match[2]);
         }
       }
 
       // Determine channel type
-      let channelType: "single" | "differential" | "unknown" = "unknown"
+      let channelType: "single" | "differential" | "unknown" = "unknown";
       if (desc.includes("differential")) {
-        channelType = "differential"
+        channelType = "differential";
       } else if (desc.includes("single")) {
-        channelType = "single"
+        channelType = "single";
       }
 
       // Parse interface and control features
       const hasEnable = Boolean(
         attrs["Enable/Disable"] === "Yes" ||
-          desc.includes("enable") ||
-          desc.includes("en pin"),
-      )
+        desc.includes("enable") ||
+        desc.includes("en pin"),
+      );
 
-      const interfaceType = (attrs["Interface"] || "").toLowerCase()
-      const hasI2c = interfaceType.includes("i2c")
-      const hasSpi = interfaceType.includes("spi")
-      const hasParallel = interfaceType.includes("parallel")
+      const interfaceType = (attrs["Interface"] || "").toLowerCase();
+      const hasI2c = interfaceType.includes("i2c");
+      const hasSpi = interfaceType.includes("spi");
+      const hasParallel = interfaceType.includes("parallel");
 
       return {
         lcsc: c.lcsc,
@@ -159,7 +159,7 @@ export const analogMultiplexerTableSpec: DerivedTableSpec<AnalogMultiplexer> = {
         operating_temp_max: tempMax,
         channel_type: channelType,
         attributes: attrs,
-      }
-    })
+      };
+    });
   },
-}
+};

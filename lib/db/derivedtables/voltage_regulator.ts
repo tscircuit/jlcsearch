@@ -1,25 +1,25 @@
-import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
-import type { DerivedTableSpec } from "./types"
-import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
-import { BaseComponent } from "./component-base"
+import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit";
+import type { DerivedTableSpec } from "./types";
+import { extractMinQPrice } from "lib/util/extract-min-quantity-price";
+import { BaseComponent } from "./component-base";
 
 export interface VoltageRegulator extends BaseComponent {
-  package: string
-  output_type: "fixed" | "adjustable" | "unknown"
-  output_voltage_min: number | null
-  output_voltage_max: number | null
-  output_current_max: number | null
-  dropout_voltage: number | null
-  input_voltage_min: number | null
-  input_voltage_max: number | null
-  operating_temp_min: number | null
-  operating_temp_max: number | null
-  quiescent_current: number | null
-  power_supply_rejection_db: number | null
-  output_noise_uvrms: number | null
-  is_low_dropout: boolean
-  is_positive: boolean
-  topology: string | null
+  package: string;
+  output_type: "fixed" | "adjustable" | "unknown";
+  output_voltage_min: number | null;
+  output_voltage_max: number | null;
+  output_current_max: number | null;
+  dropout_voltage: number | null;
+  input_voltage_min: number | null;
+  input_voltage_max: number | null;
+  operating_temp_min: number | null;
+  operating_temp_max: number | null;
+  quiescent_current: number | null;
+  power_supply_rejection_db: number | null;
+  output_noise_uvrms: number | null;
+  is_low_dropout: boolean;
+  is_positive: boolean;
+  topology: string | null;
 }
 
 export const voltageRegulatorTableSpec: DerivedTableSpec<VoltageRegulator> = {
@@ -59,121 +59,121 @@ export const voltageRegulatorTableSpec: DerivedTableSpec<VoltageRegulator> = {
       ),
   mapToTable: (components) => {
     return components.map((c): VoltageRegulator | null => {
-      if (!c.extra) return null
-      const extra = JSON.parse(c.extra ?? "{}")
-      if (!extra.attributes) return null
+      if (!c.extra) return null;
+      const extra = JSON.parse(c.extra ?? "{}");
+      if (!extra.attributes) return null;
 
-      const attrs = extra.attributes
-      const desc = c.description.toLowerCase()
+      const attrs = extra.attributes;
+      const desc = c.description.toLowerCase();
 
       // Parse output type
-      let outputType: "fixed" | "adjustable" | "unknown" = "unknown"
+      let outputType: "fixed" | "adjustable" | "unknown" = "unknown";
       if (attrs["Output Type"]?.toLowerCase().includes("fixed")) {
-        outputType = "fixed"
+        outputType = "fixed";
       } else if (attrs["Output Type"]?.toLowerCase().includes("adjustable")) {
-        outputType = "adjustable"
+        outputType = "adjustable";
       }
 
       // Parse output voltage range
-      let voltageMin = null
-      let voltageMax = null
-      const rawVoltage = attrs["Output Voltage"]
+      let voltageMin = null;
+      let voltageMax = null;
+      const rawVoltage = attrs["Output Voltage"];
       if (rawVoltage) {
-        const match = rawVoltage.match(/([\d.]+)V~([\d.]+)V/)
+        const match = rawVoltage.match(/([\d.]+)V~([\d.]+)V/);
         if (match) {
-          voltageMin = parseFloat(match[1])
-          voltageMax = parseFloat(match[2])
+          voltageMin = parseFloat(match[1]);
+          voltageMax = parseFloat(match[2]);
         } else {
           // Single voltage for fixed regulators
-          const singleMatch = rawVoltage.match(/([\d.]+)V/)
+          const singleMatch = rawVoltage.match(/([\d.]+)V/);
           if (singleMatch) {
-            voltageMin = voltageMax = parseFloat(singleMatch[1])
+            voltageMin = voltageMax = parseFloat(singleMatch[1]);
           }
         }
       }
 
       // Parse output current
-      let outputCurrent = null
-      const rawCurrent = attrs["Output Current"]
+      let outputCurrent = null;
+      const rawCurrent = attrs["Output Current"];
       if (rawCurrent) {
-        const parsed = parseAndConvertSiUnit(rawCurrent).value
-        if (parsed) outputCurrent = parsed as number
+        const parsed = parseAndConvertSiUnit(rawCurrent).value;
+        if (parsed) outputCurrent = parsed as number;
       }
 
       // Parse dropout voltage
-      let dropoutVoltage = null
-      const rawDropout = attrs["Dropout Voltage"]
+      let dropoutVoltage = null;
+      const rawDropout = attrs["Dropout Voltage"];
       if (rawDropout) {
-        const match = rawDropout.match(/([\d.]+)V/)
-        if (match) dropoutVoltage = parseFloat(match[1])
+        const match = rawDropout.match(/([\d.]+)V/);
+        if (match) dropoutVoltage = parseFloat(match[1]);
       }
 
       // Parse input voltage range
-      let inputVoltageMin = null
-      let inputVoltageMax = null
-      const maxInputVoltage = attrs["Maximum Input Voltage"]
+      let inputVoltageMin = null;
+      let inputVoltageMax = null;
+      const maxInputVoltage = attrs["Maximum Input Voltage"];
       if (maxInputVoltage) {
-        const match = maxInputVoltage.match(/([\d.]+)V/)
+        const match = maxInputVoltage.match(/([\d.]+)V/);
         if (match) {
-          inputVoltageMax = parseFloat(match[1])
+          inputVoltageMax = parseFloat(match[1]);
           // Estimate min input as dropout + output for LDOs
           if (dropoutVoltage && voltageMin) {
-            inputVoltageMin = voltageMin + dropoutVoltage
+            inputVoltageMin = voltageMin + dropoutVoltage;
           }
         }
       }
 
       // Parse temperature range
-      let tempMin = null
-      let tempMax = null
-      const rawTemp = attrs["Operating Temperature"]
+      let tempMin = null;
+      let tempMax = null;
+      const rawTemp = attrs["Operating Temperature"];
       if (rawTemp) {
-        const match = rawTemp.match(/([-\d]+)℃~\+([-\d]+)℃/)
+        const match = rawTemp.match(/([-\d]+)℃~\+([-\d]+)℃/);
         if (match) {
-          tempMin = parseInt(match[1])
-          tempMax = parseInt(match[2])
+          tempMin = parseInt(match[1]);
+          tempMax = parseInt(match[2]);
         }
       }
 
       // Parse quiescent current
-      let quiescentCurrent = null
-      const rawQuiescent = attrs["Quiescent Current (Ground Current)"]
+      let quiescentCurrent = null;
+      const rawQuiescent = attrs["Quiescent Current (Ground Current)"];
       if (rawQuiescent) {
-        const parsed = parseAndConvertSiUnit(rawQuiescent).value
-        if (parsed) quiescentCurrent = parsed as number
+        const parsed = parseAndConvertSiUnit(rawQuiescent).value;
+        if (parsed) quiescentCurrent = parsed as number;
       }
 
       // Parse power supply rejection ratio
-      let psrr = null
-      const rawPsrr = attrs["Power Supply Rejection Ratio (PSRR)"]
+      let psrr = null;
+      const rawPsrr = attrs["Power Supply Rejection Ratio (PSRR)"];
       if (rawPsrr) {
-        const match = rawPsrr.match(/([\d.]+)dB/)
-        if (match) psrr = parseFloat(match[1])
+        const match = rawPsrr.match(/([\d.]+)dB/);
+        if (match) psrr = parseFloat(match[1]);
       }
 
       // Parse output noise
-      let outputNoise = null
-      const rawNoise = attrs["Output Noise"]
+      let outputNoise = null;
+      const rawNoise = attrs["Output Noise"];
       if (rawNoise) {
-        const parsed = parseAndConvertSiUnit(rawNoise).value
-        if (parsed) outputNoise = (parsed as number) * 1e6 // Convert to μVrms
+        const parsed = parseAndConvertSiUnit(rawNoise).value;
+        if (parsed) outputNoise = (parsed as number) * 1e6; // Convert to μVrms
       }
 
       // Determine regulator characteristics
       const isLdo = Boolean(
         desc.includes("ldo") ||
-          desc.includes("low drop") ||
-          desc.includes("low-drop") ||
-          (dropoutVoltage && dropoutVoltage < 0.7),
-      )
+        desc.includes("low drop") ||
+        desc.includes("low-drop") ||
+        (dropoutVoltage && dropoutVoltage < 0.7),
+      );
 
       const isPositive = Boolean(
         attrs["Output Polarity"]?.toLowerCase().includes("positive") ||
-          !desc.includes("negative"),
-      )
+        !desc.includes("negative"),
+      );
 
       // Get topology
-      const topology = attrs["Topology"] || null
+      const topology = attrs["Topology"] || null;
 
       return {
         lcsc: c.lcsc,
@@ -201,7 +201,7 @@ export const voltageRegulatorTableSpec: DerivedTableSpec<VoltageRegulator> = {
         is_positive: isPositive,
         topology: topology,
         attributes: attrs,
-      }
-    })
+      };
+    });
   },
-}
+};

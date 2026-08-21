@@ -1,12 +1,12 @@
-import type { DerivedTableSpec } from "./types"
-import type { KyselyDatabaseInstance } from "../kysely-types"
-import { BaseComponent } from "./component-base"
-import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
+import type { DerivedTableSpec } from "./types";
+import type { KyselyDatabaseInstance } from "../kysely-types";
+import { BaseComponent } from "./component-base";
+import { extractMinQPrice } from "lib/util/extract-min-quantity-price";
 
 export interface LEDDotMatrixDisplay extends BaseComponent {
-  package?: string
-  matrix_size?: string
-  color?: string
+  package?: string;
+  matrix_size?: string;
+  color?: string;
 }
 
 export const ledDotMatrixDisplayTableSpec: DerivedTableSpec<LEDDotMatrixDisplay> =
@@ -24,28 +24,28 @@ export const ledDotMatrixDisplayTableSpec: DerivedTableSpec<LEDDotMatrixDisplay>
         .selectFrom("components")
         .innerJoin("categories", "components.category_id", "categories.id")
         .selectAll()
-        .where((eb) => eb("description", "like", "%LED Dot Matrix%"))
+        .where((eb) => eb("description", "like", "%LED Dot Matrix%"));
     },
     mapToTable(components) {
       return components.map((c) => {
         try {
-          const extraData = c.extra ? JSON.parse(c.extra) : {}
-          const attrs = extraData.attributes || {}
+          const extraData = c.extra ? JSON.parse(c.extra) : {};
+          const attrs = extraData.attributes || {};
 
           // Extract matrix size from description (e.g., "8x8", "16x32")
-          let matrix_size = undefined
-          const sizeMatch = c.description.match(/(\d+x\d+)/)
+          let matrix_size = undefined;
+          const sizeMatch = c.description.match(/(\d+x\d+)/);
           if (sizeMatch) {
-            matrix_size = sizeMatch[1]
+            matrix_size = sizeMatch[1];
           }
 
           // Extract color from description or attributes
-          let color = attrs.Color || undefined
+          let color = attrs.Color || undefined;
           if (!color) {
-            if (c.description.includes("Red")) color = "Red"
-            else if (c.description.includes("Green")) color = "Green"
-            else if (c.description.includes("Blue")) color = "Blue"
-            else if (c.description.includes("RGB")) color = "RGB"
+            if (c.description.includes("Red")) color = "Red";
+            else if (c.description.includes("Green")) color = "Green";
+            else if (c.description.includes("Blue")) color = "Blue";
+            else if (c.description.includes("RGB")) color = "RGB";
           }
 
           return {
@@ -61,10 +61,10 @@ export const ledDotMatrixDisplayTableSpec: DerivedTableSpec<LEDDotMatrixDisplay>
             matrix_size,
             color,
             attributes: attrs,
-          }
+          };
         } catch (e) {
-          return null
+          return null;
         }
-      })
+      });
     },
-  }
+  };

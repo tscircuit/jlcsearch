@@ -1,17 +1,17 @@
-import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
-import type { DerivedTableSpec } from "./types"
-import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
-import { BaseComponent } from "./component-base"
-import type { KyselyDatabaseInstance } from "../kysely-types"
+import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit";
+import type { DerivedTableSpec } from "./types";
+import { extractMinQPrice } from "lib/util/extract-min-quantity-price";
+import { BaseComponent } from "./component-base";
+import type { KyselyDatabaseInstance } from "../kysely-types";
 
 export interface BatteryHolder extends BaseComponent {
-  package: string
-  connector_type: string | null
-  battery_type: string | null
-  operating_temp_min: number | null
-  operating_temp_max: number | null
-  is_basic: boolean
-  is_preferred: boolean
+  package: string;
+  connector_type: string | null;
+  battery_type: string | null;
+  operating_temp_min: number | null;
+  operating_temp_max: number | null;
+  is_basic: boolean;
+  is_preferred: boolean;
 }
 
 const BATTERY_CONNECTOR_SUBCATEGORIES = [
@@ -20,7 +20,7 @@ const BATTERY_CONNECTOR_SUBCATEGORIES = [
   "Blade / Shrapnel Contact Battery Connectors",
   "Blade / Shrapnel Contact Battery Connector",
   "BatteryConnector",
-]
+];
 
 export const batteryHolderTableSpec: DerivedTableSpec<BatteryHolder> = {
   tableName: "battery_holder",
@@ -38,31 +38,31 @@ export const batteryHolderTableSpec: DerivedTableSpec<BatteryHolder> = {
       .selectFrom("components")
       .innerJoin("categories", "components.category_id", "categories.id")
       .selectAll()
-      .where("categories.subcategory", "in", BATTERY_CONNECTOR_SUBCATEGORIES)
+      .where("categories.subcategory", "in", BATTERY_CONNECTOR_SUBCATEGORIES);
   },
   mapToTable(components) {
     return components.map((c) => {
       try {
-        const extra = c.extra ? JSON.parse(c.extra) : {}
-        const attrs: Record<string, string> = extra.attributes || {}
+        const extra = c.extra ? JSON.parse(c.extra) : {};
+        const attrs: Record<string, string> = extra.attributes || {};
 
         const parseTemperature = (value: string | undefined): number | null => {
-          if (!value || value === "-") return null
+          if (!value || value === "-") return null;
           try {
             return parseAndConvertSiUnit(value.replace("℃", "C"))
-              .value as number
+              .value as number;
           } catch {
-            return null
+            return null;
           }
-        }
+        };
 
-        let tempMin: number | null = null
-        let tempMax: number | null = null
-        const rawTemp = attrs["Operating Temperature Range"]
+        let tempMin: number | null = null;
+        let tempMax: number | null = null;
+        const rawTemp = attrs["Operating Temperature Range"];
         if (rawTemp && rawTemp.includes("~")) {
-          const [min, max] = rawTemp.split("~")
-          tempMin = parseTemperature(min)
-          tempMax = parseTemperature(max)
+          const [min, max] = rawTemp.split("~");
+          tempMin = parseTemperature(min);
+          tempMax = parseTemperature(max);
         }
 
         return {
@@ -80,10 +80,10 @@ export const batteryHolderTableSpec: DerivedTableSpec<BatteryHolder> = {
           operating_temp_min: tempMin,
           operating_temp_max: tempMax,
           attributes: attrs,
-        }
+        };
       } catch {
-        return null
+        return null;
       }
-    })
+    });
   },
-}
+};

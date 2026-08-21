@@ -1,27 +1,27 @@
-import type { BaseComponent } from "./component-base"
+import type { BaseComponent } from "./component-base";
 
 interface SourceComponent {
-  lcsc: number
-  mfr: string
-  description: string
-  stock: number
-  basic: number
-  preferred: number
-  package: string
+  lcsc: number;
+  mfr: string;
+  description: string;
+  stock: number;
+  basic: number;
+  preferred: number;
+  package: string;
 }
 
 export interface BleComponentFields extends BaseComponent {
-  package: string
-  core_processor: string | null
-  bluetooth_version: string | null
-  frequency_ghz: number | null
-  operating_voltage_min: number | null
-  operating_voltage_max: number | null
-  data_rate_mbps: number | null
-  has_uart: boolean
-  has_i2c: boolean
-  has_spi: boolean
-  has_usb: boolean
+  package: string;
+  core_processor: string | null;
+  bluetooth_version: string | null;
+  frequency_ghz: number | null;
+  operating_voltage_min: number | null;
+  operating_voltage_max: number | null;
+  data_rate_mbps: number | null;
+  has_uart: boolean;
+  has_i2c: boolean;
+  has_spi: boolean;
+  has_usb: boolean;
 }
 
 const getFirstAttribute = (
@@ -29,79 +29,79 @@ const getFirstAttribute = (
   keys: string[],
 ): string | null => {
   for (const key of keys) {
-    const value = attributes[key]
-    if (value === undefined || value === null) continue
+    const value = attributes[key];
+    if (value === undefined || value === null) continue;
 
-    const normalized = String(value).trim()
-    if (normalized && normalized !== "-") return normalized
+    const normalized = String(value).trim();
+    if (normalized && normalized !== "-") return normalized;
   }
 
-  return null
-}
+  return null;
+};
 
 const parseValuesWithUnit = (value: string | null, unit: string): number[] => {
-  if (!value) return []
+  if (!value) return [];
 
   const matches = value.matchAll(
     new RegExp(`(-?\\d+(?:\\.\\d+)?)\\s*${unit}`, "gi"),
-  )
+  );
   return Array.from(matches, (match) => Number(match[1])).filter(
     Number.isFinite,
-  )
-}
+  );
+};
 
 const parseFrequencyGhz = (value: string | null): number | null => {
-  if (!value) return null
+  if (!value) return null;
 
-  const match = value.match(/(-?\d+(?:\.\d+)?)\s*(GHz|MHz|kHz|Hz)/i)
-  if (!match) return null
+  const match = value.match(/(-?\d+(?:\.\d+)?)\s*(GHz|MHz|kHz|Hz)/i);
+  if (!match) return null;
 
-  const frequency = Number(match[1])
-  const unit = match[2].toLowerCase()
-  if (unit === "ghz") return frequency
-  if (unit === "mhz") return frequency / 1e3
-  if (unit === "khz") return frequency / 1e6
-  return frequency / 1e9
-}
+  const frequency = Number(match[1]);
+  const unit = match[2].toLowerCase();
+  if (unit === "ghz") return frequency;
+  if (unit === "mhz") return frequency / 1e3;
+  if (unit === "khz") return frequency / 1e6;
+  return frequency / 1e9;
+};
 
 const parseDataRateMbps = (value: string | null): number | null => {
-  if (!value) return null
+  if (!value) return null;
 
-  const match = value.match(/(\d+(?:\.\d+)?)\s*(Gbps|Mbps|Kbps|bps)/i)
-  if (!match) return null
+  const match = value.match(/(\d+(?:\.\d+)?)\s*(Gbps|Mbps|Kbps|bps)/i);
+  if (!match) return null;
 
-  const dataRate = Number(match[1])
-  const unit = match[2].toLowerCase()
-  if (unit === "gbps") return dataRate * 1e3
-  if (unit === "mbps") return dataRate
-  if (unit === "kbps") return dataRate / 1e3
-  return dataRate / 1e6
-}
+  const dataRate = Number(match[1]);
+  const unit = match[2].toLowerCase();
+  if (unit === "gbps") return dataRate * 1e3;
+  if (unit === "mbps") return dataRate;
+  if (unit === "kbps") return dataRate / 1e3;
+  return dataRate / 1e6;
+};
 
 const parseBluetoothVersion = (value: string | null): string | null => {
-  if (!value) return null
+  if (!value) return null;
 
   const versionMatch = value.match(
     /(?:bluetooth|ble)?\s*(?:version|v)?\s*(\d+(?:\.\d+)?)/i,
-  )
-  return versionMatch?.[1] ?? value
-}
+  );
+  return versionMatch?.[1] ?? value;
+};
 
 export const readComponentAttributes = (
   extra: string | null,
 ): Record<string, unknown> | null => {
-  if (!extra) return null
+  if (!extra) return null;
 
   try {
-    const parsed = JSON.parse(extra)
+    const parsed = JSON.parse(extra);
     if (!parsed.attributes || typeof parsed.attributes !== "object") {
-      return null
+      return null;
     }
-    return parsed.attributes
+    return parsed.attributes;
   } catch {
-    return null
+    return null;
   }
-}
+};
 
 export const isBleChip = (
   component: Pick<SourceComponent, "description" | "mfr">,
@@ -117,28 +117,28 @@ export const isBleChip = (
   ]
     .map((key) => attributes[key])
     .filter((value) => value !== undefined && value !== null)
-    .join(" ")
+    .join(" ");
 
   if (/bluetooth|\bble\b|low[ -]?energy/i.test(bluetoothMetadata)) {
-    return true
+    return true;
   }
 
-  const searchableText = `${component.mfr} ${component.description}`
-  if (/\besp32-(?:s2|p4)/i.test(searchableText)) return false
+  const searchableText = `${component.mfr} ${component.description}`;
+  if (/\besp32-(?:s2|p4)/i.test(searchableText)) return false;
 
   return /\b(?:n?rf5\d+|cc(?:135[24]|254|264|265|267)\d*|efr32(?:bg|mg)\d+|bluenrg|stm32wba?|n32wb|ch5[789]|gr55|qn90|rsl10|da14\d+|ra4w1|tlsr\d+|esp32)/i.test(
     searchableText,
-  )
-}
+  );
+};
 
 export const isLikelyBareBleChip = (
   component: Pick<SourceComponent, "package">,
 ): boolean => {
-  const packageName = component.package.trim()
+  const packageName = component.package.trim();
   return /^(?:[A-Z]*QFN|[A-Z]*QFPN|[A-Z]*BGA|WLCSP|CSP|DFN|LQFP|TQFP|QFP|SOIC|SOP|SSOP|TSSOP)(?:-|\b)/i.test(
     packageName,
-  )
-}
+  );
+};
 
 export const mapBleFields = (
   component: SourceComponent,
@@ -150,8 +150,8 @@ export const mapBleFields = (
     "Supply Voltage",
     "Working Voltage",
     "mains input",
-  ])
-  const voltages = parseValuesWithUnit(rawVoltage, "V")
+  ]);
+  const voltages = parseValuesWithUnit(rawVoltage, "V");
 
   const interfaceText = [
     "Support Interface",
@@ -163,14 +163,14 @@ export const mapBleFields = (
     .map((key) => attributes[key])
     .filter((value) => value !== undefined && value !== null)
     .join(" ")
-    .toLowerCase()
+    .toLowerCase();
 
   const rawBluetoothVersion = getFirstAttribute(attributes, [
     "Bluetooth Version",
     "Bluetooth Protocol",
     "Bluetooth Standard",
     "Wireless Standard",
-  ])
+  ]);
 
   return {
     lcsc: component.lcsc,
@@ -214,5 +214,5 @@ export const mapBleFields = (
     attributes: Object.fromEntries(
       Object.entries(attributes).map(([key, value]) => [key, String(value)]),
     ),
-  }
-}
+  };
+};

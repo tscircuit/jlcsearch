@@ -1,10 +1,10 @@
-import { Kysely, sql, type RawBuilder } from "kysely"
-import type { DB } from "../db/types"
+import { Kysely, sql, type RawBuilder } from "kysely";
+import type { DB } from "../db/types";
 
-export type QueryParams = Record<string, string>
+export type QueryParams = Record<string, string>;
 
 interface FilterConfig {
-  field: string
+  field: string;
   type:
     | "string"
     | "number"
@@ -12,29 +12,29 @@ interface FilterConfig {
     | "number_tolerance"
     | "number_range_contains"
     | "number_distance_from_param"
-    | "number_excludes_ranges"
-  operator?: "=" | ">=" | "<=" | ">" | "<"
-  maxField?: string
-  fallbackField?: string
-  relativeToParam?: string
-  placeholder?: string
-  helpText?: string
+    | "number_excludes_ranges";
+  operator?: "=" | ">=" | "<=" | ">" | "<";
+  maxField?: string;
+  fallbackField?: string;
+  relativeToParam?: string;
+  placeholder?: string;
+  helpText?: string;
 }
 
 interface TableConfig {
-  filters: Record<string, FilterConfig>
-  paramAliases?: Record<string, string>
+  filters: Record<string, FilterConfig>;
+  paramAliases?: Record<string, string>;
   targetSort?: {
-    field: string
-    param: string
-  }
-  helpText?: string
+    field: string;
+    param: string;
+  };
+  helpText?: string;
 }
 
-export type FilterOptions = Record<string, string[]>
+export type FilterOptions = Record<string, string[]>;
 
 // Allowed operators for sanitization
-const ALLOWED_OPERATORS = new Set(["=", ">=", "<=", ">", "<"])
+const ALLOWED_OPERATORS = new Set(["=", ">=", "<=", ">", "<"]);
 
 const parseNumberRanges = (value: string): Array<[number, number]> =>
   value
@@ -44,22 +44,22 @@ const parseNumberRanges = (value: string): Array<[number, number]> =>
     .flatMap((range): Array<[number, number]> => {
       const rangeMatch = range.match(
         /^(\d+(?:\.\d+)?)\s*(?:-|–|—|\.\.)\s*(\d+(?:\.\d+)?)$/,
-      )
+      );
       if (rangeMatch) {
-        const first = Number(rangeMatch[1])
-        const second = Number(rangeMatch[2])
-        return [[Math.min(first, second), Math.max(first, second)]]
+        const first = Number(rangeMatch[1]);
+        const second = Number(rangeMatch[2]);
+        return [[Math.min(first, second), Math.max(first, second)]];
       }
 
-      const singleValue = Number(range)
-      return Number.isFinite(singleValue) ? [[singleValue, singleValue]] : []
-    })
+      const singleValue = Number(range);
+      return Number.isFinite(singleValue) ? [[singleValue, singleValue]] : [];
+    });
 
 const isBooleanLikeField = (field: string): boolean =>
   field === "in_stock" ||
   field.startsWith("is_") ||
   field.startsWith("has_") ||
-  field.startsWith("measures_")
+  field.startsWith("measures_");
 
 const normalizeJsonRow = (
   row: Record<string, unknown>,
@@ -67,11 +67,11 @@ const normalizeJsonRow = (
   Object.fromEntries(
     Object.entries(row).map(([key, value]) => {
       if (isBooleanLikeField(key) && (value === 0 || value === 1)) {
-        return [key, Boolean(value)]
+        return [key, Boolean(value)];
       }
-      return [key, value]
+      return [key, value];
     }),
-  )
+  );
 
 /**
  * Generic query handler that builds a query based on table name and params.
@@ -85,16 +85,16 @@ export async function queryTable(
 ): Promise<unknown[]> {
   // Validate table name (must be in our known list)
   if (!TABLE_CONFIGS[tableName] && tableName !== "resistor") {
-    throw new Error(`Unknown table: ${tableName}`)
+    throw new Error(`Unknown table: ${tableName}`);
   }
 
   // Build WHERE conditions using Kysely's sql template tag for safe parameterization
-  const conditions: RawBuilder<unknown>[] = []
+  const conditions: RawBuilder<unknown>[] = [];
 
   // Apply filters based on config
   for (const [paramName, fieldConfig] of Object.entries(config.filters)) {
-    const value = params[paramName]
-    if (value === undefined || value === "" || value === "All") continue
+    const value = params[paramName];
+    if (value === undefined || value === "" || value === "All") continue;
 
     const {
       field,
@@ -103,117 +103,117 @@ export async function queryTable(
       maxField,
       fallbackField,
       relativeToParam,
-    } = fieldConfig
+    } = fieldConfig;
 
     // Validate operator
     if (!ALLOWED_OPERATORS.has(operator)) {
-      throw new Error(`Invalid operator: ${operator}`)
+      throw new Error(`Invalid operator: ${operator}`);
     }
 
     // Use sql.id for column names to prevent injection
-    const column = sql.id(field)
+    const column = sql.id(field);
 
     if (type === "string") {
       if (operator === "=") {
-        conditions.push(sql`${column} = ${value}`)
+        conditions.push(sql`${column} = ${value}`);
       } else if (operator === ">=") {
-        conditions.push(sql`${column} >= ${value}`)
+        conditions.push(sql`${column} >= ${value}`);
       } else if (operator === "<=") {
-        conditions.push(sql`${column} <= ${value}`)
+        conditions.push(sql`${column} <= ${value}`);
       }
     } else if (type === "number") {
-      const numValue = parseFloat(value)
+      const numValue = parseFloat(value);
       if (!isNaN(numValue)) {
         if (operator === "=") {
-          conditions.push(sql`${column} = ${numValue}`)
+          conditions.push(sql`${column} = ${numValue}`);
         } else if (operator === ">=") {
-          conditions.push(sql`${column} >= ${numValue}`)
+          conditions.push(sql`${column} >= ${numValue}`);
         } else if (operator === "<=") {
-          conditions.push(sql`${column} <= ${numValue}`)
+          conditions.push(sql`${column} <= ${numValue}`);
         } else if (operator === ">") {
-          conditions.push(sql`${column} > ${numValue}`)
+          conditions.push(sql`${column} > ${numValue}`);
         } else if (operator === "<") {
-          conditions.push(sql`${column} < ${numValue}`)
+          conditions.push(sql`${column} < ${numValue}`);
         }
       }
     } else if (type === "boolean") {
-      const boolValue = value === "true" || value === "1" ? 1 : 0
-      conditions.push(sql`${column} = ${boolValue}`)
+      const boolValue = value === "true" || value === "1" ? 1 : 0;
+      conditions.push(sql`${column} = ${boolValue}`);
     } else if (type === "number_tolerance") {
       // For resistance/capacitance with tolerance
-      const numValue = parseFloat(value)
+      const numValue = parseFloat(value);
       if (!isNaN(numValue)) {
-        const delta = numValue * 0.0001
-        conditions.push(sql`${column} >= ${numValue - delta}`)
-        conditions.push(sql`${column} <= ${numValue + delta}`)
+        const delta = numValue * 0.0001;
+        conditions.push(sql`${column} >= ${numValue - delta}`);
+        conditions.push(sql`${column} <= ${numValue + delta}`);
       }
     } else if (type === "number_range_contains") {
-      const numValue = parseFloat(value)
+      const numValue = parseFloat(value);
       if (!isNaN(numValue)) {
         if (!maxField) {
-          throw new Error(`Missing maxField for range filter: ${paramName}`)
+          throw new Error(`Missing maxField for range filter: ${paramName}`);
         }
 
-        const maxColumn = sql.id(maxField)
+        const maxColumn = sql.id(maxField);
         if (fallbackField) {
-          const fallbackColumn = sql.id(fallbackField)
+          const fallbackColumn = sql.id(fallbackField);
           conditions.push(sql`(
             (${column} IS NOT NULL AND ${maxColumn} IS NOT NULL
               AND ${column} <= ${numValue} AND ${maxColumn} >= ${numValue})
             OR
             ((${column} IS NULL OR ${maxColumn} IS NULL)
               AND ${fallbackColumn} = ${numValue})
-          )`)
+          )`);
         } else {
           conditions.push(
             sql`${column} <= ${numValue} AND ${maxColumn} >= ${numValue}`,
-          )
+          );
         }
       }
     } else if (type === "number_distance_from_param") {
-      const maxDistance = parseFloat(value)
+      const maxDistance = parseFloat(value);
       const relativeValue = relativeToParam
         ? parseFloat(params[relativeToParam] ?? "")
-        : Number.NaN
+        : Number.NaN;
       if (
         Number.isFinite(maxDistance) &&
         maxDistance >= 0 &&
         Number.isFinite(relativeValue)
       ) {
-        conditions.push(sql`${column} IS NOT NULL`)
-        conditions.push(sql`${column} >= ${relativeValue - maxDistance}`)
-        conditions.push(sql`${column} <= ${relativeValue + maxDistance}`)
+        conditions.push(sql`${column} IS NOT NULL`);
+        conditions.push(sql`${column} >= ${relativeValue - maxDistance}`);
+        conditions.push(sql`${column} <= ${relativeValue + maxDistance}`);
       }
     } else if (type === "number_excludes_ranges") {
       for (const [rangeMin, rangeMax] of parseNumberRanges(value)) {
         conditions.push(
           sql`${column} IS NOT NULL AND (${column} < ${rangeMin} OR ${column} > ${rangeMax})`,
-        )
+        );
       }
     }
   }
 
   // Build the final query
-  const table = sql.id(tableName)
+  const table = sql.id(tableName);
   const targetSortValue = config.targetSort
     ? parseFloat(params[config.targetSort.param] ?? "")
-    : Number.NaN
+    : Number.NaN;
   const orderBy =
     config.targetSort && Number.isFinite(targetSortValue)
       ? sql`${sql.id(config.targetSort.field)} IS NULL ASC, ABS(${sql.id(config.targetSort.field)} - ${targetSortValue}) ASC, stock DESC`
-      : sql`stock DESC`
-  let query: RawBuilder<unknown>
+      : sql`stock DESC`;
+  let query: RawBuilder<unknown>;
 
   if (conditions.length === 0) {
-    query = sql`SELECT * FROM ${table} ORDER BY ${orderBy} LIMIT 100`
+    query = sql`SELECT * FROM ${table} ORDER BY ${orderBy} LIMIT 100`;
   } else {
     // Join conditions with AND
-    const whereClause = sql.join(conditions, sql` AND `)
-    query = sql`SELECT * FROM ${table} WHERE ${whereClause} ORDER BY ${orderBy} LIMIT 100`
+    const whereClause = sql.join(conditions, sql` AND `);
+    query = sql`SELECT * FROM ${table} WHERE ${whereClause} ORDER BY ${orderBy} LIMIT 100`;
   }
 
-  const result = await query.execute(db)
-  return (result.rows as Array<Record<string, unknown>>).map(normalizeJsonRow)
+  const result = await query.execute(db);
+  return (result.rows as Array<Record<string, unknown>>).map(normalizeJsonRow);
 }
 
 export async function queryFilterOptions(
@@ -221,7 +221,7 @@ export async function queryFilterOptions(
   tableName: string,
   config: TableConfig,
 ): Promise<FilterOptions> {
-  const options: FilterOptions = {}
+  const options: FilterOptions = {};
 
   for (const [paramName, fieldConfig] of Object.entries(config.filters)) {
     if (
@@ -230,14 +230,14 @@ export async function queryFilterOptions(
       fieldConfig.type === "number_distance_from_param" ||
       fieldConfig.type === "number_excludes_ranges"
     )
-      continue
+      continue;
 
-    const field = sql.id(fieldConfig.field)
-    const table = sql.id(tableName)
+    const field = sql.id(fieldConfig.field);
+    const table = sql.id(tableName);
     const orderExpression =
       fieldConfig.type === "string"
         ? sql`${field}`
-        : sql`CAST(${field} AS REAL)`
+        : sql`CAST(${field} AS REAL)`;
     const query = sql`
       SELECT CAST(${field} AS TEXT) AS value
       FROM ${table}
@@ -246,15 +246,15 @@ export async function queryFilterOptions(
       GROUP BY ${field}
       ORDER BY COUNT(*) DESC, ${orderExpression} ASC
       LIMIT 100
-    `
+    `;
 
-    const result = await query.execute(db)
+    const result = await query.execute(db);
     options[paramName] = (result.rows as Array<{ value: string | null }>)
       .map((row) => row.value?.trim() ?? "")
-      .filter(Boolean)
+      .filter(Boolean);
   }
 
-  return options
+  return options;
 }
 
 // Configuration for all derived tables
@@ -703,24 +703,24 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
       gender: { field: "gender", type: "string" },
     },
   },
-}
+};
 
 export function normalizeTableQueryParams(
   tableName: string,
   params: QueryParams,
 ): QueryParams {
-  const aliases = TABLE_CONFIGS[tableName]?.paramAliases
-  if (!aliases) return params
+  const aliases = TABLE_CONFIGS[tableName]?.paramAliases;
+  if (!aliases) return params;
 
-  let normalizedParams = params
+  let normalizedParams = params;
   for (const [alias, canonicalParam] of Object.entries(aliases)) {
     if (params[canonicalParam] === undefined && params[alias] !== undefined) {
-      if (normalizedParams === params) normalizedParams = { ...params }
-      normalizedParams[canonicalParam] = params[alias]
+      if (normalizedParams === params) normalizedParams = { ...params };
+      normalizedParams[canonicalParam] = params[alias];
     }
   }
 
-  return normalizedParams
+  return normalizedParams;
 }
 
 // Map URL paths to table names
@@ -772,7 +772,7 @@ export const ROUTE_TO_TABLE: Record<string, string> = {
   "/voltage_regulators/list": "voltage_regulator",
   "/wifi_modules/list": "wifi_module",
   "/wire_to_board_connectors/list": "wire_to_board_connector",
-}
+};
 
 // Response key for each table (plural form for JSON response)
 export const TABLE_RESPONSE_KEY: Record<string, string> = {
@@ -823,4 +823,4 @@ export const TABLE_RESPONSE_KEY: Record<string, string> = {
   voltage_regulator: "regulators",
   wifi_module: "wifi_modules",
   wire_to_board_connector: "wire_to_board_connectors",
-}
+};
