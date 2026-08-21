@@ -1,24 +1,24 @@
-import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
-import type { DerivedTableSpec } from "./types"
-import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
-import { BaseComponent } from "./component-base"
+import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit";
+import type { DerivedTableSpec } from "./types";
+import { extractMinQPrice } from "lib/util/extract-min-quantity-price";
+import { BaseComponent } from "./component-base";
 
 export interface Adc extends BaseComponent {
   // Extra columns
-  package: string
-  resolution_bits: number | null
-  sampling_rate_hz: number | null
-  num_channels: number | null
-  supply_voltage_min: number | null
-  supply_voltage_max: number | null
-  has_spi: boolean
-  has_i2c: boolean
-  has_parallel_interface: boolean
-  has_serial_interface: boolean
-  has_uart: boolean
-  is_differential: boolean
-  operating_temp_min: number | null
-  operating_temp_max: number | null
+  package: string;
+  resolution_bits: number | null;
+  sampling_rate_hz: number | null;
+  num_channels: number | null;
+  supply_voltage_min: number | null;
+  supply_voltage_max: number | null;
+  has_spi: boolean;
+  has_i2c: boolean;
+  has_parallel_interface: boolean;
+  has_serial_interface: boolean;
+  has_uart: boolean;
+  is_differential: boolean;
+  operating_temp_min: number | null;
+  operating_temp_max: number | null;
 }
 
 export const adcTableSpec: DerivedTableSpec<Adc> = {
@@ -57,54 +57,54 @@ export const adcTableSpec: DerivedTableSpec<Adc> = {
       ),
   mapToTable: (components) => {
     return components.map((c): Adc | null => {
-      if (!c.extra) return null
-      const extra = JSON.parse(c.extra ?? "{}")
-      if (!extra.attributes) return null
+      if (!c.extra) return null;
+      const extra = JSON.parse(c.extra ?? "{}");
+      if (!extra.attributes) return null;
 
-      const attrs = extra.attributes
+      const attrs = extra.attributes;
 
       // Parse resolution
-      let resolution = null
-      const rawResolution = attrs["resolution"]
+      let resolution = null;
+      const rawResolution = attrs["resolution"];
       if (rawResolution) {
-        const match = rawResolution.match(/(\d+)Bit/)
-        if (match) resolution = parseInt(match[1])
+        const match = rawResolution.match(/(\d+)Bit/);
+        if (match) resolution = parseInt(match[1]);
       }
 
       // Parse sampling rate
-      let samplingRate = null
-      const rawRate = attrs["sampling frequency"]
+      let samplingRate = null;
+      const rawRate = attrs["sampling frequency"];
       if (rawRate) {
-        const parsed = parseAndConvertSiUnit(rawRate).value
-        if (parsed) samplingRate = parsed as number
+        const parsed = parseAndConvertSiUnit(rawRate).value;
+        if (parsed) samplingRate = parsed as number;
       }
 
       // Parse voltage range
-      let voltageMin = null
-      let voltageMax = null
-      const rawVoltage = attrs["Supply Voltage"]
+      let voltageMin = null;
+      let voltageMax = null;
+      const rawVoltage = attrs["Supply Voltage"];
       if (rawVoltage) {
-        const match = rawVoltage.match(/([\d.]+)V~([\d.]+)V/)
+        const match = rawVoltage.match(/([\d.]+)V~([\d.]+)V/);
         if (match) {
-          voltageMin = parseFloat(match[1])
-          voltageMax = parseFloat(match[2])
+          voltageMin = parseFloat(match[1]);
+          voltageMax = parseFloat(match[2]);
         }
       }
 
       // Parse temperature range
-      let tempMin = null
-      let tempMax = null
-      const rawTemp = attrs["Operating Temperature"]
+      let tempMin = null;
+      let tempMax = null;
+      const rawTemp = attrs["Operating Temperature"];
       if (rawTemp) {
-        const match = rawTemp.match(/([-\d]+)℃~\+([-\d]+)℃/)
+        const match = rawTemp.match(/([-\d]+)℃~\+([-\d]+)℃/);
         if (match) {
-          tempMin = parseInt(match[1])
-          tempMax = parseInt(match[2])
+          tempMin = parseInt(match[1]);
+          tempMax = parseInt(match[2]);
         }
       }
 
       // Parse number of channels
-      const numChannels = parseInt(attrs["number of channels"]) || null
+      const numChannels = parseInt(attrs["number of channels"]) || null;
 
       return {
         lcsc: c.lcsc,
@@ -134,7 +134,7 @@ export const adcTableSpec: DerivedTableSpec<Adc> = {
         operating_temp_min: tempMin,
         operating_temp_max: tempMax,
         attributes: attrs,
-      }
-    })
+      };
+    });
   },
-}
+};

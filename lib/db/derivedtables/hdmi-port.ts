@@ -1,19 +1,19 @@
-import { BaseComponent } from "lib/db/derivedtables/component-base"
-import type { DerivedTableSpec } from "lib/db/derivedtables/types"
-import type { KyselyDatabaseInstance } from "lib/db/kysely-types"
-import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
-import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
+import { BaseComponent } from "lib/db/derivedtables/component-base";
+import type { DerivedTableSpec } from "lib/db/derivedtables/types";
+import type { KyselyDatabaseInstance } from "lib/db/kysely-types";
+import { extractMinQPrice } from "lib/util/extract-min-quantity-price";
+import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit";
 
 export interface HdmiPort extends BaseComponent {
-  package: string
-  mounting_style: string | null
-  orientation: string | null
-  gender: string | null
-  number_of_pins: number | null
-  number_of_rows: number | null
-  current_rating_a: number | null
-  operating_temp_min: number | null
-  operating_temp_max: number | null
+  package: string;
+  mounting_style: string | null;
+  orientation: string | null;
+  gender: string | null;
+  number_of_pins: number | null;
+  number_of_rows: number | null;
+  current_rating_a: number | null;
+  operating_temp_min: number | null;
+  operating_temp_max: number | null;
 }
 
 const HDMI_SUBCATEGORIES = [
@@ -21,28 +21,28 @@ const HDMI_SUBCATEGORIES = [
   "D-Sub/DVI/HDMI Connectors",
   "D-Sub / VGA Connectors",
   "Audio & Video Connectors",
-] as const
+] as const;
 
 const parseNumber = (value: string | undefined): number | null => {
-  if (!value || value === "-") return null
-  const parsed = Number(parseAndConvertSiUnit(value).value)
-  return Number.isFinite(parsed) ? parsed : null
-}
+  if (!value || value === "-") return null;
+  const parsed = Number(parseAndConvertSiUnit(value).value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
 
 const parseInteger = (value: string | undefined): number | null => {
-  if (!value || value === "-") return null
-  const match = value.match(/\d+/)
-  if (!match) return null
-  const parsed = Number.parseInt(match[0], 10)
-  return Number.isFinite(parsed) ? parsed : null
-}
+  if (!value || value === "-") return null;
+  const match = value.match(/\d+/);
+  if (!match) return null;
+  const parsed = Number.parseInt(match[0], 10);
+  return Number.isFinite(parsed) ? parsed : null;
+};
 
 const inferPinCount = (
   attrs: Record<string, string>,
   description: string,
 ): number | null =>
   parseInteger(attrs["Number of Pins"] ?? attrs["Number of Contacts"]) ??
-  parseInteger(description.match(/\b\d+\s*(?:P|Pins?)\b/i)?.[0])
+  parseInteger(description.match(/\b\d+\s*(?:P|Pins?)\b/i)?.[0]);
 
 const inferMountingStyle = (
   attrs: Record<string, string>,
@@ -50,34 +50,34 @@ const inferMountingStyle = (
   description: string,
 ): string | null => {
   if (attrs["Mounting Style"] && attrs["Mounting Style"] !== "-") {
-    return attrs["Mounting Style"]
+    return attrs["Mounting Style"];
   }
 
-  const searchableText = `${packageName} ${description}`
-  if (/\bSMD\b|surface mount/i.test(searchableText)) return "Surface Mount"
+  const searchableText = `${packageName} ${description}`;
+  if (/\bSMD\b|surface mount/i.test(searchableText)) return "Surface Mount";
   if (/\bplugin\b|push-pull|through[- ]hole/i.test(searchableText)) {
-    return "Through Hole"
+    return "Through Hole";
   }
-  return null
-}
+  return null;
+};
 
 const inferOrientation = (description: string): string | null => {
   if (/horizontal attachment|right[- ]angle|bend insert/i.test(description)) {
-    return "Horizontal"
+    return "Horizontal";
   }
   if (/vertical attachment|straight insert/i.test(description)) {
-    return "Vertical"
+    return "Vertical";
   }
-  return null
-}
+  return null;
+};
 
 const parseTemperatureRange = (
   value: string | undefined,
 ): [number | null, number | null] => {
-  if (!value || !value.includes("~")) return [null, null]
-  const [min, max] = value.split("~")
-  return [parseNumber(min), parseNumber(max)]
-}
+  if (!value || !value.includes("~")) return [null, null];
+  const [min, max] = value.split("~");
+  return [parseNumber(min), parseNumber(max)];
+};
 
 export const hdmiPortTableSpec: DerivedTableSpec<HdmiPort> = {
   tableName: "hdmi_port",
@@ -130,15 +130,15 @@ export const hdmiPortTableSpec: DerivedTableSpec<HdmiPort> = {
       .selectFrom("components")
       .innerJoin("categories", "components.category_id", "categories.id")
       .selectAll()
-      .where("categories.subcategory", "in", [...HDMI_SUBCATEGORIES])
+      .where("categories.subcategory", "in", [...HDMI_SUBCATEGORIES]);
   },
   mapToTable(components) {
     return components.map((component) => {
       try {
-        const extra = component.extra ? JSON.parse(component.extra) : {}
-        const attrs: Record<string, string> = extra.attributes || {}
-        const description = String(component.description || "")
-        const packageName = String(component.package || "")
+        const extra = component.extra ? JSON.parse(component.extra) : {};
+        const attrs: Record<string, string> = extra.attributes || {};
+        const description = String(component.description || "");
+        const packageName = String(component.package || "");
         const hdmiText = [
           component.mfr,
           description,
@@ -146,19 +146,20 @@ export const hdmiPortTableSpec: DerivedTableSpec<HdmiPort> = {
           attrs["Connector Type"],
         ]
           .filter(Boolean)
-          .join(" ")
+          .join(" ");
 
-        if (!/\bHDMI\b/i.test(hdmiText)) return null
+        if (!/\bHDMI\b/i.test(hdmiText)) return null;
 
         const temperatureRange =
-          attrs["Operating Temperature Range"] ?? attrs["Operating Temperature"]
+          attrs["Operating Temperature Range"] ??
+          attrs["Operating Temperature"];
         const [operatingTempMin, operatingTempMax] =
-          parseTemperatureRange(temperatureRange)
+          parseTemperatureRange(temperatureRange);
 
         const gender =
           attrs.Gender && attrs.Gender !== "-"
             ? attrs.Gender
-            : description.match(/\b(?:Female|Male)\b/i)?.[0]
+            : description.match(/\b(?:Female|Male)\b/i)?.[0];
 
         return {
           lcsc: Number(component.lcsc),
@@ -184,10 +185,10 @@ export const hdmiPortTableSpec: DerivedTableSpec<HdmiPort> = {
           operating_temp_min: operatingTempMin,
           operating_temp_max: operatingTempMax,
           attributes: attrs,
-        }
+        };
       } catch {
-        return null
+        return null;
       }
-    })
+    });
   },
-}
+};

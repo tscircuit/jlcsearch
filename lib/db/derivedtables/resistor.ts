@@ -1,19 +1,19 @@
-import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
-import type { DerivedTableSpec } from "./types"
-import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
-import { BaseComponent } from "./component-base"
+import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit";
+import type { DerivedTableSpec } from "./types";
+import { extractMinQPrice } from "lib/util/extract-min-quantity-price";
+import { BaseComponent } from "./component-base";
 
 export interface Resistor extends BaseComponent {
-  resistance: number
-  tolerance_fraction: number
-  power_watts: number
-  package: string
-  max_overload_voltage: number | null
-  number_of_resistors: number | null
-  number_of_pins: number | null
-  is_potentiometer: boolean
-  is_surface_mount: boolean
-  is_multi_resistor_chip: boolean
+  resistance: number;
+  tolerance_fraction: number;
+  power_watts: number;
+  package: string;
+  max_overload_voltage: number | null;
+  number_of_resistors: number | null;
+  number_of_pins: number | null;
+  is_potentiometer: boolean;
+  is_surface_mount: boolean;
+  is_multi_resistor_chip: boolean;
 }
 
 export const resistorTableSpec: DerivedTableSpec<Resistor> = {
@@ -40,38 +40,38 @@ export const resistorTableSpec: DerivedTableSpec<Resistor> = {
       .where("categories.category", "=", "Resistors"),
   mapToTable: (components) => {
     return components.map((c): Resistor | null => {
-      if (!c.extra) return null
-      const extra = JSON.parse(c.extra ?? "{}")
-      if (!extra.attributes) return null
-      const rawResistance = extra?.attributes?.["Resistance"]
-      const rawTolerance = extra?.attributes?.["Tolerance"]
-      const rawPower = extra?.attributes?.["Power(Watts)"]
+      if (!c.extra) return null;
+      const extra = JSON.parse(c.extra ?? "{}");
+      if (!extra.attributes) return null;
+      const rawResistance = extra?.attributes?.["Resistance"];
+      const rawTolerance = extra?.attributes?.["Tolerance"];
+      const rawPower = extra?.attributes?.["Power(Watts)"];
 
-      const resistance = parseAndConvertSiUnit(rawResistance).value as number
-      const tolerance = parseAndConvertSiUnit(rawTolerance).value as number
-      const power_watts = parseAndConvertSiUnit(rawPower).value as number
+      const resistance = parseAndConvertSiUnit(rawResistance).value as number;
+      const tolerance = parseAndConvertSiUnit(rawTolerance).value as number;
+      const power_watts = parseAndConvertSiUnit(rawPower).value as number;
 
       // Extract additional fields
       const maxVoltage = parseAndConvertSiUnit(
         extra?.attributes?.["Overload Voltage (Max)"],
-      ).value as number
+      ).value as number;
       const numResistors =
-        parseInt(extra?.attributes?.["Number of Resistors"]) || null
-      const numPins = parseInt(extra?.attributes?.["Number of Pins"]) || null
+        parseInt(extra?.attributes?.["Number of Resistors"]) || null;
+      const numPins = parseInt(extra?.attributes?.["Number of Pins"]) || null;
       const isPotentiometer = c.description
         .toLowerCase()
-        .includes("potentiometer")
+        .includes("potentiometer");
       const isSurfaceMount =
         c.package?.toLowerCase().includes("smd") ||
-        !c.package?.toLowerCase().includes("plugin")
+        !c.package?.toLowerCase().includes("plugin");
 
       // Determine if this is a multi-resistor chip
       const isMultiResistorChip = Boolean(
         (numResistors && numResistors > 1) ||
-          c.description.toLowerCase().includes("array") ||
-          c.description.toLowerCase().includes("network") ||
-          c.package?.toLowerCase().includes("x"),
-      )
+        c.description.toLowerCase().includes("array") ||
+        c.description.toLowerCase().includes("network") ||
+        c.package?.toLowerCase().includes("x"),
+      );
 
       return {
         lcsc: c.lcsc,
@@ -93,7 +93,7 @@ export const resistorTableSpec: DerivedTableSpec<Resistor> = {
         is_surface_mount: isSurfaceMount,
         is_multi_resistor_chip: isMultiResistorChip,
         attributes: extra.attributes,
-      }
-    })
+      };
+    });
   },
-}
+};

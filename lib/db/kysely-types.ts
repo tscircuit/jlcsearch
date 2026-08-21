@@ -1,4 +1,4 @@
-import type { Kysely } from "kysely"
-import type { DB } from "./generated/kysely"
+import type { Kysely } from "kysely";
+import type { DB } from "./generated/kysely";
 
-export type KyselyDatabaseInstance = Kysely<DB>
+export type KyselyDatabaseInstance = Kysely<DB>;

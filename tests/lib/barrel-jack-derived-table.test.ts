@@ -1,5 +1,5 @@
-import { expect, test } from "bun:test"
-import { barrelJackTableSpec } from "lib/db/derivedtables/barrel-jack"
+import { expect, test } from "bun:test";
+import { barrelJackTableSpec } from "lib/db/derivedtables/barrel-jack";
 
 const makeComponent = (overrides: Record<string, unknown> = {}) =>
   ({
@@ -25,10 +25,10 @@ const makeComponent = (overrides: Record<string, unknown> = {}) =>
       },
     }),
     ...overrides,
-  }) as any
+  }) as any;
 
 test("maps DC barrel jack dimensions and electrical ratings", () => {
-  const [jack] = barrelJackTableSpec.mapToTable([makeComponent()])
+  const [jack] = barrelJackTableSpec.mapToTable([makeComponent()]);
 
   expect(jack).toMatchObject({
     lcsc: 16214,
@@ -45,8 +45,8 @@ test("maps DC barrel jack dimensions and electrical ratings", () => {
     operating_temp_max: 85,
     is_preferred: true,
     price1: 0.0487,
-  })
-})
+  });
+});
 
 test("falls back to catalog descriptions when attributes are incomplete", () => {
   const [jack] = barrelJackTableSpec.mapToTable([
@@ -57,7 +57,7 @@ test("falls back to catalog descriptions when attributes are incomplete", () => 
         "-40℃~+85℃ 2.1mm 3A 500V 6.3mm DC Power Jack Right Angle Plugin",
       extra: null,
     }),
-  ])
+  ]);
 
   expect(jack).toMatchObject({
     inside_diameter_mm: 2.1,
@@ -68,8 +68,8 @@ test("falls back to catalog descriptions when attributes are incomplete", () => 
     orientation: "Right Angle",
     operating_temp_min: -40,
     operating_temp_max: 85,
-  })
-})
+  });
+});
 
 test("excludes DC plugs and unrelated audio jacks", () => {
   const components = [
@@ -85,7 +85,7 @@ test("excludes DC plugs and unrelated audio jacks", () => {
       joints: 4,
       extra: null,
     }),
-  ]
+  ];
 
-  expect(barrelJackTableSpec.mapToTable(components)).toEqual([null, null])
-})
+  expect(barrelJackTableSpec.mapToTable(components)).toEqual([null, null]);
+});

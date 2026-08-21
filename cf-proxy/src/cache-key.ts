@@ -1,15 +1,15 @@
-const CACHE_CONTROL_QUERY_PARAMS = new Set(["cachebust"])
+const CACHE_CONTROL_QUERY_PARAMS = new Set(["cachebust"]);
 
 /**
  * Generates a cache key from a URL by hashing the normalized path and sorted query params.
  */
 export async function generateCacheKey(url: URL): Promise<string> {
-  const normalized = normalizeUrl(url)
-  const encoder = new TextEncoder()
-  const data = encoder.encode(normalized)
-  const hashBuffer = await crypto.subtle.digest("SHA-256", data)
-  const hashArray = Array.from(new Uint8Array(hashBuffer))
-  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("")
+  const normalized = normalizeUrl(url);
+  const encoder = new TextEncoder();
+  const data = encoder.encode(normalized);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 /**
@@ -20,24 +20,24 @@ export async function generateCacheKey(url: URL): Promise<string> {
  */
 export function normalizeUrl(url: URL): string {
   // Normalize pathname - remove trailing slash except for root
-  let pathname = url.pathname
+  let pathname = url.pathname;
   if (pathname.length > 1 && pathname.endsWith("/")) {
-    pathname = pathname.slice(0, -1)
+    pathname = pathname.slice(0, -1);
   }
 
   // Sort query parameters alphabetically
-  const params = new URLSearchParams(url.searchParams)
-  const sortedParams = new URLSearchParams()
+  const params = new URLSearchParams(url.searchParams);
+  const sortedParams = new URLSearchParams();
   // Use Set to deduplicate keys since keys() returns duplicates for multi-value params
-  const keys = Array.from(new Set(params.keys())).sort()
+  const keys = Array.from(new Set(params.keys())).sort();
   for (const key of keys) {
-    if (CACHE_CONTROL_QUERY_PARAMS.has(key)) continue
-    const values = params.getAll(key).sort()
+    if (CACHE_CONTROL_QUERY_PARAMS.has(key)) continue;
+    const values = params.getAll(key).sort();
     for (const value of values) {
-      sortedParams.append(key, value)
+      sortedParams.append(key, value);
     }
   }
 
-  const search = sortedParams.toString()
-  return search ? `${pathname}?${search}` : pathname
+  const search = sortedParams.toString();
+  return search ? `${pathname}?${search}` : pathname;
 }

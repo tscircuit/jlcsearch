@@ -1,21 +1,21 @@
-import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
-import type { DerivedTableSpec } from "./types"
-import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
-import { BaseComponent } from "./component-base"
+import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit";
+import type { DerivedTableSpec } from "./types";
+import { extractMinQPrice } from "lib/util/extract-min-quantity-price";
+import { BaseComponent } from "./component-base";
 
 export interface Capacitor extends BaseComponent {
   // Extra columns
-  capacitance_farads: number
-  tolerance_fraction: number
-  voltage_rating: number
-  package: string
-  temperature_coefficient: string | null
-  lifetime_hours: number | null
-  esr_ohms: number | null
-  ripple_current_amps: number | null
-  is_polarized: boolean
-  is_surface_mount: boolean
-  capacitor_type: string
+  capacitance_farads: number;
+  tolerance_fraction: number;
+  voltage_rating: number;
+  package: string;
+  temperature_coefficient: string | null;
+  lifetime_hours: number | null;
+  esr_ohms: number | null;
+  ripple_current_amps: number | null;
+  is_polarized: boolean;
+  is_surface_mount: boolean;
+  capacitor_type: string;
 }
 
 export const capacitorTableSpec: DerivedTableSpec<Capacitor> = {
@@ -43,68 +43,68 @@ export const capacitorTableSpec: DerivedTableSpec<Capacitor> = {
       .where("categories.category", "=", "Capacitors"),
   mapToTable: (components) => {
     return components.map((c): Capacitor | null => {
-      if (!c.extra) return null
-      const extra = JSON.parse(c.extra ?? "{}")
-      if (!extra.attributes) return null
+      if (!c.extra) return null;
+      const extra = JSON.parse(c.extra ?? "{}");
+      if (!extra.attributes) return null;
 
-      const rawCapacitance = extra?.attributes?.["Capacitance"]
-      const rawTolerance = extra?.attributes?.["Tolerance"]
+      const rawCapacitance = extra?.attributes?.["Capacitance"];
+      const rawTolerance = extra?.attributes?.["Tolerance"];
       const rawVoltage =
         extra?.attributes?.["Rated Voltage"] ||
         extra?.attributes?.["Voltage Rated"] ||
-        extra?.attributes?.["Voltage(AC)"]
+        extra?.attributes?.["Voltage(AC)"];
 
       // Parse main specifications
-      const capacitance = parseAndConvertSiUnit(rawCapacitance).value as number
-      const tolerance = parseAndConvertSiUnit(rawTolerance).value as number
-      const voltage = parseAndConvertSiUnit(rawVoltage).value as number
+      const capacitance = parseAndConvertSiUnit(rawCapacitance).value as number;
+      const tolerance = parseAndConvertSiUnit(rawTolerance).value as number;
+      const voltage = parseAndConvertSiUnit(rawVoltage).value as number;
 
       // Parse additional specifications
-      const tempCoef = extra?.attributes?.["Temperature Coefficient"]
+      const tempCoef = extra?.attributes?.["Temperature Coefficient"];
       const lifetime =
         parseInt(extra?.attributes?.["Lifetime @ Temp"]?.split("hrs")?.[0]) ||
-        null
+        null;
 
       // Parse ESR and ripple current if available
-      let esr = null
+      let esr = null;
       const rawEsr =
         extra?.attributes?.["Equivalent Series Resistance(ESR)"] ||
-        extra?.attributes?.["ESR"]
+        extra?.attributes?.["ESR"];
       if (rawEsr) {
-        const match = rawEsr.match(/(\d+(?:\.\d+)?)(m?)Ω/)
+        const match = rawEsr.match(/(\d+(?:\.\d+)?)(m?)Ω/);
         if (match) {
-          esr = parseFloat(match[1]) * (match[2] === "m" ? 0.001 : 1)
+          esr = parseFloat(match[1]) * (match[2] === "m" ? 0.001 : 1);
         }
       }
 
-      let rippleCurrent = null
-      const rawRipple = extra?.attributes?.["Ripple Current"]
+      let rippleCurrent = null;
+      const rawRipple = extra?.attributes?.["Ripple Current"];
       if (rawRipple) {
-        const parsed = parseAndConvertSiUnit(rawRipple.split("@")[0]).value
-        if (parsed) rippleCurrent = parsed
+        const parsed = parseAndConvertSiUnit(rawRipple.split("@")[0]).value;
+        if (parsed) rippleCurrent = parsed;
       }
 
       // Determine capacitor characteristics
-      const desc = c.description.toLowerCase()
+      const desc = c.description.toLowerCase();
       const isPolarized =
         desc.includes("electrolytic") ||
         desc.includes("tantalum") ||
-        desc.includes("polymer")
+        desc.includes("polymer");
 
       const isSurfaceMount =
         c.package?.toLowerCase().includes("smd") ||
-        !c.package?.toLowerCase().includes("plugin")
+        !c.package?.toLowerCase().includes("plugin");
 
       // Determine capacitor type
-      let capacitorType = "unknown"
-      if (desc.includes("ceramic")) capacitorType = "ceramic"
-      else if (desc.includes("electrolytic")) capacitorType = "electrolytic"
-      else if (desc.includes("tantalum")) capacitorType = "tantalum"
-      else if (desc.includes("film")) capacitorType = "film"
-      else if (desc.includes("polymer")) capacitorType = "polymer"
-      else if (desc.includes("mica")) capacitorType = "mica"
+      let capacitorType = "unknown";
+      if (desc.includes("ceramic")) capacitorType = "ceramic";
+      else if (desc.includes("electrolytic")) capacitorType = "electrolytic";
+      else if (desc.includes("tantalum")) capacitorType = "tantalum";
+      else if (desc.includes("film")) capacitorType = "film";
+      else if (desc.includes("polymer")) capacitorType = "polymer";
+      else if (desc.includes("mica")) capacitorType = "mica";
       else if (desc.includes("variable") || desc.includes("trimmer"))
-        capacitorType = "variable"
+        capacitorType = "variable";
 
       return {
         lcsc: c.lcsc,
@@ -127,7 +127,7 @@ export const capacitorTableSpec: DerivedTableSpec<Capacitor> = {
         is_surface_mount: isSurfaceMount,
         capacitor_type: capacitorType,
         attributes: extra.attributes,
-      }
-    })
+      };
+    });
   },
-}
+};

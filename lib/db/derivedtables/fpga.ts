@@ -1,56 +1,56 @@
-import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
-import type { DerivedTableSpec } from "./types"
-import { BaseComponent } from "./component-base"
+import { extractMinQPrice } from "lib/util/extract-min-quantity-price";
+import type { DerivedTableSpec } from "./types";
+import { BaseComponent } from "./component-base";
 
 export interface FPGA extends BaseComponent {
-  package: string
-  type: string | null
-  logic_array_blocks: number | null
-  logic_elements: number | null
-  embedded_ram_bits: number | null
-  supply_voltage_min: number | null
-  supply_voltage_max: number | null
-  operating_temp_min: number | null
-  operating_temp_max: number | null
-  max_delay_ns: number | null
-  logic_gates: number | null
+  package: string;
+  type: string | null;
+  logic_array_blocks: number | null;
+  logic_elements: number | null;
+  embedded_ram_bits: number | null;
+  supply_voltage_min: number | null;
+  supply_voltage_max: number | null;
+  operating_temp_min: number | null;
+  operating_temp_max: number | null;
+  max_delay_ns: number | null;
+  logic_gates: number | null;
 }
 
 const SUBCATEGORY_MATCHES = [
   "Programmable Logic Device (CPLDs/FPGAs)",
   "CPLD/FPGA",
   "CPLD & FPGA",
-]
+];
 
 const parseNumericValue = (value?: string | null): number | null => {
-  if (!value) return null
-  const cleaned = value.replace(/[,\s]/g, "")
-  const match = cleaned.match(/(-?[\d.]+)([kKmMgG]?)/)
-  if (!match) return null
-  let numeric = parseFloat(match[1]!)
-  const suffix = match[2]?.toLowerCase()
-  if (suffix === "k") numeric *= 1e3
-  else if (suffix === "m") numeric *= 1e6
-  else if (suffix === "g") numeric *= 1e9
-  if (Number.isNaN(numeric)) return null
-  return numeric
-}
+  if (!value) return null;
+  const cleaned = value.replace(/[,\s]/g, "");
+  const match = cleaned.match(/(-?[\d.]+)([kKmMgG]?)/);
+  if (!match) return null;
+  let numeric = parseFloat(match[1]!);
+  const suffix = match[2]?.toLowerCase();
+  if (suffix === "k") numeric *= 1e3;
+  else if (suffix === "m") numeric *= 1e6;
+  else if (suffix === "g") numeric *= 1e9;
+  if (Number.isNaN(numeric)) return null;
+  return numeric;
+};
 
 const parseRange = (
   value?: string | null,
 ): { min: number | null; max: number | null } => {
-  if (!value) return { min: null, max: null }
-  const matches = value.match(/-?[\d.]+/g)
-  if (!matches || matches.length === 0) return { min: null, max: null }
+  if (!value) return { min: null, max: null };
+  const matches = value.match(/-?[\d.]+/g);
+  if (!matches || matches.length === 0) return { min: null, max: null };
   const numbers = matches
     .map((m) => parseFloat(m))
-    .filter((n) => !Number.isNaN(n))
-  if (numbers.length === 0) return { min: null, max: null }
+    .filter((n) => !Number.isNaN(n));
+  if (numbers.length === 0) return { min: null, max: null };
   return {
     min: Math.min(...numbers),
     max: Math.max(...numbers),
-  }
-}
+  };
+};
 
 export const fpgaTableSpec: DerivedTableSpec<FPGA> = {
   tableName: "fpga",
@@ -84,11 +84,11 @@ export const fpgaTableSpec: DerivedTableSpec<FPGA> = {
   mapToTable: (components) =>
     components.map((c) => {
       try {
-        const extra = c.extra ? JSON.parse(c.extra) : null
-        const attrs: Record<string, string> = extra?.attributes ?? {}
+        const extra = c.extra ? JSON.parse(c.extra) : null;
+        const attrs: Record<string, string> = extra?.attributes ?? {};
 
-        const supplyRange = parseRange(attrs["Supply Voltage Range - VCCIO"])
-        const tempRange = parseRange(attrs["Operating Temperature Range"])
+        const supplyRange = parseRange(attrs["Supply Voltage Range - VCCIO"]);
+        const tempRange = parseRange(attrs["Operating Temperature Range"]);
 
         return {
           lcsc: Number(c.lcsc),
@@ -111,9 +111,9 @@ export const fpgaTableSpec: DerivedTableSpec<FPGA> = {
           max_delay_ns: parseNumericValue(attrs["Maximum Delay Time Tpd"]),
           logic_gates: parseNumericValue(attrs["Number of Logic Gates"]),
           attributes: attrs,
-        }
+        };
       } catch (err) {
-        return null
+        return null;
       }
     }),
-}
+};

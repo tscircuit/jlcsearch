@@ -1,5 +1,5 @@
-import { describe, expect, test } from "bun:test"
-import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
+import { describe, expect, test } from "bun:test";
+import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit";
 
 describe("parseAndConvertSiUnit byte values", () => {
   test.each([
@@ -12,6 +12,6 @@ describe("parseAndConvertSiUnit byte values", () => {
       parsedUnit: rawValue.replace(/[\d.]/g, ""),
       unitOfValue: "B",
       value: expectedValue,
-    })
-  })
-})
+    });
+  });
+});

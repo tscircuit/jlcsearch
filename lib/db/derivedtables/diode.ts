@@ -1,24 +1,24 @@
-import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
-import type { DerivedTableSpec } from "./types"
-import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
-import { BaseComponent } from "./component-base"
+import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit";
+import type { DerivedTableSpec } from "./types";
+import { extractMinQPrice } from "lib/util/extract-min-quantity-price";
+import { BaseComponent } from "./component-base";
 
 export interface Diode extends BaseComponent {
   // Extra columns
-  package: string
-  forward_voltage: number | null
-  reverse_voltage: number | null
-  forward_current: number | null
-  reverse_leakage_current: number | null
-  recovery_time_ns: number | null
-  diode_type: string
-  is_schottky: boolean
-  is_zener: boolean
-  is_tvs: boolean
-  operating_temp_min: number | null
-  operating_temp_max: number | null
-  power_dissipation_watts: number | null
-  configuration: string | null
+  package: string;
+  forward_voltage: number | null;
+  reverse_voltage: number | null;
+  forward_current: number | null;
+  reverse_leakage_current: number | null;
+  recovery_time_ns: number | null;
+  diode_type: string;
+  is_schottky: boolean;
+  is_zener: boolean;
+  is_tvs: boolean;
+  operating_temp_min: number | null;
+  operating_temp_max: number | null;
+  power_dissipation_watts: number | null;
+  configuration: string | null;
 }
 
 export const diodeTableSpec: DerivedTableSpec<Diode> = {
@@ -63,92 +63,92 @@ export const diodeTableSpec: DerivedTableSpec<Diode> = {
       ),
   mapToTable: (components) => {
     return components.map((c): Diode | null => {
-      if (!c.extra) return null
-      const extra = JSON.parse(c.extra ?? "{}")
-      if (!extra.attributes) return null
+      if (!c.extra) return null;
+      const extra = JSON.parse(c.extra ?? "{}");
+      if (!extra.attributes) return null;
 
-      const attrs = extra.attributes
-      const desc = c.description.toLowerCase()
+      const attrs = extra.attributes;
+      const desc = c.description.toLowerCase();
 
       // Parse forward voltage
-      let forwardVoltage = null
+      let forwardVoltage = null;
       const rawForwardV =
-        attrs["Forward Voltage (Vf@If)"] || attrs["Forward Voltage (Vf)"]
+        attrs["Forward Voltage (Vf@If)"] || attrs["Forward Voltage (Vf)"];
       if (rawForwardV) {
-        const match = rawForwardV.match(/([\d.]+)V/)
-        if (match) forwardVoltage = parseFloat(match[1])
+        const match = rawForwardV.match(/([\d.]+)V/);
+        if (match) forwardVoltage = parseFloat(match[1]);
       }
 
       // Parse reverse voltage
-      let reverseVoltage = null
-      const rawReverseV = attrs["Reverse Voltage (Vr)"]
+      let reverseVoltage = null;
+      const rawReverseV = attrs["Reverse Voltage (Vr)"];
       if (rawReverseV) {
-        const parsed = parseAndConvertSiUnit(rawReverseV).value
-        if (parsed) reverseVoltage = parsed as number
+        const parsed = parseAndConvertSiUnit(rawReverseV).value;
+        if (parsed) reverseVoltage = parsed as number;
       }
 
       // Parse forward current
-      let forwardCurrent = null
-      const rawForwardI = attrs["Average Rectified Current (Io)"]
+      let forwardCurrent = null;
+      const rawForwardI = attrs["Average Rectified Current (Io)"];
       if (rawForwardI) {
-        const parsed = parseAndConvertSiUnit(rawForwardI).value
-        if (parsed) forwardCurrent = parsed as number
+        const parsed = parseAndConvertSiUnit(rawForwardI).value;
+        if (parsed) forwardCurrent = parsed as number;
       }
 
       // Parse reverse leakage current
-      let leakageCurrent = null
+      let leakageCurrent = null;
       const rawLeakage =
         attrs["Reverse Leakage Current"] ||
-        attrs["Reverse Leakage Current (Ir)"]
+        attrs["Reverse Leakage Current (Ir)"];
       if (rawLeakage) {
-        const parsed = parseAndConvertSiUnit(rawLeakage.split("@")[0]).value
-        if (parsed) leakageCurrent = parsed as number
+        const parsed = parseAndConvertSiUnit(rawLeakage.split("@")[0]).value;
+        if (parsed) leakageCurrent = parsed as number;
       }
 
       // Parse recovery time
-      let recoveryTime = null
-      const rawRecovery = attrs["Reverse Recovery Time (trr)"]
+      let recoveryTime = null;
+      const rawRecovery = attrs["Reverse Recovery Time (trr)"];
       if (rawRecovery) {
-        const match = rawRecovery.match(/(\d+(?:\.\d+)?)ns/)
-        if (match) recoveryTime = parseFloat(match[1])
+        const match = rawRecovery.match(/(\d+(?:\.\d+)?)ns/);
+        if (match) recoveryTime = parseFloat(match[1]);
       }
 
       // Parse temperature range
-      let tempMin = null
-      let tempMax = null
-      const rawTemp = attrs["Operating Temperature"]
+      let tempMin = null;
+      let tempMax = null;
+      const rawTemp = attrs["Operating Temperature"];
       if (rawTemp) {
-        const match = rawTemp.match(/([-\d]+)℃~\+([-\d]+)℃/)
+        const match = rawTemp.match(/([-\d]+)℃~\+([-\d]+)℃/);
         if (match) {
-          tempMin = parseInt(match[1])
-          tempMax = parseInt(match[2])
+          tempMin = parseInt(match[1]);
+          tempMax = parseInt(match[2]);
         }
       }
 
       // Parse power dissipation
-      let powerDissipation = null
-      const rawPower = attrs["Power Dissipation"]
+      let powerDissipation = null;
+      const rawPower = attrs["Power Dissipation"];
       if (rawPower) {
-        const parsed = parseAndConvertSiUnit(rawPower).value
-        if (parsed) powerDissipation = parsed as number
+        const parsed = parseAndConvertSiUnit(rawPower).value;
+        if (parsed) powerDissipation = parsed as number;
       }
 
       // Determine diode type and characteristics
-      const isSchottky = desc.includes("schottky")
-      const isZener = desc.includes("zener")
+      const isSchottky = desc.includes("schottky");
+      const isZener = desc.includes("zener");
       const isTvs =
-        desc.includes("tvs") || desc.includes("transient voltage suppressor")
+        desc.includes("tvs") || desc.includes("transient voltage suppressor");
 
-      let diodeType = "general_purpose"
-      if (isSchottky) diodeType = "schottky_barrier"
-      else if (isZener) diodeType = "zener"
-      else if (isTvs) diodeType = "tvs"
-      else if (desc.includes("switching")) diodeType = "switching"
-      else if (desc.includes("fast recovery")) diodeType = "fast_recovery"
-      else if (desc.includes("bridge")) diodeType = "bridge_rectifier"
+      let diodeType = "general_purpose";
+      if (isSchottky) diodeType = "schottky_barrier";
+      else if (isZener) diodeType = "zener";
+      else if (isTvs) diodeType = "tvs";
+      else if (desc.includes("switching")) diodeType = "switching";
+      else if (desc.includes("fast recovery")) diodeType = "fast_recovery";
+      else if (desc.includes("bridge")) diodeType = "bridge_rectifier";
 
       // Get configuration
-      const configuration = attrs["Diode Configuration"] || null
+      const configuration = attrs["Diode Configuration"] || null;
 
       return {
         lcsc: c.lcsc,
@@ -174,7 +174,7 @@ export const diodeTableSpec: DerivedTableSpec<Diode> = {
         power_dissipation_watts: powerDissipation,
         configuration: configuration,
         attributes: attrs,
-      }
-    })
+      };
+    });
   },
-}
+};

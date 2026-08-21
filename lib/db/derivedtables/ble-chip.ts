@@ -1,18 +1,18 @@
-import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
+import { extractMinQPrice } from "lib/util/extract-min-quantity-price";
 import {
   isBleChip,
   isLikelyBareBleChip,
   mapBleFields,
   readComponentAttributes,
   type BleComponentFields,
-} from "./ble-utils"
-import type { DerivedTableSpec } from "./types"
+} from "./ble-utils";
+import type { DerivedTableSpec } from "./types";
 
 const BLE_CHIP_SUBCATEGORIES = [
   "RF Transceiver ICs",
   "Microcontroller Units (MCUs/MPUs/SOCs)",
   "Bluetooth Modules",
-] as const
+] as const;
 
 const BLE_CHIP_MFR_PATTERNS = [
   "NRF5%",
@@ -39,9 +39,9 @@ const BLE_CHIP_MFR_PATTERNS = [
   "RA4W1%",
   "TLSR%",
   "ESP32%",
-] as const
+] as const;
 
-export type BleChip = BleComponentFields
+export type BleChip = BleComponentFields;
 
 export const bleChipTableSpec: DerivedTableSpec<BleChip> = {
   tableName: "ble_chip",
@@ -78,24 +78,24 @@ export const bleChipTableSpec: DerivedTableSpec<BleChip> = {
       ),
   mapToTable: (components) =>
     components.map((component): BleChip | null => {
-      const attributes = readComponentAttributes(component.extra)
-      if (!attributes || !isBleChip(component, attributes)) return null
+      const attributes = readComponentAttributes(component.extra);
+      if (!attributes || !isBleChip(component, attributes)) return null;
 
       const sourceSubcategory = (
         component as typeof component & {
-          source_subcategory?: string | null
+          source_subcategory?: string | null;
         }
-      ).source_subcategory
+      ).source_subcategory;
       if (
         sourceSubcategory === "Bluetooth Modules" &&
         !isLikelyBareBleChip(component)
       ) {
-        return null
+        return null;
       }
 
       return {
         ...mapBleFields(component, attributes),
         price1: extractMinQPrice(component.price),
-      }
+      };
     }),
-}
+};

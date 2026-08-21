@@ -1,26 +1,26 @@
-import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
-import type { DerivedTableSpec } from "./types"
-import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
-import { BaseComponent } from "./component-base"
+import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit";
+import type { DerivedTableSpec } from "./types";
+import { extractMinQPrice } from "lib/util/extract-min-quantity-price";
+import { BaseComponent } from "./component-base";
 
 export interface WifiModule extends BaseComponent {
-  package: string
-  core_processor: string | null
-  antenna_type: string | null
-  operating_voltage: number | null
-  operating_temp_min: number | null
-  operating_temp_max: number | null
-  sensitivity_dbm: number | null
-  output_power_dbm: number | null
-  frequency_ghz: number | null
-  tx_current_ma: number | null
-  rx_current_ma: number | null
-  has_uart: boolean
-  has_spi: boolean
-  has_i2c: boolean
-  has_gpio: boolean
-  has_adc: boolean
-  has_pwm: boolean
+  package: string;
+  core_processor: string | null;
+  antenna_type: string | null;
+  operating_voltage: number | null;
+  operating_temp_min: number | null;
+  operating_temp_max: number | null;
+  sensitivity_dbm: number | null;
+  output_power_dbm: number | null;
+  frequency_ghz: number | null;
+  tx_current_ma: number | null;
+  rx_current_ma: number | null;
+  has_uart: boolean;
+  has_spi: boolean;
+  has_i2c: boolean;
+  has_gpio: boolean;
+  has_adc: boolean;
+  has_pwm: boolean;
 }
 
 export const wifiModuleTableSpec: DerivedTableSpec<WifiModule> = {
@@ -56,80 +56,80 @@ export const wifiModuleTableSpec: DerivedTableSpec<WifiModule> = {
       ),
   mapToTable: (components) => {
     return components.map((c): WifiModule | null => {
-      if (!c.extra) return null
-      const extra = JSON.parse(c.extra ?? "{}")
-      if (!extra.attributes) return null
+      if (!c.extra) return null;
+      const extra = JSON.parse(c.extra ?? "{}");
+      if (!extra.attributes) return null;
 
-      const attrs = extra.attributes
-      const desc = c.description.toLowerCase()
+      const attrs = extra.attributes;
+      const desc = c.description.toLowerCase();
 
       // Parse operating voltage
-      let voltage = null
-      const rawVoltage = attrs["Operating Voltage"]
+      let voltage = null;
+      const rawVoltage = attrs["Operating Voltage"];
       if (rawVoltage) {
-        const match = rawVoltage.match(/(\d+(?:\.\d+)?)V/)
-        if (match) voltage = parseFloat(match[1])
+        const match = rawVoltage.match(/(\d+(?:\.\d+)?)V/);
+        if (match) voltage = parseFloat(match[1]);
       }
 
       // Parse temperature range
-      let tempMin = null
-      let tempMax = null
-      const rawTemp = attrs["Operating Temperature"]
+      let tempMin = null;
+      let tempMax = null;
+      const rawTemp = attrs["Operating Temperature"];
       if (rawTemp) {
-        const match = rawTemp.match(/([-\d]+)℃~\+([-\d]+)℃/)
+        const match = rawTemp.match(/([-\d]+)℃~\+([-\d]+)℃/);
         if (match) {
-          tempMin = parseInt(match[1])
-          tempMax = parseInt(match[2])
+          tempMin = parseInt(match[1]);
+          tempMax = parseInt(match[2]);
         }
       }
 
       // Parse sensitivity
-      let sensitivity = null
-      const rawSensitivity = attrs["Sensitivity"]
+      let sensitivity = null;
+      const rawSensitivity = attrs["Sensitivity"];
       if (rawSensitivity) {
-        const match = rawSensitivity.match(/([-\d]+)dBm/)
-        if (match) sensitivity = parseInt(match[1])
+        const match = rawSensitivity.match(/([-\d]+)dBm/);
+        if (match) sensitivity = parseInt(match[1]);
       }
 
       // Parse output power
-      let outputPower = null
-      const rawPower = attrs["Output Power"]
+      let outputPower = null;
+      const rawPower = attrs["Output Power"];
       if (rawPower) {
-        const match = rawPower.match(/(\d+)dBm/)
-        if (match) outputPower = parseInt(match[1])
+        const match = rawPower.match(/(\d+)dBm/);
+        if (match) outputPower = parseInt(match[1]);
       }
 
       // Parse frequency
-      let frequency = null
-      const rawFreq = attrs["Frequency"]
+      let frequency = null;
+      const rawFreq = attrs["Frequency"];
       if (rawFreq) {
-        const match = rawFreq.match(/(\d+(?:\.\d+)?)GHz/)
-        if (match) frequency = parseFloat(match[1])
+        const match = rawFreq.match(/(\d+(?:\.\d+)?)GHz/);
+        if (match) frequency = parseFloat(match[1]);
       }
 
       // Parse currents
-      let txCurrent = null
-      const rawTxCurrent = attrs["Send  Current"]
+      let txCurrent = null;
+      const rawTxCurrent = attrs["Send  Current"];
       if (rawTxCurrent) {
-        const match = rawTxCurrent.match(/(\d+)mA/)
-        if (match) txCurrent = parseInt(match[1])
+        const match = rawTxCurrent.match(/(\d+)mA/);
+        if (match) txCurrent = parseInt(match[1]);
       }
 
-      let rxCurrent = null
-      const rawRxCurrent = attrs["Receive  Current"]
+      let rxCurrent = null;
+      const rawRxCurrent = attrs["Receive  Current"];
       if (rawRxCurrent) {
-        const match = rawRxCurrent.match(/(\d+)mA/)
-        if (match) rxCurrent = parseInt(match[1])
+        const match = rawRxCurrent.match(/(\d+)mA/);
+        if (match) rxCurrent = parseInt(match[1]);
       }
 
       // Parse interfaces
-      const interfaces = (attrs["Support Interface"] || "").toLowerCase()
-      const hasUart = interfaces.includes("uart")
-      const hasSpi = interfaces.includes("spi")
-      const hasI2c = interfaces.includes("i2c")
-      const hasGpio = interfaces.includes("gpio")
-      const hasAdc = interfaces.includes("adc")
-      const hasPwm = interfaces.includes("pwm")
+      const interfaces = (attrs["Support Interface"] || "").toLowerCase();
+      const hasUart = interfaces.includes("uart");
+      const hasSpi = interfaces.includes("spi");
+      const hasI2c = interfaces.includes("i2c");
+      const hasGpio = interfaces.includes("gpio");
+      const hasAdc = interfaces.includes("adc");
+      const hasPwm = interfaces.includes("pwm");
 
       return {
         lcsc: c.lcsc,
@@ -158,7 +158,7 @@ export const wifiModuleTableSpec: DerivedTableSpec<WifiModule> = {
         has_adc: hasAdc,
         has_pwm: hasPwm,
         attributes: attrs,
-      }
-    })
+      };
+    });
   },
-}
+};

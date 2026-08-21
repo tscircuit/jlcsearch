@@ -1,50 +1,50 @@
-import { describe, expect, it as vitestIt } from "vitest"
-import { fetchJson } from "./cloudflare-http"
+import { describe, expect, it as vitestIt } from "vitest";
+import { fetchJson } from "./cloudflare-http";
 
-type FieldAlias = string | string[]
+type FieldAlias = string | string[];
 
 interface FilterCase {
-  param: string
-  rowField: string
-  pick?: (rows: any[]) => unknown
-  serialize?: (value: unknown) => string
-  assert: (row: any, value: unknown) => void
+  param: string;
+  rowField: string;
+  pick?: (rows: any[]) => unknown;
+  serialize?: (value: unknown) => string;
+  assert: (row: any, value: unknown) => void;
 }
 
 interface RouteCase {
-  name: string
-  path: string
-  responseKey: string
-  requiredFields: FieldAlias[]
-  booleanFields?: string[]
-  filters?: FilterCase[]
+  name: string;
+  path: string;
+  responseKey: string;
+  requiredFields: FieldAlias[];
+  booleanFields?: string[];
+  filters?: FilterCase[];
 }
 
-const REMOTE_TEST_TIMEOUT_MS = 15_000
+const REMOTE_TEST_TIMEOUT_MS = 15_000;
 const it = (name: string, fn: () => Promise<unknown> | unknown) =>
-  vitestIt(name, fn, REMOTE_TEST_TIMEOUT_MS)
+  vitestIt(name, fn, REMOTE_TEST_TIMEOUT_MS);
 
 const getFieldValue = (row: any, alias: FieldAlias): unknown => {
   if (Array.isArray(alias)) {
     for (const key of alias) {
-      if (key in row) return row[key]
+      if (key in row) return row[key];
     }
-    return undefined
+    return undefined;
   }
-  return row[alias]
-}
+  return row[alias];
+};
 
 const getFieldLabel = (alias: FieldAlias): string =>
-  Array.isArray(alias) ? alias.join(" or ") : alias
+  Array.isArray(alias) ? alias.join(" or ") : alias;
 
 const expectRowHasFields = (row: any, fields: FieldAlias[]) => {
   for (const field of fields) {
     expect(
       getFieldValue(row, field),
       `expected row to include ${getFieldLabel(field)}`,
-    ).not.toBeUndefined()
+    ).not.toBeUndefined();
   }
-}
+};
 
 const stringEquals = (field: string): FilterCase => ({
   param: field,
@@ -53,9 +53,9 @@ const stringEquals = (field: string): FilterCase => ({
     rows.find((row) => typeof row[field] === "string" && row[field]),
   serialize: (value) => String(value),
   assert: (row, value) => {
-    expect(row[field]).toBe(value)
+    expect(row[field]).toBe(value);
   },
-})
+});
 
 const numberEquals = (param: string, rowField: string): FilterCase => ({
   param,
@@ -67,9 +67,9 @@ const numberEquals = (param: string, rowField: string): FilterCase => ({
     ),
   serialize: (value) => String(value),
   assert: (row, value) => {
-    expect(Number(row[rowField])).toBe(Number(value))
+    expect(Number(row[rowField])).toBe(Number(value));
   },
-})
+});
 
 const numberTolerance = (param: string, rowField: string): FilterCase => ({
   param,
@@ -81,14 +81,14 @@ const numberTolerance = (param: string, rowField: string): FilterCase => ({
     ),
   serialize: (value) => String(value),
   assert: (row, value) => {
-    const expected = Number(value)
-    const actual = Number(row[rowField])
-    if (!Number.isFinite(actual)) return
+    const expected = Number(value);
+    const actual = Number(row[rowField]);
+    if (!Number.isFinite(actual)) return;
     expect(Math.abs(actual - expected)).toBeLessThanOrEqual(
       Math.abs(expected) * 0.0001 + 1e-12,
-    )
+    );
   },
-})
+});
 
 const routeCases: RouteCase[] = [
   {
@@ -361,20 +361,20 @@ const routeCases: RouteCase[] = [
     booleanFields: ["is_low_dropout", "is_positive"],
     filters: [stringEquals("package"), stringEquals("output_type")],
   },
-]
+];
 
 describe("Cloudflare route contracts", () => {
   it("GET /health returns ok", async () => {
-    const { response, data } = await fetchJson("/health")
-    expect(response.ok).toBe(true)
-    expect(data.ok).toBe(true)
-  })
+    const { response, data } = await fetchJson("/health");
+    expect(response.ok).toBe(true);
+    expect(data.ok).toBe(true);
+  });
 
   it("GET /api/search returns components with stable core fields", async () => {
-    const { response, data } = await fetchJson("/api/search?q=STM32F401RCT6")
-    expect(response.ok).toBe(true)
-    expect(Array.isArray(data.components)).toBe(true)
-    expect(data.components.length).toBeGreaterThan(0)
+    const { response, data } = await fetchJson("/api/search?q=STM32F401RCT6");
+    expect(response.ok).toBe(true);
+    expect(Array.isArray(data.components)).toBe(true);
+    expect(data.components.length).toBeGreaterThan(0);
     expectRowHasFields(data.components[0], [
       "lcsc",
       "mfr",
@@ -382,68 +382,68 @@ describe("Cloudflare route contracts", () => {
       "description",
       ["price", "price1"],
       "stock",
-    ])
-  })
+    ]);
+  });
 
   it("GET /api/search strips a leading C in LCSC lookups", async () => {
-    const lcsc = 9002
-    const { data } = await fetchJson(`/api/search?q=C${lcsc}`)
-    expect(Array.isArray(data.components)).toBe(true)
-    expect(data.components.length).toBeGreaterThan(0)
-    expect(data.components[0].lcsc).toBe(lcsc)
-  })
+    const lcsc = 9002;
+    const { data } = await fetchJson(`/api/search?q=C${lcsc}`);
+    expect(Array.isArray(data.components)).toBe(true);
+    expect(data.components.length).toBeGreaterThan(0);
+    expect(data.components[0].lcsc).toBe(lcsc);
+  });
 
   it("GET /api/search finds crystal parts by category text in the catalog", async () => {
     const { response, data } = await fetchJson(
       "/api/search?limit=10&q=12MHz%20crystal",
-    )
-    expect(response.ok).toBe(true)
-    expect(Array.isArray(data.components)).toBe(true)
-    expect(data.components.length).toBeGreaterThan(0)
+    );
+    expect(response.ok).toBe(true);
+    expect(Array.isArray(data.components)).toBe(true);
+    expect(data.components.length).toBeGreaterThan(0);
     expect(
       data.components.some(
         (component: any) =>
           component.lcsc === 9002 && component.is_basic === true,
       ),
-    ).toBe(true)
-  })
+    ).toBe(true);
+  });
 
   it("GET /components/list returns component data", async () => {
-    const { response, data } = await fetchJson("/components/list?json=true")
-    expect(response.ok).toBe(true)
-    expect(Array.isArray(data.components)).toBe(true)
-  })
+    const { response, data } = await fetchJson("/components/list?json=true");
+    expect(response.ok).toBe(true);
+    expect(Array.isArray(data.components)).toBe(true);
+  });
 
   it("GET /not-found/list?json=true returns a 404-style error payload", async () => {
-    const { response, data } = await fetchJson("/not-found/list?json=true")
-    expect(response.status).toBe(404)
-    expect(data.error?.error_code).toBe("not_found")
-  })
+    const { response, data } = await fetchJson("/not-found/list?json=true");
+    expect(response.status).toBe(404);
+    expect(data.error?.error_code).toBe("not_found");
+  });
 
   for (const routeCase of routeCases) {
     it(`GET ${routeCase.path} returns ${routeCase.responseKey}`, async () => {
-      const { response, data } = await fetchJson(routeCase.path)
-      expect(response.ok).toBe(true)
-      expect(Array.isArray(data[routeCase.responseKey])).toBe(true)
+      const { response, data } = await fetchJson(routeCase.path);
+      expect(response.ok).toBe(true);
+      expect(Array.isArray(data[routeCase.responseKey])).toBe(true);
 
-      const rows = data[routeCase.responseKey] as any[]
-      if (rows.length === 0) return
+      const rows = data[routeCase.responseKey] as any[];
+      if (rows.length === 0) return;
 
-      expectRowHasFields(rows[0], routeCase.requiredFields)
-      expect(typeof rows[0].lcsc).toBe("number")
+      expectRowHasFields(rows[0], routeCase.requiredFields);
+      expect(typeof rows[0].lcsc).toBe("number");
 
       for (const field of routeCase.booleanFields ?? []) {
         if (field in rows[0] && rows[0][field] !== null) {
-          expect(typeof rows[0][field]).toBe("boolean")
+          expect(typeof rows[0][field]).toBe("boolean");
         }
       }
-    })
+    });
 
     for (const filter of routeCase.filters ?? []) {
       it(`GET ${routeCase.path} respects ${filter.param}`, async () => {
-        const { data } = await fetchJson(routeCase.path)
-        const rows = data[routeCase.responseKey] as any[]
-        if (!Array.isArray(rows) || rows.length === 0) return
+        const { data } = await fetchJson(routeCase.path);
+        const rows = data[routeCase.responseKey] as any[];
+        if (!Array.isArray(rows) || rows.length === 0) return;
 
         const picked =
           filter.pick?.(rows) ??
@@ -452,32 +452,32 @@ describe("Cloudflare route contracts", () => {
               row[filter.rowField] !== null &&
               row[filter.rowField] !== undefined &&
               row[filter.rowField] !== "",
-          )
+          );
 
-        if (!picked) return
+        if (!picked) return;
 
         const rawValue =
           typeof picked === "object" && picked !== null
             ? picked[filter.rowField]
-            : picked
+            : picked;
 
         if (rawValue === null || rawValue === undefined || rawValue === "")
-          return
+          return;
 
         const serialized = encodeURIComponent(
           filter.serialize ? filter.serialize(rawValue) : String(rawValue),
-        )
-        const separator = routeCase.path.includes("?") ? "&" : "?"
+        );
+        const separator = routeCase.path.includes("?") ? "&" : "?";
         const filtered = await fetchJson(
           `${routeCase.path}${separator}${filter.param}=${serialized}`,
-        )
-        const filteredRows = filtered.data[routeCase.responseKey] as any[]
+        );
+        const filteredRows = filtered.data[routeCase.responseKey] as any[];
 
-        expect(Array.isArray(filteredRows)).toBe(true)
+        expect(Array.isArray(filteredRows)).toBe(true);
         for (const row of filteredRows) {
-          filter.assert(row, rawValue)
+          filter.assert(row, rawValue);
         }
-      })
+      });
     }
   }
-})
+});

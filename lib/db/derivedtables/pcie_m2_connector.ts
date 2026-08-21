@@ -1,10 +1,10 @@
-import type { DerivedTableSpec } from "./types"
-import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
-import { BaseComponent } from "./component-base"
+import type { DerivedTableSpec } from "./types";
+import { extractMinQPrice } from "lib/util/extract-min-quantity-price";
+import { BaseComponent } from "./component-base";
 
 export interface PcieM2Connector extends BaseComponent {
-  key: string | null
-  is_right_angle: boolean
+  key: string | null;
+  is_right_angle: boolean;
 }
 
 export const pcieM2ConnectorTableSpec: DerivedTableSpec<PcieM2Connector> = {
@@ -27,18 +27,18 @@ export const pcieM2ConnectorTableSpec: DerivedTableSpec<PcieM2Connector> = {
       ),
   mapToTable(components) {
     return components.map((c) => {
-      if (!c.extra) return null
-      const extra = JSON.parse(c.extra ?? "{}")
-      const attrs: Record<string, string> = extra.attributes || {}
+      if (!c.extra) return null;
+      const extra = JSON.parse(c.extra ?? "{}");
+      const attrs: Record<string, string> = extra.attributes || {};
 
-      const interfaceForm = attrs["Interface Form"] || ""
-      let key: string | null = null
-      const keyMatch = interfaceForm.match(/M\.2-(\w) Key/i)
-      if (keyMatch) key = keyMatch[1]
+      const interfaceForm = attrs["Interface Form"] || "";
+      let key: string | null = null;
+      const keyMatch = interfaceForm.match(/M\.2-(\w) Key/i);
+      if (keyMatch) key = keyMatch[1];
 
       const mounting =
-        attrs["Mounting Type"] || attrs["Mounting Style"] || c.description
-      const isRightAngle = /horizontal/i.test(mounting)
+        attrs["Mounting Type"] || attrs["Mounting Style"] || c.description;
+      const isRightAngle = /horizontal/i.test(mounting);
 
       return {
         lcsc: Number(c.lcsc),
@@ -52,7 +52,7 @@ export const pcieM2ConnectorTableSpec: DerivedTableSpec<PcieM2Connector> = {
         key,
         is_right_angle: isRightAngle,
         attributes: attrs,
-      }
-    })
+      };
+    });
   },
-}
+};

@@ -1,6 +1,6 @@
-import { sql } from "kysely"
-import type { DbOptimizationSpec } from "./types"
-import type { KyselyDatabaseInstance } from "../kysely-types"
+import { sql } from "kysely";
+import type { DbOptimizationSpec } from "./types";
+import type { KyselyDatabaseInstance } from "../kysely-types";
 
 export const componentSearchFTS: DbOptimizationSpec = {
   name: "components_fts",
@@ -11,8 +11,8 @@ export const componentSearchFTS: DbOptimizationSpec = {
     const result = await sql`
       SELECT name FROM sqlite_master
       WHERE type='table' AND name=${this.name}
-    `.execute(db)
-    return result.rows.length > 0
+    `.execute(db);
+    return result.rows.length > 0;
   },
 
   async execute(db: KyselyDatabaseInstance) {
@@ -24,7 +24,7 @@ export const componentSearchFTS: DbOptimizationSpec = {
         lcsc,
         mfr_chars
       )
-    `.execute(db)
+    `.execute(db);
 
     // Create synchronization triggers
     // INSERT trigger: Store fields in lowercase and populate mfr_chars
@@ -40,7 +40,7 @@ export const componentSearchFTS: DbOptimizationSpec = {
           REPLACE(LOWER(new.mfr), '', ' ')
         );
       END
-    `.execute(db)
+    `.execute(db);
 
     // UPDATE trigger: Update fields in lowercase and regenerate mfr_chars
     await sql`
@@ -54,7 +54,7 @@ export const componentSearchFTS: DbOptimizationSpec = {
           mfr_chars = REPLACE(LOWER(new.mfr), '', ' ')
         WHERE rowid = old.rowid;
       END
-    `.execute(db)
+    `.execute(db);
 
     // DELETE trigger: Remove corresponding FTS entry
     await sql`
@@ -62,7 +62,7 @@ export const componentSearchFTS: DbOptimizationSpec = {
       BEGIN
         DELETE FROM components_fts WHERE rowid = old.rowid;
       END
-    `.execute(db)
+    `.execute(db);
 
     // Populate initial data from components table
     await sql`
@@ -74,6 +74,6 @@ export const componentSearchFTS: DbOptimizationSpec = {
         LOWER(lcsc),
         REPLACE(LOWER(mfr), '', ' ')
       FROM components
-    `.execute(db)
+    `.execute(db);
   },
-}
+};

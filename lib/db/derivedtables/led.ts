@@ -1,22 +1,22 @@
-import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
-import type { DerivedTableSpec } from "./types"
-import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
-import { BaseComponent } from "./component-base"
+import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit";
+import type { DerivedTableSpec } from "./types";
+import { extractMinQPrice } from "lib/util/extract-min-quantity-price";
+import { BaseComponent } from "./component-base";
 
 export interface Led extends BaseComponent {
-  package: string
-  forward_voltage: number | null
-  forward_current: number | null
-  color: string | null
-  wavelength_nm: number | null
-  luminous_intensity_mcd: number | null
-  viewing_angle_deg: number | null
-  power_dissipation_mw: number | null
-  operating_temp_min: number | null
-  operating_temp_max: number | null
-  lens_color: string | null
-  mounting_style: string | null
-  is_rgb: boolean
+  package: string;
+  forward_voltage: number | null;
+  forward_current: number | null;
+  color: string | null;
+  wavelength_nm: number | null;
+  luminous_intensity_mcd: number | null;
+  viewing_angle_deg: number | null;
+  power_dissipation_mw: number | null;
+  operating_temp_min: number | null;
+  operating_temp_max: number | null;
+  lens_color: string | null;
+  mounting_style: string | null;
+  is_rgb: boolean;
 }
 
 export const ledTableSpec: DerivedTableSpec<Led> = {
@@ -52,69 +52,69 @@ export const ledTableSpec: DerivedTableSpec<Led> = {
       ),
   mapToTable: (components) => {
     return components.map((c): Led | null => {
-      if (!c.extra) return null
-      const extra = JSON.parse(c.extra ?? "{}")
-      if (!extra.attributes) return null
+      if (!c.extra) return null;
+      const extra = JSON.parse(c.extra ?? "{}");
+      if (!extra.attributes) return null;
 
-      const attrs = extra.attributes
-      const desc = c.description.toLowerCase()
+      const attrs = extra.attributes;
+      const desc = c.description.toLowerCase();
 
       // Parse voltage
       const rawVoltage =
-        attrs["Forward Voltage"] || attrs["Forward Voltage (VF)"]
+        attrs["Forward Voltage"] || attrs["Forward Voltage (VF)"];
       const forwardVoltage = rawVoltage
         ? (parseAndConvertSiUnit(rawVoltage).value as number)
-        : null
+        : null;
 
       // Parse current
-      const rawCurrent = attrs["Forward Current"]
+      const rawCurrent = attrs["Forward Current"];
       const forwardCurrent = rawCurrent
         ? (parseAndConvertSiUnit(rawCurrent).value as number)
-        : null
+        : null;
 
       // Parse wavelength
       const rawWavelength =
-        attrs["Dominant Wavelength"] || attrs["Peak Wavelength"]
-      let wavelength = null
+        attrs["Dominant Wavelength"] || attrs["Peak Wavelength"];
+      let wavelength = null;
       if (rawWavelength) {
-        const match = rawWavelength.match(/(\d+)(?:~\d+)?nm/)
-        if (match) wavelength = parseInt(match[1])
+        const match = rawWavelength.match(/(\d+)(?:~\d+)?nm/);
+        if (match) wavelength = parseInt(match[1]);
       }
 
       // Parse luminous intensity
-      const rawIntensity = attrs["Luminous Intensity"]
+      const rawIntensity = attrs["Luminous Intensity"];
       const luminousIntensity = rawIntensity
         ? (parseAndConvertSiUnit(rawIntensity).value as number)
-        : null
+        : null;
 
       // Parse viewing angle
-      const rawAngle = attrs["Viewing Angle"]
-      let viewingAngle = null
+      const rawAngle = attrs["Viewing Angle"];
+      let viewingAngle = null;
       if (rawAngle) {
-        const match = rawAngle.match(/(\d+)°/)
-        if (match) viewingAngle = parseInt(match[1])
+        const match = rawAngle.match(/(\d+)°/);
+        if (match) viewingAngle = parseInt(match[1]);
       }
 
       // Parse power
-      const rawPower = attrs["Power Dissipation"]
+      const rawPower = attrs["Power Dissipation"];
       const power = rawPower
         ? (parseAndConvertSiUnit(rawPower).value as number)
-        : null
+        : null;
       // Parse temperature range
-      let tempMin = null
-      let tempMax = null
-      const rawTemp = attrs["Operating Temperature"]
+      let tempMin = null;
+      let tempMax = null;
+      const rawTemp = attrs["Operating Temperature"];
       if (rawTemp) {
-        const match = rawTemp.match(/([-\d]+)℃~\+([-\d]+)℃/)
+        const match = rawTemp.match(/([-\d]+)℃~\+([-\d]+)℃/);
         if (match) {
-          tempMin = parseInt(match[1])
-          tempMax = parseInt(match[2])
+          tempMin = parseInt(match[1]);
+          tempMax = parseInt(match[2]);
         }
       }
 
       // Normalize color
       const normalizeColor = (color: string | null): string | null => {
-        if (!color) return null
+        if (!color) return null;
         // First split and clean the values
         const colors = color
           .toLowerCase()
@@ -123,19 +123,19 @@ export const ledTableSpec: DerivedTableSpec<Led> = {
           .split(/[\/,\s]+/)
           .filter((s) => s && s !== "-" && s !== ",")
           .map((s) => s.trim())
-          .map((s) => s.replace("yellow-green", "greenish_yellow"))
+          .map((s) => s.replace("yellow-green", "greenish_yellow"));
 
         // Then deduplicate and sort
-        return Array.from(new Set(colors)).sort().join("-")
-      }
+        return Array.from(new Set(colors)).sort().join("-");
+      };
 
       // Determine color
-      let color = normalizeColor(attrs["Emitted Color"])
+      let color = normalizeColor(attrs["Emitted Color"]);
       if (!color) {
-        if (desc.includes("ultraviolet") || desc.includes("uv")) color = "uv"
-        else if (desc.includes("infrared") || desc.includes("ir")) color = "ir"
+        if (desc.includes("ultraviolet") || desc.includes("uv")) color = "uv";
+        else if (desc.includes("infrared") || desc.includes("ir")) color = "ir";
         else {
-          const colors = []
+          const colors = [];
           for (const c of [
             "red",
             "green",
@@ -146,15 +146,15 @@ export const ledTableSpec: DerivedTableSpec<Led> = {
             "purple",
           ]) {
             if (desc.includes(c)) {
-              colors.push(c)
+              colors.push(c);
             }
           }
-          color = normalizeColor(colors.join(","))
+          color = normalizeColor(colors.join(","));
         }
       }
 
       // Determine if RGB
-      const isRgb = desc.includes("rgb") || desc.includes("full color")
+      const isRgb = desc.includes("rgb") || desc.includes("full color");
 
       return {
         lcsc: c.lcsc,
@@ -179,7 +179,7 @@ export const ledTableSpec: DerivedTableSpec<Led> = {
         mounting_style: attrs["Mounting Sytle"] || null,
         is_rgb: isRgb,
         attributes: attrs,
-      }
-    })
+      };
+    });
   },
-}
+};

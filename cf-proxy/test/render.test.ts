@@ -1,32 +1,32 @@
-import { describe, expect, it } from "vitest"
-import { D1_ROUTES, getD1Handler } from "../src/d1-routes"
-import { renderD1TablePage, renderHomePage } from "../src/render"
+import { describe, expect, it } from "vitest";
+import { D1_ROUTES, getD1Handler } from "../src/d1-routes";
+import { renderD1TablePage, renderHomePage } from "../src/render";
 
 describe("render helpers", () => {
   it("renders a home page with D1-backed route links", () => {
-    const html = renderHomePage()
+    const html = renderHomePage();
 
-    expect(html).toContain("JLCPCB In-Stock Parts Engine (Unofficial)")
-    expect(html).toContain("/led_with_ic/list")
-    expect(html).toContain("/lcd_drivers/list")
-    expect(html).toContain("/tft_display_drivers/list")
-    expect(html).toContain("/resistors/list")
-    expect(html).toContain("/barrel_jacks/list")
-    expect(html).toContain("/spring_clamp_terminal_blocks/list")
-    expect(html).toContain("/ble_modules/list")
-    expect(html).toContain("/ble_chips/list")
-    expect(html).toContain("/dimm_connectors/list")
-    expect(html).toContain("/sodimm_connectors/list")
-    expect(html).toContain("/micro_usb_connectors/list")
-    expect(html).toContain("/hdmi_ports/list")
-    expect(html).toContain("/photo_diodes/list")
-  })
+    expect(html).toContain("JLCPCB In-Stock Parts Engine (Unofficial)");
+    expect(html).toContain("/led_with_ic/list");
+    expect(html).toContain("/lcd_drivers/list");
+    expect(html).toContain("/tft_display_drivers/list");
+    expect(html).toContain("/resistors/list");
+    expect(html).toContain("/barrel_jacks/list");
+    expect(html).toContain("/spring_clamp_terminal_blocks/list");
+    expect(html).toContain("/ble_modules/list");
+    expect(html).toContain("/ble_chips/list");
+    expect(html).toContain("/dimm_connectors/list");
+    expect(html).toContain("/sodimm_connectors/list");
+    expect(html).toContain("/micro_usb_connectors/list");
+    expect(html).toContain("/hdmi_ports/list");
+    expect(html).toContain("/photo_diodes/list");
+  });
 
   it("renders the Barrel Jacks page and JSON API link", () => {
-    const pathname = "/barrel_jacks/list"
+    const pathname = "/barrel_jacks/list";
 
-    expect(D1_ROUTES).toContain(pathname)
-    expect(getD1Handler(pathname)).toBeTypeOf("function")
+    expect(D1_ROUTES).toContain(pathname);
+    expect(getD1Handler(pathname)).toBeTypeOf("function");
 
     const html = renderD1TablePage(
       pathname,
@@ -58,28 +58,28 @@ describe("render helpers", () => {
         num_pins: "3",
       },
       "https://jlcsearch.tscircuit.com/barrel_jacks/list?inside_diameter_mm=2&outside_diameter_mm=6.4",
-    )
+    );
 
-    expect(html).toContain("<h2>Barrel Jacks</h2>")
-    expect(html).toContain('name="mounting_style"')
-    expect(html).toContain('name="orientation"')
-    expect(html).toContain('name="inside_diameter_mm"')
-    expect(html).toContain('name="outside_diameter_mm"')
-    expect(html).toContain('name="current_rating_min"')
-    expect(html).toContain('name="voltage_rating_min"')
-    expect(html).toContain('name="num_pins"')
-    expect(html).toContain('name="is_basic"')
-    expect(html).toContain('name="is_preferred"')
-    expect(html).toContain("2mm")
-    expect(html).toContain("6.4mm")
-    expect(html).toContain("/barrel_jacks/list.json")
-  })
+    expect(html).toContain("<h2>Barrel Jacks</h2>");
+    expect(html).toContain('name="mounting_style"');
+    expect(html).toContain('name="orientation"');
+    expect(html).toContain('name="inside_diameter_mm"');
+    expect(html).toContain('name="outside_diameter_mm"');
+    expect(html).toContain('name="current_rating_min"');
+    expect(html).toContain('name="voltage_rating_min"');
+    expect(html).toContain('name="num_pins"');
+    expect(html).toContain('name="is_basic"');
+    expect(html).toContain('name="is_preferred"');
+    expect(html).toContain("2mm");
+    expect(html).toContain("6.4mm");
+    expect(html).toContain("/barrel_jacks/list.json");
+  });
 
   it("renders the Micro USB connectors page and JSON API link", () => {
-    const pathname = "/micro_usb_connectors/list"
+    const pathname = "/micro_usb_connectors/list";
 
-    expect(D1_ROUTES).toContain(pathname)
-    expect(getD1Handler(pathname)).toBeTypeOf("function")
+    expect(D1_ROUTES).toContain(pathname);
+    expect(getD1Handler(pathname)).toBeTypeOf("function");
 
     const html = renderD1TablePage(
       pathname,
@@ -106,19 +106,19 @@ describe("render helpers", () => {
         gender: "Female",
       },
       "https://jlcsearch.tscircuit.com/micro_usb_connectors/list?connector_type=Micro+USB+Type-B",
-    )
+    );
 
-    expect(html).toContain("<h2>Micro USB Connectors</h2>")
-    expect(html).toContain('name="connector_type"')
-    expect(html).toContain('name="usb_standard"')
-    expect(html).toContain('name="mounting_style"')
-    expect(html).toContain('name="number_of_contacts"')
-    expect(html).toContain('name="gender"')
-    expect(html).toContain('name="is_basic"')
-    expect(html).toContain('name="is_preferred"')
-    expect(html).toContain("10118194-0001LF")
-    expect(html).toContain("/micro_usb_connectors/list.json")
-  })
+    expect(html).toContain("<h2>Micro USB Connectors</h2>");
+    expect(html).toContain('name="connector_type"');
+    expect(html).toContain('name="usb_standard"');
+    expect(html).toContain('name="mounting_style"');
+    expect(html).toContain('name="number_of_contacts"');
+    expect(html).toContain('name="gender"');
+    expect(html).toContain('name="is_basic"');
+    expect(html).toContain('name="is_preferred"');
+    expect(html).toContain("10118194-0001LF");
+    expect(html).toContain("/micro_usb_connectors/list.json");
+  });
 
   it("renders the first price tier on component search results", () => {
     const html = renderD1TablePage(
@@ -136,17 +136,17 @@ describe("render helpers", () => {
       },
       { search: "MSP430" },
       "https://jlcsearch.tscircuit.com/components/list?search=MSP430",
-    )
+    );
 
-    expect(html).toContain("MSP430G2332IRSA16R")
-    expect(html).toContain("$1.52")
-  })
+    expect(html).toContain("MSP430G2332IRSA16R");
+    expect(html).toContain("$1.52");
+  });
 
   it("renders the Photo Diodes page and JSON API link", () => {
-    const pathname = "/photo_diodes/list"
+    const pathname = "/photo_diodes/list";
 
-    expect(D1_ROUTES).toContain(pathname)
-    expect(getD1Handler(pathname)).toBeTypeOf("function")
+    expect(D1_ROUTES).toContain(pathname);
+    expect(getD1Handler(pathname)).toBeTypeOf("function");
 
     const html = renderD1TablePage(
       pathname,
@@ -178,43 +178,43 @@ describe("render helpers", () => {
       {
         package: ["SMD-4P,2.7x3.2mm", "Plugin"],
       },
-    )
+    );
 
-    expect(html).toContain("<h2>Photo Diodes</h2>")
-    expect(html).toContain('name="package"')
-    expect(html).toContain('name="wavelength"')
-    expect(html).not.toContain('name="wavelength_min"')
-    expect(html).toContain("Target Wavelength (nm)")
-    expect(html).toContain('name="peak_distance_max"')
-    expect(html).toContain("Max Distance from Peak (nm)")
-    expect(html).toContain('name="excluded_peak_bands"')
-    expect(html).toContain("Excluded Peak Bands (nm)")
-    expect(html).toContain("700-1100, 532")
-    expect(html).toContain("optical filtering may be needed")
-    expect(html).toContain('name="reverse_voltage_min"')
-    expect(html).toContain('name="dark_current_max"')
-    expect(html).toContain('name="is_basic"')
-    expect(html).toContain('name="is_preferred"')
-    expect(html).toContain("PD15-22B/TR8")
-    expect(html).toContain("940nm")
-    expect(html).toContain("10nA")
-    expect(html).toContain("60°")
-    expect(html).toContain("/photo_diodes/list.json")
+    expect(html).toContain("<h2>Photo Diodes</h2>");
+    expect(html).toContain('name="package"');
+    expect(html).toContain('name="wavelength"');
+    expect(html).not.toContain('name="wavelength_min"');
+    expect(html).toContain("Target Wavelength (nm)");
+    expect(html).toContain('name="peak_distance_max"');
+    expect(html).toContain("Max Distance from Peak (nm)");
+    expect(html).toContain('name="excluded_peak_bands"');
+    expect(html).toContain("Excluded Peak Bands (nm)");
+    expect(html).toContain("700-1100, 532");
+    expect(html).toContain("optical filtering may be needed");
+    expect(html).toContain('name="reverse_voltage_min"');
+    expect(html).toContain('name="dark_current_max"');
+    expect(html).toContain('name="is_basic"');
+    expect(html).toContain('name="is_preferred"');
+    expect(html).toContain("PD15-22B/TR8");
+    expect(html).toContain("940nm");
+    expect(html).toContain("10nA");
+    expect(html).toContain("60°");
+    expect(html).toContain("/photo_diodes/list.json");
 
     const legacyHtml = renderD1TablePage(
       pathname,
       { photo_diodes: [] },
       { wavelength_min: "300" },
       "https://jlcsearch.tscircuit.com/photo_diodes/list?wavelength_min=300",
-    )
-    expect(legacyHtml).toContain('name="wavelength" value="300"')
-  })
+    );
+    expect(legacyHtml).toContain('name="wavelength" value="300"');
+  });
 
   it("renders the HDMI ports page and JSON API link", () => {
-    const pathname = "/hdmi_ports/list"
+    const pathname = "/hdmi_ports/list";
 
-    expect(D1_ROUTES).toContain(pathname)
-    expect(getD1Handler(pathname)).toBeTypeOf("function")
+    expect(D1_ROUTES).toContain(pathname);
+    expect(getD1Handler(pathname)).toBeTypeOf("function");
 
     const html = renderD1TablePage(
       pathname,
@@ -246,20 +246,20 @@ describe("render helpers", () => {
         gender: ["Female", "Male"],
         number_of_pins: ["19"],
       },
-    )
+    );
 
-    expect(html).toContain("<h2>HDMI Ports</h2>")
-    expect(html).toContain('name="package"')
-    expect(html).toContain('name="mounting_style"')
-    expect(html).toContain('name="orientation"')
-    expect(html).toContain('name="gender"')
-    expect(html).toContain('name="number_of_pins"')
-    expect(html).toContain('name="is_basic"')
-    expect(html).toContain('name="is_preferred"')
-    expect(html).toContain("HDMI-001S")
-    expect(html).toContain("500mA")
-    expect(html).toContain("/hdmi_ports/list.json")
-  })
+    expect(html).toContain("<h2>HDMI Ports</h2>");
+    expect(html).toContain('name="package"');
+    expect(html).toContain('name="mounting_style"');
+    expect(html).toContain('name="orientation"');
+    expect(html).toContain('name="gender"');
+    expect(html).toContain('name="number_of_pins"');
+    expect(html).toContain('name="is_basic"');
+    expect(html).toContain('name="is_preferred"');
+    expect(html).toContain("HDMI-001S");
+    expect(html).toContain("500mA");
+    expect(html).toContain("/hdmi_ports/list.json");
+  });
 
   it("renders ARM processor memory sizes with byte units", () => {
     const html = renderD1TablePage(
@@ -282,12 +282,12 @@ describe("render helpers", () => {
       },
       {},
       "https://jlcsearch.tscircuit.com/arm_processors/list",
-    )
+    );
 
-    expect(html).toContain("64KB")
-    expect(html).toContain("20KB")
-    expect(html).toContain("4B")
-  })
+    expect(html).toContain("64KB");
+    expect(html).toContain("20KB");
+    expect(html).toContain("4B");
+  });
 
   it.each([
     [
@@ -305,8 +305,8 @@ describe("render helpers", () => {
   ])(
     "renders the %s page with memory connector filters",
     (pathname, responseKey, heading, mfr) => {
-      expect(D1_ROUTES).toContain(pathname)
-      expect(getD1Handler(pathname)).toBeTypeOf("function")
+      expect(D1_ROUTES).toContain(pathname);
+      expect(getD1Handler(pathname)).toBeTypeOf("function");
 
       const html = renderD1TablePage(
         pathname,
@@ -336,19 +336,19 @@ describe("render helpers", () => {
           num_pins: ["200", "204", "240", "260", "288"],
           pitch: ["0.5", "0.6", "0.85", "1"],
         },
-      )
+      );
 
-      expect(html).toContain(`<h2>${heading}</h2>`)
-      expect(html).toContain('name="ddr_standard"')
-      expect(html).toContain('name="num_pins"')
-      expect(html).toContain('name="pitch"')
-      expect(html).toContain('name="height_mm"')
-      expect(html).toContain('name="is_right_angle"')
-      expect(html).toContain(mfr)
-      expect(html).toContain("9.2mm")
-      expect(html).toContain(`${pathname}.json`)
+      expect(html).toContain(`<h2>${heading}</h2>`);
+      expect(html).toContain('name="ddr_standard"');
+      expect(html).toContain('name="num_pins"');
+      expect(html).toContain('name="pitch"');
+      expect(html).toContain('name="height_mm"');
+      expect(html).toContain('name="is_right_angle"');
+      expect(html).toContain(mfr);
+      expect(html).toContain("9.2mm");
+      expect(html).toContain(`${pathname}.json`);
     },
-  )
+  );
 
   it.each([
     ["/ble_modules/list", "ble_modules", "BLE Modules", "VG6328A"],
@@ -356,8 +356,8 @@ describe("render helpers", () => {
   ])(
     "renders the %s page with BLE filters",
     (pathname, responseKey, heading, mfr) => {
-      expect(D1_ROUTES).toContain(pathname)
-      expect(getD1Handler(pathname)).toBeTypeOf("function")
+      expect(D1_ROUTES).toContain(pathname);
+      expect(getD1Handler(pathname)).toBeTypeOf("function");
 
       const html = renderD1TablePage(
         pathname,
@@ -376,21 +376,21 @@ describe("render helpers", () => {
         { bluetooth_version: "5.3", has_spi: "true" },
         `https://jlcsearch.tscircuit.com${pathname}?bluetooth_version=5.3&has_spi=true`,
         { bluetooth_version: ["5.3"] },
-      )
+      );
 
-      expect(html).toContain(`<h2>${heading}</h2>`)
-      expect(html).toContain('name="bluetooth_version"')
-      expect(html).toContain('name="has_spi"')
-      expect(html).toContain(mfr)
-      expect(html).toContain(`${pathname}.json`)
+      expect(html).toContain(`<h2>${heading}</h2>`);
+      expect(html).toContain('name="bluetooth_version"');
+      expect(html).toContain('name="has_spi"');
+      expect(html).toContain(mfr);
+      expect(html).toContain(`${pathname}.json`);
     },
-  )
+  );
 
   it("renders the spring clamp route with pitch and pin filters", () => {
-    expect(D1_ROUTES).toContain("/spring_clamp_terminal_blocks/list")
+    expect(D1_ROUTES).toContain("/spring_clamp_terminal_blocks/list");
     expect(getD1Handler("/spring_clamp_terminal_blocks/list")).toBeTypeOf(
       "function",
-    )
+    );
 
     const html = renderD1TablePage(
       "/spring_clamp_terminal_blocks/list",
@@ -407,18 +407,18 @@ describe("render helpers", () => {
       { pitch: "5.08", pins: "2" },
       "https://jlcsearch.tscircuit.com/spring_clamp_terminal_blocks/list?pitch=5.08&pins=2",
       { pitch: ["5.08"], pins: ["2"] },
-    )
+    );
 
-    expect(html).toContain("<h2>Spring Clamp Terminal Blocks</h2>")
-    expect(html).toContain('name="pitch"')
-    expect(html).toContain('name="pins"')
-    expect(html).toContain("WJ142R-5.08-2P")
-    expect(html).toContain("/spring_clamp_terminal_blocks/list.json")
-  })
+    expect(html).toContain("<h2>Spring Clamp Terminal Blocks</h2>");
+    expect(html).toContain('name="pitch"');
+    expect(html).toContain('name="pins"');
+    expect(html).toContain("WJ142R-5.08-2P");
+    expect(html).toContain("/spring_clamp_terminal_blocks/list.json");
+  });
 
   it("renders the LCD driver catalog route with package and assembly filters", () => {
-    expect(D1_ROUTES).toContain("/lcd_drivers/list")
-    expect(getD1Handler("/lcd_drivers/list")).toBeTypeOf("function")
+    expect(D1_ROUTES).toContain("/lcd_drivers/list");
+    expect(getD1Handler("/lcd_drivers/list")).toBeTypeOf("function");
 
     const html = renderD1TablePage(
       "/lcd_drivers/list",
@@ -445,22 +445,22 @@ describe("render helpers", () => {
         package: ["SSOP-48-300mil"],
         max_resolution: ["32x4", "32x8"],
       },
-    )
+    );
 
-    expect(html).toContain("<h2>LCD Drivers</h2>")
-    expect(html).toContain('name="package"')
-    expect(html).toContain('name="max_resolution"')
-    expect(html).toContain('value="32x4" selected')
-    expect(html).toContain(">Max Resolution</th>")
-    expect(html).toContain('name="is_basic"')
-    expect(html).toContain('name="is_preferred" value="true" checked')
-    expect(html).toContain("HT1621B")
-    expect(html).toContain("/lcd_drivers/list.json")
-  })
+    expect(html).toContain("<h2>LCD Drivers</h2>");
+    expect(html).toContain('name="package"');
+    expect(html).toContain('name="max_resolution"');
+    expect(html).toContain('value="32x4" selected');
+    expect(html).toContain(">Max Resolution</th>");
+    expect(html).toContain('name="is_basic"');
+    expect(html).toContain('name="is_preferred" value="true" checked');
+    expect(html).toContain("HT1621B");
+    expect(html).toContain("/lcd_drivers/list.json");
+  });
 
   it("renders the TFT display driver route with driver type filters", () => {
-    expect(D1_ROUTES).toContain("/tft_display_drivers/list")
-    expect(getD1Handler("/tft_display_drivers/list")).toBeTypeOf("function")
+    expect(D1_ROUTES).toContain("/tft_display_drivers/list");
+    expect(getD1Handler("/tft_display_drivers/list")).toBeTypeOf("function");
 
     const html = renderD1TablePage(
       "/tft_display_drivers/list",
@@ -486,18 +486,18 @@ describe("render helpers", () => {
         package: ["LQFP-128(14x14)"],
         max_resolution: ["864x480"],
       },
-    )
+    );
 
-    expect(html).toContain("<h2>TFT Display Drivers</h2>")
-    expect(html).toContain('name="driver_type"')
-    expect(html).toContain('value="controller" selected')
-    expect(html).toContain('name="max_resolution"')
-    expect(html).toContain('value="864x480" selected')
-    expect(html).toContain(">Max Resolution</th>")
-    expect(html).toContain("Display Controller")
-    expect(html).toContain("SSD1963QL9")
-    expect(html).toContain("/tft_display_drivers/list.json")
-  })
+    expect(html).toContain("<h2>TFT Display Drivers</h2>");
+    expect(html).toContain('name="driver_type"');
+    expect(html).toContain('value="controller" selected');
+    expect(html).toContain('name="max_resolution"');
+    expect(html).toContain('value="864x480" selected');
+    expect(html).toContain(">Max Resolution</th>");
+    expect(html).toContain("Display Controller");
+    expect(html).toContain("SSD1963QL9");
+    expect(html).toContain("/tft_display_drivers/list.json");
+  });
 
   it("renders an HTML table page for a supported D1 route", () => {
     const html = renderD1TablePage(
@@ -514,17 +514,17 @@ describe("render helpers", () => {
       },
       { protocol: "WS2812B" },
       "https://jlcsearch-proxy-staging.seve.workers.dev/led_with_ic/list?protocol=WS2812B",
-    )
+    );
 
-    expect(html).toContain("<h2>LEDs with Built-in IC</h2>")
-    expect(html).toContain('name="protocol"')
-    expect(html).toContain('value="WS2812B"')
+    expect(html).toContain("<h2>LEDs with Built-in IC</h2>");
+    expect(html).toContain('name="protocol"');
+    expect(html).toContain('value="WS2812B"');
     expect(html).toContain(
       '<table class="border border-gray-300 text-xs border-collapse p-1">',
-    )
-    expect(html).toContain("SMD5050-4P")
-    expect(html).toContain("/led_with_ic/list.json?protocol=WS2812B")
-  })
+    );
+    expect(html).toContain("SMD5050-4P");
+    expect(html).toContain("/led_with_ic/list.json?protocol=WS2812B");
+  });
 
   it("renders attributes cells inside details with a truncated summary", () => {
     const html = renderD1TablePage(
@@ -541,11 +541,11 @@ describe("render helpers", () => {
       },
       {},
       "https://example.com/ldos/list",
-    )
+    );
 
-    expect(html).toContain("<details><summary>{&quot;Power Su...</summary>")
+    expect(html).toContain("<details><summary>{&quot;Power Su...</summary>");
     expect(html).toContain(
       "Feature&quot;:&quot;Overcurrent Protection(OCP)&quot;",
-    )
-  })
-})
+    );
+  });
+});

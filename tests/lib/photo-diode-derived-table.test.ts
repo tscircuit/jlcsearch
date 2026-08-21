@@ -1,9 +1,9 @@
-import { Database } from "bun:sqlite"
-import { expect, test } from "bun:test"
-import { Kysely } from "kysely"
-import { BunSqliteDialect } from "kysely-bun-sqlite"
-import { photoDiodeTableSpec } from "lib/db/derivedtables/photo-diode"
-import { setupDerivedTables } from "lib/db/derivedtables/setup-derived-tables"
+import { Database } from "bun:sqlite";
+import { expect, test } from "bun:test";
+import { Kysely } from "kysely";
+import { BunSqliteDialect } from "kysely-bun-sqlite";
+import { photoDiodeTableSpec } from "lib/db/derivedtables/photo-diode";
+import { setupDerivedTables } from "lib/db/derivedtables/setup-derived-tables";
 
 const makeComponent = (overrides: Record<string, unknown> = {}) =>
   ({
@@ -28,7 +28,7 @@ const makeComponent = (overrides: Record<string, unknown> = {}) =>
       },
     }),
     ...overrides,
-  }) as any
+  }) as any;
 
 const EXPECTED_INDEX_COLUMNS = [
   "stock",
@@ -38,10 +38,10 @@ const EXPECTED_INDEX_COLUMNS = [
   "dark_current_a,stock",
   "is_basic,stock",
   "is_preferred,stock",
-]
+];
 
 test("photo diode table maps optical and electrical attributes", () => {
-  const [photoDiode] = photoDiodeTableSpec.mapToTable([makeComponent()])
+  const [photoDiode] = photoDiodeTableSpec.mapToTable([makeComponent()]);
 
   expect(photoDiode).toMatchObject({
     lcsc: 161211,
@@ -57,8 +57,8 @@ test("photo diode table maps optical and electrical attributes", () => {
     operating_temp_max: 85,
     is_preferred: true,
     price1: 0.080724638,
-  })
-})
+  });
+});
 
 test("photo diode table falls back to description data", () => {
   const [photoDiode] = photoDiodeTableSpec.mapToTable([
@@ -67,7 +67,7 @@ test("photo diode table falls back to description data", () => {
       description: "32V 940nm 730nm~1100nm 10nA Plugin Photodiodes ROHS",
       package: "Plugin",
     }),
-  ])
+  ]);
 
   expect(photoDiode).toMatchObject({
     package: "Plugin",
@@ -76,26 +76,26 @@ test("photo diode table falls back to description data", () => {
     spectral_range_max_nm: 1100,
     reverse_voltage: 32,
     dark_current_a: 10e-9,
-  })
-})
+  });
+});
 
 test("photo diode table selects the Photodiodes subcategory", async () => {
-  const database = new Database(":memory:")
+  const database = new Database(":memory:");
   const db = new Kysely<any>({
     dialect: new BunSqliteDialect({ database }),
-  })
+  });
 
   try {
     await db.schema
       .createTable("categories")
       .addColumn("id", "integer", (column) => column.primaryKey())
       .addColumn("subcategory", "text", (column) => column.notNull())
-      .execute()
+      .execute();
     await db.schema
       .createTable("components")
       .addColumn("lcsc", "integer", (column) => column.primaryKey())
       .addColumn("category_id", "integer", (column) => column.notNull())
-      .execute()
+      .execute();
 
     await db
       .insertInto("categories")
@@ -104,7 +104,7 @@ test("photo diode table selects the Photodiodes subcategory", async () => {
         { id: 2, subcategory: "Phototransistors" },
         { id: 3, subcategory: "Laser Diodes" },
       ])
-      .execute()
+      .execute();
     await db
       .insertInto("components")
       .values([
@@ -112,73 +112,73 @@ test("photo diode table selects the Photodiodes subcategory", async () => {
         { lcsc: 2, category_id: 2 },
         { lcsc: 3, category_id: 3 },
       ])
-      .execute()
+      .execute();
 
     const candidates = await photoDiodeTableSpec
       .listCandidateComponents(db)
-      .execute()
+      .execute();
 
-    expect(candidates.map((candidate) => candidate.lcsc)).toEqual([1])
+    expect(candidates.map((candidate) => candidate.lcsc)).toEqual([1]);
   } finally {
-    await db.destroy()
+    await db.destroy();
   }
-})
+});
 
 test("photo diode schema and migration create query indexes idempotently", async () => {
   expect(
     photoDiodeTableSpec.indexes?.map((index) => index.columns.join(",")),
-  ).toEqual(EXPECTED_INDEX_COLUMNS)
+  ).toEqual(EXPECTED_INDEX_COLUMNS);
 
-  const database = new Database(":memory:")
+  const database = new Database(":memory:");
   const db = new Kysely<any>({
     dialect: new BunSqliteDialect({ database }),
-  })
+  });
 
   try {
-    await setupDerivedTables({ db, populate: false })
+    await setupDerivedTables({ db, populate: false });
 
     const table = database
       .query(
         "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'photo_diode'",
       )
-      .get()
+      .get();
     const indexes = database
       .query(
         "SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = 'photo_diode' AND name NOT LIKE 'sqlite_%'",
       )
-      .all()
+      .all();
 
-    expect(table).not.toBeNull()
-    expect(indexes).toHaveLength(EXPECTED_INDEX_COLUMNS.length)
+    expect(table).not.toBeNull();
+    expect(indexes).toHaveLength(EXPECTED_INDEX_COLUMNS.length);
   } finally {
-    await db.destroy()
+    await db.destroy();
   }
 
-  const migrationDatabase = new Database(":memory:")
+  const migrationDatabase = new Database(":memory:");
   const migrationPath = new URL(
     "../../cf-proxy/migrations/0003_photo_diode.sql",
     import.meta.url,
-  )
-  const migration = await Bun.file(migrationPath).text()
+  );
+  const migration = await Bun.file(migrationPath).text();
 
   try {
-    migrationDatabase.exec(migration)
-    migrationDatabase.exec(migration)
+    migrationDatabase.exec(migration);
+    migrationDatabase.exec(migration);
 
     const table = migrationDatabase
       .query(
         "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'photo_diode'",
       )
-      .get()
+      .get();
     const indexes = migrationDatabase
       .query(
         "SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = 'photo_diode' AND name NOT LIKE 'sqlite_%'",
       )
-      .all()
+      .all();
 
-    expect(table).not.toBeNull()
-    expect(indexes).toHaveLength(EXPECTED_INDEX_COLUMNS.length)
+    expect(table).not.toBeNull();
+    expect(indexes).toHaveLength(EXPECTED_INDEX_COLUMNS.length);
   } finally {
-    migrationDatabase.close()
+    migrationDatabase.close();
   }
-})
+});

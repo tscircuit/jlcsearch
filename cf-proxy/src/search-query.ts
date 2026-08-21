@@ -1,7 +1,7 @@
-export type SearchTokenGroup = string[]
+export type SearchTokenGroup = string[];
 
 export const tokenizeSearchTerm = (term: string): string[] =>
-  term.toLowerCase().match(/[a-z0-9]+/g) ?? []
+  term.toLowerCase().match(/[a-z0-9]+/g) ?? [];
 
 const barrelJackWords = new Set([
   "jack",
@@ -14,37 +14,37 @@ const barrelJackWords = new Set([
   "receptacles",
   "plug",
   "plugs",
-])
+]);
 
 const isVoltageToken = (token: string): boolean =>
-  /^\d+(?:\.\d+)?v(?:olts?)?$/.test(token)
+  /^\d+(?:\.\d+)?v(?:olts?)?$/.test(token);
 
 const uniqueGroups = (groups: SearchTokenGroup[]): SearchTokenGroup[] => {
-  const seen = new Set<string>()
-  const result: SearchTokenGroup[] = []
+  const seen = new Set<string>();
+  const result: SearchTokenGroup[] = [];
 
   for (const group of groups) {
-    const uniqueTokens = Array.from(new Set(group)).filter(Boolean)
-    if (uniqueTokens.length === 0) continue
+    const uniqueTokens = Array.from(new Set(group)).filter(Boolean);
+    if (uniqueTokens.length === 0) continue;
 
-    const key = uniqueTokens.join("\0")
-    if (seen.has(key)) continue
+    const key = uniqueTokens.join("\0");
+    if (seen.has(key)) continue;
 
-    seen.add(key)
-    result.push(uniqueTokens)
+    seen.add(key);
+    result.push(uniqueTokens);
   }
 
-  return result
-}
+  return result;
+};
 
 export const buildSearchTokenGroups = (term: string): SearchTokenGroup[] => {
-  const tokens = tokenizeSearchTerm(term)
+  const tokens = tokenizeSearchTerm(term);
   const hasBarrelJack =
     tokens.includes("barrel") &&
-    tokens.some((token) => barrelJackWords.has(token))
+    tokens.some((token) => barrelJackWords.has(token));
 
   if (!hasBarrelJack) {
-    return tokens.map((token) => [token])
+    return tokens.map((token) => [token]);
   }
 
   const remainingTokens = tokens.filter(
@@ -52,12 +52,12 @@ export const buildSearchTokenGroups = (term: string): SearchTokenGroup[] => {
       token !== "barrel" &&
       !barrelJackWords.has(token) &&
       !isVoltageToken(token),
-  )
+  );
 
   return uniqueGroups([
     ...remainingTokens.map((token) => [token]),
     ["dc"],
     ["power"],
     ["receptacle"],
-  ])
-}
+  ]);
+};

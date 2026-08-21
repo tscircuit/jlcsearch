@@ -1,23 +1,23 @@
-import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
-import type { DerivedTableSpec } from "./types"
-import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
-import { BaseComponent } from "./component-base"
+import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit";
+import type { DerivedTableSpec } from "./types";
+import { extractMinQPrice } from "lib/util/extract-min-quantity-price";
+import { BaseComponent } from "./component-base";
 
 export interface Dac extends BaseComponent {
   // Extra columns
-  package: string
-  resolution_bits: number | null
-  num_channels: number | null
-  settling_time_us: number | null
-  supply_voltage_min: number | null
-  supply_voltage_max: number | null
-  has_spi: boolean
-  has_i2c: boolean
-  has_parallel_interface: boolean
-  output_type: string | null
-  operating_temp_min: number | null
-  operating_temp_max: number | null
-  nonlinearity_lsb: number | null
+  package: string;
+  resolution_bits: number | null;
+  num_channels: number | null;
+  settling_time_us: number | null;
+  supply_voltage_min: number | null;
+  supply_voltage_max: number | null;
+  has_spi: boolean;
+  has_i2c: boolean;
+  has_parallel_interface: boolean;
+  output_type: string | null;
+  operating_temp_min: number | null;
+  operating_temp_max: number | null;
+  nonlinearity_lsb: number | null;
 }
 
 export const dacTableSpec: DerivedTableSpec<Dac> = {
@@ -55,70 +55,70 @@ export const dacTableSpec: DerivedTableSpec<Dac> = {
       ),
   mapToTable: (components) => {
     return components.map((c): Dac | null => {
-      if (!c.extra) return null
-      const extra = JSON.parse(c.extra ?? "{}")
-      if (!extra.attributes) return null
+      if (!c.extra) return null;
+      const extra = JSON.parse(c.extra ?? "{}");
+      if (!extra.attributes) return null;
 
-      const attrs = extra.attributes
-      const desc = c.description.toLowerCase()
+      const attrs = extra.attributes;
+      const desc = c.description.toLowerCase();
 
       // Parse resolution
-      let resolution = null
-      const rawResolution = attrs["Resolution"]
+      let resolution = null;
+      const rawResolution = attrs["Resolution"];
       if (rawResolution) {
-        const match = rawResolution.match(/(\d+)\s*Bits?/)
-        if (match) resolution = parseInt(match[1])
+        const match = rawResolution.match(/(\d+)\s*Bits?/);
+        if (match) resolution = parseInt(match[1]);
       }
 
       // Parse number of channels
-      const numChannels = parseInt(attrs["Number of Channels"]) || null
+      const numChannels = parseInt(attrs["Number of Channels"]) || null;
 
       // Parse settling time
-      let settlingTime = null
-      const rawSettling = attrs["Settling Time"]
+      let settlingTime = null;
+      const rawSettling = attrs["Settling Time"];
       if (rawSettling) {
-        const match = rawSettling.match(/(\d+(?:\.\d+)?)\s*us/)
-        if (match) settlingTime = parseFloat(match[1])
+        const match = rawSettling.match(/(\d+(?:\.\d+)?)\s*us/);
+        if (match) settlingTime = parseFloat(match[1]);
       }
 
       // Parse voltage range
-      let voltageMin = null
-      let voltageMax = null
-      const rawVoltage = attrs["Supply Voltage"]
+      let voltageMin = null;
+      let voltageMax = null;
+      const rawVoltage = attrs["Supply Voltage"];
       if (rawVoltage) {
-        const match = rawVoltage.match(/([\d.]+)V~([\d.]+)V/)
+        const match = rawVoltage.match(/([\d.]+)V~([\d.]+)V/);
         if (match) {
-          voltageMin = parseFloat(match[1])
-          voltageMax = parseFloat(match[2])
+          voltageMin = parseFloat(match[1]);
+          voltageMax = parseFloat(match[2]);
         }
       }
 
       // Parse temperature range
-      let tempMin = null
-      let tempMax = null
-      const rawTemp = attrs["Operating Temperature"]
+      let tempMin = null;
+      let tempMax = null;
+      const rawTemp = attrs["Operating Temperature"];
       if (rawTemp) {
-        const match = rawTemp.match(/([-\d]+)℃~\+([-\d]+)℃/)
+        const match = rawTemp.match(/([-\d]+)℃~\+([-\d]+)℃/);
         if (match) {
-          tempMin = parseInt(match[1])
-          tempMax = parseInt(match[2])
+          tempMin = parseInt(match[1]);
+          tempMax = parseInt(match[2]);
         }
       }
 
       // Parse nonlinearity
-      let nonlinearity = null
-      const rawNonlinearity = attrs["Integral nonlinearity"]
+      let nonlinearity = null;
+      const rawNonlinearity = attrs["Integral nonlinearity"];
       if (rawNonlinearity) {
-        const match = rawNonlinearity.match(/±([\d.]+)LSB/)
-        if (match) nonlinearity = parseFloat(match[1])
+        const match = rawNonlinearity.match(/±([\d.]+)LSB/);
+        if (match) nonlinearity = parseFloat(match[1]);
       }
 
       // Determine interfaces
-      const interfaceType = (attrs["Interface"] || "").toLowerCase()
+      const interfaceType = (attrs["Interface"] || "").toLowerCase();
       const hasI2c =
-        interfaceType.includes("i²c") || interfaceType.includes("i2c")
-      const hasSpi = interfaceType.includes("spi")
-      const hasParallel = interfaceType.includes("parallel")
+        interfaceType.includes("i²c") || interfaceType.includes("i2c");
+      const hasSpi = interfaceType.includes("spi");
+      const hasParallel = interfaceType.includes("parallel");
 
       return {
         lcsc: c.lcsc,
@@ -143,7 +143,7 @@ export const dacTableSpec: DerivedTableSpec<Dac> = {
         operating_temp_max: tempMax,
         nonlinearity_lsb: nonlinearity,
         attributes: attrs,
-      }
-    })
+      };
+    });
   },
-}
+};

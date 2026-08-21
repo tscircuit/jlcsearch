@@ -1,12 +1,12 @@
-import { existsSync } from "node:fs"
-import { chmod, mkdir } from "node:fs/promises"
-import { arch, platform } from "node:os"
+import { existsSync } from "node:fs";
+import { chmod, mkdir } from "node:fs/promises";
+import { arch, platform } from "node:os";
 
-const BINARY_DIR = ".bin"
-const BINARY_NAME = "7zz"
-const SEVEN_ZIP_VERSION = "26.02"
-const SEVEN_ZIP_ARCHIVE_VERSION = SEVEN_ZIP_VERSION.replace(".", "")
-const RELEASE_BASE_URL = `https://github.com/ip7z/7zip/releases/download/${SEVEN_ZIP_VERSION}`
+const BINARY_DIR = ".bin";
+const BINARY_NAME = "7zz";
+const SEVEN_ZIP_VERSION = "26.02";
+const SEVEN_ZIP_ARCHIVE_VERSION = SEVEN_ZIP_VERSION.replace(".", "");
+const RELEASE_BASE_URL = `https://github.com/ip7z/7zip/releases/download/${SEVEN_ZIP_VERSION}`;
 
 // Map of platform-arch combinations to download URLs
 const BINARY_URLS: Record<string, string> = {
@@ -14,55 +14,55 @@ const BINARY_URLS: Record<string, string> = {
   "linux-arm64": `${RELEASE_BASE_URL}/7z${SEVEN_ZIP_ARCHIVE_VERSION}-linux-arm64.tar.xz`,
   "darwin-x64": `${RELEASE_BASE_URL}/7z${SEVEN_ZIP_ARCHIVE_VERSION}-mac.tar.xz`,
   "darwin-arm64": `${RELEASE_BASE_URL}/7z${SEVEN_ZIP_ARCHIVE_VERSION}-mac.tar.xz`,
-}
+};
 
 async function downloadAndExtract7z() {
-  const currentPlatform = platform()
-  const currentArch = arch()
-  const platformKey = `${currentPlatform}-${currentArch}`
+  const currentPlatform = platform();
+  const currentArch = arch();
+  const platformKey = `${currentPlatform}-${currentArch}`;
 
-  const downloadUrl = BINARY_URLS[platformKey]
+  const downloadUrl = BINARY_URLS[platformKey];
   if (!downloadUrl) {
-    throw new Error(`Unsupported platform: ${platformKey}`)
+    throw new Error(`Unsupported platform: ${platformKey}`);
   }
 
   // Create binary directory if it doesn't exist
   if (!existsSync(BINARY_DIR)) {
-    await mkdir(BINARY_DIR)
+    await mkdir(BINARY_DIR);
   }
 
-  const binaryPath = `${BINARY_DIR}/${BINARY_NAME}`
+  const binaryPath = `${BINARY_DIR}/${BINARY_NAME}`;
 
   // Skip if binary already exists
   if (existsSync(binaryPath)) {
-    console.log("7z binary already exists")
-    return
+    console.log("7z binary already exists");
+    return;
   }
 
-  console.log("Downloading 7z...")
-  const response = await fetch(downloadUrl)
+  console.log("Downloading 7z...");
+  const response = await fetch(downloadUrl);
   if (!response.ok) {
-    throw new Error(`Failed to download: ${response.statusText}`)
+    throw new Error(`Failed to download: ${response.statusText}`);
   }
 
   // Save the tar.xz file
-  const tempFile = "7z-temp.tar.xz"
-  await Bun.write(tempFile, await response.arrayBuffer())
+  const tempFile = "7z-temp.tar.xz";
+  await Bun.write(tempFile, await response.arrayBuffer());
 
   // Extract the tar.xz file
-  console.log("Extracting 7z binary...")
-  await Bun.spawn(["tar", "xf", tempFile]).exited
+  console.log("Extracting 7z binary...");
+  await Bun.spawn(["tar", "xf", tempFile]).exited;
 
   // Move the binary to the right location
-  await Bun.spawn(["mv", "7zz", binaryPath]).exited
+  await Bun.spawn(["mv", "7zz", binaryPath]).exited;
 
   // Make the binary executable
-  await chmod(binaryPath, 0o755)
+  await chmod(binaryPath, 0o755);
 
   // Cleanup
-  await Bun.spawn(["rm", tempFile]).exited
+  await Bun.spawn(["rm", tempFile]).exited;
 
-  console.log("7z binary setup complete")
+  console.log("7z binary setup complete");
 }
 
-await downloadAndExtract7z()
+await downloadAndExtract7z();
