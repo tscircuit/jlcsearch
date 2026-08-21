@@ -155,12 +155,24 @@ jobs:
               exit 1
             fi
 
+            extended_promotional_count="$(sqlite3 db.sqlite3 "SELECT COUNT(*) FROM component_catalog WHERE is_extended_promotional=1;")"
+            if [[ "${extended_promotional_count}" == "0" ]]; then
+              echo "::error::Prepared catalog contains no extended promotional components."
+              exit 1
+            fi
+
+            classification_mismatches="$(sqlite3 db.sqlite3 "SELECT COUNT(*) FROM component_catalog WHERE coalesce(is_extended_promotional, -1) <> CASE WHEN basic=0 AND preferred=1 THEN 1 ELSE 0 END;")"
+            if [[ "${classification_mismatches}" != "0" ]]; then
+              echo "::error::Prepared catalog contains ${classification_mismatches} inconsistent extended promotional classifications."
+              exit 1
+            fi
+
             smoke_test_count="$(sqlite3 db.sqlite3 "SELECT COUNT(*) FROM component_catalog WHERE lcsc=${SMOKE_TEST_LCSC};")"
             if [[ "${smoke_test_count}" != "1" ]]; then
               echo "::error::Prepared catalog does not contain C${SMOKE_TEST_LCSC}."
               exit 1
             fi
-            echo "component_catalog: ${catalog_count} prepared rows"
+            echo "component_catalog: ${catalog_count} prepared rows (${extended_promotional_count} extended promotional)"
           elif [[ "${SYNC_SCOPE}" == "stock_only" ]]; then
             stock_snapshot_exists="$(sqlite3 db.sqlite3 "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type='table' AND name='component_stock');")"
             if [[ "${stock_snapshot_exists}" != "1" ]]; then
