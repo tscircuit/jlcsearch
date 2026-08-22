@@ -26,6 +26,7 @@ const routeLabels: Record<string, string> = {
   "/headers/list": "Headers",
   "/barrel_jacks/list": "Barrel Jacks",
   "/dimm_connectors/list": "DIMM Connectors",
+  "/drams/list": "DRAM",
   "/sodimm_connectors/list": "SO-DIMM Connectors",
   "/micro_usb_connectors/list": "Micro USB Connectors",
   "/usb_c_connectors/list": "USB-C Connectors",
@@ -197,6 +198,9 @@ const COLUMN_LABELS: Record<string, string> = {
   inside_diameter_mm: "Inside Diameter",
   outside_diameter_mm: "Outside Diameter",
   current_rating_min: "Min Current",
+  memory_size_mbit: "Memory Size",
+  clock_frequency_mhz: "Clock Frequency",
+  clock_frequency_min_mhz: "Min Clock Frequency",
   voltage_rating_min: "Min Voltage",
   reception_angle_deg: "Reception Angle",
   luminous_intensity_mcd: "Intensity",
@@ -304,6 +308,10 @@ const formatDisplayValue = (column: string, value: unknown): string | null => {
       return `${formatSiUnit(value)}Hz`
     case "frequency_ghz":
       return withUnit(value, "GHz")
+    case "memory_size_mbit":
+      return withUnit(value, "Mbit")
+    case "clock_frequency_mhz":
+      return withUnit(value, "MHz")
     case "data_rate_mbps":
       return withUnit(value, "Mbps")
     case "wavelength_nm":
