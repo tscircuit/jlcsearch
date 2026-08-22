@@ -145,7 +145,7 @@ export const analogMultiplexerTableSpec: DerivedTableSpec<AnalogMultiplexer> = {
         in_stock: c.stock > 0,
         is_basic: Boolean(c.basic),
         is_preferred: Boolean(c.preferred),
-        is_extended_promotional: Boolean(c.is_extended_promotional),
+        is_extended_promotional: Boolean(c.preferred && !c.basic),
         package: c.package || "",
         num_channels: numChannels,
         num_bits: numBits,

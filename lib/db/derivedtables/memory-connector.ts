@@ -245,7 +245,9 @@ const createMemoryConnectorTableSpec = (
         in_stock: Number(component.stock || 0) > 0,
         is_basic: Boolean(component.basic),
         is_preferred: Boolean(component.preferred),
-        is_extended_promotional: Boolean(component.is_extended_promotional),
+        is_extended_promotional: Boolean(
+          Number(component.preferred) === 1 && Number(component.basic) === 0,
+        ),
         package: packageName,
         ddr_standard: ddrStandard,
         num_pins: numPins,

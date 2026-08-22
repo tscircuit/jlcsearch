@@ -118,7 +118,7 @@ export const boostConverterTableSpec: DerivedTableSpec<BoostConverter> = {
           in_stock: c.stock > 0,
           is_basic: Boolean(c.basic),
           is_preferred: Boolean(c.preferred),
-          is_extended_promotional: Boolean(c.is_extended_promotional),
+          is_extended_promotional: Boolean(c.preferred && !c.basic),
           package: c.package || "",
           input_voltage_min: inputMin,
           input_voltage_max: inputMax,

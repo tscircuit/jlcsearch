@@ -170,7 +170,9 @@ export const hdmiPortTableSpec: DerivedTableSpec<HdmiPort> = {
           in_stock: Boolean((component.stock || 0) > 0),
           is_basic: Boolean(component.basic),
           is_preferred: Boolean(component.preferred),
-          is_extended_promotional: Boolean(component.is_extended_promotional),
+          is_extended_promotional: Boolean(
+            Number(component.preferred) === 1 && Number(component.basic) === 0,
+          ),
           package: packageName,
           mounting_style: inferMountingStyle(attrs, packageName, description),
           orientation: inferOrientation(description),

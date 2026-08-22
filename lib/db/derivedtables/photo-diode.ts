@@ -169,7 +169,9 @@ export const photoDiodeTableSpec: DerivedTableSpec<PhotoDiode> = {
           in_stock: Boolean((component.stock || 0) > 0),
           is_basic: Boolean(component.basic),
           is_preferred: Boolean(component.preferred),
-          is_extended_promotional: Boolean(component.is_extended_promotional),
+          is_extended_promotional: Boolean(
+            Number(component.preferred) === 1 && Number(component.basic) === 0,
+          ),
           package: String(component.package || ""),
           peak_wavelength_nm: parseWavelength(peakWavelengthSource),
           spectral_range_min_nm: spectralRangeMin,
