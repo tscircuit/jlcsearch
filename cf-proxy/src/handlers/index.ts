@@ -264,7 +264,10 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
       package: { field: "package", type: "string" },
       is_basic: { field: "is_basic", type: "boolean" },
       is_preferred: { field: "is_preferred", type: "boolean" },
-      is_extended_promotional: { field: "is_extended_promotional", type: "boolean" },
+      is_extended_promotional: {
+        field: "is_extended_promotional",
+        type: "boolean",
+      },
       resistance: { field: "resistance", type: "number_tolerance" },
     },
   },
@@ -273,7 +276,10 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
       package: { field: "package", type: "string" },
       is_basic: { field: "is_basic", type: "boolean" },
       is_preferred: { field: "is_preferred", type: "boolean" },
-      is_extended_promotional: { field: "is_extended_promotional", type: "boolean" },
+      is_extended_promotional: {
+        field: "is_extended_promotional",
+        type: "boolean",
+      },
       capacitance: { field: "capacitance_farads", type: "number_tolerance" },
     },
   },
@@ -295,7 +301,10 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
       gender: { field: "gender", type: "string" },
       is_basic: { field: "is_basic", type: "boolean" },
       is_preferred: { field: "is_preferred", type: "boolean" },
-      is_extended_promotional: { field: "is_extended_promotional", type: "boolean" },
+      is_extended_promotional: {
+        field: "is_extended_promotional",
+        type: "boolean",
+      },
     },
   },
   ldo: {
@@ -364,7 +373,10 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
       },
       is_basic: { field: "is_basic", type: "boolean" },
       is_preferred: { field: "is_preferred", type: "boolean" },
-      is_extended_promotional: { field: "is_extended_promotional", type: "boolean" },
+      is_extended_promotional: {
+        field: "is_extended_promotional",
+        type: "boolean",
+      },
     },
   },
   dimm_connector: {
@@ -378,7 +390,10 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
       is_right_angle: { field: "is_right_angle", type: "boolean" },
       is_basic: { field: "is_basic", type: "boolean" },
       is_preferred: { field: "is_preferred", type: "boolean" },
-      is_extended_promotional: { field: "is_extended_promotional", type: "boolean" },
+      is_extended_promotional: {
+        field: "is_extended_promotional",
+        type: "boolean",
+      },
     },
   },
   mosfet: {
@@ -482,7 +497,10 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
       num_pins: { field: "num_pins", type: "number" },
       is_basic: { field: "is_basic", type: "boolean" },
       is_preferred: { field: "is_preferred", type: "boolean" },
-      is_extended_promotional: { field: "is_extended_promotional", type: "boolean" },
+      is_extended_promotional: {
+        field: "is_extended_promotional",
+        type: "boolean",
+      },
     },
   },
   battery_holder: {
@@ -593,7 +611,10 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
       number_of_pins: { field: "number_of_pins", type: "number" },
       is_basic: { field: "is_basic", type: "boolean" },
       is_preferred: { field: "is_preferred", type: "boolean" },
-      is_extended_promotional: { field: "is_extended_promotional", type: "boolean" },
+      is_extended_promotional: {
+        field: "is_extended_promotional",
+        type: "boolean",
+      },
     },
   },
   gyroscope: {
@@ -689,7 +710,10 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
       is_right_angle: { field: "is_right_angle", type: "boolean" },
       is_basic: { field: "is_basic", type: "boolean" },
       is_preferred: { field: "is_preferred", type: "boolean" },
-      is_extended_promotional: { field: "is_extended_promotional", type: "boolean" },
+      is_extended_promotional: {
+        field: "is_extended_promotional",
+        type: "boolean",
+      },
     },
   },
   spring_clamp_terminal_block: {
