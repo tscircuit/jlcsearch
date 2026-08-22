@@ -6,6 +6,8 @@ import path from "node:path"
 interface StockRow {
   lcsc: number
   stock: number | null
+  basic: number
+  preferred: number
 }
 
 interface CatalogStats {
@@ -30,17 +32,23 @@ const createStockUpdateStatement = (
 ) => {
   const values = rows
     .map(
-      ({ lcsc, stock }) =>
-        `(${integerLiteral(lcsc, "lcsc")},${integerLiteral(stock, "stock")})`,
+      ({ lcsc, stock, basic, preferred }) =>
+        `(${integerLiteral(lcsc, "lcsc")},${integerLiteral(stock, "stock")},${integerLiteral(basic, "basic")},${integerLiteral(preferred, "preferred")})`,
     )
     .join(",")
 
-  return `WITH stock_updates(lcsc, stock) AS (VALUES ${values})
+  return `WITH component_updates(lcsc, stock, basic, preferred) AS (VALUES ${values})
 UPDATE ${table} AS target
-SET stock = stock_updates.stock
-FROM stock_updates
-WHERE target.lcsc = stock_updates.lcsc
-  AND target.stock IS NOT stock_updates.stock;`
+SET stock = component_updates.stock,
+    basic = component_updates.basic,
+    preferred = component_updates.preferred
+FROM component_updates
+WHERE target.lcsc = component_updates.lcsc
+  AND (
+    target.stock IS NOT component_updates.stock
+    OR target.basic IS NOT component_updates.basic
+    OR target.preferred IS NOT component_updates.preferred
+  );`
 }
 
 export const createStockSyncBatchSql = (rows: StockRow[]): string => {
@@ -99,7 +107,7 @@ export const writeStockSyncBatches = async ({
 
     const rows = database
       .query<StockRow, []>(
-        `SELECT lcsc, stock
+        `SELECT lcsc, stock, basic, preferred
          FROM component_stock
          ORDER BY rowid`,
       )

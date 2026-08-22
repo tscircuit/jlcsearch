@@ -25,18 +25,23 @@ afterEach(async () => {
 })
 
 describe("stock sync SQL generation", () => {
-  test("updates only changed stock in existing catalog and search rows", async () => {
+  test("updates stock and source classification in existing catalog and search rows", async () => {
     const directory = await createTempDirectory()
     const sourcePath = path.join(directory, "source.sqlite3")
     const outputDirectory = path.join(directory, "batches")
     const source = new Database(sourcePath, { create: true })
     source.exec(`
-      CREATE TABLE component_stock (lcsc INTEGER, stock INTEGER);
-      INSERT INTO component_stock(lcsc, stock) VALUES
-        (1, 10),
-        (2, NULL),
-        (3, 0),
-        (4, 40);
+      CREATE TABLE component_stock (
+        lcsc INTEGER,
+        stock INTEGER,
+        basic INTEGER NOT NULL,
+        preferred INTEGER NOT NULL
+      );
+      INSERT INTO component_stock(lcsc, stock, basic, preferred) VALUES
+        (1, 10, 0, 1),
+        (2, NULL, 1, 1),
+        (3, 0, 0, 0),
+        (4, 40, 0, 1);
     `)
     source.close()
 
@@ -49,12 +54,28 @@ describe("stock sync SQL generation", () => {
 
     const target = new Database(":memory:")
     target.exec(`
-      CREATE TABLE component_catalog (lcsc INTEGER UNIQUE, stock INTEGER);
-      CREATE TABLE search_index (lcsc INTEGER UNIQUE, stock INTEGER);
-      INSERT INTO component_catalog(lcsc, stock) VALUES
-        (1, 1), (2, NULL), (3, 3), (99, 99);
-      INSERT INTO search_index(lcsc, stock) VALUES
-        (1, 1), (2, NULL), (3, 3), (99, 99);
+      CREATE TABLE component_catalog (
+        lcsc INTEGER UNIQUE,
+        stock INTEGER,
+        basic INTEGER,
+        preferred INTEGER
+      );
+      CREATE TABLE search_index (
+        lcsc INTEGER UNIQUE,
+        stock INTEGER,
+        basic INTEGER,
+        preferred INTEGER
+      );
+      INSERT INTO component_catalog(lcsc, stock, basic, preferred) VALUES
+        (1, 1, 0, 0),
+        (2, NULL, 1, 1),
+        (3, 3, 1, 1),
+        (99, 99, 1, 0);
+      INSERT INTO search_index(lcsc, stock, basic, preferred) VALUES
+        (1, 1, 0, 0),
+        (2, NULL, 1, 1),
+        (3, 3, 1, 1),
+        (99, 99, 1, 0);
     `)
 
     const batchFiles = (await readdir(outputDirectory)).sort()
@@ -64,12 +85,16 @@ describe("stock sync SQL generation", () => {
 
     for (const table of ["component_catalog", "search_index"]) {
       expect(
-        target.query(`SELECT lcsc, stock FROM ${table} ORDER BY lcsc`).all(),
+        target
+          .query(
+            `SELECT lcsc, stock, basic, preferred FROM ${table} ORDER BY lcsc`,
+          )
+          .all(),
       ).toEqual([
-        { lcsc: 1, stock: 10 },
-        { lcsc: 2, stock: null },
-        { lcsc: 3, stock: 0 },
-        { lcsc: 99, stock: 99 },
+        { lcsc: 1, stock: 10, basic: 0, preferred: 1 },
+        { lcsc: 2, stock: null, basic: 1, preferred: 1 },
+        { lcsc: 3, stock: 0, basic: 0, preferred: 0 },
+        { lcsc: 99, stock: 99, basic: 1, preferred: 0 },
       ])
     }
 
@@ -91,8 +116,15 @@ describe("stock sync SQL generation", () => {
     const sourcePath = path.join(directory, "source.sqlite3")
     const source = new Database(sourcePath, { create: true })
     source.exec(`
-      CREATE TABLE component_stock (lcsc INTEGER, stock INTEGER);
-      INSERT INTO component_stock(lcsc, stock) VALUES (1, 10), (1, 20);
+      CREATE TABLE component_stock (
+        lcsc INTEGER,
+        stock INTEGER,
+        basic INTEGER NOT NULL,
+        preferred INTEGER NOT NULL
+      );
+      INSERT INTO component_stock(lcsc, stock, basic, preferred) VALUES
+        (1, 10, 0, 1),
+        (1, 20, 0, 1);
     `)
     source.close()
 
@@ -108,6 +140,8 @@ describe("stock sync SQL generation", () => {
     const rows = Array.from({ length: 1000 }, (_, index) => ({
       lcsc: 9_000_000 + index,
       stock: 999_999_999,
+      basic: 0,
+      preferred: 1,
     }))
     const statements = createStockSyncBatchSql(rows).split(";\n")
 
