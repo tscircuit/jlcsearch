@@ -36,6 +36,7 @@ DERIVED_TABLES=(
   capacitor
   dac
   diode
+  dram
   dimm_connector
   fpc_connector
   fpga

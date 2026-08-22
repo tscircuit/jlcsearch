@@ -12,6 +12,7 @@ describe("render helpers", () => {
     expect(html).toContain("/tft_display_drivers/list")
     expect(html).toContain("/resistors/list")
     expect(html).toContain("/barrel_jacks/list")
+    expect(html).toContain("/drams/list")
     expect(html).toContain("/spring_clamp_terminal_blocks/list")
     expect(html).toContain("/ble_modules/list")
     expect(html).toContain("/ble_chips/list")
@@ -20,6 +21,48 @@ describe("render helpers", () => {
     expect(html).toContain("/micro_usb_connectors/list")
     expect(html).toContain("/hdmi_ports/list")
     expect(html).toContain("/photo_diodes/list")
+  })
+
+  it("renders the DRAM page and JSON API link", () => {
+    const pathname = "/drams/list"
+
+    expect(D1_ROUTES).toContain(pathname)
+    expect(getD1Handler(pathname)).toBeTypeOf("function")
+
+    const html = renderD1TablePage(
+      pathname,
+      {
+        drams: [
+          {
+            lcsc: 500275,
+            mfr: "K4B4G1646E-BYMA",
+            package: "FBGA-96(7.5x13.3)",
+            memory_type: "DDR3L",
+            memory_size_mbit: 4096,
+            clock_frequency_mhz: 933,
+            stock: 5739,
+          },
+        ],
+      },
+      {
+        package: "FBGA-96(7.5x13.3)",
+        memory_type: "DDR3L",
+        memory_size_mbit: "4096",
+        clock_frequency_min_mhz: "800",
+      },
+      "https://jlcsearch.tscircuit.com/drams/list?memory_type=DDR3L",
+    )
+
+    expect(html).toContain("<h2>DRAM</h2>")
+    expect(html).toContain('name="package"')
+    expect(html).toContain('name="memory_type"')
+    expect(html).toContain('name="memory_size_mbit"')
+    expect(html).toContain('name="clock_frequency_min_mhz"')
+    expect(html).toContain('name="is_basic"')
+    expect(html).toContain('name="is_preferred"')
+    expect(html).toContain("4096Mbit")
+    expect(html).toContain("933MHz")
+    expect(html).toContain("/drams/list.json")
   })
 
   it("renders the Barrel Jacks page and JSON API link", () => {

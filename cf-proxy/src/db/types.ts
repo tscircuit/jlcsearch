@@ -286,6 +286,26 @@ export interface Dac {
   supply_voltage_min: number | null
 }
 
+export interface Dram {
+  attributes: string | null
+  clock_frequency_mhz: number | null
+  description: string | null
+  in_stock: number | null
+  is_basic: number | null
+  is_preferred: number | null
+  lcsc: Generated<number | null>
+  memory_size_mbit: number | null
+  memory_type: string | null
+  mfr: string | null
+  operating_temp_max: number | null
+  operating_temp_min: number | null
+  package: string | null
+  price1: number | null
+  stock: number | null
+  supply_voltage_max: number | null
+  supply_voltage_min: number | null
+}
+
 export interface Diode {
   attributes: string | null
   configuration: string | null
@@ -1053,6 +1073,7 @@ export interface DB {
   capacitor: Capacitor
   component_catalog: ComponentCatalog
   dac: Dac
+  dram: Dram
   diode: Diode
   dimm_connector: DimmConnector
   fpc_connector: FpcConnector

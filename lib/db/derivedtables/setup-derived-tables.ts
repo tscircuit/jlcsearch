@@ -13,6 +13,7 @@ import { buckBoostConverterTableSpec } from "lib/db/derivedtables/buck_boost_con
 import { capacitorTableSpec } from "lib/db/derivedtables/capacitor"
 import { dacTableSpec } from "lib/db/derivedtables/dac"
 import { diodeTableSpec } from "lib/db/derivedtables/diode"
+import { dramTableSpec } from "lib/db/derivedtables/dram"
 import {
   dimmConnectorTableSpec,
   sodimmConnectorTableSpec,
@@ -64,6 +65,7 @@ export const DERIVED_TABLES: DerivedTableSpec<any>[] = [
   barrelJackTableSpec,
   ioExpanderTableSpec,
   diodeTableSpec,
+  dramTableSpec,
   dacTableSpec,
   dimmConnectorTableSpec,
   sodimmConnectorTableSpec,
