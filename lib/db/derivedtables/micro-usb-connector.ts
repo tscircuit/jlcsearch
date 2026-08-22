@@ -114,6 +114,7 @@ export const microUsbConnectorTableSpec: DerivedTableSpec<MicroUsbConnector> = {
     { name: "operating_temp_max", type: "real" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   indexes: [
     { name: "idx_micro_usb_connector_stock", columns: ["stock"] },
@@ -183,6 +184,7 @@ export const microUsbConnectorTableSpec: DerivedTableSpec<MicroUsbConnector> = {
         in_stock: Number(component.stock || 0) > 0,
         is_basic: Boolean(component.basic),
         is_preferred: Boolean(component.preferred),
+        is_extended_promotional: Boolean(component.is_extended_promotional),
         connector_type: connectorType || "Micro USB",
         usb_standard: firstAttribute(attributes, [
           "USB Standard",
