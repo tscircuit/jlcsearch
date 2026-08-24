@@ -4,6 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DB_NAME="${DB_NAME:-jlcsearch}"
 REQUIRE_PROMOTIONAL_SEARCH_TABLES="${REQUIRE_PROMOTIONAL_SEARCH_TABLES:-1}"
+ROLLOUT_BACKFILL_ROWS="${ROLLOUT_BACKFILL_ROWS:-1000}"
 ROLLOUT_TEMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/jlcsearch-promotional-rollout.XXXXXX")"
 
 if command -v bunx >/dev/null 2>&1; then
@@ -78,6 +79,90 @@ ensure_remote_column() {
     "ALTER TABLE $(quote_identifier "${table}") ADD COLUMN $(quote_identifier "${column}") ${type};"
 }
 
+require_positive_integer() {
+  local name="$1"
+  local value="$2"
+  if [[ ! "${value}" =~ ^[1-9][0-9]*$ ]]; then
+    echo "${name} must be a positive integer." >&2
+    exit 1
+  fi
+}
+
+get_remote_max_rowid() {
+  local table="$1"
+  local result_file="${ROLLOUT_TEMP_DIR}/max-rowid-${table}.json"
+  local max_rowid
+
+  remote_query_json "${result_file}" --command \
+    "SELECT MAX(rowid) AS max_rowid FROM $(quote_identifier "${table}");"
+  max_rowid="$(jq -r '.[0].results[0].max_rowid // 0' "${result_file}")"
+  if [[ ! "${max_rowid}" =~ ^[0-9]+$ ]]; then
+    echo "Invalid max rowid for ${table}: ${max_rowid}" >&2
+    exit 1
+  fi
+
+  echo "${max_rowid}"
+}
+
+backfill_component_catalog() {
+  local max_rowid start end
+  max_rowid="$(get_remote_max_rowid component_catalog)"
+  if [[ "${max_rowid}" == "0" ]]; then
+    return
+  fi
+
+  for ((start=1; start<=max_rowid; start+=ROLLOUT_BACKFILL_ROWS)); do
+    end=$((start + ROLLOUT_BACKFILL_ROWS - 1))
+    if (( end > max_rowid )); then
+      end="${max_rowid}"
+    fi
+
+    echo "Backfilling component_catalog rows ${start}-${end}..."
+    run_wrangler d1 execute "${DB_NAME}" --remote --command "
+      UPDATE component_catalog
+      SET is_extended_promotional = CASE
+        WHEN basic = 0 AND preferred = 1 THEN 1
+        ELSE 0
+      END
+      WHERE rowid BETWEEN ${start} AND ${end}
+        AND is_extended_promotional IS NULL;
+    "
+  done
+}
+
+backfill_search_index() {
+  local max_rowid start end
+  max_rowid="$(get_remote_max_rowid search_index)"
+  if [[ "${max_rowid}" == "0" ]]; then
+    return
+  fi
+
+  for ((start=1; start<=max_rowid; start+=ROLLOUT_BACKFILL_ROWS)); do
+    end=$((start + ROLLOUT_BACKFILL_ROWS - 1))
+    if (( end > max_rowid )); then
+      end="${max_rowid}"
+    fi
+
+    echo "Backfilling search_index rows ${start}-${end}..."
+    run_wrangler d1 execute "${DB_NAME}" --remote --command "
+      UPDATE search_index
+      SET is_extended_promotional = COALESCE(
+        (
+          SELECT source.is_extended_promotional
+          FROM component_catalog AS source
+          WHERE source.lcsc = search_index.lcsc
+        ),
+        CASE
+          WHEN basic = 0 AND preferred = 1 THEN 1
+          ELSE 0
+        END
+      )
+      WHERE rowid BETWEEN ${start} AND ${end}
+        AND is_extended_promotional IS NULL;
+    "
+  done
+}
+
 require_rollout_table() {
   local table="$1"
   if [[ "${REQUIRE_PROMOTIONAL_SEARCH_TABLES}" == "1" ]]; then
@@ -95,17 +180,7 @@ prepare_component_catalog() {
   fi
 
   ensure_remote_column component_catalog is_extended_promotional INTEGER
-  run_wrangler d1 execute "${DB_NAME}" --remote --command "
-    UPDATE component_catalog
-    SET is_extended_promotional = CASE
-      WHEN basic = 0 AND preferred = 1 THEN 1
-      ELSE 0
-    END
-    WHERE is_extended_promotional IS NULL;
-
-    CREATE INDEX IF NOT EXISTS idx_component_catalog_extended_promotional_stock
-      ON component_catalog(is_extended_promotional, stock DESC);
-  "
+  backfill_component_catalog
 }
 
 prepare_search_index() {
@@ -115,41 +190,14 @@ prepare_search_index() {
   fi
 
   ensure_remote_column search_index is_extended_promotional INTEGER
-
-  if remote_table_exists component_catalog &&
-    remote_column_exists component_catalog is_extended_promotional; then
-    run_wrangler d1 execute "${DB_NAME}" --remote --command "
-      UPDATE search_index
-      SET is_extended_promotional = (
-        SELECT source.is_extended_promotional
-        FROM component_catalog AS source
-        WHERE source.lcsc = search_index.lcsc
-      )
-      WHERE EXISTS (
-        SELECT 1
-        FROM component_catalog AS source
-        WHERE source.lcsc = search_index.lcsc
-      )
-        AND is_extended_promotional IS NULL;
-    "
-  fi
-
-  run_wrangler d1 execute "${DB_NAME}" --remote --command "
-    UPDATE search_index
-    SET is_extended_promotional = CASE
-      WHEN basic = 0 AND preferred = 1 THEN 1
-      ELSE 0
-    END
-    WHERE is_extended_promotional IS NULL;
-
-    CREATE INDEX IF NOT EXISTS idx_search_index_extended_promotional_stock
-      ON search_index(is_extended_promotional, stock DESC);
-  "
+  backfill_search_index
 }
 
 require_command jq
+require_positive_integer ROLLOUT_BACKFILL_ROWS "${ROLLOUT_BACKFILL_ROWS}"
 
 echo "Preparing extended promotional search rollout schema..."
 prepare_component_catalog
 prepare_search_index
+echo "Promotional rollout index creation is handled by full_catalog/search-index rebuild paths."
 echo "Extended promotional search rollout schema is ready."

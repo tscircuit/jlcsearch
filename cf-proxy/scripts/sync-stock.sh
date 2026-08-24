@@ -58,6 +58,7 @@ DERIVED_STOCK_TABLES=(
   wire_to_board_connector
 )
 EXISTING_DERIVED_STOCK_TABLES=()
+HAS_SEARCH_INDEX=0
 
 if command -v bunx >/dev/null 2>&1; then
   WRANGLER_CMD=(bunx wrangler)
@@ -150,29 +151,10 @@ ensure_stock_sync_schema() {
   fi
 
   ensure_remote_column component_catalog is_extended_promotional INTEGER
-  run_wrangler d1 execute "${DB_NAME}" --remote --command "
-    UPDATE component_catalog
-    SET is_extended_promotional = CASE
-      WHEN basic = 0 AND preferred = 1 THEN 1
-      ELSE 0
-    END
-    WHERE is_extended_promotional IS NULL;
-    CREATE INDEX IF NOT EXISTS idx_component_catalog_extended_promotional_stock
-      ON component_catalog(is_extended_promotional, stock DESC);
-  "
 
   if remote_table_exists search_index; then
+    HAS_SEARCH_INDEX=1
     ensure_remote_column search_index is_extended_promotional INTEGER
-    run_wrangler d1 execute "${DB_NAME}" --remote --command "
-      UPDATE search_index
-      SET is_extended_promotional = CASE
-        WHEN basic = 0 AND preferred = 1 THEN 1
-        ELSE 0
-      END
-      WHERE is_extended_promotional IS NULL;
-      CREATE INDEX IF NOT EXISTS idx_search_index_extended_promotional_stock
-        ON search_index(is_extended_promotional, stock DESC);
-    "
   else
     echo "Remote search_index does not exist; skipping search index propagation."
   fi
@@ -183,10 +165,6 @@ ensure_stock_sync_schema() {
     fi
 
     ensure_remote_column "${table}" is_extended_promotional INTEGER
-    run_wrangler d1 execute "${DB_NAME}" --remote --command "
-      CREATE INDEX IF NOT EXISTS idx_${table}_extended_promotional_stock
-        ON $(quote_identifier "${table}")(is_extended_promotional, stock DESC);
-    "
     EXISTING_DERIVED_STOCK_TABLES+=("${table}")
   done
 }
@@ -194,30 +172,28 @@ ensure_stock_sync_schema() {
 propagate_stock_classification() {
   local lcsc_file="$1"
   local propagation_sql
+  local target_args=()
 
   if [[ ! -s "${lcsc_file}" ]]; then
     echo "Missing or empty stock propagation LCSC batch: ${lcsc_file}" >&2
     exit 1
   fi
 
-  if remote_table_exists search_index; then
-    echo "Propagating stock classification from component_catalog to search_index..."
-    propagation_sql="$(
-      cd "${REPO_ROOT}"
-      bun run scripts/stock-sync-propagation-sql.ts search_index "${lcsc_file}"
-    )"
-    run_wrangler d1 execute "${DB_NAME}" --remote --command "${propagation_sql}"
+  if [[ "${HAS_SEARCH_INDEX}" == "1" ]]; then
+    target_args+=(--search-index)
+  fi
+  target_args+=("${EXISTING_DERIVED_STOCK_TABLES[@]}")
+
+  if [[ "${#target_args[@]}" -eq 0 ]]; then
+    return
   fi
 
-  local table
-  for table in "${EXISTING_DERIVED_STOCK_TABLES[@]}"; do
-    echo "Propagating stock classification from component_catalog to ${table}..."
-    propagation_sql="$(
-      cd "${REPO_ROOT}"
-      bun run scripts/stock-sync-propagation-sql.ts derived "${table}" "${lcsc_file}"
-    )"
-    run_wrangler d1 execute "${DB_NAME}" --remote --command "${propagation_sql}"
-  done
+  echo "Propagating stock classification from component_catalog to served tables..."
+  propagation_sql="$(
+    cd "${REPO_ROOT}"
+    bun run scripts/stock-sync-propagation-sql.ts combined "${lcsc_file}" "${target_args[@]}"
+  )"
+  run_wrangler d1 execute "${DB_NAME}" --remote --command "${propagation_sql}"
 }
 
 cleanup() {

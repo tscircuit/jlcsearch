@@ -9,6 +9,7 @@ import {
   writeStockSyncBatches,
 } from "../scripts/generate-stock-sync-sql"
 import {
+  createCombinedStockPropagationSql,
   createDerivedTablePropagationSql,
   createSearchIndexPropagationSql,
 } from "../scripts/stock-sync-propagation-sql"
@@ -447,6 +448,14 @@ describe("stock sync SQL generation", () => {
         is_preferred INTEGER,
         description TEXT
       );
+      CREATE TABLE usb_c_connector (
+        lcsc INTEGER PRIMARY KEY,
+        stock INTEGER,
+        in_stock INTEGER,
+        is_basic INTEGER,
+        is_preferred INTEGER,
+        description TEXT
+      );
       INSERT INTO component_catalog(lcsc, stock, basic, preferred, description)
       VALUES
         (1, 1, 1, 1, 'false to true'),
@@ -464,6 +473,9 @@ describe("stock sync SQL generation", () => {
         (3, 33, 1, 1, 0, 'unchanged'),
         (5, 5, 1, 1, 0, 'final short batch'),
         (999, 999, 1, 1, 1, 'unrelated');
+      INSERT INTO usb_c_connector(lcsc, stock, in_stock, is_basic, is_preferred, description)
+      SELECT lcsc, stock, in_stock, is_basic, is_preferred, description
+      FROM hdmi_port;
     `)
     remote.close()
 
@@ -521,7 +533,7 @@ try {
         DB_NAME: "test",
         SOURCE_DB_PATH: sourcePath,
         STOCK_BATCH_ROWS: "2",
-        DERIVED_STOCK_TABLES_LIST: "hdmi_port",
+        DERIVED_STOCK_TABLES_LIST: "hdmi_port,usb_c_connector",
         FAKE_D1_PATH: remotePath,
         FAKE_WRANGLER_LOG: logPath,
         PATH: `${fakeBinDirectory}:${path.dirname(process.execPath)}:${process.env.PATH ?? ""}`,
@@ -664,18 +676,74 @@ try {
           catalog_preferred: 1,
           search_preferred: 1,
           derived_preferred: 1,
-          catalog_extended: 0,
-          search_extended: 0,
+          catalog_extended: null,
+          search_extended: null,
           derived_extended: null,
           derived_description: "unrelated",
+        },
+      ])
+
+      expect(
+        proof
+          .query(
+            `SELECT lcsc, stock, in_stock, is_basic, is_preferred, is_extended_promotional
+             FROM usb_c_connector
+             ORDER BY lcsc`,
+          )
+          .all(),
+      ).toEqual([
+        {
+          lcsc: 1,
+          stock: 11,
+          in_stock: 1,
+          is_basic: 0,
+          is_preferred: 1,
+          is_extended_promotional: 1,
+        },
+        {
+          lcsc: 2,
+          stock: 22,
+          in_stock: 1,
+          is_basic: 1,
+          is_preferred: 1,
+          is_extended_promotional: 0,
+        },
+        {
+          lcsc: 3,
+          stock: 33,
+          in_stock: 1,
+          is_basic: 1,
+          is_preferred: 0,
+          is_extended_promotional: 0,
+        },
+        {
+          lcsc: 5,
+          stock: 55,
+          in_stock: 1,
+          is_basic: 0,
+          is_preferred: 0,
+          is_extended_promotional: 0,
+        },
+        {
+          lcsc: 999,
+          stock: 999,
+          in_stock: 1,
+          is_basic: 1,
+          is_preferred: 1,
+          is_extended_promotional: null,
         },
       ])
 
       const changesBeforeRetry = proof
         .query<{ changes: number }, []>("SELECT total_changes() AS changes")
         .get()?.changes
-      proof.exec(createSearchIndexPropagationSql([1, 2]))
-      proof.exec(createDerivedTablePropagationSql("hdmi_port", [1, 2]))
+      proof.exec(
+        createCombinedStockPropagationSql({
+          lcscs: [1, 2],
+          includeSearchIndex: true,
+          derivedTableNames: ["hdmi_port", "usb_c_connector"],
+        }),
+      )
       const changesAfterRetry = proof
         .query<{ changes: number }, []>("SELECT total_changes() AS changes")
         .get()?.changes
@@ -690,13 +758,18 @@ try {
       .filter((statement) =>
         statement.includes("WITH component_updates(lcsc) AS (VALUES"),
       )
-    expect(propagationStatements).toHaveLength(6)
+    expect(propagationStatements).toHaveLength(3)
     for (const statement of propagationStatements) {
       const values = statement.match(
         /WITH component_updates\(lcsc\) AS \(VALUES (\([^)]+\)(?:,\([^)]+\))*)\)/,
       )?.[1]
       expect(values).toBeDefined()
       expect(values?.match(/\(/g)?.length ?? 0).toBeLessThanOrEqual(2)
+      expect(statement).toContain("BEGIN TRANSACTION;")
+      expect(statement).toContain("UPDATE search_index AS target")
+      expect(statement).toContain('UPDATE "hdmi_port" AS target')
+      expect(statement).toContain('UPDATE "usb_c_connector" AS target')
+      expect(statement).toContain("COMMIT;")
     }
     expect(log).toContain("WITH component_updates(lcsc) AS (VALUES (1),(2))")
     expect(log).toContain("WITH component_updates(lcsc) AS (VALUES (5))")

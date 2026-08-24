@@ -2,7 +2,7 @@ import { Database } from "bun:sqlite"
 import { expect, test } from "bun:test"
 import { Kysely } from "kysely"
 import { BunSqliteDialect } from "kysely-bun-sqlite"
-import { chmod, mkdir, mkdtemp, readdir, rm } from "node:fs/promises"
+import { chmod, mkdir, mkdtemp, readFile, readdir, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import { queryComponentCatalog } from "../cf-proxy/src/components"
@@ -21,7 +21,7 @@ async function installFakeWrangler(
     fakeWranglerPath,
     `
 import { Database } from "bun:sqlite"
-import { readFileSync } from "node:fs"
+import { appendFileSync, readFileSync } from "node:fs"
 
 const args = Bun.argv.slice(2)
 if (args[0] !== "wrangler" || args[1] !== "d1" || args[2] !== "execute") {
@@ -41,6 +41,9 @@ const sql =
         : null
 
 if (!sql) throw new Error(\`Missing SQL in command: \${args.join(" ")}\`)
+if (process.env.FAKE_WRANGLER_LOG) {
+  appendFileSync(process.env.FAKE_WRANGLER_LOG, \`---SQL---\\n\${sql}\\n\`)
+}
 
 const database = new Database(process.env.FAKE_D1_PATH!)
 try {
@@ -324,6 +327,7 @@ test("pre-deploy rollout upgrades existing search schemas before worker reads", 
     path.join(tmpdir(), "jlcsearch-existing-rollout-"),
   )
   const databasePath = path.join(tempDirectory, "d1.sqlite")
+  const logPath = path.join(tempDirectory, "wrangler.log")
   const database = new Database(databasePath, { create: true })
   database.exec(`
     CREATE TABLE component_catalog (
@@ -396,12 +400,20 @@ test("pre-deploy rollout upgrades existing search schemas before worker reads", 
     "cf-proxy/scripts/prepare-extended-promotional-search-rollout.sh",
     fakeBinDirectory,
     databasePath,
+    {
+      FAKE_WRANGLER_LOG: logPath,
+      ROLLOUT_BACKFILL_ROWS: "2",
+    },
   )
   expect(firstRun).toMatchObject({ exitCode: 0 })
   const secondRun = await runShellScript(
     "cf-proxy/scripts/prepare-extended-promotional-search-rollout.sh",
     fakeBinDirectory,
     databasePath,
+    {
+      FAKE_WRANGLER_LOG: logPath,
+      ROLLOUT_BACKFILL_ROWS: "2",
+    },
   )
   expect(secondRun).toMatchObject({ exitCode: 0 })
 
@@ -420,16 +432,6 @@ test("pre-deploy rollout upgrades existing search schemas before worker reads", 
     expect(
       upgraded
         .query(
-          `SELECT name
-           FROM sqlite_master
-           WHERE type = 'index'
-             AND name = 'idx_search_index_extended_promotional_stock'`,
-        )
-        .get(),
-    ).toEqual({ name: "idx_search_index_extended_promotional_stock" })
-    expect(
-      upgraded
-        .query(
           `SELECT lcsc, is_extended_promotional
            FROM component_catalog
            ORDER BY lcsc`,
@@ -440,6 +442,20 @@ test("pre-deploy rollout upgrades existing search schemas before worker reads", 
       { lcsc: 1002, is_extended_promotional: 1 },
       { lcsc: 1003, is_extended_promotional: 0 },
     ])
+
+    const log = await readFile(logPath, "utf8")
+    expect(firstRun.stdout).toContain("Backfilling component_catalog rows 1-2")
+    expect(firstRun.stdout).toContain("Backfilling component_catalog rows 3-3")
+    expect(firstRun.stdout).toContain("Backfilling search_index rows 1-2")
+    expect(firstRun.stdout).toContain("Backfilling search_index rows 3-3")
+    expect(log).toContain("WHERE rowid BETWEEN 1 AND 2")
+    expect(log).toContain("WHERE rowid BETWEEN 3 AND 3")
+    expect(log).not.toMatch(
+      /UPDATE component_catalog\s+SET is_extended_promotional[\s\S]*WHERE is_extended_promotional IS NULL;/,
+    )
+    expect(log).not.toContain(
+      "CREATE INDEX IF NOT EXISTS idx_search_index_extended_promotional_stock",
+    )
   } finally {
     await db.destroy()
     upgraded.close()
