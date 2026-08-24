@@ -126,11 +126,9 @@ export const createCombinedStockPropagationSql = ({
     throw new Error("Cannot create stock propagation SQL without target tables")
   }
 
-  return [
-    "BEGIN TRANSACTION;",
-    ...statements.map((statement) => `${stripTrailingSemicolon(statement)};`),
-    "COMMIT;",
-  ].join("\n")
+  return statements
+    .map((statement) => `${stripTrailingSemicolon(statement)};`)
+    .join("\n")
 }
 
 if (import.meta.main) {

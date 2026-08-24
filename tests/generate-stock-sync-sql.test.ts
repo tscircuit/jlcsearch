@@ -22,6 +22,12 @@ const createTempDirectory = async () => {
   return directory
 }
 
+const splitSqlStatements = (sql: string) =>
+  sql
+    .split(/;\s*/)
+    .map((statement) => statement.trim())
+    .filter(Boolean)
+
 afterEach(async () => {
   await Promise.all(
     tempDirectories
@@ -734,16 +740,140 @@ try {
         },
       ])
 
+      const combinedPropagationSql = createCombinedStockPropagationSql({
+        lcscs: [1, 2],
+        includeSearchIndex: true,
+        derivedTableNames: ["hdmi_port", "usb_c_connector"],
+      })
+      const combinedStatements = splitSqlStatements(combinedPropagationSql)
+      expect(combinedStatements).toHaveLength(3)
+      expect(combinedPropagationSql).not.toContain("BEGIN TRANSACTION")
+      expect(combinedPropagationSql).not.toContain("COMMIT")
+
+      proof.exec(`
+        UPDATE search_index
+        SET stock = 0,
+            basic = 1,
+            preferred = 0,
+            is_extended_promotional = 0
+        WHERE lcsc IN (1, 2);
+
+        UPDATE hdmi_port
+        SET stock = 0,
+            in_stock = 0,
+            is_basic = 1,
+            is_preferred = 0,
+            is_extended_promotional = 0
+        WHERE lcsc IN (1, 2);
+
+        UPDATE usb_c_connector
+        SET stock = 0,
+            in_stock = 0,
+            is_basic = 1,
+            is_preferred = 0,
+            is_extended_promotional = 0
+        WHERE lcsc IN (1, 2);
+      `)
+      proof.exec(`${combinedStatements[0]};`)
+      expect(
+        proof
+          .query(
+            `SELECT lcsc, stock, basic, preferred, is_extended_promotional
+             FROM search_index
+             WHERE lcsc IN (1, 2)
+             ORDER BY lcsc`,
+          )
+          .all(),
+      ).toEqual([
+        {
+          lcsc: 1,
+          stock: 11,
+          basic: 0,
+          preferred: 1,
+          is_extended_promotional: 1,
+        },
+        {
+          lcsc: 2,
+          stock: 22,
+          basic: 1,
+          preferred: 1,
+          is_extended_promotional: 0,
+        },
+      ])
+      expect(
+        proof
+          .query(
+            `SELECT lcsc, stock, is_extended_promotional
+             FROM hdmi_port
+             WHERE lcsc IN (1, 2)
+             ORDER BY lcsc`,
+          )
+          .all(),
+      ).toEqual([
+        { lcsc: 1, stock: 0, is_extended_promotional: 0 },
+        { lcsc: 2, stock: 0, is_extended_promotional: 0 },
+      ])
+
+      proof.exec(combinedPropagationSql)
+      expect(
+        proof
+          .query(
+            `SELECT lcsc, stock, in_stock, is_basic, is_preferred, is_extended_promotional
+             FROM hdmi_port
+             WHERE lcsc IN (1, 2)
+             ORDER BY lcsc`,
+          )
+          .all(),
+      ).toEqual([
+        {
+          lcsc: 1,
+          stock: 11,
+          in_stock: 1,
+          is_basic: 0,
+          is_preferred: 1,
+          is_extended_promotional: 1,
+        },
+        {
+          lcsc: 2,
+          stock: 22,
+          in_stock: 1,
+          is_basic: 1,
+          is_preferred: 1,
+          is_extended_promotional: 0,
+        },
+      ])
+      expect(
+        proof
+          .query(
+            `SELECT lcsc, stock, in_stock, is_basic, is_preferred, is_extended_promotional
+             FROM usb_c_connector
+             WHERE lcsc IN (1, 2)
+             ORDER BY lcsc`,
+          )
+          .all(),
+      ).toEqual([
+        {
+          lcsc: 1,
+          stock: 11,
+          in_stock: 1,
+          is_basic: 0,
+          is_preferred: 1,
+          is_extended_promotional: 1,
+        },
+        {
+          lcsc: 2,
+          stock: 22,
+          in_stock: 1,
+          is_basic: 1,
+          is_preferred: 1,
+          is_extended_promotional: 0,
+        },
+      ])
+
       const changesBeforeRetry = proof
         .query<{ changes: number }, []>("SELECT total_changes() AS changes")
         .get()?.changes
-      proof.exec(
-        createCombinedStockPropagationSql({
-          lcscs: [1, 2],
-          includeSearchIndex: true,
-          derivedTableNames: ["hdmi_port", "usb_c_connector"],
-        }),
-      )
+      proof.exec(combinedPropagationSql)
       const changesAfterRetry = proof
         .query<{ changes: number }, []>("SELECT total_changes() AS changes")
         .get()?.changes
@@ -765,11 +895,11 @@ try {
       )?.[1]
       expect(values).toBeDefined()
       expect(values?.match(/\(/g)?.length ?? 0).toBeLessThanOrEqual(2)
-      expect(statement).toContain("BEGIN TRANSACTION;")
+      expect(statement).not.toContain("BEGIN TRANSACTION")
       expect(statement).toContain("UPDATE search_index AS target")
       expect(statement).toContain('UPDATE "hdmi_port" AS target')
       expect(statement).toContain('UPDATE "usb_c_connector" AS target')
-      expect(statement).toContain("COMMIT;")
+      expect(statement).not.toContain("COMMIT")
     }
     expect(log).toContain("WITH component_updates(lcsc) AS (VALUES (1),(2))")
     expect(log).toContain("WITH component_updates(lcsc) AS (VALUES (5))")
