@@ -189,6 +189,7 @@ test("batched search index rebuild preserves extended promotional classification
   const fakeBinDirectory = path.join(tempDirectory, "bin")
   const fakeWranglerPath = path.join(tempDirectory, "fake-wrangler.ts")
   const fakeBunxPath = path.join(fakeBinDirectory, "bunx")
+  const fakeRipgrepPath = path.join(fakeBinDirectory, "rg")
   const database = new Database(databasePath, { create: true })
   await mkdir(fakeBinDirectory)
 
@@ -290,7 +291,12 @@ try {
     fakeBunxPath,
     `#!/usr/bin/env bash\n"${process.execPath}" "${fakeWranglerPath}" "$@"\n`,
   )
+  await Bun.write(
+    fakeRipgrepPath,
+    "#!/usr/bin/env bash\necho 'rg must not be used by this test' >&2\nexit 127\n",
+  )
   await chmod(fakeBunxPath, 0o755)
+  await chmod(fakeRipgrepPath, 0o755)
 
   const script = Bun.spawn({
     cmd: ["bash", "cf-proxy/scripts/rebuild-search-index-batched.sh"],

@@ -17,15 +17,16 @@ run_wrangler() {
 }
 
 echo "Fetching component_catalog bounds..."
-MAX_ROWID="$(
-  run_wrangler d1 execute "$DB_NAME" --remote --command \
+if ! MAX_ROWID="$(
+  run_wrangler d1 execute "$DB_NAME" --remote --json --command \
     "SELECT MAX(rowid) AS max_rowid FROM component_catalog;" \
-    | rg -o '"max_rowid":\s*[0-9]+' \
-    | rg -o '[0-9]+' \
-    | tail -n1
-)"
+    | jq -er '.[0].results[0].max_rowid // empty'
+)"; then
+  echo "Failed to determine component_catalog max_rowid"
+  exit 1
+fi
 
-if [[ -z "${MAX_ROWID}" ]]; then
+if [[ ! "${MAX_ROWID}" =~ ^[1-9][0-9]*$ ]]; then
   echo "Failed to determine component_catalog max_rowid"
   exit 1
 fi
