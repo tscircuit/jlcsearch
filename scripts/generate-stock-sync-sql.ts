@@ -21,8 +21,6 @@ interface TableInfoRow {
   name: string
 }
 
-const STOCK_TABLES = ["component_catalog", "search_index"] as const
-
 const integerLiteral = (value: number | null, label: string): string => {
   if (value === null) return "NULL"
   if (!Number.isSafeInteger(value)) {
@@ -31,10 +29,7 @@ const integerLiteral = (value: number | null, label: string): string => {
   return String(value)
 }
 
-const createStockUpdateStatement = (
-  table: (typeof STOCK_TABLES)[number],
-  rows: StockRow[],
-) => {
+const createStockUpdateStatement = (rows: StockRow[]) => {
   const values = rows
     .map(
       ({ lcsc, stock, basic, preferred, is_extended_promotional }) =>
@@ -43,7 +38,7 @@ const createStockUpdateStatement = (
     .join(",")
 
   return `WITH component_updates(lcsc, stock, basic, preferred, is_extended_promotional) AS (VALUES ${values})
-UPDATE ${table} AS target
+UPDATE component_catalog AS target
 SET stock = component_updates.stock,
     basic = component_updates.basic,
     preferred = component_updates.preferred,
@@ -63,9 +58,7 @@ export const createStockSyncBatchSql = (rows: StockRow[]): string => {
     throw new Error("Cannot create an empty stock sync batch")
   }
 
-  return STOCK_TABLES.map((table) =>
-    createStockUpdateStatement(table, rows),
-  ).join("\n")
+  return createStockUpdateStatement(rows)
 }
 
 export const writeStockSyncBatches = async ({
