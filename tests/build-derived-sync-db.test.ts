@@ -303,9 +303,7 @@ describe("buildDerivedSyncDatabase", () => {
   test("fails closed on unsupported source classification values", async () => {
     const { sourcePath, outputPath } = await createSourceDatabase()
     const source = new Database(sourcePath)
-    source
-      .query("UPDATE jlc_components SET library_type = 'mystery'")
-      .run()
+    source.query("UPDATE jlc_components SET library_type = 'mystery'").run()
     source.close()
 
     await expect(

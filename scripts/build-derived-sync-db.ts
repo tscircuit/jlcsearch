@@ -42,8 +42,8 @@ const getTableColumns = (
 const requireSourceClassificationColumns = (database: Database) => {
   const columns = getTableColumns(database, "source", "jlc_components")
   const requiredColumns = ["library_type", "preferred"]
-  const missingColumns = requiredColumns.filter((column) =>
-    !columns.has(column),
+  const missingColumns = requiredColumns.filter(
+    (column) => !columns.has(column),
   )
   if (missingColumns.length > 0) {
     throw new Error(

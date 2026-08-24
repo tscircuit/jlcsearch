@@ -105,8 +105,8 @@ export const writeStockSyncBatches = async ({
       "preferred",
       "is_extended_promotional",
     ]
-    const missingColumns = requiredColumns.filter((column) =>
-      !columns.has(column),
+    const missingColumns = requiredColumns.filter(
+      (column) => !columns.has(column),
     )
     if (missingColumns.length > 0) {
       throw new Error(
