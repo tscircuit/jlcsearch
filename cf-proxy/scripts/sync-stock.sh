@@ -115,6 +115,34 @@ ensure_remote_column() {
     "ALTER TABLE $(quote_identifier "${table}") ADD COLUMN $(quote_identifier "${column}") ${type};"
 }
 
+select_derived_stock_tables() {
+  if [[ -z "${DERIVED_STOCK_TABLES_LIST:-}" ]]; then
+    return
+  fi
+
+  local requested raw_table table
+  local selected=()
+  IFS=',' read -r -a requested <<< "${DERIVED_STOCK_TABLES_LIST}"
+  for raw_table in "${requested[@]}"; do
+    table="$(echo "${raw_table}" | xargs)"
+    if [[ -z "${table}" ]]; then
+      continue
+    fi
+    if [[ ! "${table}" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
+      echo "Invalid derived stock table: ${table}" >&2
+      exit 1
+    fi
+    selected+=("${table}")
+  done
+
+  if [[ "${#selected[@]}" -eq 0 ]]; then
+    echo "DERIVED_STOCK_TABLES_LIST did not resolve to any tables." >&2
+    exit 1
+  fi
+
+  DERIVED_STOCK_TABLES=("${selected[@]}")
+}
+
 ensure_stock_sync_schema() {
   if ! remote_table_exists component_catalog; then
     echo "Remote component_catalog does not exist; run a full_catalog sync before stock_only." >&2
@@ -164,12 +192,19 @@ ensure_stock_sync_schema() {
 }
 
 propagate_stock_classification() {
+  local lcsc_file="$1"
   local propagation_sql
+
+  if [[ ! -s "${lcsc_file}" ]]; then
+    echo "Missing or empty stock propagation LCSC batch: ${lcsc_file}" >&2
+    exit 1
+  fi
+
   if remote_table_exists search_index; then
     echo "Propagating stock classification from component_catalog to search_index..."
     propagation_sql="$(
       cd "${REPO_ROOT}"
-      bun run scripts/stock-sync-propagation-sql.ts search_index
+      bun run scripts/stock-sync-propagation-sql.ts search_index "${lcsc_file}"
     )"
     run_wrangler d1 execute "${DB_NAME}" --remote --command "${propagation_sql}"
   fi
@@ -179,7 +214,7 @@ propagate_stock_classification() {
     echo "Propagating stock classification from component_catalog to ${table}..."
     propagation_sql="$(
       cd "${REPO_ROOT}"
-      bun run scripts/stock-sync-propagation-sql.ts derived "${table}"
+      bun run scripts/stock-sync-propagation-sql.ts derived "${table}" "${lcsc_file}"
     )"
     run_wrangler d1 execute "${DB_NAME}" --remote --command "${propagation_sql}"
   done
@@ -202,6 +237,8 @@ if [[ ! "${STOCK_BATCH_ROWS}" =~ ^[1-9][0-9]*$ ]]; then
   echo "STOCK_BATCH_ROWS must be a positive integer." >&2
   exit 1
 fi
+
+select_derived_stock_tables
 
 echo "Preparing remote stock-only schema..."
 ensure_stock_sync_schema
@@ -226,11 +263,15 @@ batch_count="${#batch_files[@]}"
 batch_number=0
 for batch_file in "${batch_files[@]}"; do
   batch_number=$((batch_number + 1))
+  lcsc_file="${batch_file%.sql}.lcsc"
+  if [[ ! -s "${lcsc_file}" ]]; then
+    echo "Missing stock propagation LCSC file for ${batch_file}: ${lcsc_file}" >&2
+    exit 1
+  fi
   batch_sql="$(<"${batch_file}")"
   echo "Updating stock batch ${batch_number}/${batch_count}..."
   run_wrangler d1 execute "${DB_NAME}" --remote --command "${batch_sql}"
+  propagate_stock_classification "${lcsc_file}"
 done
-
-propagate_stock_classification
 
 echo "Stock-only sync complete."

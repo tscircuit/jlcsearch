@@ -53,12 +53,23 @@ WHERE target.lcsc = component_updates.lcsc
   );`
 }
 
+const createStockBatchLcscList = (rows: StockRow[]) =>
+  `${rows.map((row) => integerLiteral(row.lcsc, "lcsc")).join("\n")}\n`
+
 export const createStockSyncBatchSql = (rows: StockRow[]): string => {
   if (rows.length === 0) {
     throw new Error("Cannot create an empty stock sync batch")
   }
 
   return createStockUpdateStatement(rows)
+}
+
+export const createStockSyncBatchLcscList = (rows: StockRow[]): string => {
+  if (rows.length === 0) {
+    throw new Error("Cannot create an empty stock sync batch")
+  }
+
+  return createStockBatchLcscList(rows)
 }
 
 export const writeStockSyncBatches = async ({
@@ -142,20 +153,28 @@ export const writeStockSyncBatches = async ({
       if (batch.length < batchSize) continue
 
       batchCount += 1
-      const filename = `batch-${String(batchCount).padStart(6, "0")}.sql`
+      const basename = `batch-${String(batchCount).padStart(6, "0")}`
       await Bun.write(
-        path.join(resolvedOutputDirectory, filename),
+        path.join(resolvedOutputDirectory, `${basename}.sql`),
         createStockSyncBatchSql(batch),
+      )
+      await Bun.write(
+        path.join(resolvedOutputDirectory, `${basename}.lcsc`),
+        createStockSyncBatchLcscList(batch),
       )
       batch = []
     }
 
     if (batch.length > 0) {
       batchCount += 1
-      const filename = `batch-${String(batchCount).padStart(6, "0")}.sql`
+      const basename = `batch-${String(batchCount).padStart(6, "0")}`
       await Bun.write(
-        path.join(resolvedOutputDirectory, filename),
+        path.join(resolvedOutputDirectory, `${basename}.sql`),
         createStockSyncBatchSql(batch),
+      )
+      await Bun.write(
+        path.join(resolvedOutputDirectory, `${basename}.lcsc`),
+        createStockSyncBatchLcscList(batch),
       )
     }
 
