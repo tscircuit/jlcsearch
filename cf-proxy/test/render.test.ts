@@ -185,6 +185,35 @@ describe("render helpers", () => {
     expect(html).toContain("$1.52")
   })
 
+  it("renders and preserves the promotional extended component filter", () => {
+    const html = renderD1TablePage(
+      "/components/list",
+      {
+        components: [
+          {
+            lcsc: 23456,
+            mfr: "HDMI-EXT",
+            package: "SMD",
+            description: "Extended promotional HDMI part",
+            is_extended_promotional: true,
+          },
+        ],
+      },
+      {
+        search: "HDMI",
+        is_extended_promotional: "true",
+      },
+      "https://jlcsearch.tscircuit.com/components/list?search=HDMI&is_extended_promotional=true",
+    )
+
+    expect(html).toContain("<h2>Components</h2>")
+    expect(html).toContain(
+      'name="is_extended_promotional" value="true" checked',
+    )
+    expect(html).toContain(">Promotional Extended</th>")
+    expect(html).toContain("HDMI-EXT")
+  })
+
   it("renders the Photo Diodes page and JSON API link", () => {
     const pathname = "/photo_diodes/list"
 

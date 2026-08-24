@@ -19,6 +19,84 @@ const tableExists = (database: Database, schema: string, table: string) =>
       .get(table),
   )
 
+type TableInfoRow = {
+  name: string
+}
+
+type CountRow = {
+  count: number
+}
+
+const getTableColumns = (
+  database: Database,
+  schema: string,
+  table: string,
+): Set<string> =>
+  new Set(
+    database
+      .query<TableInfoRow, []>(`PRAGMA ${schema}.table_info(${table})`)
+      .all()
+      .map((row) => row.name),
+  )
+
+const requireSourceClassificationColumns = (database: Database) => {
+  const columns = getTableColumns(database, "source", "jlc_components")
+  const requiredColumns = ["library_type", "preferred"]
+  const missingColumns = requiredColumns.filter((column) =>
+    !columns.has(column),
+  )
+  if (missingColumns.length > 0) {
+    throw new Error(
+      `Expected source.jlc_components to contain ${missingColumns.join(", ")}; refusing to fabricate is_extended_promotional`,
+    )
+  }
+
+  const missingClassificationRows = database
+    .query<CountRow, []>(
+      `SELECT COUNT(*) AS count
+       FROM source.jlc_components
+       WHERE present = 1
+         AND last_on_stock >= unixepoch('now', '-1 year')
+         AND (library_type IS NULL OR preferred IS NULL)`,
+    )
+    .get()?.count
+  if (missingClassificationRows) {
+    throw new Error(
+      `Found ${missingClassificationRows} source.jlc_components rows with null library_type/preferred; refusing to fabricate is_extended_promotional`,
+    )
+  }
+
+  const unsupportedLibraryTypeRows = database
+    .query<CountRow, []>(
+      `SELECT COUNT(*) AS count
+       FROM source.jlc_components
+       WHERE present = 1
+         AND last_on_stock >= unixepoch('now', '-1 year')
+         AND library_type NOT IN ('base', 'expand')`,
+    )
+    .get()?.count
+  if (unsupportedLibraryTypeRows) {
+    throw new Error(
+      `Found ${unsupportedLibraryTypeRows} source.jlc_components rows with unsupported library_type; refusing to fabricate is_extended_promotional`,
+    )
+  }
+
+  const unsupportedPreferredRows = database
+    .query<CountRow, []>(
+      `SELECT COUNT(*) AS count
+       FROM source.jlc_components
+       WHERE present = 1
+         AND last_on_stock >= unixepoch('now', '-1 year')
+         AND preferred NOT IN (0, 1)`,
+    )
+    .get()?.count
+  if (unsupportedPreferredRows) {
+    throw new Error(
+      `Found ${unsupportedPreferredRows} source.jlc_components rows with unsupported preferred value; refusing to fabricate is_extended_promotional`,
+    )
+  }
+}
+
 export const buildDerivedSyncDatabase = async ({
   sourcePath,
   outputPath,
@@ -60,6 +138,13 @@ export const buildDerivedSyncDatabase = async ({
     )
   }
 
+  try {
+    requireSourceClassificationColumns(database)
+  } catch (error) {
+    database.close()
+    throw error
+  }
+
   database.exec(`
     CREATE TABLE categories (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -85,6 +170,10 @@ export const buildDerivedSyncDatabase = async ({
       0 AS manufacturer_id,
       CASE WHEN j.library_type = 'base' THEN 1 ELSE 0 END AS basic,
       j.preferred,
+      CASE
+        WHEN j.library_type = 'expand' AND j.preferred = 1 THEN 1
+        ELSE 0
+      END AS is_extended_promotional,
       j.description,
       j.datasheet,
       j.stock,
@@ -136,6 +225,10 @@ export const buildDerivedSyncDatabase = async ({
         j.package,
         CASE WHEN j.library_type = 'base' THEN 1 ELSE 0 END AS basic,
         j.preferred,
+        CASE
+          WHEN j.library_type = 'expand' AND j.preferred = 1 THEN 1
+          ELSE 0
+        END AS is_extended_promotional,
         j.description,
         j.stock,
         j.price,
@@ -181,6 +274,10 @@ export const buildDerivedSyncDatabase = async ({
         AND j.last_on_stock >= unixepoch('now', '-1 year');
 
       CREATE INDEX idx_component_catalog_lcsc ON component_catalog(lcsc);
+      CREATE INDEX idx_component_catalog_basic ON component_catalog(basic);
+      CREATE INDEX idx_component_catalog_preferred ON component_catalog(preferred);
+      CREATE INDEX idx_component_catalog_extended_promotional_stock
+        ON component_catalog(is_extended_promotional, stock DESC);
       CREATE INDEX idx_component_catalog_stock ON component_catalog(stock DESC);
     `)
   }
@@ -189,13 +286,28 @@ export const buildDerivedSyncDatabase = async ({
     database.exec(`
       CREATE TABLE component_stock (
         lcsc INTEGER PRIMARY KEY,
-        stock INTEGER NOT NULL
+        stock INTEGER NOT NULL,
+        basic INTEGER NOT NULL,
+        preferred INTEGER NOT NULL,
+        is_extended_promotional INTEGER NOT NULL
       );
 
-      INSERT INTO component_stock(lcsc, stock)
+      INSERT INTO component_stock(
+        lcsc,
+        stock,
+        basic,
+        preferred,
+        is_extended_promotional
+      )
       SELECT
         lcsc,
-        CASE WHEN present = 1 THEN coalesce(stock, 0) ELSE 0 END
+        CASE WHEN present = 1 THEN coalesce(stock, 0) ELSE 0 END,
+        CASE WHEN library_type = 'base' THEN 1 ELSE 0 END,
+        preferred,
+        CASE
+          WHEN library_type = 'expand' AND preferred = 1 THEN 1
+          ELSE 0
+        END
       FROM source.jlc_components
       WHERE last_on_stock >= unixepoch('now', '-1 year');
     `)

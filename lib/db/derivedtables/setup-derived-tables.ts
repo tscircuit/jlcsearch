@@ -106,12 +106,34 @@ export const DERIVED_TABLES: DerivedTableSpec<any>[] = [
 
 type Logger = (message: string) => void
 
+type SourceComponentClassification = {
+  basic?: number | null
+  preferred?: number | null
+  is_extended_promotional?: number | null
+  extra?: string | null
+}
+
 const jsonParseOrNull = (strObject: string) => {
   try {
     return JSON.parse(strObject)
   } catch {
     return null
   }
+}
+
+const toExtendedPromotional = (
+  component: SourceComponentClassification,
+  tableName: string,
+) => {
+  if (component.is_extended_promotional != null) {
+    return Boolean(component.is_extended_promotional)
+  }
+  if (component.basic == null || component.preferred == null) {
+    throw new Error(
+      `Cannot derive is_extended_promotional for ${tableName}: missing basic/preferred classification fields`,
+    )
+  }
+  return component.basic === 0 && component.preferred === 1
 }
 
 const createIndexes = async (
@@ -175,6 +197,7 @@ const createTable = async (
     { name: "stock", type: "integer" },
     { name: "price1", type: "real" },
     { name: "in_stock", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ].concat(spec.extraColumns as any, [{ name: "attributes", type: "text" }])) {
     tableCreator = tableCreator.addColumn(
       col.name as string,
@@ -205,14 +228,18 @@ const createTable = async (
 
     if (components.length === 0) break
 
-    const mappedComponents = spec.mapToTable(components as any).map((c, i) =>
-      c === null
-        ? null
-        : {
-            ...c,
-            attributes: jsonParseOrNull(components[i].extra)?.attributes,
-          },
-    )
+    const mappedComponents = spec.mapToTable(components as any).map((c, i) => {
+      if (c === null) return null
+      const sourceComponent = components[i] as SourceComponentClassification
+      return {
+        ...c,
+        is_extended_promotional: toExtendedPromotional(
+          sourceComponent,
+          spec.tableName,
+        ),
+        attributes: jsonParseOrNull(sourceComponent.extra ?? "")?.attributes,
+      }
+    })
 
     for (const component of mappedComponents) {
       if (component === null) continue
