@@ -1,6 +1,6 @@
 import { Database } from "bun:sqlite"
 import { afterEach, describe, expect, test } from "bun:test"
-import { mkdtemp, rm } from "node:fs/promises"
+import { mkdtemp, readFile, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import { extractMinQPrice } from "../lib/util/extract-min-quantity-price"
@@ -56,7 +56,8 @@ const createSourceDatabase = async () => {
       ) VALUES (
         12345, unixepoch(), 1, 1, 'Connectors',
         'HDMI Connectors', 'HDMI-19P', 'SMD', 19, 'Example', 'base', 1,
-        unixepoch(), 'HDMI Female 19 Pins horizontal attachment', '', 250,
+        unixepoch(), 'HDMI Female 19 Pins horizontal attachment',
+        'https://www.lcsc.com/datasheet/C12345.pdf', 250,
         '1-9:1.25,10-:0.75',
         '{"Connector Type":"HDMI","Number of Pins":"19"}'
       )`,
@@ -148,7 +149,7 @@ describe("buildDerivedSyncDatabase", () => {
     const row = output
       .query(
         `SELECT
-          lcsc, mfr, category, subcategory, basic, preferred, stock,
+          lcsc, mfr, category, subcategory, basic, preferred, stock, datasheet,
           json_extract(extra, '$.manufacturer.name') AS manufacturer,
           json_extract(extra, '$.mpn') AS mpn,
           json_extract(extra, '$.attributes.Gender') AS gender
@@ -164,9 +165,40 @@ describe("buildDerivedSyncDatabase", () => {
       basic: 1,
       preferred: 1,
       stock: 250,
+      datasheet: "https://www.lcsc.com/datasheet/C12345.pdf",
       manufacturer: "Example Inc.",
       mpn: "HDMI-19P",
       gender: "Female",
+    })
+    output.close()
+  })
+
+  test("preserves datasheet URLs in the search index", async () => {
+    const { sourcePath, outputPath } = await createSourceDatabase()
+
+    await buildDerivedSyncDatabase({
+      sourcePath,
+      outputPath,
+      tableNames: ["hdmi_port"],
+      includeComponentCatalog: true,
+      logger: () => {},
+    })
+
+    const rebuildSearchIndexSql = await readFile(
+      new URL(
+        "../cf-proxy/scripts/rebuild-search-index-from-component-catalog.sql",
+        import.meta.url,
+      ),
+      "utf8",
+    )
+    const output = new Database(outputPath)
+    output.exec(rebuildSearchIndexSql)
+
+    expect(
+      output.query("SELECT lcsc, datasheet FROM search_index").get(),
+    ).toEqual({
+      lcsc: 12345,
+      datasheet: "https://www.lcsc.com/datasheet/C12345.pdf",
     })
     output.close()
   })

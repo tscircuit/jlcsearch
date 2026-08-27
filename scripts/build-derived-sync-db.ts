@@ -137,6 +137,7 @@ export const buildDerivedSyncDatabase = async ({
         CASE WHEN j.library_type = 'base' THEN 1 ELSE 0 END AS basic,
         j.preferred,
         j.description,
+        j.datasheet,
         j.stock,
         j.price,
         json_object(
