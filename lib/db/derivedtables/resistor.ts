@@ -30,7 +30,7 @@ export const resistorTableSpec: DerivedTableSpec<Resistor> = {
     { name: "is_surface_mount", type: "boolean" },
     { name: "is_multi_resistor_chip", type: "boolean" },
     { name: "is_basic", type: "boolean" },
-{ name: "is_extended_promotional", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
@@ -82,7 +82,7 @@ export const resistorTableSpec: DerivedTableSpec<Resistor> = {
         price1: extractMinQPrice(c.price)!,
         in_stock: c.stock > 0,
         is_basic: Boolean(c.basic),
-is_extended_promotional: Boolean(c.preferred) && !Boolean(c.basic),
+        is_extended_promotional: Boolean(c.preferred) && !Boolean(c.basic),
 
         is_preferred: Boolean(c.preferred),
         resistance: resistance,

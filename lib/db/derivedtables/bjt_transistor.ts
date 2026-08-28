@@ -25,7 +25,7 @@ export const bjtTransistorTableSpec: DerivedTableSpec<BJTTransistor> = {
     { name: "power_dissipation", type: "integer" },
     { name: "temperature_range", type: "text" },
     { name: "is_basic", type: "boolean" },
-{ name: "is_extended_promotional", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
   ],
   listCandidateComponents(db: KyselyDatabaseInstance) {
@@ -74,7 +74,7 @@ export const bjtTransistorTableSpec: DerivedTableSpec<BJTTransistor> = {
           price1: extractMinQPrice(c.price),
           in_stock: Boolean((c.stock || 0) > 0),
           is_basic: Boolean(c.basic),
-is_extended_promotional: Boolean(c.preferred) && !Boolean(c.basic),
+          is_extended_promotional: Boolean(c.preferred) && !Boolean(c.basic),
 
           is_preferred: Boolean(c.preferred),
           package: c.package || "",

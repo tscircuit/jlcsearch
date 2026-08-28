@@ -36,7 +36,7 @@ export const switchTableSpec: DerivedTableSpec<Switch> = {
     { name: "length_mm", type: "real" },
     { name: "switch_height_mm", type: "real" },
     { name: "is_basic", type: "boolean" },
-{ name: "is_extended_promotional", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
   ],
   listCandidateComponents(db) {
@@ -91,7 +91,7 @@ export const switchTableSpec: DerivedTableSpec<Switch> = {
         price1: extractMinQPrice(c.price)!,
         in_stock: c.stock > 0,
         is_basic: Boolean(c.basic),
-is_extended_promotional: Boolean(c.preferred) && !Boolean(c.basic),
+        is_extended_promotional: Boolean(c.preferred) && !Boolean(c.basic),
 
         is_preferred: Boolean(c.preferred),
         package: c.package || "",

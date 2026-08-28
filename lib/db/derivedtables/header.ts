@@ -47,7 +47,7 @@ export const headerTableSpec: DerivedTableSpec<Header> = {
     { name: "is_shrouded", type: "boolean" },
     { name: "is_right_angle", type: "boolean" },
     { name: "is_basic", type: "boolean" },
-{ name: "is_extended_promotional", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
@@ -227,7 +227,7 @@ export const headerTableSpec: DerivedTableSpec<Header> = {
         stock: c.stock,
         in_stock: c.stock > 0,
         is_basic: Boolean(c.basic),
-is_extended_promotional: Boolean(c.preferred) && !Boolean(c.basic),
+        is_extended_promotional: Boolean(c.preferred) && !Boolean(c.basic),
 
         is_preferred: Boolean(c.preferred),
         price1: extractMinQPrice(c.price)!,

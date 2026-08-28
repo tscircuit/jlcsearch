@@ -67,7 +67,7 @@ export const fpgaTableSpec: DerivedTableSpec<FPGA> = {
     { name: "max_delay_ns", type: "real" },
     { name: "logic_gates", type: "real" },
     { name: "is_basic", type: "boolean" },
-{ name: "is_extended_promotional", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
@@ -99,7 +99,7 @@ export const fpgaTableSpec: DerivedTableSpec<FPGA> = {
           price1: extractMinQPrice(c.price),
           in_stock: Boolean((c.stock ?? 0) > 0),
           is_basic: Boolean(c.basic),
-is_extended_promotional: Boolean(c.preferred) && !Boolean(c.basic),
+          is_extended_promotional: Boolean(c.preferred) && !Boolean(c.basic),
 
           is_preferred: Boolean(c.preferred),
           package: extra?.package ?? c.package ?? "",
