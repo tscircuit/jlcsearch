@@ -61,6 +61,7 @@ export const microcontrollerTableSpec: DerivedTableSpec<Microcontroller> = {
     { name: "adc_resolution_bits", type: "integer" },
     { name: "dac_resolution_bits", type: "integer" },
     { name: "is_basic", type: "boolean" },
+{ name: "is_extended_promotional", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
@@ -227,6 +228,8 @@ export const microcontrollerTableSpec: DerivedTableSpec<Microcontroller> = {
         price1: extractMinQPrice(c.price),
         in_stock: c.stock > 0,
         is_basic: Boolean(c.basic),
+is_extended_promotional: Boolean(c.preferred) && !Boolean(c.basic),
+
         is_preferred: Boolean(c.preferred),
         package: c.package || "",
         cpu_core: cpuCore,

@@ -27,6 +27,7 @@ export const bleModuleTableSpec: DerivedTableSpec<BleModule> = {
     { name: "has_spi", type: "boolean" },
     { name: "has_usb", type: "boolean" },
     { name: "is_basic", type: "boolean" },
+{ name: "is_extended_promotional", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
   ],
   listCandidateComponents: (db) =>

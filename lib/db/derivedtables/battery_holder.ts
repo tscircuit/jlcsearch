@@ -31,6 +31,7 @@ export const batteryHolderTableSpec: DerivedTableSpec<BatteryHolder> = {
     { name: "operating_temp_min", type: "real" },
     { name: "operating_temp_max", type: "real" },
     { name: "is_basic", type: "boolean" },
+{ name: "is_extended_promotional", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
   ],
   listCandidateComponents(db: KyselyDatabaseInstance) {
@@ -73,6 +74,8 @@ export const batteryHolderTableSpec: DerivedTableSpec<BatteryHolder> = {
           price1: extractMinQPrice(c.price),
           in_stock: Boolean((c.stock || 0) > 0),
           is_basic: Boolean(c.basic),
+is_extended_promotional: Boolean(c.preferred) && !Boolean(c.basic),
+
           is_preferred: Boolean(c.preferred),
           package: String(c.package || ""),
           connector_type: attrs["Connector Type"] || null,
