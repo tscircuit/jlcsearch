@@ -270,6 +270,7 @@ export interface Component {
   mfr: string;
   package: string;
   preferred: Generated<number>;
+  is_extended_promotional: number | null;
   price: string;
   stock: number;
 }

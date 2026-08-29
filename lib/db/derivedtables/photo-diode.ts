@@ -100,6 +100,7 @@ export const photoDiodeTableSpec: DerivedTableSpec<PhotoDiode> = {
     { name: "operating_temp_max", type: "real" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   indexes: [
     { name: "idx_photo_diode_stock", columns: ["stock"] },
@@ -168,6 +169,7 @@ export const photoDiodeTableSpec: DerivedTableSpec<PhotoDiode> = {
           in_stock: Boolean((component.stock || 0) > 0),
           is_basic: Boolean(component.basic),
           is_preferred: Boolean(component.preferred),
+          is_extended_promotional: Boolean(component.is_extended_promotional),
           package: String(component.package || ""),
           peak_wavelength_nm: parseWavelength(peakWavelengthSource),
           spectral_range_min_nm: spectralRangeMin,
