@@ -17,7 +17,7 @@
     "setup": "bun run setup:7z && bun run setup:download-cache-fragments && bun run setup:extract-db && bun run setup:replace-db-file && bun run setup:optimize-db && bun run setup:derived-tables",
     "setup:7z": "bun run scripts/setup-7z.ts",
     "setup:download-cache-fragments": "bun scripts/download-cache-fragments.ts",
-    "setup:extract-db": ".bin/7zz x .buildtmp/cache.zip",
+    "setup:extract-db": "bun run scripts/extract-db.ts",
     "setup:replace-db-file": "rm -f ./db.sqlite3 && mv ./cache.sqlite3 ./db.sqlite3",
     "setup:optimize-db": "bun run scripts/setup-db-optimizations.ts",
     "setup:derived-tables": "bun run scripts/setup-derived-tables.ts",
