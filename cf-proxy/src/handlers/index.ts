@@ -566,6 +566,21 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
       type: { field: "type", type: "string" },
     },
   },
+  npu_chip: {
+    filters: {
+      package: { field: "package", type: "string" },
+      manufacturer: { field: "manufacturer", type: "string" },
+      chip_family: { field: "chip_family", type: "string" },
+      npu_name: { field: "npu_name", type: "string" },
+      performance_min_tops: {
+        field: "npu_performance_tops",
+        type: "number",
+        operator: ">=",
+      },
+      is_basic: { field: "is_basic", type: "boolean" },
+      is_preferred: { field: "is_preferred", type: "boolean" },
+    },
+  },
   fuse: {
     filters: {
       package: { field: "package", type: "string" },
@@ -765,6 +780,7 @@ export const ROUTE_TO_TABLE: Record<string, string> = {
   "/dimm_connectors/list": "dimm_connector",
   "/fpc_connectors/list": "fpc_connector",
   "/fpgas/list": "fpga",
+  "/npu_chips/list": "npu_chip",
   "/fuses/list": "fuse",
   "/gas_sensors/list": "gas_sensor",
   "/hdmi_ports/list": "hdmi_port",
@@ -817,6 +833,7 @@ export const TABLE_RESPONSE_KEY: Record<string, string> = {
   dimm_connector: "dimm_connectors",
   fpc_connector: "fpc_connectors",
   fpga: "fpgas",
+  npu_chip: "npu_chips",
   fuse: "fuses",
   gas_sensor: "gas_sensors",
   hdmi_port: "hdmi_ports",

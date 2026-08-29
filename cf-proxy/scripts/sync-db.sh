@@ -57,6 +57,7 @@ DERIVED_TABLES=(
   microcontroller
   micro_usb_connector
   mosfet
+  npu_chip
   oled_display
   pcie_m2_connector
   photo_diode

@@ -747,6 +747,23 @@ export interface Mosfet {
   stock: number | null
 }
 
+export interface NpuChip {
+  attributes: string | null
+  chip_family: string | null
+  description: string | null
+  in_stock: number | null
+  is_basic: number | null
+  is_preferred: number | null
+  lcsc: Generated<number | null>
+  manufacturer: string | null
+  mfr: string | null
+  npu_name: string | null
+  npu_performance_tops: number | null
+  package: string | null
+  price1: number | null
+  stock: number | null
+}
+
 export interface OledDisplay {
   attributes: string | null
   description: string | null
@@ -1096,6 +1113,7 @@ export interface DB {
   microcontroller: Microcontroller
   micro_usb_connector: MicroUsbConnector
   mosfet: Mosfet
+  npu_chip: NpuChip
   oled_display: OledDisplay
   pcie_m2_connector: PcieM2Connector
   photo_diode: PhotoDiode

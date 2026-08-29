@@ -21,6 +21,51 @@ describe("render helpers", () => {
     expect(html).toContain("/micro_usb_connectors/list")
     expect(html).toContain("/hdmi_ports/list")
     expect(html).toContain("/photo_diodes/list")
+    expect(html).toContain("/npu_chips/list")
+  })
+
+  it("renders the NPU chip page and JSON API link", () => {
+    const pathname = "/npu_chips/list"
+
+    expect(D1_ROUTES).toContain(pathname)
+    expect(getD1Handler(pathname)).toBeTypeOf("function")
+
+    const html = renderD1TablePage(
+      pathname,
+      {
+        npu_chips: [
+          {
+            lcsc: 5_156_490,
+            mfr: "RK3588",
+            package: "FCBGA-1088",
+            manufacturer: "Rockchip",
+            chip_family: "RK3588",
+            npu_name: "Rockchip NPU",
+            npu_performance_tops: 6,
+            stock: 100,
+          },
+        ],
+      },
+      {
+        package: "FCBGA-1088",
+        manufacturer: "Rockchip",
+        chip_family: "RK3588",
+        npu_name: "Rockchip NPU",
+        performance_min_tops: "1",
+      },
+      "https://jlcsearch.tscircuit.com/npu_chips/list?manufacturer=Rockchip",
+    )
+
+    expect(html).toContain("<h2>NPU Chips (Neural Processing Units)</h2>")
+    expect(html).toContain('name="package"')
+    expect(html).toContain('name="manufacturer"')
+    expect(html).toContain('name="chip_family"')
+    expect(html).toContain('name="npu_name"')
+    expect(html).toContain('name="performance_min_tops"')
+    expect(html).toContain('name="is_basic"')
+    expect(html).toContain('name="is_preferred"')
+    expect(html).toContain("6TOPS")
+    expect(html).toContain("/npu_chips/list.json")
   })
 
   it("renders the DRAM page and JSON API link", () => {

@@ -120,6 +120,47 @@ describe("buildDerivedSyncDatabase", () => {
     output.close()
   })
 
+  test("uses JLC manufacturer metadata for NPU chips missing from LCSC", async () => {
+    const { sourcePath, outputPath } = await createSourceDatabase()
+    const source = new Database(sourcePath)
+    source
+      .query(
+        `INSERT INTO jlc_components (
+          lcsc, fetched_at, present, sync_seen, category, subcategory, mfr,
+          package, joints, manufacturer, library_type, preferred, last_on_stock,
+          description, datasheet, stock, price, attributes
+        ) VALUES (
+          67890, unixepoch(), 1, 1, 'Embedded Processors & Controllers',
+          'Microcontrollers (MCU/MPU/SOC)', 'MIMX9352CVVXMAC', 'VFBGA-396',
+          396, 'NXP', 'expand', 0, unixepoch(),
+          '64 Bit Microcontrollers (MCU/MPU/SOC)', '', 0, '1-:35.00', '{}'
+        )`,
+      )
+      .run()
+    source.close()
+
+    await buildDerivedSyncDatabase({
+      sourcePath,
+      outputPath,
+      tableNames: ["npu_chip"],
+      logger: () => {},
+    })
+
+    const output = new Database(outputPath, { readonly: true })
+    expect(
+      output
+        .query(
+          "SELECT manufacturer, chip_family, npu_name FROM npu_chip WHERE lcsc = 67890",
+        )
+        .get(),
+    ).toEqual({
+      manufacturer: "NXP",
+      chip_family: "NXP i.MX 93",
+      npu_name: "Arm Ethos-U65",
+    })
+    output.close()
+  })
+
   test("rejects unknown derived tables", async () => {
     const { sourcePath, outputPath } = await createSourceDatabase()
 

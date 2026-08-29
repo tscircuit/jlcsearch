@@ -37,6 +37,7 @@ import { ldoTableSpec } from "lib/db/derivedtables/ldo"
 import { microcontrollerTableSpec } from "lib/db/derivedtables/microcontroller"
 import { microUsbConnectorTableSpec } from "lib/db/derivedtables/micro-usb-connector"
 import { mosfetTableSpec } from "lib/db/derivedtables/mosfet"
+import { npuChipTableSpec } from "lib/db/derivedtables/npu-chip"
 import { oledDisplayTableSpec } from "lib/db/derivedtables/oled_display"
 import { pcieM2ConnectorTableSpec } from "lib/db/derivedtables/pcie_m2_connector"
 import { photoDiodeTableSpec } from "lib/db/derivedtables/photo-diode"
@@ -80,6 +81,7 @@ export const DERIVED_TABLES: DerivedTableSpec<any>[] = [
   boostConverterTableSpec,
   buckBoostConverterTableSpec,
   mosfetTableSpec,
+  npuChipTableSpec,
   gyroscopeTableSpec,
   accelerometerTableSpec,
   gasSensorTableSpec,

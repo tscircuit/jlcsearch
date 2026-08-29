@@ -108,7 +108,10 @@ export const buildDerivedSyncDatabase = async ({
           )
         ),
         'manufacturer',
-        NULLIF(l.manufacturer, ''),
+        coalesce(
+          NULLIF(l.manufacturer, ''),
+          NULLIF(j.manufacturer, '')
+        ),
         'url',
         CASE
           WHEN l.url_slug IS NOT NULL AND l.url_slug != ''

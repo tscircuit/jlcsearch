@@ -56,6 +56,7 @@ const routeLabels: Record<string, string> = {
   "/arm_processors/list": "ARM Processors",
   "/risc_v_processors/list": "RISC-V Processors",
   "/fpgas/list": "FPGAs & CPLDs",
+  "/npu_chips/list": "NPU Chips",
   "/voltage_regulators/list": "Voltage Regulators",
   "/ldos/list": "LDO Regulators",
   "/boost_converters/list": "Boost DC-DC Converters",
@@ -96,6 +97,7 @@ const routeHeadings: Record<string, string> = {
   "/components/list": "Components",
   "/footprint_index/list": "Package Index",
   "/led_with_ic/list": "LEDs with Built-in IC",
+  "/npu_chips/list": "NPU Chips (Neural Processing Units)",
 }
 
 const titleCase = (value: string): string =>
@@ -229,6 +231,10 @@ const COLUMN_LABELS: Record<string, string> = {
   clock_frequency_hz: "Clock",
   frequency_ghz: "Frequency",
   data_rate_mbps: "Data Rate",
+  chip_family: "Chip Family",
+  npu_name: "NPU",
+  npu_performance_tops: "NPU Performance",
+  performance_min_tops: "Min NPU Performance",
   display_type: "Display Type",
   matrix_size: "Matrix Size",
   forward_current: "Forward Current",
@@ -314,6 +320,8 @@ const formatDisplayValue = (column: string, value: unknown): string | null => {
       return withUnit(value, "MHz")
     case "data_rate_mbps":
       return withUnit(value, "Mbps")
+    case "npu_performance_tops":
+      return withUnit(value, "TOPS")
     case "wavelength_nm":
     case "peak_wavelength_nm":
     case "spectral_range_min_nm":
