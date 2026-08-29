@@ -1,6 +1,7 @@
 import { sql } from "kysely"
 import { destroyDbClient, getDbClient } from "lib/db/get-db-client"
 import { accelerometerTableSpec } from "lib/db/derivedtables/accelerometer"
+import { imuTableSpec } from "lib/db/derivedtables/imu"
 import { adcTableSpec } from "lib/db/derivedtables/adc"
 import { analogMultiplexerTableSpec } from "lib/db/derivedtables/analog_multiplexer"
 import { barrelJackTableSpec } from "lib/db/derivedtables/barrel-jack"
@@ -82,6 +83,7 @@ export const DERIVED_TABLES: DerivedTableSpec<any>[] = [
   mosfetTableSpec,
   gyroscopeTableSpec,
   accelerometerTableSpec,
+  imuTableSpec,
   gasSensorTableSpec,
   ledWithICTableSpec,
   ledDotMatrixDisplayTableSpec,

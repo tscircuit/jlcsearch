@@ -171,6 +171,49 @@ describe("buildDerivedSyncDatabase", () => {
     output.close()
   })
 
+  test("materializes an imu table with sensor capability flags", async () => {
+    const { sourcePath, outputPath } = await createSourceDatabase()
+    const source = new Database(sourcePath)
+    source
+      .query(
+        `INSERT INTO jlc_components (
+          lcsc, fetched_at, present, sync_seen, category, subcategory, mfr,
+          package, joints, manufacturer, library_type, preferred, last_on_stock,
+          description, datasheet, stock, price, attributes
+        ) VALUES (
+          99101, unixepoch(), 1, 1, 'Sensors',
+          'IMUs', 'MPU-6050', 'QFN-24', 24, 'InvenSense', 'base', 0,
+          unixepoch(), '6-axis gyro+accel IMU i2c', '', 500,
+          '1-9:4.00', '{"Supply Voltage":"1.71V~3.45V","Operating Temperature":"-40℃~+85℃","Interface Type":"I2C"}'
+        )`,
+      )
+      .run()
+    source.close()
+
+    await buildDerivedSyncDatabase({
+      sourcePath,
+      outputPath,
+      tableNames: ["imu"],
+      logger: () => {},
+    })
+
+    const output = new Database(outputPath, { readonly: true })
+    const row = output
+      .query(
+        `SELECT lcsc, has_gyroscope, has_accelerometer, has_magnetometer, has_i2c, supply_voltage_min FROM imu`,
+      )
+      .get() as Record<string, unknown>
+    expect(row).toEqual({
+      lcsc: 99101,
+      has_gyroscope: 1,
+      has_accelerometer: 1,
+      has_magnetometer: 0,
+      has_i2c: 1,
+      supply_voltage_min: 1.71,
+    })
+    output.close()
+  })
+
   test("materializes a stock snapshot with zeroes for absent parts", async () => {
     const { sourcePath, outputPath } = await createSourceDatabase()
     const source = new Database(sourcePath)

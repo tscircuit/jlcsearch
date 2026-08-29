@@ -444,6 +444,17 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
       axes: { field: "axes", type: "string" },
     },
   },
+  imu: {
+    filters: {
+      package: { field: "package", type: "string" },
+      axes: { field: "axes", type: "string" },
+      has_accelerometer: { field: "has_accelerometer", type: "boolean" },
+      has_gyroscope: { field: "has_gyroscope", type: "boolean" },
+      has_magnetometer: { field: "has_magnetometer", type: "boolean" },
+      has_i2c: { field: "has_i2c", type: "boolean" },
+      has_spi: { field: "has_spi", type: "boolean" },
+    },
+  },
   adc: {
     filters: {
       package: { field: "package", type: "string" },
@@ -751,6 +762,7 @@ export const ROUTE_TO_TABLE: Record<string, string> = {
   "/switches/list": "switch",
   "/headers/list": "header",
   "/accelerometers/list": "accelerometer",
+  "/imus/list": "imu",
   "/adcs/list": "adc",
   "/analog_multiplexers/list": "analog_multiplexer",
   "/barrel_jacks/list": "barrel_jack",
@@ -803,6 +815,7 @@ export const TABLE_RESPONSE_KEY: Record<string, string> = {
   switch: "switches",
   header: "headers",
   accelerometer: "accelerometers",
+  imu: "imus",
   adc: "adcs",
   analog_multiplexer: "multiplexers",
   barrel_jack: "barrel_jacks",

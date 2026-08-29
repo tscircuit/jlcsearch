@@ -30,6 +30,30 @@ export interface Accelerometer {
   supply_voltage_min: number | null
 }
 
+export interface Imu {
+  attributes: string | null
+  axes: string | null
+  description: string | null
+  has_i2c: number | null
+  has_spi: number | null
+  has_uart: number | null
+  in_stock: number | null
+  is_basic: number | null
+  is_preferred: number | null
+  lcsc: Generated<number | null>
+  mfr: string | null
+  operating_temp_max: number | null
+  operating_temp_min: number | null
+  package: string | null
+  price1: number | null
+  stock: number | null
+  supply_voltage_max: number | null
+  supply_voltage_min: number | null
+  has_accelerometer: number | null
+  has_gyroscope: number | null
+  has_magnetometer: number | null
+}
+
 export interface Adc {
   attributes: string | null
   description: string | null
@@ -1061,6 +1085,7 @@ export interface FootprinterStrings {
 
 export interface DB {
   accelerometer: Accelerometer
+  imu: Imu
   adc: Adc
   analog_multiplexer: AnalogMultiplexer
   barrel_jack: BarrelJack

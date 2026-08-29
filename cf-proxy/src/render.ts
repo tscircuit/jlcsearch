@@ -45,6 +45,7 @@ const routeLabels: Record<string, string> = {
   "/io_expanders/list": "I/O Expanders",
   "/gyroscopes/list": "Gyroscopes",
   "/accelerometers/list": "Accelerometers",
+  "/imus/list": "IMUs",
   "/gas_sensors/list": "Gas Sensors",
   "/hdmi_ports/list": "HDMI Ports",
   "/microphones/list": "Microphones",
