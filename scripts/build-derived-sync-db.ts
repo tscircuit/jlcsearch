@@ -2,10 +2,10 @@ import { Database } from "bun:sqlite"
 import { existsSync } from "node:fs"
 import { mkdir, rm } from "node:fs/promises"
 import path from "node:path"
-import { setupDerivedTables } from "lib/db/derivedtables/setup-derived-tables"
-import type { DB } from "lib/db/generated/kysely"
 import { Kysely } from "kysely"
 import { BunSqliteDialect } from "kysely-bun-sqlite"
+import { setupDerivedTables } from "lib/db/derivedtables/setup-derived-tables"
+import type { DB } from "lib/db/generated/kysely"
 
 const tableExists = (database: Database, schema: string, table: string) =>
   Boolean(
@@ -50,6 +50,17 @@ export const buildDerivedSyncDatabase = async ({
   const database = new Database(resolvedOutputPath, { create: true })
   database.run("ATTACH DATABASE ? AS source", [resolvedSourcePath])
 
+  const sourceHasAssemblyProcess = Boolean(
+    database
+      .query(
+        "SELECT 1 FROM source.pragma_table_info('jlc_components') WHERE name = 'assembly_process' LIMIT 1",
+      )
+      .get(),
+  )
+  const extendedPromotionalExpr = sourceHasAssemblyProcess
+    ? "CASE WHEN j.library_type = 'expand' AND lower(coalesce(j.assembly_process, '')) = 'basic' THEN 1 ELSE 0 END"
+    : "0"
+
   if (
     !tableExists(database, "source", "jlc_components") ||
     !tableExists(database, "source", "lcsc_components")
@@ -85,6 +96,7 @@ export const buildDerivedSyncDatabase = async ({
       0 AS manufacturer_id,
       CASE WHEN j.library_type = 'base' THEN 1 ELSE 0 END AS basic,
       j.preferred,
+      ${extendedPromotionalExpr} AS is_extended_promotional,
       j.description,
       j.datasheet,
       j.stock,
@@ -136,6 +148,7 @@ export const buildDerivedSyncDatabase = async ({
         j.package,
         CASE WHEN j.library_type = 'base' THEN 1 ELSE 0 END AS basic,
         j.preferred,
+        ${extendedPromotionalExpr} AS is_extended_promotional,
         j.description,
         j.stock,
         j.price,

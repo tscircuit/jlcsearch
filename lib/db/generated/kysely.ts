@@ -1013,6 +1013,7 @@ export interface UsbCConnector {
 
 export interface VComponent {
   basic: number | null;
+  is_extended_promotional: number | null;
   category: string | null;
   category_id: number | null;
   datasheet: string | null;

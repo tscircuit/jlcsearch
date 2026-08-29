@@ -28,6 +28,7 @@ const createSourceDatabase = async () => {
       joints INTEGER NOT NULL,
       manufacturer TEXT NOT NULL,
       library_type TEXT NOT NULL,
+      assembly_process TEXT,
       preferred INTEGER NOT NULL,
       last_on_stock INTEGER NOT NULL,
       description TEXT NOT NULL,
@@ -51,11 +52,11 @@ const createSourceDatabase = async () => {
     .query(
       `INSERT INTO jlc_components (
         lcsc, fetched_at, present, sync_seen, category, subcategory, mfr,
-        package, joints, manufacturer, library_type, preferred, last_on_stock,
+        package, joints, manufacturer, library_type, assembly_process, preferred, last_on_stock,
         description, datasheet, stock, price, attributes
       ) VALUES (
         12345, unixepoch(), 1, 1, 'Connectors',
-        'HDMI Connectors', 'HDMI-19P', 'SMD', 19, 'Example', 'base', 1,
+        'HDMI Connectors', 'HDMI-19P', 'SMD', 19, 'Example', 'base', 'Basic', 1,
         unixepoch(), 'HDMI Female 19 Pins horizontal attachment', '', 250,
         '1-9:1.25,10-:0.75',
         '{"Connector Type":"HDMI","Number of Pins":"19"}'
@@ -148,7 +149,7 @@ describe("buildDerivedSyncDatabase", () => {
     const row = output
       .query(
         `SELECT
-          lcsc, mfr, category, subcategory, basic, preferred, stock,
+          lcsc, mfr, category, subcategory, basic, preferred, is_extended_promotional, stock,
           json_extract(extra, '$.manufacturer.name') AS manufacturer,
           json_extract(extra, '$.mpn') AS mpn,
           json_extract(extra, '$.attributes.Gender') AS gender
@@ -163,11 +164,52 @@ describe("buildDerivedSyncDatabase", () => {
       subcategory: "HDMI Connectors",
       basic: 1,
       preferred: 1,
+      is_extended_promotional: 0,
       stock: 250,
       manufacturer: "Example Inc.",
       mpn: "HDMI-19P",
       gender: "Female",
     })
+    output.close()
+  })
+
+  test("flags extended promotional parts in the component catalog", async () => {
+    const { sourcePath, outputPath } = await createSourceDatabase()
+    const source = new Database(sourcePath)
+    source
+      .query(
+        `INSERT INTO jlc_components (
+          lcsc, fetched_at, present, sync_seen, category, subcategory, mfr,
+          package, joints, manufacturer, library_type, assembly_process, preferred, last_on_stock,
+          description, datasheet, stock, price, attributes
+        ) VALUES (
+          67890, unixepoch(), 1, 1, 'Connectors',
+          'HDMI Connectors', 'HDMI-PROMO', 'SMD', 19, 'Example', 'expand', 'Basic', 0,
+          unixepoch(), 'Extended part currently acting as basic', '', 100,
+          '1-9:2.00', '{}'
+        )`,
+      )
+      .run()
+    source.close()
+
+    await buildDerivedSyncDatabase({
+      sourcePath,
+      outputPath,
+      tableNames: ["hdmi_port"],
+      includeComponentCatalog: true,
+      logger: () => {},
+    })
+
+    const output = new Database(outputPath, { readonly: true })
+    const rows = output
+      .query(
+        `SELECT lcsc, basic, is_extended_promotional FROM component_catalog ORDER BY lcsc`,
+      )
+      .all() as Record<string, unknown>[]
+    expect(rows).toEqual([
+      { lcsc: 12345, basic: 1, is_extended_promotional: 0 },
+      { lcsc: 67890, basic: 0, is_extended_promotional: 1 },
+    ])
     output.close()
   })
 
@@ -178,11 +220,11 @@ describe("buildDerivedSyncDatabase", () => {
       .query(
         `INSERT INTO jlc_components (
           lcsc, fetched_at, present, sync_seen, category, subcategory, mfr,
-          package, joints, manufacturer, library_type, preferred, last_on_stock,
+          package, joints, manufacturer, library_type, assembly_process, preferred, last_on_stock,
           description, datasheet, stock, price, attributes
         ) VALUES (
           54321, unixepoch(), 0, 1, 'Connectors',
-          'HDMI Connectors', 'REMOVED', 'SMD', 19, 'Example', 'base', 0,
+          'HDMI Connectors', 'REMOVED', 'SMD', 19, 'Example', 'base', 'Extended', 0,
           unixepoch(), 'No longer listed', '', 125, '1-:1.00', '{}'
         )`,
       )
