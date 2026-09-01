@@ -7,6 +7,7 @@ interface SourceComponent {
   stock: number
   basic: number
   preferred: number
+  is_extended_promotional: number
   package: string
 }
 
@@ -181,6 +182,7 @@ export const mapBleFields = (
     in_stock: component.stock > 0,
     is_basic: Boolean(component.basic),
     is_preferred: Boolean(component.preferred),
+    is_extended_promotional: Boolean(component.is_extended_promotional),
     package: component.package || "",
     core_processor: getFirstAttribute(attributes, [
       "Core Processor",

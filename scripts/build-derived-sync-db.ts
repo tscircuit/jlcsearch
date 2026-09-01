@@ -60,6 +60,23 @@ export const buildDerivedSyncDatabase = async ({
     )
   }
 
+  // Extended promotional parts come from the JLCPCB "preferred component"
+  // flag: preferred components with a non-base library_type are promotional
+  // parts that currently act as basic. Base parts with the flag are the
+  // permanent basic catalog, so they are excluded. If the source ever stops
+  // exposing the flag the column is derived as 0 for every row (fail closed).
+  const sourceHasPreferred = Boolean(
+    database
+      .query(
+        "SELECT 1 FROM source.pragma_table_info('jlc_components') WHERE name = 'preferred' LIMIT 1",
+      )
+      .get(),
+  )
+  const preferredExpr = sourceHasPreferred ? "j.preferred" : "0"
+  const extendedPromotionalExpr = sourceHasPreferred
+    ? "CASE WHEN j.preferred = 1 AND j.library_type != 'base' THEN 1 ELSE 0 END"
+    : "0"
+
   database.exec(`
     CREATE TABLE categories (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -84,7 +101,8 @@ export const buildDerivedSyncDatabase = async ({
       j.joints,
       0 AS manufacturer_id,
       CASE WHEN j.library_type = 'base' THEN 1 ELSE 0 END AS basic,
-      j.preferred,
+      ${preferredExpr} AS preferred,
+      ${extendedPromotionalExpr} AS is_extended_promotional,
       j.description,
       j.datasheet,
       j.stock,
@@ -138,7 +156,8 @@ export const buildDerivedSyncDatabase = async ({
         j.mfr,
         j.package,
         CASE WHEN j.library_type = 'base' THEN 1 ELSE 0 END AS basic,
-        j.preferred,
+        ${preferredExpr} AS preferred,
+        ${extendedPromotionalExpr} AS is_extended_promotional,
         j.description,
         j.stock,
         j.price,
