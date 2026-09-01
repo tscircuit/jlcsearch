@@ -212,6 +212,90 @@ describe("buildDerivedSyncDatabase", () => {
     output.close()
   })
 
+  test("derives is_extended_promotional from preferred non-base parts and fails closed", async () => {
+    const { sourcePath, outputPath } = await createSourceDatabase()
+    const source = new Database(sourcePath)
+    // A preferred expand-library part currently acting as basic
+    source
+      .query(
+        `
+        INSERT INTO jlc_components (
+          lcsc, fetched_at, present, sync_seen, category, subcategory, mfr,
+          package, joints, manufacturer, library_type, preferred, last_on_stock,
+          description, datasheet, stock, price, attributes
+        ) VALUES (
+          67890, unixepoch(), 1, 1, 'Connectors',
+          'HDMI Connectors', 'HDMI-PROMO', 'SMD', 19, 'Example', 'expand', 1,
+          unixepoch(), 'Extended promotional part', '', 100,
+          '1-9:2.00', '{}'
+        )`,
+      )
+      .run()
+    // A non-preferred expand part is not extended promotional
+    source
+      .query(
+        `
+        INSERT INTO jlc_components (
+          lcsc, fetched_at, present, sync_seen, category, subcategory, mfr,
+          package, joints, manufacturer, library_type, preferred, last_on_stock,
+          description, datasheet, stock, price, attributes
+        ) VALUES (
+          67891, unixepoch(), 1, 1, 'Connectors',
+          'HDMI Connectors', 'HDMI-EXP', 'SMD', 19, 'Example', 'expand', 0,
+          unixepoch(), 'Extended part not on promotion', '', 100,
+          '1-9:2.00', '{}'
+        )`,
+      )
+      .run()
+    source.close()
+
+    await buildDerivedSyncDatabase({
+      sourcePath,
+      outputPath,
+      tableNames: ["hdmi_port"],
+      includeComponentCatalog: true,
+      logger: () => {},
+    })
+
+    const output = new Database(outputPath, { readonly: true })
+    const rows = output
+      .query(
+        `
+          SELECT lcsc, basic, preferred, is_extended_promotional
+          FROM component_catalog ORDER BY lcsc
+        `,
+      )
+      .all() as Record<string, unknown>[]
+    expect(rows).toEqual([
+      { lcsc: 12345, basic: 1, preferred: 1, is_extended_promotional: 0 },
+      { lcsc: 67890, basic: 0, preferred: 1, is_extended_promotional: 1 },
+      { lcsc: 67891, basic: 0, preferred: 0, is_extended_promotional: 0 },
+    ])
+    output.close()
+  })
+
+  test("derives is_extended_promotional as 0 when the source lacks the preferred column", async () => {
+    const { sourcePath, outputPath } = await createSourceDatabase()
+    const source = new Database(sourcePath)
+    source.exec("ALTER TABLE jlc_components DROP COLUMN preferred")
+    source.close()
+
+    await buildDerivedSyncDatabase({
+      sourcePath,
+      outputPath,
+      tableNames: ["hdmi_port"],
+      includeComponentCatalog: true,
+      logger: () => {},
+    })
+
+    const output = new Database(outputPath, { readonly: true })
+    const row = output
+      .query("SELECT is_extended_promotional FROM component_catalog")
+      .get() as Record<string, unknown>
+    expect(row).toEqual({ is_extended_promotional: 0 })
+    output.close()
+  })
+
   test("materializes a stock snapshot with zeroes for absent parts", async () => {
     const { sourcePath, outputPath } = await createSourceDatabase()
     const source = new Database(sourcePath)
