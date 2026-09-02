@@ -43,6 +43,7 @@ run_wrangler d1 execute "$DB_NAME" --remote --command \
      price1 REAL,
      basic INTEGER,
      preferred INTEGER,
+     is_extended_promotional INTEGER,
      category TEXT,
      subcategory TEXT,
      manufacturer_name TEXT,
@@ -102,6 +103,7 @@ SELECT
   END AS price1,
   basic,
   preferred,
+  CASE WHEN basic != 1 AND preferred = 1 THEN 1 ELSE 0 END AS is_extended_promotional,
   category,
   subcategory,
   CASE
@@ -144,7 +146,8 @@ run_wrangler d1 execute "$DB_NAME" --remote --command \
    CREATE INDEX IF NOT EXISTS idx_search_index_next_lcsc ON search_index_next(lcsc);
    CREATE INDEX IF NOT EXISTS idx_search_index_next_package ON search_index_next(package);
    CREATE INDEX IF NOT EXISTS idx_search_index_next_basic ON search_index_next(basic);
-   CREATE INDEX IF NOT EXISTS idx_search_index_next_preferred ON search_index_next(preferred);"
+   CREATE INDEX IF NOT EXISTS idx_search_index_next_preferred ON search_index_next(preferred);
+CREATE INDEX IF NOT EXISTS idx_search_index_next_is_extended_promotional ON search_index_next(is_extended_promotional);"
 
 echo "Validating row count..."
 run_wrangler d1 execute "$DB_NAME" --remote --command \

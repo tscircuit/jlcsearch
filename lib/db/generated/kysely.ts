@@ -258,6 +258,7 @@ export interface Category {
 export interface Component {
   basic: number;
   category_id: number;
+  is_extended_promotional: number;
   datasheet: string;
   description: string;
   extra: string | null;
@@ -1032,6 +1033,7 @@ export interface VComponent {
   basic: number | null;
   category: string | null;
   category_id: number | null;
+  is_extended_promotional: number | null;
   datasheet: string | null;
   description: string | null;
   extra: string | null;

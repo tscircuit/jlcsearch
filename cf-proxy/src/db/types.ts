@@ -235,6 +235,7 @@ export interface ComponentCatalog {
   mfr: string | null
   package: string | null
   preferred: number | null
+  is_extended_promotional: number | null
   price: string | null
   stock: number | null
   subcategory: string | null
@@ -850,6 +851,7 @@ export interface Relay {
 export interface SearchIndex {
   attributes: string | null
   basic: number | null
+  is_extended_promotional: number | null
   category: string | null
   description: string | null
   lcsc: Generated<number | null>
