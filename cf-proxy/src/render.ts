@@ -839,6 +839,8 @@ export const renderD1TablePage = (
 
   if (pathname === "/components/list") {
     pageBody += renderComponentsFilters(params)
+    pageBody +=
+      "<p>Search shows in-stock parts and exact part-number matches. A stock value of 0 means the part is currently recorded as out of stock.</p>"
     if (params.subcategory_name) {
       pageBody += `<div>Filtering by subcategory: ${escapeHtml(params.subcategory_name)}</div>`
     }

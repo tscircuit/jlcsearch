@@ -13,6 +13,11 @@ Play with it at [jlcsearch.tscircuit.com](https://jlcsearch.tscircuit.com)
 
 You can go on any page and click "json" in the top right corner to automatically convert whatever filter you've made to a JSON query.
 
+Component search (`/components/list` and `/api/search`) includes exact
+manufacturer part-number and LCSC-number matches even when their recorded stock
+is zero. Exact matches appear first; other results must be in stock. For example,
+searching `RV1103G1` or `C5307358` can identify the chip even when it is unavailable.
+
 ```bash
 curl https://jlcsearch.tscircuit.com/resistors/list.json?package=&resistance=1k
 
