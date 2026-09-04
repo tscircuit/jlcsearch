@@ -192,7 +192,8 @@ describe("buildDerivedSyncDatabase", () => {
           lcsc, mfr, category, subcategory, basic, preferred, stock,
           json_extract(extra, '$.manufacturer.name') AS manufacturer,
           json_extract(extra, '$.mpn') AS mpn,
-          json_extract(extra, '$.attributes.Gender') AS gender
+          json_extract(extra, '$.attributes.Gender') AS gender,
+          is_extended_promotional
         FROM component_catalog`,
       )
       .get() as Record<string, unknown>
@@ -204,11 +205,64 @@ describe("buildDerivedSyncDatabase", () => {
       subcategory: "HDMI Connectors",
       basic: 1,
       preferred: 1,
+      is_extended_promotional: 0,
       stock: 250,
       manufacturer: "Example Inc.",
       mpn: "HDMI-19P",
       gender: "Female",
     })
+    output.close()
+  })
+
+  test("derives is_extended_promotional for preferred non-base parts", async () => {
+    const { sourcePath, outputPath } = await createSourceDatabase()
+    const source = new Database(sourcePath)
+
+    const insertComponent = (
+      lcsc: number,
+      libraryType: string,
+      preferred: number,
+    ) =>
+      source
+        .query(
+          `INSERT INTO jlc_components (
+            lcsc, fetched_at, present, sync_seen, category, subcategory, mfr,
+            package, joints, manufacturer, library_type, preferred, last_on_stock,
+            description, datasheet, stock, price, attributes
+          ) VALUES (
+            ${lcsc}, unixepoch(), 1, 1, 'Connectors',
+            'HDMI Connectors', 'TEST-' || ${lcsc}, 'SMD', 19, 'Example', '${libraryType}',
+            ${preferred}, unixepoch(), 'HDMI test part', '', 150, '1-9:1.25,10-:0.75', '{}'
+          )`,
+        )
+        .run()
+
+    insertComponent(22222, "extended", 1)
+    insertComponent(33333, "extended", 0)
+    insertComponent(44444, "base", 1)
+    source.close()
+
+    await buildDerivedSyncDatabase({
+      sourcePath,
+      outputPath,
+      tableNames: ["hdmi_port"],
+      includeComponentCatalog: true,
+      logger: () => {},
+    })
+
+    const output = new Database(outputPath, { readonly: true })
+    const rows = output
+      .query(
+        "SELECT lcsc, is_extended_promotional FROM component_catalog ORDER BY lcsc",
+      )
+      .all() as Array<{ lcsc: number; is_extended_promotional: number }>
+
+    expect(rows).toEqual([
+      { lcsc: 12345, is_extended_promotional: 0 },
+      { lcsc: 22222, is_extended_promotional: 1 },
+      { lcsc: 33333, is_extended_promotional: 0 },
+      { lcsc: 44444, is_extended_promotional: 0 },
+    ])
     output.close()
   })
 

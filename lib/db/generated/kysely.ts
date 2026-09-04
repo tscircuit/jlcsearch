@@ -270,6 +270,7 @@ export interface Component {
   mfr: string;
   package: string;
   preferred: Generated<number>;
+  is_extended_promotional: Generated<number>;
   price: string;
   stock: number;
 }
@@ -1042,6 +1043,7 @@ export interface VComponent {
   mfr: string | null;
   package: string | null;
   preferred: number | null;
+  is_extended_promotional: number | null;
   price: string | null;
   stock: number | null;
   subcategory: string | null;
