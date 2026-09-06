@@ -581,6 +581,18 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
       is_preferred: { field: "is_preferred", type: "boolean" },
     },
   },
+  linux_capable_processor: {
+    helpText: "Application processors with documented Linux support.",
+    filters: {
+      package: { field: "package", type: "string" },
+      manufacturer: { field: "manufacturer", type: "string" },
+      chip_family: { field: "chip_family", type: "string" },
+      architecture: { field: "architecture", type: "string" },
+      cpu_core: { field: "cpu_core", type: "string" },
+      is_basic: { field: "is_basic", type: "boolean" },
+      is_preferred: { field: "is_preferred", type: "boolean" },
+    },
+  },
   fuse: {
     filters: {
       package: { field: "package", type: "string" },
@@ -781,6 +793,7 @@ export const ROUTE_TO_TABLE: Record<string, string> = {
   "/fpc_connectors/list": "fpc_connector",
   "/fpgas/list": "fpga",
   "/npu_chips/list": "npu_chip",
+  "/linux_capable_processors/list": "linux_capable_processor",
   "/fuses/list": "fuse",
   "/gas_sensors/list": "gas_sensor",
   "/hdmi_ports/list": "hdmi_port",
@@ -834,6 +847,7 @@ export const TABLE_RESPONSE_KEY: Record<string, string> = {
   fpc_connector: "fpc_connectors",
   fpga: "fpgas",
   npu_chip: "npu_chips",
+  linux_capable_processor: "linux_capable_processors",
   fuse: "fuses",
   gas_sensor: "gas_sensors",
   hdmi_port: "hdmi_ports",

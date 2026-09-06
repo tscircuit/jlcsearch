@@ -60,7 +60,7 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       SYNC_SCOPE: ${{ github.event_name == 'schedule' && 'stock_only' || inputs.sync_scope || 'derived' }}
-      DERIVED_TABLES_LIST: ${{ inputs.derived_tables || 'photo_diode,micro_usb_connector,barrel_jack,dram,npu_chip' }}
+      DERIVED_TABLES_LIST: ${{ inputs.derived_tables || 'photo_diode,micro_usb_connector,barrel_jack,dram,npu_chip,linux_capable_processor' }}
       SMOKE_TEST_LCSC: ${{ inputs.smoke_test_lcsc || '7512' }}
 
     steps:
@@ -302,6 +302,8 @@ jobs:
           if [[ -z "${CACHE_BUST_URL}" ]]; then
             if [[ "${SYNC_SCOPE}" != "derived" ]]; then
               CACHE_BUST_URL="https://jlcsearch.tscircuit.com/components/list?search=C${SMOKE_TEST_LCSC}&json=true"
+            elif [[ ",${DERIVED_TABLES_LIST}," == *",linux_capable_processor,"* ]]; then
+              CACHE_BUST_URL="https://jlcsearch.tscircuit.com/linux_capable_processors/list.json"
             elif [[ ",${DERIVED_TABLES_LIST}," == *",npu_chip,"* ]]; then
               CACHE_BUST_URL="https://jlcsearch.tscircuit.com/npu_chips/list.json"
             elif [[ ",${DERIVED_TABLES_LIST}," == *",barrel_jack,"* ]]; then

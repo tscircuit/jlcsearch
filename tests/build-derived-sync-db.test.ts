@@ -161,6 +161,51 @@ describe("buildDerivedSyncDatabase", () => {
     output.close()
   })
 
+  test("builds Linux-capable processors from source-db-v2 manufacturer metadata", async () => {
+    const { sourcePath, outputPath } = await createSourceDatabase()
+    const source = new Database(sourcePath)
+    source.exec(`
+      DELETE FROM lcsc_components;
+      UPDATE jlc_components SET
+        category = 'Embedded Processors & Controllers',
+        subcategory = 'Microcontrollers (MCU/MPU/SOC)',
+        mfr = 'STM32MP157AAC3', manufacturer = 'STMicroelectronics',
+        package = 'LFBGA-361', description = 'Arm Cortex-A7 microprocessor',
+        attributes = '{}';
+    `)
+    source.close()
+
+    await buildDerivedSyncDatabase({
+      sourcePath,
+      outputPath,
+      tableNames: ["linux_capable_processor"],
+      logger: () => {},
+    })
+
+    const output = new Database(outputPath, { readonly: true })
+    try {
+      expect(
+        output
+          .query(
+            `SELECT mfr, manufacturer, architecture, package, stock,
+              price1, is_basic, is_preferred FROM linux_capable_processor`,
+          )
+          .get(),
+      ).toEqual({
+        mfr: "STM32MP157AAC3",
+        manufacturer: "STMicroelectronics",
+        architecture: "ARM32",
+        package: "LFBGA-361",
+        stock: 250,
+        price1: 1.25,
+        is_basic: 1,
+        is_preferred: 1,
+      })
+    } finally {
+      output.close()
+    }
+  })
+
   test("rejects unknown derived tables", async () => {
     const { sourcePath, outputPath } = await createSourceDatabase()
 

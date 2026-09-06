@@ -22,6 +22,63 @@ describe("render helpers", () => {
     expect(html).toContain("/hdmi_ports/list")
     expect(html).toContain("/photo_diodes/list")
     expect(html).toContain("/npu_chips/list")
+    expect(html).toContain("/linux_capable_processors/list")
+    expect(html).toContain("Linux-capable Processors")
+  })
+
+  it("renders the Linux-capable Processors page, filters, and JSON API link", () => {
+    const pathname = "/linux_capable_processors/list"
+
+    expect(D1_ROUTES).toContain(pathname)
+    expect(getD1Handler(pathname)).toBeTypeOf("function")
+
+    const html = renderD1TablePage(
+      pathname,
+      {
+        linux_capable_processors: [
+          {
+            lcsc: 5_156_490,
+            mfr: "RK3588",
+            package: "FCBGA-1088",
+            manufacturer: "Rockchip",
+            chip_family: "Rockchip RK3588",
+            architecture: "ARM64",
+            cpu_core: "Cortex-A76 + Cortex-A55",
+            stock: 100,
+          },
+        ],
+      },
+      {
+        package: "FCBGA-1088",
+        manufacturer: "Rockchip",
+        chip_family: "Rockchip RK3588",
+        architecture: "ARM64",
+        cpu_core: "Cortex-A76 + Cortex-A55",
+        is_preferred: "true",
+      },
+      "https://jlcsearch.tscircuit.com/linux_capable_processors/list?manufacturer=Rockchip&architecture=ARM64",
+      { architecture: ["ARM32", "ARM64", "RISC-V64"] },
+    )
+
+    expect(html).toContain("<h2>Linux-capable Processors</h2>")
+    expect(html).toContain('name="package" value="FCBGA-1088"')
+    expect(html).toContain('name="manufacturer" value="Rockchip"')
+    expect(html).toContain('name="chip_family" value="Rockchip RK3588"')
+    expect(html).toContain('name="architecture" value="ARM64"')
+    expect(html).toContain('name="cpu_core" value="Cortex-A76 + Cortex-A55"')
+    expect(html).toContain('name="is_basic"')
+    expect(html).toContain('name="is_preferred"')
+    expect(html).toContain('<option value="true" selected>Yes</option>')
+    expect(html).toContain('<option value="ARM32">')
+    expect(html).toContain('<option value="RISC-V64">')
+    expect(html).toContain(">Architecture</th>")
+    expect(html).toContain("Cortex-A76 + Cortex-A55")
+    expect(html).toContain(
+      "Application processors with documented Linux support.",
+    )
+    expect(html).toContain(
+      "/linux_capable_processors/list.json?manufacturer=Rockchip&amp;architecture=ARM64",
+    )
   })
 
   it("renders the NPU chip page and JSON API link", () => {

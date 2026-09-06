@@ -55,6 +55,7 @@ const routeLabels: Record<string, string> = {
   "/microcontrollers/list": "Microcontrollers",
   "/arm_processors/list": "ARM Processors",
   "/risc_v_processors/list": "RISC-V Processors",
+  "/linux_capable_processors/list": "Linux-capable Processors",
   "/fpgas/list": "FPGAs & CPLDs",
   "/npu_chips/list": "NPU Chips",
   "/voltage_regulators/list": "Voltage Regulators",

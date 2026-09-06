@@ -54,6 +54,7 @@ DERIVED_TABLES=(
   led_driver
   led_segment_display
   led_with_ic
+  linux_capable_processor
   microcontroller
   micro_usb_connector
   mosfet
