@@ -60,6 +60,19 @@ export const buildDerivedSyncDatabase = async ({
     )
   }
 
+  const sourceHasPreferred = Boolean(
+    database
+      .query(
+        "SELECT 1 FROM source.pragma_table_info('jlc_components') WHERE name = 'preferred'",
+      )
+      .get(),
+  )
+  const preferred = sourceHasPreferred ? "j.preferred" : "0"
+  // The source normalizes Extended to "expand". Unknown types fail closed.
+  const promotional = sourceHasPreferred
+    ? "CASE WHEN j.preferred = 1 AND j.library_type = 'expand' THEN 1 ELSE 0 END"
+    : "0"
+
   database.exec(`
     CREATE TABLE categories (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -84,7 +97,8 @@ export const buildDerivedSyncDatabase = async ({
       j.joints,
       0 AS manufacturer_id,
       CASE WHEN j.library_type = 'base' THEN 1 ELSE 0 END AS basic,
-      j.preferred,
+      ${preferred} AS preferred,
+      ${promotional} AS is_extended_promotional,
       j.description,
       j.datasheet,
       j.stock,
@@ -138,7 +152,8 @@ export const buildDerivedSyncDatabase = async ({
         j.mfr,
         j.package,
         CASE WHEN j.library_type = 'base' THEN 1 ELSE 0 END AS basic,
-        j.preferred,
+        ${preferred} AS preferred,
+        ${promotional} AS is_extended_promotional,
         j.description,
         j.stock,
         j.price,
@@ -192,14 +207,16 @@ export const buildDerivedSyncDatabase = async ({
     database.exec(`
       CREATE TABLE component_stock (
         lcsc INTEGER PRIMARY KEY,
-        stock INTEGER NOT NULL
+        stock INTEGER NOT NULL,
+        is_extended_promotional INTEGER NOT NULL
       );
 
-      INSERT INTO component_stock(lcsc, stock)
+      INSERT INTO component_stock(lcsc, stock, is_extended_promotional)
       SELECT
         lcsc,
-        CASE WHEN present = 1 THEN coalesce(stock, 0) ELSE 0 END
-      FROM source.jlc_components
+        CASE WHEN present = 1 THEN coalesce(stock, 0) ELSE 0 END,
+        CASE WHEN present = 1 THEN ${promotional} ELSE 0 END
+      FROM source.jlc_components AS j
       WHERE last_on_stock >= unixepoch('now', '-1 year');
     `)
   }
@@ -217,6 +234,8 @@ export const buildDerivedSyncDatabase = async ({
     database.exec("ANALYZE")
   } finally {
     await db.destroy()
+    // Kysely initializes lazily; catalog/stock-only builds may never acquire it.
+    database.close()
   }
 }
 

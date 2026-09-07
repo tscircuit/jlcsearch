@@ -25,6 +25,55 @@ afterEach(async () => {
 })
 
 describe("stock sync SQL generation", () => {
+  test("writes current promotional status from daily snapshots", async () => {
+    const directory = await createTempDirectory()
+    const sourcePath = path.join(directory, "source.sqlite3")
+    const source = new Database(sourcePath)
+    source.exec(
+      "CREATE TABLE component_stock(lcsc INTEGER, stock INTEGER, is_extended_promotional INTEGER); INSERT INTO component_stock VALUES (1,10,0),(2,20,1)",
+    )
+    source.close()
+    const outputDirectory = path.join(directory, "batches")
+    await writeStockSyncBatches({ sourcePath, outputDirectory, batchSize: 1 })
+    const target = new Database(":memory:")
+    for (const table of ["component_catalog", "search_index"])
+      target.exec(
+        `CREATE TABLE ${table}(lcsc INTEGER, stock INTEGER, is_extended_promotional INTEGER); INSERT INTO ${table} VALUES (1,10,1),(2,20,0)`,
+      )
+    for (const file of (await readdir(outputDirectory)).sort())
+      target.exec(await readFile(path.join(outputDirectory, file), "utf8"))
+    for (const table of ["component_catalog", "search_index"])
+      expect(
+        target
+          .query(
+            `SELECT is_extended_promotional AS flag FROM ${table} ORDER BY lcsc`,
+          )
+          .all(),
+      ).toEqual([{ flag: 0 }, { flag: 1 }])
+    target.close()
+  })
+
+  test("validates status and keeps full daily batches below D1 query size", () => {
+    const rows = Array.from({ length: 1000 }, (_, i) => ({
+      lcsc: i + 1,
+      stock: 100,
+      is_extended_promotional: i % 2,
+    }))
+    for (const statement of createStockSyncBatchSql(rows).split(";"))
+      expect(new TextEncoder().encode(statement).length).toBeLessThan(100_000)
+    expect(() =>
+      createStockSyncBatchSql([
+        { lcsc: 1, stock: 10, is_extended_promotional: 2 },
+      ]),
+    ).toThrow("must be 0 or 1")
+    expect(() =>
+      createStockSyncBatchSql([
+        { lcsc: 1, stock: 10, is_extended_promotional: 1 },
+        { lcsc: 2, stock: 10 },
+      ]),
+    ).toThrow("consistently")
+  })
+
   test("updates only changed stock in existing catalog and search rows", async () => {
     const directory = await createTempDirectory()
     const sourcePath = path.join(directory, "source.sqlite3")

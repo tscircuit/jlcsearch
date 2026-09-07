@@ -22,6 +22,8 @@ afterEach(() => {
   }
 
   if (tempDir) {
+    // Release finalized SQLite statements before Windows removes the file.
+    Bun.gc(true)
     rmSync(tempDir, { recursive: true, force: true })
     tempDir = undefined
   }

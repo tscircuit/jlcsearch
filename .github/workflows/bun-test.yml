@@ -37,5 +37,9 @@ jobs:
       - name: Install Cloudflare proxy dependencies
         run: bun install --cwd cf-proxy --frozen-lockfile
 
-      - name: Run tests
-        run: bun test
+      - name: Run database pipeline tests
+        run: bun test tests
+
+      - name: Run worker tests in the Cloudflare runtime
+        working-directory: cf-proxy
+        run: bun run test
