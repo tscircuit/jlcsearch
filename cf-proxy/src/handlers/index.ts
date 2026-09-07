@@ -1,5 +1,9 @@
 import { Kysely, sql, type RawBuilder } from "kysely"
 import type { DB } from "../db/types"
+import {
+  catalogPromotionalStatus,
+  parsePromotionalFilter,
+} from "../promotional-status"
 
 export type QueryParams = Record<string, string>
 
@@ -90,6 +94,21 @@ export async function queryTable(
 
   // Build WHERE conditions using Kysely's sql template tag for safe parameterization
   const conditions: RawBuilder<unknown>[] = []
+  const promotionalFilter = parsePromotionalFilter(
+    params.is_extended_promotional,
+  )
+  // A positive filter may use an inner join: missing catalog records cannot
+  // match. This avoids evaluating the same scalar lookup in WHERE and SELECT.
+  // Leave negative/unfiltered queries unchanged so missing records remain.
+  const positivePromotion = promotionalFilter === 1
+  const promotionalStatus = positivePromotion
+    ? sql<number>`${sql.id("promotional_catalog", "is_extended_promotional")}`
+    : catalogPromotionalStatus(tableName)
+  const categoryColumn = (field: string) =>
+    positivePromotion ? sql.id(tableName, field) : sql.id(field)
+  if (promotionalFilter !== undefined) {
+    conditions.push(sql`${promotionalStatus} = ${promotionalFilter}`)
+  }
 
   // Apply filters based on config
   for (const [paramName, fieldConfig] of Object.entries(config.filters)) {
@@ -111,7 +130,7 @@ export async function queryTable(
     }
 
     // Use sql.id for column names to prevent injection
-    const column = sql.id(field)
+    const column = categoryColumn(field)
 
     if (type === "string") {
       if (operator === "=") {
@@ -154,9 +173,9 @@ export async function queryTable(
           throw new Error(`Missing maxField for range filter: ${paramName}`)
         }
 
-        const maxColumn = sql.id(maxField)
+        const maxColumn = categoryColumn(maxField)
         if (fallbackField) {
-          const fallbackColumn = sql.id(fallbackField)
+          const fallbackColumn = categoryColumn(fallbackField)
           conditions.push(sql`(
             (${column} IS NOT NULL AND ${maxColumn} IS NOT NULL
               AND ${column} <= ${numValue} AND ${maxColumn} >= ${numValue})
@@ -195,21 +214,26 @@ export async function queryTable(
 
   // Build the final query
   const table = sql.id(tableName)
+  const from = positivePromotion
+    ? sql`${table} INNER JOIN component_catalog AS promotional_catalog ON promotional_catalog.lcsc = ${sql.id(tableName, "lcsc")}`
+    : table
+  const selection = positivePromotion ? sql`${table}.*` : sql`*`
+  const stockColumn = positivePromotion ? categoryColumn("stock") : sql`stock`
   const targetSortValue = config.targetSort
     ? parseFloat(params[config.targetSort.param] ?? "")
     : Number.NaN
   const orderBy =
     config.targetSort && Number.isFinite(targetSortValue)
-      ? sql`${sql.id(config.targetSort.field)} IS NULL ASC, ABS(${sql.id(config.targetSort.field)} - ${targetSortValue}) ASC, stock DESC`
-      : sql`stock DESC`
+      ? sql`${categoryColumn(config.targetSort.field)} IS NULL ASC, ABS(${categoryColumn(config.targetSort.field)} - ${targetSortValue}) ASC, ${stockColumn} DESC`
+      : sql`${stockColumn} DESC`
   let query: RawBuilder<unknown>
 
   if (conditions.length === 0) {
-    query = sql`SELECT * FROM ${table} ORDER BY ${orderBy} LIMIT 100`
+    query = sql`SELECT ${selection}, ${promotionalStatus} AS is_extended_promotional FROM ${from} ORDER BY ${orderBy} LIMIT 100`
   } else {
     // Join conditions with AND
     const whereClause = sql.join(conditions, sql` AND `)
-    query = sql`SELECT * FROM ${table} WHERE ${whereClause} ORDER BY ${orderBy} LIMIT 100`
+    query = sql`SELECT ${selection}, ${promotionalStatus} AS is_extended_promotional FROM ${from} WHERE ${whereClause} ORDER BY ${orderBy} LIMIT 100`
   }
 
   const result = await query.execute(db)

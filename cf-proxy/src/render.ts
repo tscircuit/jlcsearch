@@ -179,6 +179,7 @@ const COLUMN_LABELS: Record<string, string> = {
   in_stock: "In Stock",
   is_basic: "Basic",
   is_preferred: "Preferred",
+  is_extended_promotional: "Extended Promotional",
   capacitance_farads: "Capacitance",
   tolerance_fraction: "Tolerance",
   voltage_rating: "Voltage",
@@ -507,7 +508,7 @@ const renderCustomFilters = (
               .join("")}
           </select>
         </div>
-        <button type="submit">Filter</button>
+        <div>${renderPromotionalFilter(params)}</div><button type="submit">Filter</button>
       </form>`
     }
     case "/arm_processors/list":
@@ -545,7 +546,7 @@ const renderCustomFilters = (
               .join("")}
           </select>
         </div>
-        <button type="submit">Filter</button>
+        <div>${renderPromotionalFilter(params)}</div><button type="submit">Filter</button>
       </form>`
     }
     case "/microphones/list": {
@@ -577,7 +578,7 @@ const renderCustomFilters = (
               .join("")}
           </select>
         </div>
-        <button type="submit">Filter</button>
+        <div>${renderPromotionalFilter(params)}</div><button type="submit">Filter</button>
       </form>`
     }
     case "/lcd_drivers/list": {
@@ -613,7 +614,7 @@ const renderCustomFilters = (
         <div>
           <label>Preferred Part:<input type="checkbox" name="is_preferred" value="true"${params.is_preferred === "true" ? " checked" : ""} /></label>
         </div>
-        <button type="submit">Filter</button>
+        <div>${renderPromotionalFilter(params)}</div><button type="submit">Filter</button>
       </form>`
     }
     case "/tft_display_drivers/list": {
@@ -658,7 +659,7 @@ const renderCustomFilters = (
         <div>
           <label>Preferred Part:<input type="checkbox" name="is_preferred" value="true"${params.is_preferred === "true" ? " checked" : ""} /></label>
         </div>
-        <button type="submit">Filter</button>
+        <div>${renderPromotionalFilter(params)}</div><button type="submit">Filter</button>
       </form>`
     }
     default:
@@ -712,8 +713,11 @@ const renderGenericFilters = (
   const helpText = config.helpText
     ? `<p class="mt-2 text-sm text-gray-600">${escapeHtml(config.helpText)}</p>`
     : ""
-  return `<form method="GET" class="flex flex-row gap-4">${inputs}<button type="submit">Filter</button></form>${helpText}`
+  return `<form method="GET" class="flex flex-row gap-4">${inputs}<div>${renderPromotionalFilter(params)}</div><button type="submit">Filter</button></form>${helpText}`
 }
+
+const renderPromotionalFilter = (params: QueryParams): string =>
+  `<label title="Extended parts currently offered with basic-part assembly treatment">Extended Promotional:<select name="is_extended_promotional"><option value="">All</option><option value="true"${params.is_extended_promotional === "true" || params.is_extended_promotional === "1" ? " selected" : ""}>Yes</option><option value="false"${params.is_extended_promotional === "false" || params.is_extended_promotional === "0" ? " selected" : ""}>No</option></select></label>`
 
 const renderComponentsFilters = (
   params: QueryParams,
@@ -727,6 +731,7 @@ const renderComponentsFilters = (
   <div>
     <label>Preferred Part:<input type="checkbox" name="is_preferred" value="true"${params.is_preferred === "true" ? " checked" : ""} /></label>
   </div>
+  <div>${renderPromotionalFilter(params)}</div>
   <button type="submit">Filter</button>
 </form>`
 

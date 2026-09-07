@@ -102,10 +102,12 @@ describe("Linux-capable Processors route", () => {
       })
 
       const partsQuery = compiledQueries.find((query) =>
-        query.sql.startsWith('SELECT * FROM "linux_capable_processor"'),
+        query.sql.includes(
+          'AS is_extended_promotional FROM "linux_capable_processor"',
+        ),
       )
-      expect(partsQuery?.sql).toBe(
-        'SELECT * FROM "linux_capable_processor" WHERE "package" = ? AND "manufacturer" = ? AND "chip_family" = ? AND "architecture" = ? AND "cpu_core" = ? AND "is_basic" = ? AND "is_preferred" = ? ORDER BY stock DESC LIMIT 100',
+      expect(partsQuery?.sql).toContain(
+        'AS is_extended_promotional FROM "linux_capable_processor" WHERE "package" = ? AND "manufacturer" = ? AND "chip_family" = ? AND "architecture" = ? AND "cpu_core" = ? AND "is_basic" = ? AND "is_preferred" = ? ORDER BY stock DESC LIMIT 100',
       )
       expect(partsQuery?.parameters).toEqual([
         "FCBGA-1088",
@@ -120,10 +122,12 @@ describe("Linux-capable Processors route", () => {
       compiledQueries.length = 0
       await handler!(db, { architecture: "All", manufacturer: "" })
       const unfilteredQuery = compiledQueries.find((query) =>
-        query.sql.startsWith('SELECT * FROM "linux_capable_processor"'),
+        query.sql.includes(
+          'AS is_extended_promotional FROM "linux_capable_processor"',
+        ),
       )
-      expect(unfilteredQuery?.sql).toBe(
-        'SELECT * FROM "linux_capable_processor" ORDER BY stock DESC LIMIT 100',
+      expect(unfilteredQuery?.sql).toContain(
+        'AS is_extended_promotional FROM "linux_capable_processor" ORDER BY stock DESC LIMIT 100',
       )
       expect(unfilteredQuery?.parameters).toEqual([])
     } finally {
@@ -143,7 +147,11 @@ describe("Linux-capable Processors route", () => {
             const optionField = optionFields.find((field) =>
               sql.includes(`CAST("${field}" AS TEXT) AS value`),
             )
-            if (sql.startsWith('SELECT * FROM "linux_capable_processor"')) {
+            if (
+              sql.includes(
+                'AS is_extended_promotional FROM "linux_capable_processor"',
+              )
+            ) {
               partsQueries.push({ sql, parameters })
             }
             return {

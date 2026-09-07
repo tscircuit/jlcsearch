@@ -1,6 +1,10 @@
 import type { Kysely } from "kysely"
 import type { DB } from "./db/types"
 import {
+  catalogPromotionalStatus,
+  parsePromotionalFilter,
+} from "./promotional-status"
+import {
   createDisplayDriverMaxResolutionResolver,
   getDisplayDriverMaxResolutionOptions,
 } from "./display-driver-resolution"
@@ -87,8 +91,23 @@ const getMicrocontrollerListHandler = (
     let query = db
       .selectFrom("microcontroller")
       .selectAll()
+      .select(
+        catalogPromotionalStatus("microcontroller").as(
+          "is_extended_promotional",
+        ),
+      )
       .limit(100)
       .orderBy("stock", "desc")
+
+    const promotionalFilter = parsePromotionalFilter(
+      params.is_extended_promotional,
+    )
+    if (promotionalFilter !== undefined)
+      query = query.where(
+        catalogPromotionalStatus("microcontroller"),
+        "=",
+        promotionalFilter,
+      )
 
     query =
       coreFilter === "ARM%"
@@ -159,6 +178,7 @@ const getMicrocontrollerListHandler = (
           mfr: m.mfr ?? "",
           package: m.package ?? "",
           cpu_core: m.cpu_core ?? "",
+          is_extended_promotional: Boolean(m.is_extended_promotional),
           cpu_speed_hz: m.cpu_speed_hz ?? 0,
           flash_size_bytes: m.flash_size_bytes ?? 0,
           ram_size_bytes: m.ram_size_bytes ?? 0,
@@ -182,9 +202,24 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
     let query = db
       .selectFrom("analog_multiplexer")
       .selectAll()
+      .select(
+        catalogPromotionalStatus("analog_multiplexer").as(
+          "is_extended_promotional",
+        ),
+      )
       .where("num_channels", "<=", 2)
       .limit(100)
       .orderBy("stock", "desc")
+
+    const promotionalFilter = parsePromotionalFilter(
+      params.is_extended_promotional,
+    )
+    if (promotionalFilter !== undefined)
+      query = query.where(
+        catalogPromotionalStatus("analog_multiplexer"),
+        "=",
+        promotionalFilter,
+      )
 
     if (params.package) {
       query = query.where("package", "=", params.package)
@@ -233,6 +268,7 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
           mfr: m.mfr ?? "",
           package: m.package ?? "",
           num_channels: m.num_channels ?? 0,
+          is_extended_promotional: Boolean(m.is_extended_promotional),
           on_resistance_ohms: m.on_resistance_ohms ?? 0,
           supply_voltage_min: m.supply_voltage_min ?? 0,
           supply_voltage_max: m.supply_voltage_max ?? 0,
@@ -267,6 +303,7 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
         "stock",
         "price",
         "subcategory",
+        "is_extended_promotional",
       ])
       .where("stock", ">", 0)
       .where("subcategory", "in", [...MICROPHONE_SUBCATEGORIES])
@@ -280,6 +317,11 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
     if (params.microphone_type && params.microphone_type !== "all") {
       query = query.where("subcategory", "=", params.microphone_type)
     }
+    const promotionalFilter = parsePromotionalFilter(
+      params.is_extended_promotional,
+    )
+    if (promotionalFilter !== undefined)
+      query = query.where("is_extended_promotional", "=", promotionalFilter)
 
     const [packages, microphones] = await Promise.all([
       db
@@ -309,6 +351,7 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
             mfr: m.mfr ?? "",
             package: m.package ?? "",
             microphone_type: m.subcategory ?? "",
+            is_extended_promotional: Boolean(m.is_extended_promotional),
             description: m.description ?? "",
             stock: m.stock ?? 0,
             price1: extractSmallQuantityPrice(m.price),
@@ -329,6 +372,7 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
         "price",
         "basic",
         "preferred",
+        "is_extended_promotional",
         "extra",
       ])
       .where("stock", ">", 0)
@@ -345,6 +389,18 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
 
     if (params.is_preferred === "true" || params.is_preferred === "1") {
       query = query.where("preferred", "=", 1)
+    }
+    if (
+      ["true", "1", "false", "0"].includes(params.is_extended_promotional ?? "")
+    ) {
+      query = query.where(
+        "is_extended_promotional",
+        "=",
+        params.is_extended_promotional === "true" ||
+          params.is_extended_promotional === "1"
+          ? 1
+          : 0,
+      )
     }
 
     const [packages, resolutionSources, lcdDrivers] = await Promise.all([
@@ -391,6 +447,7 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
             description: driver.description ?? "",
             is_basic: Boolean(driver.basic),
             is_preferred: Boolean(driver.preferred),
+            is_extended_promotional: Boolean(driver.is_extended_promotional),
             stock: driver.stock ?? 0,
             price1: extractSmallQuantityPrice(driver.price),
             attributes: extractAttributes(driver.extra),
@@ -416,6 +473,7 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
         "price",
         "basic",
         "preferred",
+        "is_extended_promotional",
         "subcategory",
         "extra",
       ])
@@ -432,6 +490,18 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
 
     if (params.is_preferred === "true" || params.is_preferred === "1") {
       query = query.where("preferred", "=", 1)
+    }
+    if (
+      ["true", "1", "false", "0"].includes(params.is_extended_promotional ?? "")
+    ) {
+      query = query.where(
+        "is_extended_promotional",
+        "=",
+        params.is_extended_promotional === "true" ||
+          params.is_extended_promotional === "1"
+          ? 1
+          : 0,
+      )
     }
 
     const [packages, resolutionSources, tftDrivers] = await Promise.all([
@@ -479,6 +549,7 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
             description: driver.description ?? "",
             is_basic: Boolean(driver.basic),
             is_preferred: Boolean(driver.preferred),
+            is_extended_promotional: Boolean(driver.is_extended_promotional),
             stock: driver.stock ?? 0,
             price1: extractSmallQuantityPrice(driver.price),
             attributes: extractAttributes(driver.extra),

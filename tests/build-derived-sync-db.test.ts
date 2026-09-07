@@ -27,8 +27,8 @@ const createSourceDatabase = async () => {
       package TEXT NOT NULL,
       joints INTEGER NOT NULL,
       manufacturer TEXT NOT NULL,
-      library_type TEXT NOT NULL,
-      preferred INTEGER NOT NULL,
+      library_type TEXT,
+      preferred INTEGER,
       last_on_stock INTEGER NOT NULL,
       description TEXT NOT NULL,
       datasheet TEXT NOT NULL,
@@ -80,6 +80,7 @@ const createSourceDatabase = async () => {
 }
 
 afterEach(async () => {
+  Bun.gc(true)
   await Promise.all(
     tempDirectories
       .splice(0)
@@ -88,6 +89,71 @@ afterEach(async () => {
 })
 
 describe("buildDerivedSyncDatabase", () => {
+  test.each([
+    ["base", 1, 0],
+    ["base", 0, 0],
+    ["expand", 1, 1],
+    ["expand", 0, 0],
+    ["expand", null, 0],
+    ["unexpected", 1, 0],
+    [null, 1, 0],
+  ])(
+    "derives catalog and daily status for library=%s preferred=%s",
+    async (library, preferred, expected) => {
+      const { sourcePath, outputPath } = await createSourceDatabase()
+      const source = new Database(sourcePath)
+      source.run("UPDATE jlc_components SET library_type = ?, preferred = ?", [
+        library,
+        preferred,
+      ])
+      source.close()
+      await buildDerivedSyncDatabase({
+        sourcePath,
+        outputPath,
+        tableNames: [],
+        includeComponentCatalog: true,
+        includeStockSnapshot: true,
+        logger: () => {},
+      })
+      const output = new Database(outputPath)
+      for (const table of ["component_catalog", "component_stock"]) {
+        expect(
+          output
+            .query(`SELECT is_extended_promotional AS value FROM ${table}`)
+            .get(),
+        ).toEqual({ value: expected })
+      }
+      output.close()
+    },
+  )
+
+  test("missing preferred fails closed for catalog and daily refresh", async () => {
+    const { sourcePath, outputPath } = await createSourceDatabase()
+    const source = new Database(sourcePath)
+    source.exec("ALTER TABLE jlc_components DROP COLUMN preferred")
+    source.close()
+    await buildDerivedSyncDatabase({
+      sourcePath,
+      outputPath,
+      tableNames: [],
+      includeComponentCatalog: true,
+      includeStockSnapshot: true,
+      logger: () => {},
+    })
+    const output = new Database(outputPath)
+    expect(
+      output
+        .query(
+          "SELECT preferred, is_extended_promotional FROM component_catalog",
+        )
+        .get(),
+    ).toEqual({ preferred: 0, is_extended_promotional: 0 })
+    expect(
+      output.query("SELECT is_extended_promotional FROM component_stock").get(),
+    ).toEqual({ is_extended_promotional: 0 })
+    output.close()
+  })
+
   test("converts source-db-v2 rows into a populated HDMI derived table", async () => {
     const { sourcePath, outputPath } = await createSourceDatabase()
 

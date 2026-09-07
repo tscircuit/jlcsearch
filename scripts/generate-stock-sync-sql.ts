@@ -6,6 +6,7 @@ import path from "node:path"
 interface StockRow {
   lcsc: number
   stock: number | null
+  is_extended_promotional?: number
 }
 
 interface CatalogStats {
@@ -28,19 +29,37 @@ const createStockUpdateStatement = (
   table: (typeof STOCK_TABLES)[number],
   rows: StockRow[],
 ) => {
-  const values = rows
-    .map(
-      ({ lcsc, stock }) =>
-        `(${integerLiteral(lcsc, "lcsc")},${integerLiteral(stock, "stock")})`,
+  // Older stock snapshots can still update stock without clearing known status.
+  const includesPromotional = rows.every(
+    (row) => row.is_extended_promotional !== undefined,
+  )
+  if (
+    !includesPromotional &&
+    rows.some((row) => row.is_extended_promotional !== undefined)
+  ) {
+    throw new Error(
+      "A stock batch must consistently include promotional status",
     )
+  }
+  const values = rows
+    .map(({ lcsc, stock, is_extended_promotional }) => {
+      if (
+        includesPromotional &&
+        is_extended_promotional !== 0 &&
+        is_extended_promotional !== 1
+      ) {
+        throw new Error("is_extended_promotional must be 0 or 1")
+      }
+      return `(${integerLiteral(lcsc, "lcsc")},${integerLiteral(stock, "stock")}${includesPromotional ? `,${is_extended_promotional}` : ""})`
+    })
     .join(",")
 
-  return `WITH stock_updates(lcsc, stock) AS (VALUES ${values})
+  return `WITH stock_updates(lcsc, stock${includesPromotional ? ", is_extended_promotional" : ""}) AS (VALUES ${values})
 UPDATE ${table} AS target
-SET stock = stock_updates.stock
+SET stock = stock_updates.stock${includesPromotional ? ", is_extended_promotional = stock_updates.is_extended_promotional" : ""}
 FROM stock_updates
 WHERE target.lcsc = stock_updates.lcsc
-  AND target.stock IS NOT stock_updates.stock;`
+  AND (target.stock IS NOT stock_updates.stock${includesPromotional ? " OR target.is_extended_promotional IS NOT stock_updates.is_extended_promotional" : ""});`
 }
 
 export const createStockSyncBatchSql = (rows: StockRow[]): string => {
@@ -97,9 +116,16 @@ export const writeStockSyncBatches = async ({
       throw new Error("component_stock.lcsc must be unique and non-null")
     }
 
+    const hasPromotional = Boolean(
+      database
+        .query(
+          "SELECT 1 FROM pragma_table_info('component_stock') WHERE name = 'is_extended_promotional'",
+        )
+        .get(),
+    )
     const rows = database
       .query<StockRow, []>(
-        `SELECT lcsc, stock
+        `SELECT lcsc, stock${hasPromotional ? ", is_extended_promotional" : ""}
          FROM component_stock
          ORDER BY rowid`,
       )

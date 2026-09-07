@@ -25,6 +25,7 @@ SELECT
   END AS price1,
   basic,
   preferred,
+  is_extended_promotional,
   category,
   subcategory,
   CASE
@@ -65,4 +66,5 @@ CREATE INDEX IF NOT EXISTS idx_search_index_subcategory_stock ON search_index(su
 CREATE INDEX IF NOT EXISTS idx_search_index_basic ON search_index(basic);
 CREATE INDEX IF NOT EXISTS idx_search_index_basic_stock ON search_index(basic, stock DESC);
 CREATE INDEX IF NOT EXISTS idx_search_index_preferred ON search_index(preferred);
+CREATE INDEX IF NOT EXISTS idx_search_index_is_extended_promotional_stock ON search_index(is_extended_promotional, stock DESC);
 CREATE INDEX IF NOT EXISTS idx_search_index_preferred_stock ON search_index(preferred, stock DESC);

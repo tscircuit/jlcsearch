@@ -7,6 +7,7 @@ import { getD1Handler } from "../../cf-proxy/src/d1-routes"
 test("photo diode wavelength filter matches detection ranges", async () => {
   const database = new Database(":memory:")
   database.exec(`
+    CREATE TABLE component_catalog (lcsc INTEGER UNIQUE, is_extended_promotional INTEGER);
     CREATE TABLE photo_diode (
       lcsc INTEGER PRIMARY KEY,
       mfr TEXT,
