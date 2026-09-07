@@ -404,6 +404,14 @@ SELECT
   END AS price1,
   basic,
   preferred,
+  CASE
+    WHEN json_valid(extra) AND (
+      json_extract(extra, '$.is_extended_promotional') = 1 OR
+      json_extract(extra, '$.is_extended_promotional') = 'true' OR
+      json_extract(extra, '$.is_extended_promotional') = true
+    ) THEN 1
+    ELSE 0
+  END AS is_extended_promotional,
   category,
   subcategory,
   CASE
@@ -445,6 +453,8 @@ CREATE INDEX IF NOT EXISTS idx_search_index_basic ON search_index(basic);
 CREATE INDEX IF NOT EXISTS idx_search_index_basic_stock ON search_index(basic, stock DESC);
 CREATE INDEX IF NOT EXISTS idx_search_index_preferred ON search_index(preferred);
 CREATE INDEX IF NOT EXISTS idx_search_index_preferred_stock ON search_index(preferred, stock DESC);
+CREATE INDEX IF NOT EXISTS idx_search_index_is_extended_promotional ON search_index(is_extended_promotional);
+CREATE INDEX IF NOT EXISTS idx_search_index_is_extended_promotional_stock ON search_index(is_extended_promotional, stock DESC);
 SEARCH_INDEX_SCHEMA
 }
 
@@ -461,6 +471,7 @@ CREATE TABLE search_index (
   price1 REAL,
   basic INTEGER,
   preferred INTEGER,
+  is_extended_promotional INTEGER,
   category TEXT,
   subcategory TEXT,
   manufacturer_name TEXT,
@@ -478,6 +489,8 @@ CREATE INDEX IF NOT EXISTS idx_search_index_basic ON search_index(basic);
 CREATE INDEX IF NOT EXISTS idx_search_index_basic_stock ON search_index(basic, stock DESC);
 CREATE INDEX IF NOT EXISTS idx_search_index_preferred ON search_index(preferred);
 CREATE INDEX IF NOT EXISTS idx_search_index_preferred_stock ON search_index(preferred, stock DESC);
+CREATE INDEX IF NOT EXISTS idx_search_index_is_extended_promotional ON search_index(is_extended_promotional);
+CREATE INDEX IF NOT EXISTS idx_search_index_is_extended_promotional_stock ON search_index(is_extended_promotional, stock DESC);
 SEARCH_INDEX_SCHEMA_EXPORT
 }
 

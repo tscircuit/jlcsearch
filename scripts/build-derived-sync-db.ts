@@ -217,6 +217,7 @@ export const buildDerivedSyncDatabase = async ({
     database.exec("ANALYZE")
   } finally {
     await db.destroy()
+    database.close()
   }
 }
 
