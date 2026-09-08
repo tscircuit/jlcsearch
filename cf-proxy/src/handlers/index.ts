@@ -63,8 +63,8 @@ const isBooleanLikeField = (field: string): boolean =>
 
 const normalizeJsonRow = (
   row: Record<string, unknown>,
-): Record<string, unknown> =>
-  Object.fromEntries(
+): Record<string, unknown> => {
+  const normalized = Object.fromEntries(
     Object.entries(row).map(([key, value]) => {
       if (isBooleanLikeField(key) && (value === 0 || value === 1)) {
         return [key, Boolean(value)]
@@ -72,6 +72,14 @@ const normalizeJsonRow = (
       return [key, value]
     }),
   )
+
+  // Derived tables retain their existing preferred column; expose the clearer
+  // catalog name without inventing a value when that column is absent.
+  if (Object.hasOwn(normalized, "is_preferred")) {
+    normalized.is_extended_promotional = normalized.is_preferred
+  }
+  return normalized
+}
 
 /**
  * Generic query handler that builds a query based on table name and params.
@@ -137,6 +145,12 @@ export async function queryTable(
         }
       }
     } else if (type === "boolean") {
+      if (
+        paramName === "is_extended_promotional" &&
+        !["true", "1", "false", "0"].includes(value)
+      ) {
+        continue
+      }
       const boolValue = value === "true" || value === "1" ? 1 : 0
       conditions.push(sql`${column} = ${boolValue}`)
     } else if (type === "number_tolerance") {
@@ -257,8 +271,36 @@ export async function queryFilterOptions(
   return options
 }
 
-// Configuration for all derived tables
-export const TABLE_CONFIGS: Record<string, TableConfig> = {
+const withExtendedPromotionalFilter = (
+  configs: Record<string, TableConfig>,
+): Record<string, TableConfig> =>
+  Object.fromEntries(
+    Object.entries(configs).map(([tableName, config]) => [
+      tableName,
+      {
+        ...config,
+        paramAliases: {
+          ...config.paramAliases,
+          is_preferred: "is_extended_promotional",
+        },
+        filters: {
+          ...Object.fromEntries(
+            Object.entries(config.filters).filter(
+              ([name]) => name !== "is_preferred",
+            ),
+          ),
+          is_extended_promotional: {
+            field: "is_preferred",
+            type: "boolean",
+          },
+        },
+      },
+    ]),
+  )
+
+// Every configured derived-table spec includes is_preferred. Keep one visible
+// filter while accepting the legacy parameter through paramAliases.
+const DERIVED_TABLE_CONFIGS: Record<string, TableConfig> = {
   resistor: {
     filters: {
       package: { field: "package", type: "string" },
@@ -746,6 +788,10 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
   },
 }
 
+export const TABLE_CONFIGS = withExtendedPromotionalFilter(
+  DERIVED_TABLE_CONFIGS,
+)
+
 export function normalizeTableQueryParams(
   tableName: string,
   params: QueryParams,
@@ -757,7 +803,15 @@ export function normalizeTableQueryParams(
   for (const [alias, canonicalParam] of Object.entries(aliases)) {
     if (params[canonicalParam] === undefined && params[alias] !== undefined) {
       if (normalizedParams === params) normalizedParams = { ...params }
-      normalizedParams[canonicalParam] = params[alias]
+      const aliasValue = params[alias]
+      // The legacy category boolean parser treated any other nonempty value
+      // as false. Keep that behavior without relaxing canonical validation.
+      normalizedParams[canonicalParam] =
+        alias === "is_preferred" &&
+        canonicalParam === "is_extended_promotional" &&
+        !["", "All", "true", "1", "false", "0"].includes(aliasValue)
+          ? "false"
+          : aliasValue
     }
   }
 
