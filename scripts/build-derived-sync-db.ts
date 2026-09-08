@@ -84,7 +84,8 @@ export const buildDerivedSyncDatabase = async ({
       j.joints,
       0 AS manufacturer_id,
       CASE WHEN j.library_type = 'base' THEN 1 ELSE 0 END AS basic,
-      j.preferred,
+          j.preferred,
+          j.preferred AS is_extended_promotional,
       j.description,
       j.datasheet,
       j.stock,
@@ -192,13 +193,15 @@ export const buildDerivedSyncDatabase = async ({
     database.exec(`
       CREATE TABLE component_stock (
         lcsc INTEGER PRIMARY KEY,
-        stock INTEGER NOT NULL
+        stock INTEGER NOT NULL,
+        preferred INTEGER NOT NULL
       );
 
-      INSERT INTO component_stock(lcsc, stock)
+      INSERT INTO component_stock(lcsc, stock, preferred)
       SELECT
         lcsc,
-        CASE WHEN present = 1 THEN coalesce(stock, 0) ELSE 0 END
+        CASE WHEN present = 1 THEN coalesce(stock, 0) ELSE 0 END,
+        CASE WHEN present = 1 THEN preferred ELSE 0 END
       FROM source.jlc_components
       WHERE last_on_stock >= unixepoch('now', '-1 year');
     `)

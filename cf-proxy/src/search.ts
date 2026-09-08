@@ -9,6 +9,21 @@ export interface SearchQueryParams {
   limit?: string
   is_basic?: string
   is_preferred?: string
+  is_extended_promotional?: string
+}
+
+export const getExtendedPromotionalFilter = (
+  params: Pick<SearchQueryParams, "is_extended_promotional" | "is_preferred">,
+): 0 | 1 | undefined => {
+  // An explicit canonical value wins, including an empty (All) selection.
+  if (params.is_extended_promotional !== undefined) {
+    if (["true", "1"].includes(params.is_extended_promotional)) return 1
+    if (["false", "0"].includes(params.is_extended_promotional)) return 0
+    return undefined
+  }
+  // Preserve the legacy search filter: false/0 previously meant no filter.
+  if (params.is_preferred === "true" || params.is_preferred === "1") return 1
+  return undefined
 }
 
 interface SearchRow {
@@ -106,8 +121,14 @@ export async function searchIndex(
     conditions.push(sql`search_index.basic = 1`)
   }
 
-  if (params.is_preferred === "true" || params.is_preferred === "1") {
-    conditions.push(sql`search_index.preferred = 1`)
+  const promotionalFilter = getExtendedPromotionalFilter(params)
+  if (promotionalFilter === 0) {
+    // Search responses serialize a missing preferred value as false.
+    conditions.push(
+      sql`(search_index.preferred = ${0} OR search_index.preferred IS NULL)`,
+    )
+  } else if (promotionalFilter !== undefined) {
+    conditions.push(sql`search_index.preferred = ${promotionalFilter}`)
   }
 
   const raw = params.q?.trim()
