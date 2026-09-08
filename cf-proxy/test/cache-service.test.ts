@@ -1,6 +1,12 @@
 import { beforeEach, describe, expect, it } from "vitest"
-import { type CacheMetadata, isFresh, isUsableStale } from "../src/cache-entry"
+import {
+  type CacheMetadata,
+  createMetadata,
+  isFresh,
+  isUsableStale,
+} from "../src/cache-entry"
 import { CacheService } from "../src/cache-service"
+import { normalizeUrl } from "../src/cache-key"
 import { createTestEnv } from "./test-env"
 
 describe("isFresh", () => {
@@ -56,6 +62,34 @@ describe("CacheService", () => {
   })
 
   describe("get/put", () => {
+    it("ignores fresh pre-promotional KV entries and caches the new response separately", async () => {
+      const env = createTestEnv()
+      const versionedCache = new CacheService(env.CACHE_KV)
+      const url = new URL("https://example.com/components/list.json")
+      // Exact previous key format: SHA-256 of normalized URL without a version.
+      const digest = await crypto.subtle.digest(
+        "SHA-256",
+        new TextEncoder().encode(normalizeUrl(url)),
+      )
+      const oldKey = Array.from(new Uint8Array(digest), (byte) =>
+        byte.toString(16).padStart(2, "0"),
+      ).join("")
+      const oldResponse = new Response('{"components":[{"is_preferred":true}]}')
+      await env.CACHE_KV.put(oldKey, await oldResponse.clone().text(), {
+        metadata: createMetadata(oldResponse),
+      })
+
+      expect(await versionedCache.get(url)).toEqual({ type: "miss" })
+      const newBody =
+        '{"components":[{"is_preferred":true,"is_extended_promotional":true}]}'
+      await versionedCache.put(url, new Response(newBody))
+      const current = await versionedCache.get(url)
+      expect(current.type).toBe("fresh")
+      if (current.type !== "miss") expect(current.entry.body).toBe(newBody)
+      await versionedCache.delete(url)
+      expect(await versionedCache.get(url)).toEqual({ type: "miss" })
+    })
+
     it("returns miss for uncached URL", async () => {
       const url = new URL("https://example.com/uncached")
       const result = await cache.get(url)
