@@ -347,13 +347,6 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
       query = query.where("preferred", "=", 1)
     }
 
-    if (
-      params.is_extended_promotional === "true" ||
-      params.is_extended_promotional === "1"
-    ) {
-      query = query.where("is_extended_promotional", "=", 1)
-    }
-
     const [packages, resolutionSources, lcdDrivers] = await Promise.all([
       db
         .selectFrom("component_catalog")
@@ -398,7 +391,6 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
             description: driver.description ?? "",
             is_basic: Boolean(driver.basic),
             is_preferred: Boolean(driver.preferred),
-            is_extended_promotional: Boolean(driver.is_extended_promotional),
             stock: driver.stock ?? 0,
             price1: extractSmallQuantityPrice(driver.price),
             attributes: extractAttributes(driver.extra),
@@ -440,13 +432,6 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
 
     if (params.is_preferred === "true" || params.is_preferred === "1") {
       query = query.where("preferred", "=", 1)
-    }
-
-    if (
-      params.is_extended_promotional === "true" ||
-      params.is_extended_promotional === "1"
-    ) {
-      query = query.where("is_extended_promotional", "=", 1)
     }
 
     const [packages, resolutionSources, tftDrivers] = await Promise.all([
@@ -494,7 +479,6 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
             description: driver.description ?? "",
             is_basic: Boolean(driver.basic),
             is_preferred: Boolean(driver.preferred),
-            is_extended_promotional: Boolean(driver.is_extended_promotional),
             stock: driver.stock ?? 0,
             price1: extractSmallQuantityPrice(driver.price),
             attributes: extractAttributes(driver.extra),
