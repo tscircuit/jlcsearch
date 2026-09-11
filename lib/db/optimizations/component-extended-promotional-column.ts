@@ -13,7 +13,9 @@ export const componentExtendedPromotionalColumn: DbOptimizationSpec = {
       return rows.some((row: any) => row.name === "is_extended_promotional")
     }
     const result = await sql<any>`SELECT * FROM components LIMIT 1`.execute(db)
-    return Boolean(result.rows[0] && "is_extended_promotional" in result.rows[0])
+    return Boolean(
+      result.rows[0] && "is_extended_promotional" in result.rows[0],
+    )
   },
 
   async execute(db: KyselyDatabaseInstance) {

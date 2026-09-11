@@ -43,22 +43,22 @@ describe("searchIndex and componentCatalog with is_extended_promotional", () => 
       `.execute(db)
 
       // Test without filter: returns all 3
-      const allRows = await searchIndex(db, {})
+      const allRows = await searchIndex(db as any, {})
       expect(allRows.length).toBe(3)
 
       // Test with is_extended_promotional: "true"
-      const promoRowsTrue = await searchIndex(db, { is_extended_promotional: "true" })
+      const promoRowsTrue = await searchIndex(db as any, { is_extended_promotional: "true" })
       expect(promoRowsTrue.length).toBe(1)
       expect(promoRowsTrue[0].lcsc).toBe(1003)
       expect(promoRowsTrue[0].is_extended_promotional).toBe(1)
 
       // Test with is_extended_promotional: "1"
-      const promoRowsOne = await searchIndex(db, { is_extended_promotional: "1" })
+      const promoRowsOne = await searchIndex(db as any, { is_extended_promotional: "1" })
       expect(promoRowsOne.length).toBe(1)
       expect(promoRowsOne[0].lcsc).toBe(1003)
 
       // Test queryComponentCatalog
-      const catalogResult = await queryComponentCatalog(db, { is_extended_promotional: "true" })
+      const catalogResult = await queryComponentCatalog(db as any, { is_extended_promotional: "true" })
       expect(catalogResult.length).toBe(1)
       expect(catalogResult[0].lcsc).toBe(1003)
       expect(catalogResult[0].is_extended_promotional).toBe(1)
