@@ -287,6 +287,29 @@ describe("render helpers", () => {
     expect(html).toContain("$1.52")
   })
 
+  it("renders and preserves the extended promotional component filter", () => {
+    const html = renderD1TablePage(
+      "/components/list",
+      {
+        components: [
+          {
+            lcsc: 123,
+            mfr: "PROMO-PART",
+            is_extended_promotional: true,
+          },
+        ],
+      },
+      { is_extended_promotional: "true" },
+      "https://jlcsearch.tscircuit.com/components/list?is_extended_promotional=true",
+    )
+
+    expect(html).toContain('name="is_extended_promotional"')
+    expect(html).toContain(
+      'name="is_extended_promotional" value="true" checked',
+    )
+    expect(html).toContain(">Extended Promotional</th>")
+  })
+
   it("renders the Photo Diodes page and JSON API link", () => {
     const pathname = "/photo_diodes/list"
 
