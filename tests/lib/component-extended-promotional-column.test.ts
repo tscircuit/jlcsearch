@@ -96,4 +96,76 @@ describe("componentExtendedPromotionalColumn optimization", () => {
       await db.destroy()
     }
   })
+
+  test("D1 migration 0010 applies cleanly to component_catalog and search_index", async () => {
+    const database = new Database(":memory:")
+    try {
+      database.exec(`
+        CREATE TABLE component_catalog (
+          lcsc INTEGER NOT NULL UNIQUE,
+          category TEXT,
+          subcategory TEXT,
+          mfr TEXT,
+          package TEXT,
+          basic INTEGER,
+          preferred INTEGER,
+          description TEXT,
+          stock INTEGER,
+          price TEXT,
+          extra TEXT
+        );
+
+        CREATE TABLE search_index (
+          lcsc INTEGER,
+          mfr TEXT,
+          package TEXT,
+          description TEXT,
+          stock INTEGER,
+          price TEXT,
+          price1 REAL,
+          basic INTEGER,
+          preferred INTEGER,
+          category TEXT,
+          subcategory TEXT,
+          manufacturer_name TEXT,
+          title TEXT,
+          mpn TEXT,
+          attributes TEXT,
+          search_text TEXT
+        );
+      `)
+
+      const migrationSql = await Bun.file(
+        new URL("../../cf-proxy/migrations/0010_is_extended_promotional.sql", import.meta.url)
+      ).text()
+
+      database.exec(migrationSql)
+
+      // Verify columns in component_catalog
+      const catalogCols = database.prepare("PRAGMA table_info(component_catalog)").all() as Array<{ name: string }>
+      expect(catalogCols.some((col) => col.name === "is_extended_promotional")).toBe(true)
+
+      // Verify columns in search_index
+      const searchCols = database.prepare("PRAGMA table_info(search_index)").all() as Array<{ name: string }>
+      expect(searchCols.some((col) => col.name === "is_extended_promotional")).toBe(true)
+
+      // Verify indexes in sqlite_master
+      const indexes = database.prepare("SELECT name FROM sqlite_master WHERE type = 'index'").all() as Array<{ name: string }>
+      const indexNames = indexes.map((idx) => idx.name)
+      expect(indexNames).toContain("idx_component_catalog_is_extended_promotional")
+      expect(indexNames).toContain("idx_search_index_is_extended_promotional")
+      expect(indexNames).toContain("idx_search_index_is_extended_promotional_stock")
+
+      // Test inserting rows and verifying defaults
+      database.exec("INSERT INTO component_catalog (lcsc, mfr) VALUES (1, 'TEST-MFR');")
+      const catRow = database.prepare("SELECT is_extended_promotional FROM component_catalog WHERE lcsc = 1").get() as { is_extended_promotional: number }
+      expect(catRow.is_extended_promotional).toBe(0)
+
+      database.exec("INSERT INTO search_index (lcsc, stock) VALUES (1, 500);")
+      const searchRow = database.prepare("SELECT is_extended_promotional FROM search_index WHERE lcsc = 1").get() as { is_extended_promotional: number }
+      expect(searchRow.is_extended_promotional).toBe(0)
+    } finally {
+      database.close()
+    }
+  })
 })
