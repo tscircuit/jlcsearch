@@ -47,18 +47,24 @@ describe("searchIndex and componentCatalog with is_extended_promotional", () => 
       expect(allRows.length).toBe(3)
 
       // Test with is_extended_promotional: "true"
-      const promoRowsTrue = await searchIndex(db as any, { is_extended_promotional: "true" })
+      const promoRowsTrue = await searchIndex(db as any, {
+        is_extended_promotional: "true",
+      })
       expect(promoRowsTrue.length).toBe(1)
       expect(promoRowsTrue[0].lcsc).toBe(1003)
       expect(promoRowsTrue[0].is_extended_promotional).toBe(1)
 
       // Test with is_extended_promotional: "1"
-      const promoRowsOne = await searchIndex(db as any, { is_extended_promotional: "1" })
+      const promoRowsOne = await searchIndex(db as any, {
+        is_extended_promotional: "1",
+      })
       expect(promoRowsOne.length).toBe(1)
       expect(promoRowsOne[0].lcsc).toBe(1003)
 
       // Test queryComponentCatalog
-      const catalogResult = await queryComponentCatalog(db as any, { is_extended_promotional: "true" })
+      const catalogResult = await queryComponentCatalog(db as any, {
+        is_extended_promotional: "true",
+      })
       expect(catalogResult.length).toBe(1)
       expect(catalogResult[0].lcsc).toBe(1003)
       expect(catalogResult[0].is_extended_promotional).toBe(1)
@@ -101,7 +107,9 @@ describe("searchIndex and componentCatalog with is_extended_promotional", () => 
       const lcdHandler = getD1Handler("/lcd_drivers/list")
       expect(lcdHandler).not.toBeNull()
 
-      const lcdResult = await lcdHandler!(db as any, { is_extended_promotional: "true" })
+      const lcdResult = await lcdHandler!(db as any, {
+        is_extended_promotional: "true",
+      })
       const lcdList = lcdResult.data.lcd_drivers as any[]
       expect(lcdList).toHaveLength(1)
       expect(lcdList[0].lcsc).toBe(2002)
@@ -110,7 +118,9 @@ describe("searchIndex and componentCatalog with is_extended_promotional", () => 
       const tftHandler = getD1Handler("/tft_display_drivers/list")
       expect(tftHandler).not.toBeNull()
 
-      const tftResult = await tftHandler!(db as any, { is_extended_promotional: "true" })
+      const tftResult = await tftHandler!(db as any, {
+        is_extended_promotional: "true",
+      })
       const tftList = tftResult.data.tft_display_drivers as any[]
       expect(tftList).toHaveLength(1)
       expect(tftList[0].lcsc).toBe(3002)
@@ -138,6 +148,6 @@ describe("searchIndex and componentCatalog with is_extended_promotional", () => 
 
     expect(html).toContain('name="is_extended_promotional"')
     expect(html).toContain("Extended Promotional")
-    expect(html).toContain('checked')
+    expect(html).toContain("checked")
   })
 })
