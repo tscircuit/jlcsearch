@@ -27,6 +27,7 @@ const routeLabels: Record<string, string> = {
   "/barrel_jacks/list": "Barrel Jacks",
   "/dimm_connectors/list": "DIMM Connectors",
   "/drams/list": "DRAM",
+  "/psrams/list": "PSRAM",
   "/sodimm_connectors/list": "SO-DIMM Connectors",
   "/micro_usb_connectors/list": "Micro USB Connectors",
   "/usb_c_connectors/list": "USB-C Connectors",
