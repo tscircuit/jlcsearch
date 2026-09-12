@@ -227,6 +227,7 @@ export interface BuckBoostConverter {
 }
 
 export interface ComponentCatalog {
+  is_extended_promotional: number
   basic: number | null
   category: string | null
   description: string | null
@@ -865,6 +866,7 @@ export interface Relay {
 }
 
 export interface SearchIndex {
+  is_extended_promotional: number
   attributes: string | null
   basic: number | null
   category: string | null

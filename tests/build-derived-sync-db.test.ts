@@ -74,7 +74,7 @@ const createSourceDatabase = async () => {
       )`,
     )
     .run()
-  source.close()
+  source.close(true)
 
   return { sourcePath, outputPath }
 }
@@ -117,7 +117,7 @@ describe("buildDerivedSyncDatabase", () => {
       is_basic: 1,
       is_preferred: 1,
     })
-    output.close()
+    output.close(true)
   })
 
   test("uses JLC manufacturer metadata for NPU chips missing from LCSC", async () => {
@@ -137,7 +137,7 @@ describe("buildDerivedSyncDatabase", () => {
         )`,
       )
       .run()
-    source.close()
+    source.close(true)
 
     await buildDerivedSyncDatabase({
       sourcePath,
@@ -158,7 +158,7 @@ describe("buildDerivedSyncDatabase", () => {
       chip_family: "NXP i.MX 93",
       npu_name: "Arm Ethos-U65",
     })
-    output.close()
+    output.close(true)
   })
 
   test("builds Linux-capable processors from source-db-v2 manufacturer metadata", async () => {
@@ -173,7 +173,7 @@ describe("buildDerivedSyncDatabase", () => {
         package = 'LFBGA-361', description = 'Arm Cortex-A7 microprocessor',
         attributes = '{}';
     `)
-    source.close()
+    source.close(true)
 
     await buildDerivedSyncDatabase({
       sourcePath,
@@ -202,7 +202,7 @@ describe("buildDerivedSyncDatabase", () => {
         is_preferred: 1,
       })
     } finally {
-      output.close()
+      output.close(true)
     }
   })
 
@@ -227,6 +227,7 @@ describe("buildDerivedSyncDatabase", () => {
       outputPath,
       tableNames: ["hdmi_port"],
       includeComponentCatalog: true,
+      extendedPromotionalLcscNumbers: [1034],
       logger: () => {},
     })
 
@@ -254,7 +255,63 @@ describe("buildDerivedSyncDatabase", () => {
       mpn: "HDMI-19P",
       gender: "Female",
     })
-    output.close()
+    output.close(true)
+  })
+
+  test("carries real promotion membership through catalog and search rebuild", async () => {
+    const { sourcePath, outputPath } = await createSourceDatabase()
+    const source = new Database(sourcePath)
+    source.exec(`INSERT INTO jlc_components
+      SELECT 1034, fetched_at, present, sync_seen, category, subcategory, mfr,
+        package, joints, manufacturer, 'expand', 1, last_on_stock,
+        description, datasheet, stock, price, attributes FROM jlc_components LIMIT 1;
+      INSERT INTO jlc_components
+      SELECT 2000, fetched_at, present, sync_seen, category, subcategory, mfr,
+        package, joints, manufacturer, 'expand', 1, last_on_stock,
+        description, datasheet, stock, price, attributes FROM jlc_components LIMIT 1;`)
+    source.close(true)
+    await buildDerivedSyncDatabase({
+      sourcePath,
+      outputPath,
+      tableNames: ["hdmi_port"],
+      includeComponentCatalog: true,
+      extendedPromotionalLcscNumbers: [1034],
+      logger: () => {},
+    })
+    const output = new Database(outputPath)
+    try {
+      expect(
+        output
+          .query(
+            "SELECT lcsc, is_extended_promotional FROM component_catalog ORDER BY lcsc",
+          )
+          .all(),
+      ).toEqual([
+        { lcsc: 1034, is_extended_promotional: 1 },
+        { lcsc: 2000, is_extended_promotional: 0 },
+        { lcsc: 12345, is_extended_promotional: 0 },
+      ])
+    } finally {
+      output.close(true)
+    }
+  })
+
+  test("fails before overwriting output when promotion catalog is absent", async () => {
+    const { sourcePath, outputPath } = await createSourceDatabase()
+    await Bun.write(outputPath, "preserve me")
+    for (const ids of [undefined, [], [NaN], [-1]]) {
+      await expect(
+        buildDerivedSyncDatabase({
+          sourcePath,
+          outputPath,
+          tableNames: ["hdmi_port"],
+          includeComponentCatalog: true,
+          extendedPromotionalLcscNumbers: ids,
+          logger: () => {},
+        }),
+      ).rejects.toThrow("verified nonempty")
+      expect(await Bun.file(outputPath).text()).toBe("preserve me")
+    }
   })
 
   test("materializes a stock snapshot with zeroes for absent parts", async () => {
@@ -273,7 +330,7 @@ describe("buildDerivedSyncDatabase", () => {
         )`,
       )
       .run()
-    source.close()
+    source.close(true)
 
     await buildDerivedSyncDatabase({
       sourcePath,
@@ -292,7 +349,7 @@ describe("buildDerivedSyncDatabase", () => {
       { lcsc: 12345, stock: 250 },
       { lcsc: 54321, stock: 0 },
     ])
-    output.close()
+    output.close(true)
   })
 })
 
