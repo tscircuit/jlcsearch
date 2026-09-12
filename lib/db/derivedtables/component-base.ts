@@ -7,5 +7,6 @@ export interface BaseComponent {
   in_stock: boolean
   is_basic: boolean
   is_preferred: boolean
+  is_extended_promotional: boolean
   attributes: Record<string, string>
 }
