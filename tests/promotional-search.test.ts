@@ -1,8 +1,7 @@
 import { Database } from "bun:sqlite"
 import { expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
-import { Kysely } from "../cf-proxy/test/kysely-test-client"
-import { BunSqliteDialect } from "kysely-bun-sqlite"
+import { Kysely, SqliteDialect } from "../cf-proxy/test/kysely-test-client"
 import type { DB } from "../cf-proxy/src/db/types"
 import { queryComponentCatalog } from "../cf-proxy/src/components"
 import { searchIndex } from "../cf-proxy/src/search"
@@ -30,7 +29,30 @@ test("catalog rebuild, search and HTML preserve/filter promotion membership", as
     ),
   )
   const db = new Kysely<DB>({
-    dialect: new BunSqliteDialect({ database: sqlite }),
+    dialect: new SqliteDialect({
+      database: {
+        close: () => sqlite.close(true),
+        prepare: (sql) => {
+          const statement = sqlite.prepare(sql)
+          return {
+            reader: statement.columnNames.length > 0,
+            all: (parameters) =>
+              statement.all(
+                ...(parameters as Parameters<typeof statement.all>),
+              ),
+            run: (parameters) =>
+              statement.run(
+                ...(parameters as Parameters<typeof statement.run>),
+              ),
+            *iterate(parameters) {
+              yield* statement.all(
+                ...(parameters as Parameters<typeof statement.all>),
+              )
+            },
+          }
+        },
+      },
+    }),
   })
   try {
     expect(
