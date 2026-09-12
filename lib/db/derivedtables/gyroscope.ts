@@ -28,6 +28,7 @@ export const gyroscopeTableSpec: DerivedTableSpec<Gyroscope> = {
     { name: "has_uart", type: "boolean" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db
@@ -106,6 +107,7 @@ export const gyroscopeTableSpec: DerivedTableSpec<Gyroscope> = {
         in_stock: c.stock > 0,
         is_basic: Boolean(c.basic),
         is_preferred: Boolean(c.preferred),
+        is_extended_promotional: false, // TODO: Populate from JLCPCB promotional data
         package: c.package || "",
         supply_voltage_min: voltageMin,
         supply_voltage_max: voltageMax,

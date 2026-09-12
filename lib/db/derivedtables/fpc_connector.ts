@@ -20,6 +20,7 @@ export const fpcConnectorTableSpec: DerivedTableSpec<FpcConnector> = {
     { name: "locking_feature", type: "text" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   listCandidateComponents(db: KyselyDatabaseInstance) {
     return db
@@ -55,6 +56,7 @@ export const fpcConnectorTableSpec: DerivedTableSpec<FpcConnector> = {
           in_stock: Boolean((c.stock || 0) > 0),
           is_basic: Boolean(c.basic),
           is_preferred: Boolean(c.preferred),
+          is_extended_promotional: false, // TODO: Populate from JLCPCB promotional data
           pitch_mm: parseNum(attrs["Pitch"]),
           number_of_contacts: isNaN(contacts) ? null : contacts,
           contact_type: attrs["Contact Type"] || null,

@@ -37,6 +37,7 @@ export const ledTableSpec: DerivedTableSpec<Led> = {
     { name: "is_rgb", type: "boolean" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db
@@ -165,6 +166,7 @@ export const ledTableSpec: DerivedTableSpec<Led> = {
         in_stock: c.stock > 0,
         is_basic: Boolean(c.basic),
         is_preferred: Boolean(c.preferred),
+        is_extended_promotional: false, // TODO: Populate from JLCPCB promotional data
         package: c.package || "",
         forward_voltage: forwardVoltage,
         forward_current: forwardCurrent,
