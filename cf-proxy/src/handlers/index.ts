@@ -554,6 +554,20 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
       is_preferred: { field: "is_preferred", type: "boolean" },
     },
   },
+  psram: {
+    filters: {
+      package: { field: "package", type: "string" },
+      interface_type: { field: "interface_type", type: "string" },
+      memory_size_mbit: { field: "memory_size_mbit", type: "number" },
+      clock_frequency_min_mhz: {
+        field: "clock_frequency_mhz",
+        type: "number",
+        operator: ">=",
+      },
+      is_basic: { field: "is_basic", type: "boolean" },
+      is_preferred: { field: "is_preferred", type: "boolean" },
+    },
+  },
   fpc_connector: {
     filters: {
       pitch_mm: { field: "pitch_mm", type: "number" },
@@ -789,6 +803,7 @@ export const ROUTE_TO_TABLE: Record<string, string> = {
   "/buck_boost_converters/list": "buck_boost_converter",
   "/dacs/list": "dac",
   "/drams/list": "dram",
+  "/psrams/list": "psram",
   "/dimm_connectors/list": "dimm_connector",
   "/fpc_connectors/list": "fpc_connector",
   "/fpgas/list": "fpga",
@@ -843,6 +858,7 @@ export const TABLE_RESPONSE_KEY: Record<string, string> = {
   buck_boost_converter: "buck_boost_converters",
   dac: "dacs",
   dram: "drams",
+  psram: "psrams",
   dimm_connector: "dimm_connectors",
   fpc_connector: "fpc_connectors",
   fpga: "fpgas",

@@ -13,6 +13,7 @@ describe("render helpers", () => {
     expect(html).toContain("/resistors/list")
     expect(html).toContain("/barrel_jacks/list")
     expect(html).toContain("/drams/list")
+    expect(html).toContain("/psrams/list")
     expect(html).toContain("/spring_clamp_terminal_blocks/list")
     expect(html).toContain("/ble_modules/list")
     expect(html).toContain("/ble_chips/list")
@@ -165,6 +166,48 @@ describe("render helpers", () => {
     expect(html).toContain("4096Mbit")
     expect(html).toContain("933MHz")
     expect(html).toContain("/drams/list.json")
+  })
+
+  it("renders the PSRAM page and JSON API link", () => {
+    const pathname = "/psrams/list"
+
+    expect(D1_ROUTES).toContain(pathname)
+    expect(getD1Handler(pathname)).toBeTypeOf("function")
+
+    const html = renderD1TablePage(
+      pathname,
+      {
+        psrams: [
+          {
+            lcsc: 500275,
+            mfr: "APS6404L-SQN-SN",
+            package: "SOP-8",
+            interface_type: "SPI, QPI",
+            memory_size_mbit: 64,
+            clock_frequency_mhz: 133,
+            stock: 5739,
+          },
+        ],
+      },
+      {
+        package: "SOP-8",
+        interface_type: "SPI, QPI",
+        memory_size_mbit: "64",
+        clock_frequency_min_mhz: "100",
+      },
+      "https://jlcsearch.tscircuit.com/psrams/list?interface_type=SPI, QPI",
+    )
+
+    expect(html).toContain("<h2>PSRAM</h2>")
+    expect(html).toContain('name="package"')
+    expect(html).toContain('name="interface_type"')
+    expect(html).toContain('name="memory_size_mbit"')
+    expect(html).toContain('name="clock_frequency_min_mhz"')
+    expect(html).toContain('name="is_basic"')
+    expect(html).toContain('name="is_preferred"')
+    expect(html).toContain("64Mbit")
+    expect(html).toContain("133MHz")
+    expect(html).toContain("/psrams/list.json")
   })
 
   it("renders the Barrel Jacks page and JSON API link", () => {

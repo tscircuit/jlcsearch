@@ -37,6 +37,7 @@ DERIVED_TABLES=(
   dac
   diode
   dram
+  psram
   dimm_connector
   fpc_connector
   fpga
