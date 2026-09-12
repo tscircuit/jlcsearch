@@ -5,7 +5,7 @@ const API = "https://jlcpcb.com/api/overseas-pcb-order/v1"
 const PAGE_SIZE = 1000
 
 export async function fetchExtendedPromotionalComponents(
-  fetcher: typeof fetch = fetch,
+  fetcher: (input: string, init?: RequestInit) => Promise<Response> = fetch,
 ): Promise<number[]> {
   const session = await fetcher(`${API}/getAll`, {
     signal: AbortSignal.timeout(30_000),

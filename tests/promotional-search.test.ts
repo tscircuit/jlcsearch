@@ -1,7 +1,7 @@
 import { Database } from "bun:sqlite"
 import { expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
-import { Kysely } from "kysely"
+import { Kysely } from "../cf-proxy/test/kysely-test-client"
 import { BunSqliteDialect } from "kysely-bun-sqlite"
 import type { DB } from "../cf-proxy/src/db/types"
 import { queryComponentCatalog } from "../cf-proxy/src/components"

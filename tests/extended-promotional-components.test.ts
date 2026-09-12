@@ -12,14 +12,14 @@ const page = (list: unknown[], total = list.length) => ({
 function mockFetch(pages: unknown[]) {
   const requests: RequestInit[] = []
   let index = 0
-  const fetcher = (async (_url: unknown, init?: RequestInit) => {
+  const fetcher = async (_url: string, init?: RequestInit) => {
     if (index++ === 0)
       return new Response("{}", {
         headers: { "Set-Cookie": "XSRF-TOKEN=test-session; Path=/" },
       })
     requests.push(init!)
     return Response.json(pages.shift())
-  }) as typeof fetch
+  }
   return { fetcher, requests }
 }
 
@@ -68,7 +68,7 @@ describe("extended promotional catalog", () => {
     await expect(fetchExtendedPromotionalComponents(fetcher)).rejects.toThrow()
   })
   test("does not call the catalog without a valid session", async () => {
-    const fetcher = (async () => new Response("{}")) as typeof fetch
+    const fetcher = async () => new Response("{}")
     await expect(fetchExtendedPromotionalComponents(fetcher)).rejects.toThrow(
       "XSRF token",
     )
