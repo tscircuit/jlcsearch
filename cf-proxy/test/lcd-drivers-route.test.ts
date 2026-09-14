@@ -57,6 +57,7 @@ describe("LCD driver route", () => {
                 price: "1-9:0.464285714,10-:0.4",
                 basic: 0,
                 preferred: 1,
+                is_extended_promotional: 0,
                 extra:
                   '{"attributes":{"Display Configurations":"32x4 bit","Interface":"Serial"}}',
               },
@@ -113,6 +114,7 @@ describe("LCD driver route", () => {
               description: "LCD driver",
               is_basic: false,
               is_preferred: true,
+              is_extended_promotional: false,
               stock: 18416,
               price1: 0.464285714,
               attributes:
