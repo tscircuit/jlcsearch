@@ -1,3 +1,4 @@
+import { fetchExtendedPromotionalComponents } from "../lib/extended-promotional-components"
 import { Database } from "bun:sqlite"
 import { existsSync } from "node:fs"
 import { mkdir, rm } from "node:fs/promises"
@@ -24,6 +25,7 @@ export const buildDerivedSyncDatabase = async ({
   outputPath,
   tableNames,
   includeComponentCatalog = false,
+  extendedPromotionalLcscNumbers,
   includeStockSnapshot = false,
   logger = console.log,
 }: {
@@ -31,6 +33,7 @@ export const buildDerivedSyncDatabase = async ({
   outputPath: string
   tableNames?: string[]
   includeComponentCatalog?: boolean
+  extendedPromotionalLcscNumbers?: readonly number[]
   includeStockSnapshot?: boolean
   logger?: (message: string) => void
 }) => {
@@ -42,6 +45,18 @@ export const buildDerivedSyncDatabase = async ({
   }
   if (resolvedSourcePath === resolvedOutputPath) {
     throw new Error("Source and output database paths must be different")
+  }
+
+  if (
+    includeComponentCatalog &&
+    (!extendedPromotionalLcscNumbers?.length ||
+      extendedPromotionalLcscNumbers.some(
+        (lcsc) => !Number.isSafeInteger(lcsc) || lcsc <= 0,
+      ))
+  ) {
+    throw new Error(
+      "A verified nonempty extended promotional catalog is required",
+    )
   }
 
   await mkdir(path.dirname(resolvedOutputPath), { recursive: true })
@@ -59,6 +74,18 @@ export const buildDerivedSyncDatabase = async ({
       "Expected a source-db-v2 database with jlc_components and lcsc_components",
     )
   }
+
+  database.exec(
+    "CREATE TEMP TABLE extended_promotional_parts (lcsc INTEGER PRIMARY KEY)",
+  )
+  const insertPromotion = database.prepare(
+    "INSERT OR IGNORE INTO extended_promotional_parts VALUES (?)",
+  )
+  database.transaction(() => {
+    for (const lcsc of extendedPromotionalLcscNumbers ?? [])
+      insertPromotion.run(lcsc)
+  })()
+  insertPromotion.finalize()
 
   database.exec(`
     CREATE TABLE categories (
@@ -85,6 +112,7 @@ export const buildDerivedSyncDatabase = async ({
       0 AS manufacturer_id,
       CASE WHEN j.library_type = 'base' THEN 1 ELSE 0 END AS basic,
       j.preferred,
+      EXISTS(SELECT 1 FROM extended_promotional_parts p WHERE p.lcsc = j.lcsc) AS is_extended_promotional,
       j.description,
       j.datasheet,
       j.stock,
@@ -139,6 +167,7 @@ export const buildDerivedSyncDatabase = async ({
         j.package,
         CASE WHEN j.library_type = 'base' THEN 1 ELSE 0 END AS basic,
         j.preferred,
+        EXISTS(SELECT 1 FROM extended_promotional_parts p WHERE p.lcsc = j.lcsc) AS is_extended_promotional,
         j.description,
         j.stock,
         j.price,
@@ -217,6 +246,7 @@ export const buildDerivedSyncDatabase = async ({
     database.exec("ANALYZE")
   } finally {
     await db.destroy()
+    database.close(true)
   }
 }
 
@@ -238,6 +268,9 @@ const main = async () => {
     outputPath,
     tableNames: configuredTables?.length ? configuredTables : undefined,
     includeComponentCatalog,
+    extendedPromotionalLcscNumbers: includeComponentCatalog
+      ? await fetchExtendedPromotionalComponents()
+      : undefined,
     includeStockSnapshot,
   })
 }
