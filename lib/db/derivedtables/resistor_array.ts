@@ -69,6 +69,7 @@ export const resistorArrayTableSpec: DerivedTableSpec<ResistorArray> = {
     { name: "is_surface_mount", type: "boolean" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db
@@ -123,6 +124,8 @@ export const resistorArrayTableSpec: DerivedTableSpec<ResistorArray> = {
         price1: extractMinQPrice(component.price)!,
         in_stock: component.stock > 0,
         is_basic: Boolean(component.basic),
+
+        is_extended_promotional: !Boolean(component.basic) && Boolean(component.preferred),
         is_preferred: Boolean(component.preferred),
         package: component.package ?? "",
         resistance,

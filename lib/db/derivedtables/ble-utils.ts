@@ -180,6 +180,8 @@ export const mapBleFields = (
     price1: null,
     in_stock: component.stock > 0,
     is_basic: Boolean(component.basic),
+
+    is_extended_promotional: !Boolean(component.basic) && Boolean(component.preferred),
     is_preferred: Boolean(component.preferred),
     package: component.package || "",
     core_processor: getFirstAttribute(attributes, [

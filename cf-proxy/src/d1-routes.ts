@@ -5,21 +5,21 @@ import {
   getDisplayDriverMaxResolutionOptions,
 } from "./display-driver-resolution"
 import {
-  getTftDisplayDriverFamily,
-  getTftDisplayDriverPatterns,
-  TFT_DISPLAY_DRIVER_FAMILIES,
-  TFT_DISPLAY_DRIVER_SUBCATEGORIES,
-} from "./tft-display-drivers"
-import {
-  normalizeTableQueryParams,
-  queryFilterOptions,
-  queryTable,
+  type FilterOptions,
+  type QueryParams,
   ROUTE_TO_TABLE,
   TABLE_CONFIGS,
   TABLE_RESPONSE_KEY,
-  type FilterOptions,
-  type QueryParams,
+  normalizeTableQueryParams,
+  queryFilterOptions,
+  queryTable,
 } from "./handlers"
+import {
+  TFT_DISPLAY_DRIVER_FAMILIES,
+  TFT_DISPLAY_DRIVER_SUBCATEGORIES,
+  getTftDisplayDriverFamily,
+  getTftDisplayDriverPatterns,
+} from "./tft-display-drivers"
 
 export interface D1QueryResult {
   data: Record<string, unknown[]>

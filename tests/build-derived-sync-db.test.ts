@@ -188,7 +188,7 @@ describe("buildDerivedSyncDatabase", () => {
         output
           .query(
             `SELECT mfr, manufacturer, architecture, package, stock,
-              price1, is_basic, is_preferred FROM linux_capable_processor`,
+              price1, is_basic, is_preferred, is_extended_promotional FROM linux_capable_processor`,
           )
           .get(),
       ).toEqual({
@@ -200,6 +200,7 @@ describe("buildDerivedSyncDatabase", () => {
         price1: 1.25,
         is_basic: 1,
         is_preferred: 1,
+        is_extended_promotional: 0,
       })
     } finally {
       output.close()

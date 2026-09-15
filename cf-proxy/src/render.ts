@@ -1,10 +1,10 @@
 import {
-  normalizeTableQueryParams,
+  type FilterOptions,
+  type QueryParams,
   ROUTE_TO_TABLE,
   TABLE_CONFIGS,
   TABLE_RESPONSE_KEY,
-  type QueryParams,
-  type FilterOptions,
+  normalizeTableQueryParams,
 } from "./handlers"
 import { TFT_DISPLAY_DRIVER_FAMILIES } from "./tft-display-drivers"
 
@@ -614,6 +614,9 @@ const renderCustomFilters = (
         <div>
           <label>Preferred Part:<input type="checkbox" name="is_preferred" value="true"${params.is_preferred === "true" ? " checked" : ""} /></label>
         </div>
+        <div>
+          <label>Extended Promotional:<input type="checkbox" name="is_extended_promotional" value="true"${params.is_extended_promotional === "true" ? " checked" : ""} /></label>
+        </div>
         <button type="submit">Filter</button>
       </form>`
     }
@@ -658,6 +661,9 @@ const renderCustomFilters = (
         </div>
         <div>
           <label>Preferred Part:<input type="checkbox" name="is_preferred" value="true"${params.is_preferred === "true" ? " checked" : ""} /></label>
+        </div>
+        <div>
+          <label>Extended Promotional:<input type="checkbox" name="is_extended_promotional" value="true"${params.is_extended_promotional === "true" ? " checked" : ""} /></label>
         </div>
         <button type="submit">Filter</button>
       </form>`
@@ -727,6 +733,9 @@ const renderComponentsFilters = (
   </div>
   <div>
     <label>Preferred Part:<input type="checkbox" name="is_preferred" value="true"${params.is_preferred === "true" ? " checked" : ""} /></label>
+  </div>
+  <div>
+    <label>Extended Promotional:<input type="checkbox" name="is_extended_promotional" value="true"${params.is_extended_promotional === "true" ? " checked" : ""} /></label>
   </div>
   <button type="submit">Filter</button>
 </form>`
