@@ -233,7 +233,8 @@ export const barrelJackTableSpec: DerivedTableSpec<BarrelJack> = {
         in_stock: Number(component.stock || 0) > 0,
         is_basic: Boolean(component.basic),
 
-        is_extended_promotional: !Boolean(component.basic) && Boolean(component.preferred),
+        is_extended_promotional:
+          !Boolean(component.basic) && Boolean(component.preferred),
         is_preferred: Boolean(component.preferred),
         connector_type: connectorType || "DC Power Jack",
         mounting_style: inferMountingStyle(

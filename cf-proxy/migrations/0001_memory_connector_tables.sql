@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS dimm_connector (
   is_right_angle BOOLEAN,
   is_basic BOOLEAN,
   is_preferred BOOLEAN,
+  is_extended_promotional BOOLEAN,
   attributes TEXT
 );
 
@@ -58,6 +59,7 @@ CREATE TABLE IF NOT EXISTS sodimm_connector (
   is_right_angle BOOLEAN,
   is_basic BOOLEAN,
   is_preferred BOOLEAN,
+  is_extended_promotional BOOLEAN,
   attributes TEXT
 );
 
