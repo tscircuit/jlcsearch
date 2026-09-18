@@ -15,6 +15,7 @@ interface SearchRow {
   lcsc: number | null
   mfr: string | null
   package: string | null
+  datasheet: string | null
   description: string | null
   stock: number | null
   price: string | null
@@ -145,6 +146,7 @@ export async function searchIndex(
       search_index.lcsc,
       search_index.mfr,
       search_index.package,
+      search_index.datasheet,
       search_index.description,
       search_index.stock,
       search_index.price,
