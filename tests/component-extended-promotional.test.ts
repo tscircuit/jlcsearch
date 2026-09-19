@@ -24,7 +24,8 @@ test("componentExtendedPromotionalColumn adds column and index to components tab
   })
 
   try {
-    const beforeAdded = await componentExtendedPromotionalColumn.checkIfAdded(db)
+    const beforeAdded =
+      await componentExtendedPromotionalColumn.checkIfAdded(db)
     expect(beforeAdded).toBe(false)
 
     await componentExtendedPromotionalColumn.execute(db)
