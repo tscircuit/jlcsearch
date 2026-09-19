@@ -257,6 +257,54 @@ describe("buildDerivedSyncDatabase", () => {
     output.close()
   })
 
+  test("marks only preferred expanded parts as extended promotional", async () => {
+    const { sourcePath, outputPath } = await createSourceDatabase()
+    const source = new Database(sourcePath)
+    for (const [lcsc, libraryType, preferred] of [
+      [20001, "expand", 1],
+      [20002, "expand", 0],
+      [20003, "base", 0],
+    ] as const) {
+      source
+        .query(
+          `INSERT INTO jlc_components (
+            lcsc, fetched_at, present, sync_seen, category, subcategory, mfr,
+            package, joints, manufacturer, library_type, preferred,
+            last_on_stock, description, datasheet, stock, price, attributes
+          ) VALUES (
+            ${lcsc}, unixepoch(), 1, 1, 'Connectors', 'HDMI Connectors',
+            'HDMI-19P-${lcsc}', 'SMD', 19, 'Example', '${libraryType}',
+            ${preferred}, unixepoch(), 'HDMI connector', '', 10, '1-:1.00', '{}'
+          )`,
+        )
+        .run()
+    }
+    source.close()
+
+    await buildDerivedSyncDatabase({
+      sourcePath,
+      outputPath,
+      tableNames: ["hdmi_port"],
+      includeComponentCatalog: true,
+      logger: () => {},
+    })
+
+    const output = new Database(outputPath, { readonly: true })
+    const rows = output
+      .query(
+        `SELECT lcsc, basic, preferred, is_extended_promotional
+         FROM component_catalog ORDER BY lcsc`,
+      )
+      .all() as Record<string, unknown>[]
+    expect(rows).toEqual([
+      { lcsc: 12345, basic: 1, preferred: 1, is_extended_promotional: 0 },
+      { lcsc: 20001, basic: 0, preferred: 1, is_extended_promotional: 1 },
+      { lcsc: 20002, basic: 0, preferred: 0, is_extended_promotional: 0 },
+      { lcsc: 20003, basic: 1, preferred: 0, is_extended_promotional: 0 },
+    ])
+    output.close()
+  })
+
   test("materializes a stock snapshot with zeroes for absent parts", async () => {
     const { sourcePath, outputPath } = await createSourceDatabase()
     const source = new Database(sourcePath)
