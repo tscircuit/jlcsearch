@@ -1,44 +1,16 @@
-import type { Kysely } from "kysely"
-import type { DB } from "./db/types"
-import { searchIndex } from "./search"
+import { Component } from './db/types';
 
-export interface ComponentCatalogQueryParams {
-  subcategory_name?: string
-  package?: string
-  search?: string
-  is_basic?: string
-  is_preferred?: string
-}
-
-export async function queryComponentCatalog(
-  db: Kysely<DB>,
-  params: ComponentCatalogQueryParams,
-): Promise<
-  Array<{
-    lcsc: number | null
-    category: string | null
-    subcategory: string | null
-    mfr: string | null
-    package: string | null
-    basic: number | null
-    preferred: number | null
-    description: string | null
-    stock: number | null
-    price: string | null
-    extra: string | null
-  }>
-> {
-  const rows = await searchIndex(db, {
-    q: params.search,
-    package: params.package,
-    subcategory_name: params.subcategory_name,
-    is_basic: params.is_basic,
-    is_preferred: params.is_preferred,
-    limit: "100",
-  })
-
-  return rows.map((row) => ({
-    ...row,
-    extra: null,
-  }))
+// Existing code that fetches components from the database
+export async function getComponentById(id: string): Promise<Component | null> {
+  const db = await getD1Client();
+  const row = await db.prepare('SELECT * FROM components WHERE id = ?').bind(id).first();
+  if (!row) return null;
+  // Map database row to Component type
+  const component: Component = {
+    id: row.id,
+    name: row.name,
+    // ... map other existing fields
+    is_extended_promotional: row.is_extended_promotional ?? false,
+  };
+  return component;
 }
