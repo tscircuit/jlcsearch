@@ -108,7 +108,10 @@ export async function searchIndex(
     conditions.push(sql`search_index.basic = 1`)
   }
 
-  if (params.is_extended_promotional === "true" || params.is_extended_promotional === "1") {
+  if (
+    params.is_extended_promotional === "true" ||
+    params.is_extended_promotional === "1"
+  ) {
     conditions.push(sql`search_index.is_extended_promotional = 1`)
   }
 
