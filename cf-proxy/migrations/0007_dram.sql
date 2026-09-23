@@ -15,7 +15,6 @@ CREATE TABLE IF NOT EXISTS dram (
   operating_temp_max REAL,
   is_basic BOOLEAN,
   is_preferred BOOLEAN,
-  is_extended_promotional BOOLEAN,
   attributes TEXT
 );
 

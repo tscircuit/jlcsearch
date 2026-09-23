@@ -12,7 +12,6 @@ CREATE TABLE IF NOT EXISTS linux_capable_processor (
   cpu_core TEXT,
   is_basic BOOLEAN,
   is_preferred BOOLEAN,
-  is_extended_promotional BOOLEAN,
   attributes TEXT
 );
 

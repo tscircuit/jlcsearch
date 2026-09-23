@@ -57,6 +57,7 @@ describe("LCD driver route", () => {
                 price: "1-9:0.464285714,10-:0.4",
                 basic: 0,
                 preferred: 1,
+                extended_promotional: 1,
                 extra:
                   '{"attributes":{"Display Configurations":"32x4 bit","Interface":"Serial"}}',
               },
@@ -69,6 +70,7 @@ describe("LCD driver route", () => {
                 price: '[{"qFrom":1,"price":0.901428571}]',
                 basic: 0,
                 preferred: 1,
+                extended_promotional: 1,
                 extra:
                   '{"attributes":{"Display Configurations(bit)":"32x8 bit"}}',
               },
@@ -94,6 +96,7 @@ describe("LCD driver route", () => {
       const result = await handler!(db, {
         package: "SSOP-48-300mil",
         is_preferred: "true",
+        is_extended_promotional: "true",
         max_resolution: "32x4",
       })
 
@@ -113,6 +116,7 @@ describe("LCD driver route", () => {
               description: "LCD driver",
               is_basic: false,
               is_preferred: true,
+              is_extended_promotional: true,
               stock: 18416,
               price1: 0.464285714,
               attributes:
@@ -128,10 +132,12 @@ describe("LCD driver route", () => {
       expect(partsQuery?.sql).toContain('"subcategory" = ?')
       expect(partsQuery?.sql).toContain('"package" = ?')
       expect(partsQuery?.sql).toContain('"preferred" = ?')
+      expect(partsQuery?.sql).toContain('"extended_promotional" = ?')
       expect(partsQuery?.parameters).toEqual([
         0,
         "LCD Drivers",
         "SSOP-48-300mil",
+        1,
         1,
       ])
     } finally {

@@ -230,6 +230,7 @@ export interface ComponentCatalog {
   basic: number | null
   category: string | null
   description: string | null
+  extended_promotional: number | null
   extra: string | null
   lcsc: Generated<number | null>
   mfr: string | null

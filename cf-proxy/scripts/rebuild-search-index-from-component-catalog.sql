@@ -67,3 +67,4 @@ CREATE INDEX IF NOT EXISTS idx_search_index_basic ON search_index(basic);
 CREATE INDEX IF NOT EXISTS idx_search_index_basic_stock ON search_index(basic, stock DESC);
 CREATE INDEX IF NOT EXISTS idx_search_index_preferred ON search_index(preferred);
 CREATE INDEX IF NOT EXISTS idx_search_index_preferred_stock ON search_index(preferred, stock DESC);
+CREATE INDEX IF NOT EXISTS idx_search_index_extended_promotional ON search_index(extended_promotional);

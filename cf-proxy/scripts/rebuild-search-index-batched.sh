@@ -43,6 +43,7 @@ run_wrangler d1 execute "$DB_NAME" --remote --command \
      price1 REAL,
      basic INTEGER,
      preferred INTEGER,
+     extended_promotional INTEGER,
      category TEXT,
      subcategory TEXT,
      manufacturer_name TEXT,
@@ -68,9 +69,10 @@ INSERT INTO search_index_next (
   stock,
   price,
   price1,
-  basic,
-  preferred,
-  category,
+   basic,
+   preferred,
+   extended_promotional,
+   category,
   subcategory,
   manufacturer_name,
   title,
@@ -100,9 +102,10 @@ SELECT
     )
     ELSE NULL
   END AS price1,
-  basic,
-  preferred,
-  category,
+   basic,
+   preferred,
+   extended_promotional,
+   category,
   subcategory,
   CASE
     WHEN json_valid(extra) THEN json_extract(extra, '$.manufacturer.name')
@@ -132,7 +135,8 @@ SELECT
     coalesce(CASE WHEN json_valid(extra) THEN json_extract(extra, '$.attributes') END, '')
   )) AS search_text
 FROM component_catalog
-WHERE rowid BETWEEN __START__ AND __END__;
+WHERE rowid BETWEEN __START__ AND __END__
+  AND lcsc IS NOT NULL;
 EOF
 
   run_wrangler d1 execute "$DB_NAME" --remote --file="$TMP_SQL"
@@ -144,13 +148,30 @@ run_wrangler d1 execute "$DB_NAME" --remote --command \
    CREATE INDEX IF NOT EXISTS idx_search_index_next_lcsc ON search_index_next(lcsc);
    CREATE INDEX IF NOT EXISTS idx_search_index_next_package ON search_index_next(package);
    CREATE INDEX IF NOT EXISTS idx_search_index_next_basic ON search_index_next(basic);
-   CREATE INDEX IF NOT EXISTS idx_search_index_next_preferred ON search_index_next(preferred);"
+   CREATE INDEX IF NOT EXISTS idx_search_index_next_preferred ON search_index_next(preferred);
+   CREATE INDEX IF NOT EXISTS idx_search_index_next_extended_promotional ON search_index_next(extended_promotional);"
 
 echo "Validating row count..."
-run_wrangler d1 execute "$DB_NAME" --remote --command \
-  "SELECT
-     (SELECT COUNT(*) FROM component_catalog) AS component_catalog_count,
-     (SELECT COUNT(*) FROM search_index_next) AS search_index_next_count;"
+count_result="$(
+  run_wrangler d1 execute "$DB_NAME" --remote --json --command \
+    "SELECT
+       (SELECT COUNT(*) FROM component_catalog WHERE lcsc IS NOT NULL) AS component_catalog_count,
+       (SELECT COUNT(*) FROM search_index_next) AS search_index_next_count;" |
+    bun --eval '
+      const chunks = [];
+      for await (const chunk of Bun.stdin.stream()) chunks.push(chunk);
+      const text = Buffer.concat(chunks).toString();
+      const json = JSON.parse(text.slice(text.indexOf("[")));
+      const row = json[0]?.results?.[0];
+      console.log(`${row?.component_catalog_count ?? 0} ${row?.search_index_next_count ?? 0}`);
+    '
+)"
+catalog_count="${count_result%% *}"
+search_index_count="${count_result##* }"
+if [[ "${catalog_count}" != "${search_index_count}" || "${catalog_count}" == "0" ]]; then
+  echo "Refusing to swap search_index: catalog count ${catalog_count} != rebuilt count ${search_index_count}."
+  exit 1
+fi
 
 echo "Swapping search index tables..."
 run_wrangler d1 execute "$DB_NAME" --remote --command \
@@ -168,11 +189,13 @@ run_wrangler d1 execute "$DB_NAME" --remote --command \
    DROP INDEX IF EXISTS idx_search_index_package;
    DROP INDEX IF EXISTS idx_search_index_basic;
    DROP INDEX IF EXISTS idx_search_index_preferred;
+   DROP INDEX IF EXISTS idx_search_index_extended_promotional;
    ALTER TABLE search_index_next RENAME TO search_index;
    CREATE INDEX IF NOT EXISTS idx_search_index_stock ON search_index(stock DESC);
    CREATE INDEX IF NOT EXISTS idx_search_index_lcsc ON search_index(lcsc);
    CREATE INDEX IF NOT EXISTS idx_search_index_package ON search_index(package);
    CREATE INDEX IF NOT EXISTS idx_search_index_basic ON search_index(basic);
-   CREATE INDEX IF NOT EXISTS idx_search_index_preferred ON search_index(preferred);"
+   CREATE INDEX IF NOT EXISTS idx_search_index_preferred ON search_index(preferred);
+   CREATE INDEX IF NOT EXISTS idx_search_index_extended_promotional ON search_index(extended_promotional);"
 
 echo "Done. Old table kept as search_index_old for rollback."

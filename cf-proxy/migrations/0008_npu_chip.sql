@@ -12,7 +12,6 @@ CREATE TABLE IF NOT EXISTS npu_chip (
   npu_performance_tops REAL,
   is_basic BOOLEAN,
   is_preferred BOOLEAN,
-  is_extended_promotional BOOLEAN,
   attributes TEXT
 );
 

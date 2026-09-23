@@ -157,11 +157,12 @@ export async function searchIndex(
       search_index.description,
       search_index.stock,
       search_index.price,
-      search_index.price1,
-      search_index.basic,
-      search_index.preferred,
-      search_index.category,
-      search_index.subcategory
+       search_index.price1,
+       search_index.basic,
+       search_index.preferred,
+       search_index.extended_promotional,
+       search_index.category,
+       search_index.subcategory
     FROM search_index
   `
   const orderLimitSql = sql`
