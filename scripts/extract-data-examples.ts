@@ -1,7 +1,7 @@
-import { mkdir, writeFile } from "node:fs/promises"
 import { existsSync } from "node:fs"
-import { getDbClient } from "lib/db/get-db-client"
+import { mkdir, writeFile } from "node:fs/promises"
 import Path from "node:path"
+import { getDbClient } from "lib/db/get-db-client"
 
 const EXCLUDED_CATEGORIES: string[] = [
   "_",

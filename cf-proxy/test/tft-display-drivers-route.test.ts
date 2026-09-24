@@ -118,6 +118,7 @@ describe("TFT display driver route", () => {
                 price: '[{"qFrom":1,"price":5.845714286}]',
                 basic: 0,
                 preferred: 1,
+                extended_promotional: 1,
                 subcategory: "LCD Drivers",
                 extra: '{"attributes":{"Interface":"8080/6800"}}',
               },
@@ -144,6 +145,7 @@ describe("TFT display driver route", () => {
         driver_type: "controller",
         package: "LQFP-128(14x14)",
         is_preferred: "true",
+        is_extended_promotional: "true",
         max_resolution: "864x480",
       })
 
@@ -158,6 +160,7 @@ describe("TFT display driver route", () => {
           description: "TFT LCD controller",
           is_basic: false,
           is_preferred: true,
+          is_extended_promotional: true,
           stock: 604,
           price1: 5.845714286,
           attributes: '{"Interface":"8080/6800"}',
@@ -173,6 +176,7 @@ describe("TFT display driver route", () => {
       expect(partsQuery?.sql).toContain('"mfr" like ?')
       expect(partsQuery?.sql).toContain('"package" = ?')
       expect(partsQuery?.sql).toContain('"preferred" = ?')
+      expect(partsQuery?.sql).toContain('"extended_promotional" = ?')
       expect(partsQuery?.parameters).toContain("SSD1963%")
       expect(partsQuery?.parameters).not.toContain("TPS651%")
     } finally {

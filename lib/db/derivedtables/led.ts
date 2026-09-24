@@ -164,6 +164,8 @@ export const ledTableSpec: DerivedTableSpec<Led> = {
         stock: c.stock,
         in_stock: c.stock > 0,
         is_basic: Boolean(c.basic),
+
+        is_extended_promotional: !Boolean(c.basic) && Boolean(c.preferred),
         is_preferred: Boolean(c.preferred),
         package: c.package || "",
         forward_voltage: forwardVoltage,

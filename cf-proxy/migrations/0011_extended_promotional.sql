@@ -1,0 +1,12 @@
+ALTER TABLE component_catalog ADD COLUMN extended_promotional INTEGER;
+ALTER TABLE search_index ADD COLUMN extended_promotional INTEGER;
+ALTER TABLE dimm_connector ADD COLUMN is_extended_promotional BOOLEAN;
+ALTER TABLE sodimm_connector ADD COLUMN is_extended_promotional BOOLEAN;
+ALTER TABLE hdmi_port ADD COLUMN is_extended_promotional BOOLEAN;
+ALTER TABLE photo_diode ADD COLUMN is_extended_promotional BOOLEAN;
+ALTER TABLE micro_usb_connector ADD COLUMN is_extended_promotional BOOLEAN;
+ALTER TABLE barrel_jack ADD COLUMN is_extended_promotional BOOLEAN;
+ALTER TABLE dram ADD COLUMN is_extended_promotional BOOLEAN;
+ALTER TABLE npu_chip ADD COLUMN is_extended_promotional BOOLEAN;
+ALTER TABLE linux_capable_processor ADD COLUMN is_extended_promotional BOOLEAN;
+ALTER TABLE psram ADD COLUMN is_extended_promotional BOOLEAN;

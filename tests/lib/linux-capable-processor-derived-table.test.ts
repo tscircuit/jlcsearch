@@ -318,8 +318,32 @@ test("SQLite setup and D1 migration create matching columns and indexes idempote
         import.meta.url,
       ),
     ).text()
+    const extendedPromotionalMigration = await Bun.file(
+      new URL(
+        "../../cf-proxy/migrations/0011_extended_promotional.sql",
+        import.meta.url,
+      ),
+    ).text()
     migrationDatabase.exec(migration)
     migrationDatabase.exec(migration)
+    for (const table of [
+      "component_catalog",
+      "search_index",
+      "dimm_connector",
+      "sodimm_connector",
+      "hdmi_port",
+      "photo_diode",
+      "micro_usb_connector",
+      "barrel_jack",
+      "dram",
+      "npu_chip",
+      "psram",
+    ]) {
+      migrationDatabase.exec(
+        `CREATE TABLE IF NOT EXISTS "${table}" (lcsc INTEGER)`,
+      )
+    }
+    migrationDatabase.exec(extendedPromotionalMigration)
     expect(schema(database)).toEqual(schema(migrationDatabase))
     expect(schema(database).indexes).toHaveLength(8)
   } finally {

@@ -6,6 +6,11 @@ import {
   fetchEasyEdaComponentFromCache,
 } from "../lib/easyeda-component-cache-client"
 import {
+  POPULATION_BATCH_RESTART_EXIT_CODE,
+  POPULATION_WASM_RESTART_EXIT_CODE,
+  isManifoldWasmAbort,
+} from "../lib/footprinter-population-restarts"
+import {
   COPPER_IOU_THRESHOLD,
   type FootprinterStringRow,
   buildFootprinterStringUpsert,
@@ -13,14 +18,9 @@ import {
   isPermanentEasyEdaMiss,
 } from "../lib/footprinter-strings"
 import {
-  POPULATION_BATCH_RESTART_EXIT_CODE,
-  POPULATION_WASM_RESTART_EXIT_CODE,
-  isManifoldWasmAbort,
-} from "../lib/footprinter-population-restarts"
-import {
   PoliteRateLimitedFetch,
-  RequestDeadlineReachedError,
   type PoliteRateLimitedFetchMetrics,
+  RequestDeadlineReachedError,
 } from "../lib/polite-rate-limited-fetch"
 
 const DATABASE_NAME = "jlcsearch"

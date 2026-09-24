@@ -5,21 +5,21 @@ import {
   getDisplayDriverMaxResolutionOptions,
 } from "./display-driver-resolution"
 import {
-  getTftDisplayDriverFamily,
-  getTftDisplayDriverPatterns,
-  TFT_DISPLAY_DRIVER_FAMILIES,
-  TFT_DISPLAY_DRIVER_SUBCATEGORIES,
-} from "./tft-display-drivers"
-import {
-  normalizeTableQueryParams,
-  queryFilterOptions,
-  queryTable,
+  type FilterOptions,
+  type QueryParams,
   ROUTE_TO_TABLE,
   TABLE_CONFIGS,
   TABLE_RESPONSE_KEY,
-  type FilterOptions,
-  type QueryParams,
+  normalizeTableQueryParams,
+  queryFilterOptions,
+  queryTable,
 } from "./handlers"
+import {
+  TFT_DISPLAY_DRIVER_FAMILIES,
+  TFT_DISPLAY_DRIVER_SUBCATEGORIES,
+  getTftDisplayDriverFamily,
+  getTftDisplayDriverPatterns,
+} from "./tft-display-drivers"
 
 export interface D1QueryResult {
   data: Record<string, unknown[]>
@@ -329,6 +329,7 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
         "price",
         "basic",
         "preferred",
+        "extended_promotional",
         "extra",
       ])
       .where("stock", ">", 0)
@@ -345,6 +346,13 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
 
     if (params.is_preferred === "true" || params.is_preferred === "1") {
       query = query.where("preferred", "=", 1)
+    }
+
+    if (
+      params.is_extended_promotional === "true" ||
+      params.is_extended_promotional === "1"
+    ) {
+      query = query.where("extended_promotional", "=", 1)
     }
 
     const [packages, resolutionSources, lcdDrivers] = await Promise.all([
@@ -391,6 +399,7 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
             description: driver.description ?? "",
             is_basic: Boolean(driver.basic),
             is_preferred: Boolean(driver.preferred),
+            is_extended_promotional: Boolean(driver.extended_promotional),
             stock: driver.stock ?? 0,
             price1: extractSmallQuantityPrice(driver.price),
             attributes: extractAttributes(driver.extra),
@@ -416,6 +425,7 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
         "price",
         "basic",
         "preferred",
+        "extended_promotional",
         "subcategory",
         "extra",
       ])
@@ -432,6 +442,13 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
 
     if (params.is_preferred === "true" || params.is_preferred === "1") {
       query = query.where("preferred", "=", 1)
+    }
+
+    if (
+      params.is_extended_promotional === "true" ||
+      params.is_extended_promotional === "1"
+    ) {
+      query = query.where("extended_promotional", "=", 1)
     }
 
     const [packages, resolutionSources, tftDrivers] = await Promise.all([
@@ -479,6 +496,7 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
             description: driver.description ?? "",
             is_basic: Boolean(driver.basic),
             is_preferred: Boolean(driver.preferred),
+            is_extended_promotional: Boolean(driver.extended_promotional),
             stock: driver.stock ?? 0,
             price1: extractSmallQuantityPrice(driver.price),
             attributes: extractAttributes(driver.extra),
