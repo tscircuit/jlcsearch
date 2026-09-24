@@ -7,6 +7,7 @@ import {
   type FilterOptions,
 } from "./handlers"
 import { TFT_DISPLAY_DRIVER_FAMILIES } from "./tft-display-drivers"
+import { getExtendedPromotionalFilter } from "./search"
 
 const escapeHtml = (value: unknown): string =>
   String(value ?? "")
@@ -180,6 +181,7 @@ const COLUMN_LABELS: Record<string, string> = {
   in_stock: "In Stock",
   is_basic: "Basic",
   is_preferred: "Preferred",
+  is_extended_promotional: "Promotional Extended",
   capacitance_farads: "Capacitance",
   tolerance_fraction: "Tolerance",
   voltage_rating: "Voltage",
@@ -429,7 +431,10 @@ const renderCell = (
 const renderTable = (rows: unknown[]): string => {
   if (rows.length === 0) return ""
   const firstRow = rows[0] as Record<string, unknown>
-  const columns = Object.keys(firstRow)
+  const columns = Object.keys(firstRow).filter(
+    (column) =>
+      column !== "is_preferred" || !("is_extended_promotional" in firstRow),
+  )
   const headerHtml = columns
     .map(
       (column) =>
@@ -474,6 +479,11 @@ const getSuggestionListId = (
   options.length > 0
     ? `${pathname.replaceAll("/", "-")}-${paramName}-options`
     : ""
+
+const renderExtendedPromotionalFilter = (params: QueryParams): string => {
+  const value = getExtendedPromotionalFilter(params)
+  return `<div><label>Promotional Extended:</label><select name="is_extended_promotional"><option value=""${value === undefined ? " selected" : ""}>All</option><option value="true"${value === 1 ? " selected" : ""}>Yes</option><option value="false"${value === 0 ? " selected" : ""}>No</option></select></div>`
+}
 
 const renderCustomFilters = (
   pathname: string,
@@ -611,9 +621,7 @@ const renderCustomFilters = (
         <div>
           <label>Basic Part:<input type="checkbox" name="is_basic" value="true"${params.is_basic === "true" ? " checked" : ""} /></label>
         </div>
-        <div>
-          <label>Preferred Part:<input type="checkbox" name="is_preferred" value="true"${params.is_preferred === "true" ? " checked" : ""} /></label>
-        </div>
+        ${renderExtendedPromotionalFilter(params)}
         <button type="submit">Filter</button>
       </form>`
     }
@@ -656,9 +664,7 @@ const renderCustomFilters = (
         <div>
           <label>Basic Part:<input type="checkbox" name="is_basic" value="true"${params.is_basic === "true" ? " checked" : ""} /></label>
         </div>
-        <div>
-          <label>Preferred Part:<input type="checkbox" name="is_preferred" value="true"${params.is_preferred === "true" ? " checked" : ""} /></label>
-        </div>
+        ${renderExtendedPromotionalFilter(params)}
         <button type="submit">Filter</button>
       </form>`
     }
@@ -680,6 +686,9 @@ const renderGenericFilters = (
 
   const inputs = Object.entries(config.filters)
     .map(([paramName, fieldConfig]) => {
+      if (paramName === "is_extended_promotional") {
+        return renderExtendedPromotionalFilter(normalizedParams)
+      }
       const label = getColumnLabel(paramName)
       const mergedSuggestions = Array.from(
         new Set([
@@ -725,9 +734,7 @@ const renderComponentsFilters = (
   <div>
     <label>Basic Part:<input type="checkbox" name="is_basic" value="true"${params.is_basic === "true" ? " checked" : ""} /></label>
   </div>
-  <div>
-    <label>Preferred Part:<input type="checkbox" name="is_preferred" value="true"${params.is_preferred === "true" ? " checked" : ""} /></label>
-  </div>
+  ${renderExtendedPromotionalFilter(params)}
   <button type="submit">Filter</button>
 </form>`
 

@@ -226,7 +226,7 @@ jobs:
           RETRY_BASE_DELAY_SECONDS: ${{ env.SYNC_SCOPE == 'full_catalog' && '20' || '30' }}
         run: bash ./cf-proxy/scripts/sync-db.sh
 
-      - name: Sync stock quantities to D1
+      - name: Sync stock quantities and promotional flags to D1
         if: env.SYNC_SCOPE == 'stock_only'
         env:
           SOURCE_DB_PATH: ${{ github.workspace }}/db.sqlite3
@@ -253,9 +253,10 @@ jobs:
               source_stock_table="component_stock"
             fi
             expected_stock="$(sqlite3 ../db.sqlite3 "SELECT stock FROM ${source_stock_table} WHERE lcsc=${SMOKE_TEST_LCSC};")"
+            expected_preferred="$(sqlite3 ../db.sqlite3 "SELECT preferred FROM ${source_stock_table} WHERE lcsc=${SMOKE_TEST_LCSC};")"
             remote_result_file="${RUNNER_TEMP}/jlcsearch-remote-stock.json"
             bash scripts/retry-command.sh bunx wrangler d1 execute jlcsearch --remote --json \
-              --command "SELECT lcsc, mfr, stock FROM search_index WHERE lcsc=${SMOKE_TEST_LCSC};" \
+              --command "SELECT lcsc, mfr, stock, preferred FROM search_index WHERE lcsc=${SMOKE_TEST_LCSC};" \
               > "${remote_result_file}"
             remote_stock="$(jq -r '.[0].results[0].stock // empty' "${remote_result_file}")"
             if [[ -z "${expected_stock}" || "${remote_stock}" != "${expected_stock}" ]]; then
@@ -264,6 +265,12 @@ jobs:
               exit 1
             fi
             echo "Remote C${SMOKE_TEST_LCSC} stock matches source: ${expected_stock}."
+            remote_preferred="$(jq -r '.[0].results[0].preferred // empty' "${remote_result_file}")"
+            if [[ ! "${expected_preferred}" =~ ^[01]$ || "${remote_preferred}" != "${expected_preferred}" ]]; then
+              echo "::error::Remote C${SMOKE_TEST_LCSC} promotional flag ${remote_preferred:-missing} did not match source ${expected_preferred:-missing}."
+              exit 1
+            fi
+            echo "Remote C${SMOKE_TEST_LCSC} promotional flag matches source: ${expected_preferred}."
           else
             IFS=',' read -ra tables <<< "${DERIVED_TABLES_LIST}"
             for raw_table in "${tables[@]}"; do
@@ -369,6 +376,15 @@ jobs:
               source_stock_table="component_stock"
             fi
             expected_stock="$(sqlite3 db.sqlite3 "SELECT stock FROM ${source_stock_table} WHERE lcsc=${SMOKE_TEST_LCSC};")"
+            expected_preferred="$(sqlite3 db.sqlite3 "SELECT preferred FROM ${source_stock_table} WHERE lcsc=${SMOKE_TEST_LCSC};")"
+            if [[ ! "${expected_preferred}" =~ ^[01]$ ]]; then
+              echo "::error::Prepared C${SMOKE_TEST_LCSC} promotional flag is not 0 or 1."
+              exit 1
+            fi
+            expected_promotional="false"
+            if [[ "${expected_preferred}" == "1" ]]; then
+              expected_promotional="true"
+            fi
             api_stock="$(jq -r '.components[0].stock // empty' /tmp/d1-sync-response.json)"
             if [[ -z "${expected_stock}" || "${api_stock}" != "${expected_stock}" ]]; then
               echo "::error::Production C${SMOKE_TEST_LCSC} stock ${api_stock:-missing} did not match source stock ${expected_stock:-missing}."
@@ -376,6 +392,11 @@ jobs:
               exit 1
             fi
             echo "Cache-busted production API returned expected C${SMOKE_TEST_LCSC} stock ${expected_stock}."
+            api_promotional="$(jq -r '.components[0].is_extended_promotional | tostring' /tmp/d1-sync-response.json)"
+            if [[ "${api_promotional}" != "${expected_promotional}" ]]; then
+              echo "::error::Production C${SMOKE_TEST_LCSC} promotional flag ${api_promotional} did not match source ${expected_promotional}."
+              exit 1
+            fi
 
             curl --fail --silent --show-error \
               --retry 3 \
@@ -391,4 +412,9 @@ jobs:
               exit 1
             fi
             echo "Cached production API returned expected C${SMOKE_TEST_LCSC} stock ${expected_stock}."
+            cached_api_promotional="$(jq -r '.components[0].is_extended_promotional | tostring' /tmp/d1-sync-cached-response.json)"
+            if [[ "${cached_api_promotional}" != "${expected_promotional}" ]]; then
+              echo "::error::Cached production C${SMOKE_TEST_LCSC} promotional flag ${cached_api_promotional} did not match source ${expected_promotional}."
+              exit 1
+            fi
           fi

@@ -33,6 +33,19 @@ const PROCESSOR_INTERFACES = ["uart", "i2c", "spi", "can", "usb"] as const
 const MICROPHONE_SUBCATEGORIES = ["Microphones", "MEMS Microphones"] as const
 const LCD_DRIVER_SUBCATEGORY = "LCD Drivers"
 
+const getExtendedPromotionalFilter = (params: QueryParams): 0 | 1 | null => {
+  const value = params.is_extended_promotional
+  if (value !== undefined) {
+    if (value === "true" || value === "1") return 1
+    if (value === "false" || value === "0") return 0
+    return null
+  }
+  // Preserve the legacy LCD/TFT checkbox behavior: only true/1 filtered rows.
+  return params.is_preferred === "true" || params.is_preferred === "1"
+    ? 1
+    : null
+}
+
 const parseFiniteNumber = (value: string | undefined): number | null => {
   if (value === undefined || value === "") return null
   const parsed = Number(value)
@@ -343,8 +356,13 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
       query = query.where("basic", "=", 1)
     }
 
-    if (params.is_preferred === "true" || params.is_preferred === "1") {
-      query = query.where("preferred", "=", 1)
+    const extendedPromotional = getExtendedPromotionalFilter(params)
+    if (extendedPromotional !== null) {
+      query = query.where((eb) =>
+        extendedPromotional === 0
+          ? eb.or([eb("preferred", "=", 0), eb("preferred", "is", null)])
+          : eb("preferred", "=", 1),
+      )
     }
 
     const [packages, resolutionSources, lcdDrivers] = await Promise.all([
@@ -391,6 +409,7 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
             description: driver.description ?? "",
             is_basic: Boolean(driver.basic),
             is_preferred: Boolean(driver.preferred),
+            is_extended_promotional: Boolean(driver.preferred),
             stock: driver.stock ?? 0,
             price1: extractSmallQuantityPrice(driver.price),
             attributes: extractAttributes(driver.extra),
@@ -430,8 +449,13 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
       query = query.where("basic", "=", 1)
     }
 
-    if (params.is_preferred === "true" || params.is_preferred === "1") {
-      query = query.where("preferred", "=", 1)
+    const extendedPromotional = getExtendedPromotionalFilter(params)
+    if (extendedPromotional !== null) {
+      query = query.where((eb) =>
+        extendedPromotional === 0
+          ? eb.or([eb("preferred", "=", 0), eb("preferred", "is", null)])
+          : eb("preferred", "=", 1),
+      )
     }
 
     const [packages, resolutionSources, tftDrivers] = await Promise.all([
@@ -479,6 +503,7 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
             description: driver.description ?? "",
             is_basic: Boolean(driver.basic),
             is_preferred: Boolean(driver.preferred),
+            is_extended_promotional: Boolean(driver.preferred),
             stock: driver.stock ?? 0,
             price1: extractSmallQuantityPrice(driver.price),
             attributes: extractAttributes(driver.extra),
