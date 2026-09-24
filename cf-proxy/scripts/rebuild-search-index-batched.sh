@@ -22,13 +22,9 @@ MAX_ROWID="$(
     "SELECT MAX(rowid) AS max_rowid FROM component_catalog;" \
     | rg -o '"max_rowid":\s*[0-9]+' \
     | rg -o '[0-9]+' \
-    | tail -n1
+    | tail -n1 || true
 )"
-
-if [[ -z "${MAX_ROWID}" ]]; then
-  echo "Failed to determine component_catalog max_rowid"
-  exit 1
-fi
+MAX_ROWID="${MAX_ROWID:-0}"
 
 echo "Recreating search_index_next schema..."
 run_wrangler d1 execute "$DB_NAME" --remote --command \
@@ -168,7 +164,7 @@ count_result="$(
 )"
 catalog_count="${count_result%% *}"
 search_index_count="${count_result##* }"
-if [[ "${catalog_count}" != "${search_index_count}" || "${catalog_count}" == "0" ]]; then
+if [[ "${catalog_count}" != "${search_index_count}" ]]; then
   echo "Refusing to swap search_index: catalog count ${catalog_count} != rebuilt count ${search_index_count}."
   exit 1
 fi

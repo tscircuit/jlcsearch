@@ -1,5 +1,5 @@
-import { describe, expect, test } from "bun:test"
 import { Database } from "bun:sqlite"
+import { describe, expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
 
@@ -52,6 +52,7 @@ describe("extended promotional D1 migration and deploy path", () => {
 
   test("keeps applied migration history free of the new column", () => {
     for (const path of [
+      "cf-proxy/migrations/0000_catalog_bootstrap.sql",
       "cf-proxy/migrations/0001_memory_connector_tables.sql",
       "cf-proxy/migrations/0002_hdmi_port.sql",
       "cf-proxy/migrations/0003_photo_diode.sql",
@@ -88,12 +89,15 @@ describe("extended promotional D1 migration and deploy path", () => {
 
   test("migrates, verifies, rebuilds, refreshes FTS, and deploys in order", () => {
     const deploy = readProjectFile("cf-proxy/scripts/deploy.sh")
+    const bootstrapIndex = deploy.indexOf("bootstrap-catalog.sh")
     const migrationIndex = deploy.indexOf("d1 migrations apply")
     const verifyIndex = deploy.indexOf("SELECT extended_promotional")
     const rebuildIndex = deploy.indexOf("rebuild-search-index-batched.sh")
     const ftsIndex = deploy.indexOf("rebuild-search-index-fts-batched.sh")
     const deployIndex = deploy.lastIndexOf("wrangler deploy")
 
+    expect(bootstrapIndex).toBeGreaterThanOrEqual(0)
+    expect(bootstrapIndex).toBeLessThan(migrationIndex)
     expect(migrationIndex).toBeGreaterThanOrEqual(0)
     expect(verifyIndex).toBeGreaterThan(migrationIndex)
     expect(rebuildIndex).toBeGreaterThan(verifyIndex)
