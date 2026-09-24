@@ -161,16 +161,27 @@ const formatSiUnit = (value: unknown): string => {
   if (!Number.isFinite(num)) return ""
   if (num === 0) return "0"
 
-  const prefix =
-    SI_PREFIXES.find((candidate) => Math.abs(num) >= candidate.value) ||
-    SI_PREFIXES[SI_PREFIXES.length - 1]
-  const scaled = num / prefix.value
+  const prefixIndex = SI_PREFIXES.findIndex(
+    (candidate) => Math.abs(num) >= candidate.value,
+  )
+  let index = prefixIndex === -1 ? SI_PREFIXES.length - 1 : prefixIndex
+  let scaled = num / SI_PREFIXES[index].value
+
+  // Rounding to 3 significant figures can push the scaled magnitude up to the next
+  // prefix: 999_999 scales to 999.999 under "k", which toPrecision(3) renders as
+  // "1.00e+3", producing "1.00e+3k" instead of "1M". Step up a prefix so the value
+  // stays in [1, 1000) after rounding.
+  if (Math.abs(scaled) >= 999.5 && index > 0) {
+    index -= 1
+    scaled = num / SI_PREFIXES[index].value
+  }
+
   const formatted = scaled
     .toPrecision(3)
     .replace(/\.0+$/, "")
     .replace(/(\.\d*?)0+$/, "$1")
 
-  return `${formatted}${prefix.symbol}`
+  return `${formatted}${SI_PREFIXES[index].symbol}`
 }
 
 const COLUMN_LABELS: Record<string, string> = {
