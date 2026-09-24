@@ -143,8 +143,12 @@ run_wrangler d1 execute "$DB_NAME" --remote --command \
   "CREATE INDEX IF NOT EXISTS idx_search_index_next_stock ON search_index_next(stock DESC);
    CREATE INDEX IF NOT EXISTS idx_search_index_next_lcsc ON search_index_next(lcsc);
    CREATE INDEX IF NOT EXISTS idx_search_index_next_package ON search_index_next(package);
+   CREATE INDEX IF NOT EXISTS idx_search_index_next_package_stock ON search_index_next(package, stock DESC);
+   CREATE INDEX IF NOT EXISTS idx_search_index_next_subcategory_stock ON search_index_next(subcategory, stock DESC);
    CREATE INDEX IF NOT EXISTS idx_search_index_next_basic ON search_index_next(basic);
+   CREATE INDEX IF NOT EXISTS idx_search_index_next_basic_stock ON search_index_next(basic, stock DESC);
    CREATE INDEX IF NOT EXISTS idx_search_index_next_preferred ON search_index_next(preferred);
+   CREATE INDEX IF NOT EXISTS idx_search_index_next_preferred_stock ON search_index_next(preferred, stock DESC);
    CREATE INDEX IF NOT EXISTS idx_search_index_next_extended_promotional ON search_index_next(extended_promotional);"
 
 echo "Validating row count..."
@@ -183,15 +187,23 @@ run_wrangler d1 execute "$DB_NAME" --remote --command \
    DROP INDEX IF EXISTS idx_search_index_stock;
    DROP INDEX IF EXISTS idx_search_index_lcsc;
    DROP INDEX IF EXISTS idx_search_index_package;
+   DROP INDEX IF EXISTS idx_search_index_package_stock;
+   DROP INDEX IF EXISTS idx_search_index_subcategory_stock;
    DROP INDEX IF EXISTS idx_search_index_basic;
+   DROP INDEX IF EXISTS idx_search_index_basic_stock;
    DROP INDEX IF EXISTS idx_search_index_preferred;
+   DROP INDEX IF EXISTS idx_search_index_preferred_stock;
    DROP INDEX IF EXISTS idx_search_index_extended_promotional;
    ALTER TABLE search_index_next RENAME TO search_index;
    CREATE INDEX IF NOT EXISTS idx_search_index_stock ON search_index(stock DESC);
    CREATE INDEX IF NOT EXISTS idx_search_index_lcsc ON search_index(lcsc);
    CREATE INDEX IF NOT EXISTS idx_search_index_package ON search_index(package);
+   CREATE INDEX IF NOT EXISTS idx_search_index_package_stock ON search_index(package, stock DESC);
+   CREATE INDEX IF NOT EXISTS idx_search_index_subcategory_stock ON search_index(subcategory, stock DESC);
    CREATE INDEX IF NOT EXISTS idx_search_index_basic ON search_index(basic);
+   CREATE INDEX IF NOT EXISTS idx_search_index_basic_stock ON search_index(basic, stock DESC);
    CREATE INDEX IF NOT EXISTS idx_search_index_preferred ON search_index(preferred);
+   CREATE INDEX IF NOT EXISTS idx_search_index_preferred_stock ON search_index(preferred, stock DESC);
    CREATE INDEX IF NOT EXISTS idx_search_index_extended_promotional ON search_index(extended_promotional);"
 
 echo "Done. Old table kept as search_index_old for rollback."
