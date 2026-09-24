@@ -55,7 +55,7 @@ concurrency:
 
 jobs:
   migrations:
-    name: Apply migrations without rebuilding data
+    name: Audit or migrate without rebuilding data
     if: github.event_name == 'workflow_dispatch' && (inputs.sync_scope == 'migrations_only' || inputs.sync_scope == 'audit_microcontrollers')
     runs-on: ubuntu-latest
     timeout-minutes: 20

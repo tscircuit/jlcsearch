@@ -139,3 +139,5 @@ can be combined with it.
 | 98 | C432212 | STM32G071CBT6 | No | No | [Reference](https://www.st.com/en/microcontrollers-microprocessors/stm32g071cb.html) |
 | 99 | C5182268 | LKS32MC037EM6S8 | No | No | [Reference](https://www.lksmcu.com/static/upload/file/20230113/LKS32MC03x_Datasheet_EN_v2.57.pdf) |
 | 100 | C80215 | GD32F103VET6 | No | Yes | [Reference](https://www.gigadevice.com/product/mcu/main-stream-mcus/gd32f10x-series/gd32f103) |
+
+The audit now also covers [ranks 101–300](microcontroller-usb-audit-next200.md), with a separate migration 0012 preserving this original migration.

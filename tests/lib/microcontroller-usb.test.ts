@@ -1,6 +1,7 @@
 import { Database } from "bun:sqlite"
 import { expect, test } from "bun:test"
 import audit from "lib/db/derivedtables/microcontroller-usb-audit.json"
+import next200 from "lib/db/derivedtables/microcontroller-usb-audit-next200.json"
 import { microcontrollerTableSpec } from "lib/db/derivedtables/microcontroller"
 import { generateMicrocontrollerUsbMigration } from "../../scripts/generate-microcontroller-usb-migration"
 
@@ -84,6 +85,74 @@ test("migration corrects audited rows, preserves other data, and is idempotent",
         .query("SELECT has_usb, stock FROM microcontroller WHERE lcsc = -2")
         .get(),
     ).toEqual({ has_usb: 0, stock: 789 })
+  } finally {
+    db.close()
+  }
+})
+
+test("next 200 audit is disjoint and every decision survives a data rebuild", () => {
+  expect(next200).toHaveLength(200)
+  const all = [...audit, ...next200]
+  expect(new Set(all.map((row) => row.lcsc)).size).toBe(300)
+  expect(new Set(all.map((row) => row.mfr.toUpperCase())).size).toBe(300)
+  expect(next200.filter((row) => row.has_usb)).toHaveLength(64)
+  for (const [index, row] of next200.entries()) {
+    expect(row.rank).toBe(index + 101)
+    expect(new URL(row.source_url).protocol).toBe("https:")
+    expect(usb(row.mfr, "USB", { "Universal Serial Bus": "Yes" })).toBe(
+      row.has_usb,
+    )
+  }
+  expect(usb(" v3S ")).toBe(true)
+  expect(usb("STM32F070F6P6")).toBe(true)
+  expect(usb("STC8H3K64S4-45I-LQFP48", "USB software download")).toBe(false)
+  expect(usb("CW32L031C8U6", "CRC16_USB")).toBe(false)
+  expect(usb("STM32F070F6P6-UNVERIFIED")).toBe(false)
+})
+
+test("next 200 migration corrects only reviewed parts and can run repeatedly", async () => {
+  const migration = await Bun.file(
+    "cf-proxy/migrations/0012_microcontroller_usb_next200.sql",
+  ).text()
+  expect(migration).toBe(generateMicrocontrollerUsbMigration("next200"))
+  const db = new Database(":memory:")
+  try {
+    db.run(
+      "CREATE TABLE microcontroller (lcsc INTEGER PRIMARY KEY, mfr TEXT, has_usb INTEGER, stock INTEGER)",
+    )
+    const insert = db.prepare("INSERT INTO microcontroller VALUES (?, ?, ?, ?)")
+    for (const row of next200)
+      insert.run(
+        row.lcsc,
+        ` ${row.mfr.toLowerCase()} `,
+        Number(!row.has_usb),
+        123,
+      )
+    insert.run(-1, "UNAUDITED", 1, 456)
+    insert.run(-2, "STM32F070F6P6-UNVERIFIED", 0, 789)
+    db.exec(migration)
+    for (const row of next200) {
+      expect(
+        db
+          .query("SELECT has_usb, stock FROM microcontroller WHERE lcsc = ?")
+          .get(row.lcsc),
+      ).toEqual({ has_usb: Number(row.has_usb), stock: 123 })
+    }
+    expect(
+      db
+        .query("SELECT has_usb, stock FROM microcontroller WHERE lcsc = -1")
+        .get(),
+    ).toEqual({ has_usb: 1, stock: 456 })
+    expect(
+      db
+        .query("SELECT has_usb, stock FROM microcontroller WHERE lcsc = -2")
+        .get(),
+    ).toEqual({ has_usb: 0, stock: 789 })
+    const before = db.query("SELECT * FROM microcontroller ORDER BY lcsc").all()
+    db.exec(migration)
+    expect(
+      db.query("SELECT * FROM microcontroller ORDER BY lcsc").all(),
+    ).toEqual(before)
   } finally {
     db.close()
   }
