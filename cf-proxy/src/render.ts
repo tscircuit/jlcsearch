@@ -223,6 +223,7 @@ const COLUMN_LABELS: Record<string, string> = {
   contact_type: "Contact Type",
   connector_type: "Connector Type",
   usb_standard: "USB Standard",
+  has_usb: "Has USB",
   output_type: "Output Type",
   mounting_style: "Mounting",
   cpu_core: "Core",
