@@ -234,7 +234,7 @@ describe("buildDerivedSyncDatabase", () => {
     const row = output
       .query(
         `SELECT
-          lcsc, mfr, category, subcategory, basic, preferred, stock,
+          lcsc, mfr, category, subcategory, basic, preferred, is_extended_promotional, stock,
           json_extract(extra, '$.manufacturer.name') AS manufacturer,
           json_extract(extra, '$.mpn') AS mpn,
           json_extract(extra, '$.attributes.Gender') AS gender
@@ -249,10 +249,55 @@ describe("buildDerivedSyncDatabase", () => {
       subcategory: "HDMI Connectors",
       basic: 1,
       preferred: 1,
+      is_extended_promotional: 0,
       stock: 250,
       manufacturer: "Example Inc.",
       mpn: "HDMI-19P",
       gender: "Female",
+    })
+    output.close()
+  })
+
+  test("materializes is_extended_promotional = 1 for promotional library_type in component_catalog", async () => {
+    const { sourcePath, outputPath } = await createSourceDatabase()
+    const source = new Database(sourcePath)
+    source
+      .query(
+        `INSERT INTO jlc_components (
+          lcsc, fetched_at, present, sync_seen, category, subcategory, mfr,
+          package, joints, manufacturer, library_type, preferred, last_on_stock,
+          description, datasheet, stock, price, attributes
+        ) VALUES (
+          99999, unixepoch(), 1, 1, 'Connectors',
+          'HDMI Connectors', 'PROMO-HDMI', 'SMD', 19, 'Promo Corp', 'promotional', 0,
+          unixepoch(), 'Promo HDMI Component', '', 100, '1-:0.50', '{}'
+        )`,
+      )
+      .run()
+    source.close()
+
+    await buildDerivedSyncDatabase({
+      sourcePath,
+      outputPath,
+      tableNames: ["hdmi_port"],
+      includeComponentCatalog: true,
+      logger: () => {},
+    })
+
+    const output = new Database(outputPath, { readonly: true })
+    const row = output
+      .query(
+        `SELECT lcsc, mfr, basic, preferred, is_extended_promotional
+        FROM component_catalog WHERE lcsc = 99999`,
+      )
+      .get() as Record<string, unknown>
+
+    expect(row).toEqual({
+      lcsc: 99999,
+      mfr: "PROMO-HDMI",
+      basic: 0,
+      preferred: 0,
+      is_extended_promotional: 1,
     })
     output.close()
   })

@@ -8,6 +8,7 @@ export interface ComponentCatalogQueryParams {
   search?: string
   is_basic?: string
   is_preferred?: string
+  is_extended_promotional?: string
 }
 
 export async function queryComponentCatalog(
@@ -22,6 +23,7 @@ export async function queryComponentCatalog(
     package: string | null
     basic: number | null
     preferred: number | null
+    is_extended_promotional: number | null
     description: string | null
     stock: number | null
     price: string | null
@@ -34,11 +36,13 @@ export async function queryComponentCatalog(
     subcategory_name: params.subcategory_name,
     is_basic: params.is_basic,
     is_preferred: params.is_preferred,
+    is_extended_promotional: params.is_extended_promotional,
     limit: "100",
   })
 
   return rows.map((row) => ({
     ...row,
+    is_extended_promotional: row.is_extended_promotional ?? 0,
     extra: null,
   }))
 }
