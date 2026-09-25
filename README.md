@@ -162,3 +162,16 @@ To recap:
 
 None of this would be possible without [JLCPCB](https://jlcpcb.com) and the work
 [jlcparts](https://github.com/yaqwsx/jlcparts) project.
+
+### Microcontroller USB filtering and corrections
+
+Use `/microcontrollers/list.json?has_usb=true` to require an on-chip USB data
+interface, or `has_usb=false` to exclude it. The list page exposes the same
+**Has USB** filter with All, Yes, and No options. USB power delivery alone does
+not count as a USB data interface.
+
+The [top-100 USB audit](docs/microcontroller-usb-audit.md) and
+[next-200 audit](docs/microcontroller-usb-audit-next200.md) record manufacturer
+sources and exact part overrides used by the import pipeline and D1 migrations
+0011 and 0012. **Build and Sync D1** also supports `migrations_only` to apply
+pending migrations and clear cached responses without rebuilding any tables.

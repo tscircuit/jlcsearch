@@ -278,6 +278,7 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
   microcontroller: {
     filters: {
       package: { field: "package", type: "string" },
+      has_usb: { field: "has_usb", type: "boolean" },
       core: { field: "cpu_core", type: "string" },
       flash_min: { field: "flash_size_bytes", type: "number", operator: ">=" },
       ram_min: { field: "ram_size_bytes", type: "number", operator: ">=" },
