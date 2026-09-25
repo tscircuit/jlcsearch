@@ -54,11 +54,17 @@ const createSourceDatabase = async () => {
         package, joints, manufacturer, library_type, preferred, last_on_stock,
         description, datasheet, stock, price, attributes
       ) VALUES (
-        12345, unixepoch(), 1, 1, 'Connectors',
+        12345, CAST(strftime('%s', 'now') AS INTEGER), 1, 1, 'Connectors',
         'HDMI Connectors', 'HDMI-19P', 'SMD', 19, 'Example', 'base', 1,
-        unixepoch(), 'HDMI Female 19 Pins horizontal attachment', '', 250,
+        CAST(strftime('%s', 'now') AS INTEGER), 'HDMI Female 19 Pins horizontal attachment', '', 250,
         '1-9:1.25,10-:0.75',
         '{"Connector Type":"HDMI","Number of Pins":"19"}'
+      ), (
+        99999, CAST(strftime('%s', 'now') AS INTEGER), 1, 1, 'Connectors',
+        'HDMI Connectors', 'HDMI-EXT-PROMO', 'SMD', 19, 'Promo Corp', 'expand', 1,
+        CAST(strftime('%s', 'now') AS INTEGER), 'HDMI Promotional Ext', '', 500,
+        '1-9:1.00',
+        '{"Connector Type":"HDMI"}'
       )`,
     )
     .run()
@@ -68,9 +74,12 @@ const createSourceDatabase = async () => {
       `INSERT INTO lcsc_components (
         lcsc, fetched_at, manufacturer, attributes, image, url_slug
       ) VALUES (
-        12345, unixepoch(), 'Example Inc.',
+        12345, CAST(strftime('%s', 'now') AS INTEGER), 'Example Inc.',
         '{"Gender":"Female","Mounting Style":"Surface Mount"}',
         'example.jpg', 'hdmi-19p'
+      ), (
+        99999, CAST(strftime('%s', 'now') AS INTEGER), 'Promo Corp',
+        '{}', 'promo.jpg', 'hdmi-promo'
       )`,
     )
     .run()
@@ -130,9 +139,9 @@ describe("buildDerivedSyncDatabase", () => {
           package, joints, manufacturer, library_type, preferred, last_on_stock,
           description, datasheet, stock, price, attributes
         ) VALUES (
-          67890, unixepoch(), 1, 1, 'Embedded Processors & Controllers',
+          67890, CAST(strftime('%s', 'now') AS INTEGER), 1, 1, 'Embedded Processors & Controllers',
           'Microcontrollers (MCU/MPU/SOC)', 'MIMX9352CVVXMAC', 'VFBGA-396',
-          396, 'NXP', 'expand', 0, unixepoch(),
+          396, 'NXP', 'expand', 0, CAST(strftime('%s', 'now') AS INTEGER),
           '64 Bit Microcontrollers (MCU/MPU/SOC)', '', 0, '1-:35.00', '{}'
         )`,
       )
@@ -231,28 +240,44 @@ describe("buildDerivedSyncDatabase", () => {
     })
 
     const output = new Database(outputPath, { readonly: true })
-    const row = output
+    const rows = output
       .query(
         `SELECT
-          lcsc, mfr, category, subcategory, basic, preferred, stock,
+          lcsc, mfr, category, subcategory, basic, preferred, is_extended_promotional, stock,
           json_extract(extra, '$.manufacturer.name') AS manufacturer,
           json_extract(extra, '$.mpn') AS mpn,
           json_extract(extra, '$.attributes.Gender') AS gender
-        FROM component_catalog`,
+        FROM component_catalog
+        ORDER BY lcsc ASC`,
       )
-      .get() as Record<string, unknown>
+      .all() as Array<Record<string, unknown>>
 
-    expect(row).toEqual({
+    expect(rows[0]).toEqual({
       lcsc: 12345,
       mfr: "HDMI-19P",
       category: "Connectors",
       subcategory: "HDMI Connectors",
       basic: 1,
       preferred: 1,
+      is_extended_promotional: 0,
       stock: 250,
       manufacturer: "Example Inc.",
       mpn: "HDMI-19P",
       gender: "Female",
+    })
+
+    expect(rows[1]).toEqual({
+      lcsc: 99999,
+      mfr: "HDMI-EXT-PROMO",
+      category: "Connectors",
+      subcategory: "HDMI Connectors",
+      basic: 0,
+      preferred: 1,
+      is_extended_promotional: 1,
+      stock: 500,
+      manufacturer: "Promo Corp",
+      mpn: "HDMI-EXT-PROMO",
+      gender: null,
     })
     output.close()
   })
@@ -267,9 +292,9 @@ describe("buildDerivedSyncDatabase", () => {
           package, joints, manufacturer, library_type, preferred, last_on_stock,
           description, datasheet, stock, price, attributes
         ) VALUES (
-          54321, unixepoch(), 0, 1, 'Connectors',
+          54321, CAST(strftime('%s', 'now') AS INTEGER), 0, 1, 'Connectors',
           'HDMI Connectors', 'REMOVED', 'SMD', 19, 'Example', 'base', 0,
-          unixepoch(), 'No longer listed', '', 125, '1-:1.00', '{}'
+          CAST(strftime('%s', 'now') AS INTEGER), 'No longer listed', '', 125, '1-:1.00', '{}'
         )`,
       )
       .run()
@@ -291,6 +316,7 @@ describe("buildDerivedSyncDatabase", () => {
     ).toEqual([
       { lcsc: 12345, stock: 250 },
       { lcsc: 54321, stock: 0 },
+      { lcsc: 99999, stock: 500 },
     ])
     output.close()
   })
