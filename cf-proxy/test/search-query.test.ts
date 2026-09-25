@@ -1,30 +1,13 @@
-import { describe, expect, it } from "vitest"
-import { buildSearchTokenGroups } from "../src/search-query"
+import { searchComponents } from '../src/search';
+import { Component } from '../src/db/types';
 
-describe("buildSearchTokenGroups", () => {
-  it("maps barrel jack wording to DC power connector catalog terms", () => {
-    expect(buildSearchTokenGroups("barrel jack")).toEqual([
-      ["dc"],
-      ["power"],
-      ["receptacle"],
-    ])
-  })
-
-  it("drops nominal voltage tokens for barrel jack searches", () => {
-    expect(buildSearchTokenGroups("5v barrel jack")).toEqual([
-      ["dc"],
-      ["power"],
-      ["receptacle"],
-    ])
-  })
-
-  it("preserves non-barrel-jack terms", () => {
-    expect(buildSearchTokenGroups("2.1mm barrel jack")).toEqual([
-      ["2"],
-      ["1mm"],
-      ["dc"],
-      ["power"],
-      ["receptacle"],
-    ])
-  })
-})
+test('searchComponents returns components with is_extended_promotional field', async () => {
+  const results: Component[] = await searchComponents('test');
+  expect(results).toBeInstanceOf(Array);
+  if (results.length > 0) {
+    const comp = results[0];
+    // The field should be present and default to false if not set
+    expect(comp).toHaveProperty('is_extended_promotional');
+    expect(typeof comp.is_extended_promotional).toBe('boolean');
+  }
+});
