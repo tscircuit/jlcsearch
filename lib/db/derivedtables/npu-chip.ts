@@ -539,6 +539,7 @@ export const npuChipTableSpec: DerivedTableSpec<NpuChip> = {
     { name: "npu_performance_tops", type: "real" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   indexes: [
     { name: "idx_npu_chip_stock", columns: ["stock"] },
@@ -658,6 +659,7 @@ export const npuChipTableSpec: DerivedTableSpec<NpuChip> = {
         in_stock: Number(component.stock ?? 0) > 0,
         is_basic: Boolean(component.basic),
         is_preferred: Boolean(component.preferred),
+        is_extended_promotional: Boolean(component.is_extended_promotional),
         package: packageName,
         manufacturer,
         chip_family: familyRule?.chipFamily ?? mfr,
