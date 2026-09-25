@@ -221,6 +221,23 @@ describe("buildDerivedSyncDatabase", () => {
 
   test("materializes a component catalog from source-db-v2", async () => {
     const { sourcePath, outputPath } = await createSourceDatabase()
+    const source = new Database(sourcePath)
+    source
+      .query(
+        `INSERT INTO jlc_components (
+          lcsc, fetched_at, present, sync_seen, category, subcategory, mfr,
+          package, joints, manufacturer, library_type, preferred, last_on_stock,
+          description, datasheet, stock, price, attributes
+        ) VALUES (
+          54321, unixepoch(), 1, 1, 'Connectors',
+          'HDMI Connectors', 'PROMO-HDMI', 'SMD', 19, 'Example', 'expand', 1,
+          unixepoch(), 'Promotional HDMI Female 19 Pins', '', 100,
+          '1-9:1.00,10-:0.50',
+          '{"Connector Type":"HDMI","Number of Pins":"19"}'
+        )`,
+      )
+      .run()
+    source.close()
 
     await buildDerivedSyncDatabase({
       sourcePath,
@@ -231,29 +248,47 @@ describe("buildDerivedSyncDatabase", () => {
     })
 
     const output = new Database(outputPath, { readonly: true })
-    const row = output
+    const rows = output
       .query(
         `SELECT
-          lcsc, mfr, category, subcategory, basic, preferred, stock,
+          lcsc, mfr, category, subcategory, basic, preferred,
+          is_extended_promotional, stock,
           json_extract(extra, '$.manufacturer.name') AS manufacturer,
           json_extract(extra, '$.mpn') AS mpn,
           json_extract(extra, '$.attributes.Gender') AS gender
-        FROM component_catalog`,
+        FROM component_catalog
+        ORDER BY lcsc`,
       )
-      .get() as Record<string, unknown>
+      .all() as Record<string, unknown>[]
 
-    expect(row).toEqual({
-      lcsc: 12345,
-      mfr: "HDMI-19P",
-      category: "Connectors",
-      subcategory: "HDMI Connectors",
-      basic: 1,
-      preferred: 1,
-      stock: 250,
-      manufacturer: "Example Inc.",
-      mpn: "HDMI-19P",
-      gender: "Female",
-    })
+    expect(rows).toEqual([
+      {
+        lcsc: 12345,
+        mfr: "HDMI-19P",
+        category: "Connectors",
+        subcategory: "HDMI Connectors",
+        basic: 1,
+        preferred: 1,
+        is_extended_promotional: 0,
+        stock: 250,
+        manufacturer: "Example Inc.",
+        mpn: "HDMI-19P",
+        gender: "Female",
+      },
+      {
+        lcsc: 54321,
+        mfr: "PROMO-HDMI",
+        category: "Connectors",
+        subcategory: "HDMI Connectors",
+        basic: 0,
+        preferred: 1,
+        is_extended_promotional: 1,
+        stock: 100,
+        manufacturer: "Example",
+        mpn: "PROMO-HDMI",
+        gender: null,
+      },
+    ])
     output.close()
   })
 
