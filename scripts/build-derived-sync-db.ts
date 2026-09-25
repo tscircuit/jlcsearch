@@ -85,6 +85,10 @@ export const buildDerivedSyncDatabase = async ({
       0 AS manufacturer_id,
       CASE WHEN j.library_type = 'base' THEN 1 ELSE 0 END AS basic,
       j.preferred,
+      CASE
+        WHEN j.library_type != 'base' AND j.preferred = 1 THEN 1
+        ELSE 0
+      END AS is_extended_promotional,
       j.description,
       j.datasheet,
       j.stock,
@@ -139,6 +143,10 @@ export const buildDerivedSyncDatabase = async ({
         j.package,
         CASE WHEN j.library_type = 'base' THEN 1 ELSE 0 END AS basic,
         j.preferred,
+        CASE
+          WHEN j.library_type != 'base' AND j.preferred = 1 THEN 1
+          ELSE 0
+        END AS is_extended_promotional,
         j.description,
         j.stock,
         j.price,
