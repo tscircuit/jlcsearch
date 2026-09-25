@@ -30,6 +30,7 @@ const createSourceDatabase = async () => {
       library_type TEXT NOT NULL,
       preferred INTEGER NOT NULL,
       last_on_stock INTEGER NOT NULL,
+      is_extended_promotional INTEGER,
       description TEXT NOT NULL,
       datasheet TEXT NOT NULL,
       stock INTEGER NOT NULL,
@@ -51,12 +52,12 @@ const createSourceDatabase = async () => {
     .query(
       `INSERT INTO jlc_components (
         lcsc, fetched_at, present, sync_seen, category, subcategory, mfr,
-        package, joints, manufacturer, library_type, preferred, last_on_stock,
+        package, joints, manufacturer, library_type, preferred, last_on_stock, is_extended_promotional,
         description, datasheet, stock, price, attributes
       ) VALUES (
         12345, unixepoch(), 1, 1, 'Connectors',
         'HDMI Connectors', 'HDMI-19P', 'SMD', 19, 'Example', 'base', 1,
-        unixepoch(), 'HDMI Female 19 Pins horizontal attachment', '', 250,
+        unixepoch(), 0, 'HDMI Female 19 Pins horizontal attachment', '', 250,
         '1-9:1.25,10-:0.75',
         '{"Connector Type":"HDMI","Number of Pins":"19"}'
       )`,
@@ -127,12 +128,12 @@ describe("buildDerivedSyncDatabase", () => {
       .query(
         `INSERT INTO jlc_components (
           lcsc, fetched_at, present, sync_seen, category, subcategory, mfr,
-          package, joints, manufacturer, library_type, preferred, last_on_stock,
+          package, joints, manufacturer, library_type, preferred, last_on_stock, is_extended_promotional,
           description, datasheet, stock, price, attributes
         ) VALUES (
           67890, unixepoch(), 1, 1, 'Embedded Processors & Controllers',
           'Microcontrollers (MCU/MPU/SOC)', 'MIMX9352CVVXMAC', 'VFBGA-396',
-          396, 'NXP', 'expand', 0, unixepoch(),
+          396, 'NXP', 'expand', 0, unixepoch(), 0,
           '64 Bit Microcontrollers (MCU/MPU/SOC)', '', 0, '1-:35.00', '{}'
         )`,
       )
@@ -264,12 +265,12 @@ describe("buildDerivedSyncDatabase", () => {
       .query(
         `INSERT INTO jlc_components (
           lcsc, fetched_at, present, sync_seen, category, subcategory, mfr,
-          package, joints, manufacturer, library_type, preferred, last_on_stock,
+          package, joints, manufacturer, library_type, preferred, last_on_stock, is_extended_promotional,
           description, datasheet, stock, price, attributes
         ) VALUES (
           54321, unixepoch(), 0, 1, 'Connectors',
           'HDMI Connectors', 'REMOVED', 'SMD', 19, 'Example', 'base', 0,
-          unixepoch(), 'No longer listed', '', 125, '1-:1.00', '{}'
+          unixepoch(), 0, 'No longer listed', '', 125, '1-:1.00', '{}'
         )`,
       )
       .run()

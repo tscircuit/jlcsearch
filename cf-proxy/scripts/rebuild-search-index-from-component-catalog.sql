@@ -25,6 +25,7 @@ SELECT
   END AS price1,
   basic,
   preferred,
+  is_extended_promotional,
   category,
   subcategory,
   CASE
