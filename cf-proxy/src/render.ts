@@ -180,6 +180,7 @@ const COLUMN_LABELS: Record<string, string> = {
   in_stock: "In Stock",
   is_basic: "Basic",
   is_preferred: "Preferred",
+  is_extended_promotional: "Extended Promotional",
   capacitance_farads: "Capacitance",
   tolerance_fraction: "Tolerance",
   voltage_rating: "Voltage",
@@ -615,6 +616,9 @@ const renderCustomFilters = (
         <div>
           <label>Preferred Part:<input type="checkbox" name="is_preferred" value="true"${params.is_preferred === "true" ? " checked" : ""} /></label>
         </div>
+        <div>
+          <label>Extended Promotional:<input type="checkbox" name="is_extended_promotional" value="true"${params.is_extended_promotional === "true" ? " checked" : ""} /></label>
+        </div>
         <button type="submit">Filter</button>
       </form>`
     }
@@ -659,6 +663,9 @@ const renderCustomFilters = (
         </div>
         <div>
           <label>Preferred Part:<input type="checkbox" name="is_preferred" value="true"${params.is_preferred === "true" ? " checked" : ""} /></label>
+        </div>
+        <div>
+          <label>Extended Promotional:<input type="checkbox" name="is_extended_promotional" value="true"${params.is_extended_promotional === "true" ? " checked" : ""} /></label>
         </div>
         <button type="submit">Filter</button>
       </form>`
@@ -728,6 +735,9 @@ const renderComponentsFilters = (
   </div>
   <div>
     <label>Preferred Part:<input type="checkbox" name="is_preferred" value="true"${params.is_preferred === "true" ? " checked" : ""} /></label>
+  </div>
+  <div>
+    <label>Extended Promotional:<input type="checkbox" name="is_extended_promotional" value="true"${params.is_extended_promotional === "true" ? " checked" : ""} /></label>
   </div>
   <button type="submit">Filter</button>
 </form>`

@@ -1,6 +1,6 @@
 import type { Kysely } from "kysely"
 import type { DB } from "./db/types"
-import { searchIndex } from "./search"
+import { isExtendedPromotional, searchIndex } from "./search"
 
 export interface ComponentCatalogQueryParams {
   subcategory_name?: string
@@ -8,6 +8,7 @@ export interface ComponentCatalogQueryParams {
   search?: string
   is_basic?: string
   is_preferred?: string
+  is_extended_promotional?: string
 }
 
 export async function queryComponentCatalog(
@@ -34,11 +35,13 @@ export async function queryComponentCatalog(
     subcategory_name: params.subcategory_name,
     is_basic: params.is_basic,
     is_preferred: params.is_preferred,
+    is_extended_promotional: params.is_extended_promotional,
     limit: "100",
   })
 
   return rows.map((row) => ({
     ...row,
+    is_extended_promotional: isExtendedPromotional(row.basic, row.preferred),
     extra: null,
   }))
 }
