@@ -827,6 +827,7 @@ export const ROUTE_TO_TABLE: Record<string, string> = {
   "/relays/list": "relay",
   "/resistor_arrays/list": "resistor_array",
   "/sodimm_connectors/list": "sodimm_connector",
+  "/spring_clamp_connectors/list": "spring_clamp_terminal_block",
   "/spring_clamp_terminal_blocks/list": "spring_clamp_terminal_block",
   "/usb_c_connectors/list": "usb_c_connector",
   "/voltage_regulators/list": "voltage_regulator",
