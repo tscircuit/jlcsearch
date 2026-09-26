@@ -15,6 +15,9 @@ describe("render helpers", () => {
     expect(html).toContain("/drams/list")
     expect(html).toContain("/psrams/list")
     expect(html).toContain("/spring_clamp_terminal_blocks/list")
+    expect(html).toContain(
+      'href="/spring_clamp_connectors/list">Spring-Clamp Connectors</a>',
+    )
     expect(html).toContain("/ble_modules/list")
     expect(html).toContain("/ble_chips/list")
     expect(html).toContain("/dimm_connectors/list")
@@ -574,14 +577,15 @@ describe("render helpers", () => {
     },
   )
 
-  it("renders the spring clamp route with pitch and pin filters", () => {
-    expect(D1_ROUTES).toContain("/spring_clamp_terminal_blocks/list")
-    expect(getD1Handler("/spring_clamp_terminal_blocks/list")).toBeTypeOf(
-      "function",
-    )
+  it.each([
+    ["/spring_clamp_terminal_blocks/list", "Spring Clamp Terminal Blocks"],
+    ["/spring_clamp_connectors/list", "Spring-Clamp Connectors"],
+  ])("renders %s with pitch and pin filters", (pathname, heading) => {
+    expect(D1_ROUTES).toContain(pathname)
+    expect(getD1Handler(pathname)).toBeTypeOf("function")
 
     const html = renderD1TablePage(
-      "/spring_clamp_terminal_blocks/list",
+      pathname,
       {
         spring_clamp_terminal_blocks: [
           {
@@ -593,15 +597,15 @@ describe("render helpers", () => {
         ],
       },
       { pitch: "5.08", pins: "2" },
-      "https://jlcsearch.tscircuit.com/spring_clamp_terminal_blocks/list?pitch=5.08&pins=2",
+      `https://jlcsearch.tscircuit.com${pathname}?pitch=5.08&pins=2`,
       { pitch: ["5.08"], pins: ["2"] },
     )
 
-    expect(html).toContain("<h2>Spring Clamp Terminal Blocks</h2>")
+    expect(html).toContain(`<h2>${heading}</h2>`)
     expect(html).toContain('name="pitch"')
     expect(html).toContain('name="pins"')
     expect(html).toContain("WJ142R-5.08-2P")
-    expect(html).toContain("/spring_clamp_terminal_blocks/list.json")
+    expect(html).toContain(`${pathname}.json`)
   })
 
   it("renders the LCD driver catalog route with package and assembly filters", () => {

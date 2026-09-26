@@ -35,6 +35,7 @@ const routeLabels: Record<string, string> = {
   "/fpc_connectors/list": "FPC Connectors",
   "/jst_connectors/list": "JST Connectors",
   "/wire_to_board_connectors/list": "Wire to Board Connectors",
+  "/spring_clamp_connectors/list": "Spring-Clamp Connectors",
   "/spring_clamp_terminal_blocks/list": "Spring Clamp Terminal Blocks",
   "/battery_holders/list": "Battery Holders",
   "/ble_modules/list": "BLE Modules",
