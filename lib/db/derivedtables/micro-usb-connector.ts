@@ -114,6 +114,7 @@ export const microUsbConnectorTableSpec: DerivedTableSpec<MicroUsbConnector> = {
     { name: "operating_temp_max", type: "real" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   indexes: [
     { name: "idx_micro_usb_connector_stock", columns: ["stock"] },

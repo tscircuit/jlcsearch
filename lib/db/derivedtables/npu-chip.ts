@@ -539,6 +539,7 @@ export const npuChipTableSpec: DerivedTableSpec<NpuChip> = {
     { name: "npu_performance_tops", type: "real" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   indexes: [
     { name: "idx_npu_chip_stock", columns: ["stock"] },
