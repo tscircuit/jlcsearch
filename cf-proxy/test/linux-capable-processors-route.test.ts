@@ -89,6 +89,7 @@ describe("Linux-capable Processors route", () => {
               in_stock: true,
               is_basic: false,
               is_preferred: true,
+              is_extended_promotional: true,
             },
           ],
         },
@@ -190,6 +191,7 @@ describe("Linux-capable Processors route", () => {
             in_stock: true,
             is_basic: false,
             is_preferred: true,
+            is_extended_promotional: true,
           },
         ],
       })

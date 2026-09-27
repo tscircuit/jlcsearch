@@ -13,6 +13,12 @@ Play with it at [jlcsearch.tscircuit.com](https://jlcsearch.tscircuit.com)
 
 You can go on any page and click "json" in the top right corner to automatically convert whatever filter you've made to a JSON query.
 
+Use `is_extended_promotional=true` to select JLCPCB Promotional Extended
+parts, or `false` to exclude them. The field is backed by the upstream
+`preferred` flag; existing `is_preferred` response fields and query parameters
+remain supported. See [promotional status](docs/extended-promotional.md) for
+supported routes, parameter precedence, and data refresh behavior.
+
 ```bash
 curl https://jlcsearch.tscircuit.com/resistors/list.json?package=&resistance=1k
 
@@ -108,9 +114,12 @@ table data from a prepared local SQLite database.
 Production D1 data is populated by the **Build and Sync D1** GitHub Actions
 workflow. Every night at 05:00 UTC, after the upstream jlcparts refresh, it
 performs a `stock_only` sync and clears the production response cache. The
-stock-only path updates changed values in `component_catalog` and `search_index`
-without rebuilding either table or the FTS index. Its compact stock snapshot
-also sets recently removed parts to zero instead of leaving stale quantities.
+stock-only path updates stock and promotional flags in `component_catalog`
+and `search_index` without rebuilding either table or the FTS index. Each
+batch also copies its refreshed flags into deployed derived tables that have an
+`is_preferred` column. Its compact snapshot also clears stock and promotional
+status for recently removed parts. A promotional status change is applied
+even when the stock quantity has not changed.
 API clients are instructed to revalidate within 24 hours so the nightly stock
 snapshot is not hidden by an older response. On relevant merges to `main`, the
 workflow
@@ -126,10 +135,14 @@ command, and a three-hour job timeout so the component catalog and search index
 can finish before the next upstream refresh. The workflow can also be run
 manually in `derived`, `stock_only`, or `full_catalog` mode. `derived` accepts a
 comma-separated `derived_tables` input. `stock_only` performs the same in-place
-stock refresh used by the nightly schedule. `full_catalog` rebuilds and uploads
+stock and promotional refresh used by the nightly schedule. `full_catalog` rebuilds and uploads
 the component catalog, search index, and FTS index from the current source-db-v2
 snapshot. Catalog and stock syncs require a numeric `smoke_test_lcsc` whose
-remote stock must match the prepared source database. All modes accept an
+remote stock and promotional status must match the prepared source database.
+Deploy the worker with the new response field before running these checks.
+The response-cache namespace changes with this field so old KV responses do
+not hide the new API field or HTML filter after deployment.
+All modes accept an
 optional `cache_bust_url`. The workflow requires the
 `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` repository secrets.
 

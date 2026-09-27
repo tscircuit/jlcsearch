@@ -1,4 +1,7 @@
 const CACHE_CONTROL_QUERY_PARAMS = new Set(["cachebust"])
+// Older response bodies lack is_extended_promotional and its HTML controls.
+// Use a new namespace at deployment instead of waiting for the nightly purge.
+const RESPONSE_SCHEMA_VERSION = "promotional-v1"
 
 /**
  * Generates a cache key from a URL by hashing the normalized path and sorted query params.
@@ -6,7 +9,7 @@ const CACHE_CONTROL_QUERY_PARAMS = new Set(["cachebust"])
 export async function generateCacheKey(url: URL): Promise<string> {
   const normalized = normalizeUrl(url)
   const encoder = new TextEncoder()
-  const data = encoder.encode(normalized)
+  const data = encoder.encode(`${RESPONSE_SCHEMA_VERSION}:${normalized}`)
   const hashBuffer = await crypto.subtle.digest("SHA-256", data)
   const hashArray = Array.from(new Uint8Array(hashBuffer))
   return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("")

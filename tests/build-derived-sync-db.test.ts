@@ -257,7 +257,7 @@ describe("buildDerivedSyncDatabase", () => {
     output.close()
   })
 
-  test("materializes a stock snapshot with zeroes for absent parts", async () => {
+  test("snapshots preferred flags and clears stock and flags for absent parts", async () => {
     const { sourcePath, outputPath } = await createSourceDatabase()
     const source = new Database(sourcePath)
     source
@@ -268,7 +268,7 @@ describe("buildDerivedSyncDatabase", () => {
           description, datasheet, stock, price, attributes
         ) VALUES (
           54321, unixepoch(), 0, 1, 'Connectors',
-          'HDMI Connectors', 'REMOVED', 'SMD', 19, 'Example', 'base', 0,
+          'HDMI Connectors', 'REMOVED', 'SMD', 19, 'Example', 'base', 1,
           unixepoch(), 'No longer listed', '', 125, '1-:1.00', '{}'
         )`,
       )
@@ -286,11 +286,13 @@ describe("buildDerivedSyncDatabase", () => {
     const output = new Database(outputPath, { readonly: true })
     expect(
       output
-        .query("SELECT lcsc, stock FROM component_stock ORDER BY lcsc")
+        .query(
+          "SELECT lcsc, stock, preferred FROM component_stock ORDER BY lcsc",
+        )
         .all(),
     ).toEqual([
-      { lcsc: 12345, stock: 250 },
-      { lcsc: 54321, stock: 0 },
+      { lcsc: 12345, stock: 250, preferred: 1 },
+      { lcsc: 54321, stock: 0, preferred: 0 },
     ])
     output.close()
   })
