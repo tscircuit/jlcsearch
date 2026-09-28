@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="440" viewBox="0 0 600 440">
+<rect width="600" height="440" rx="12" fill="#f8fafc"/>
+<g font-family="Arial, sans-serif">
+<text x="28" y="38" font-size="15" font-weight="700" fill="#b42318">BEFORE · ACTUAL MAPPER OUTPUT</text>
+<text x="28" y="73" font-size="23" font-weight="700" fill="#152238">C492422 / PZ254V-12-10P</text>
+<rect x="28" y="96" width="544" height="64" rx="6" fill="#e9eef5"/>
+<text x="42" y="122" font-size="15" fill="#334155">Supplier input: Pin Structure = "2x5P"</text>
+<text x="42" y="146" font-size="14" fill="#334155">Number of Rows = double-row (Chinese supplier text)</text>
+<text x="28" y="196" font-size="16" fill="#334155">Derived record</text>
+<g font-family="monospace" font-size="19" fill="#b42318">
+<text x="42" y="229">num_rows: 1</text>
+<text x="42" y="257">num_pins_per_row: 10</text>
+<text x="42" y="285">num_pins: 10</text>
+</g>
+<circle cx="54" cy="332" r="10" fill="#b42318"/>
+<circle cx="90" cy="332" r="10" fill="#b42318"/>
+<circle cx="126" cy="332" r="10" fill="#b42318"/>
+<circle cx="162" cy="332" r="10" fill="#b42318"/>
+<circle cx="198" cy="332" r="10" fill="#b42318"/>
+<circle cx="234" cy="332" r="10" fill="#b42318"/>
+<circle cx="270" cy="332" r="10" fill="#b42318"/>
+<circle cx="306" cy="332" r="10" fill="#b42318"/>
+<circle cx="342" cy="332" r="10" fill="#b42318"/>
+<circle cx="378" cy="332" r="10" fill="#b42318"/>
+<text x="28" y="416" font-size="13" fill="#64748b">Visualization of derived counts; not a PCB footprint export.</text>
+</g></svg>
