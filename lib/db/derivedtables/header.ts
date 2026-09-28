@@ -95,7 +95,10 @@ export const headerTableSpec: DerivedTableSpec<Header> = {
 
       // Try to extract from structure field
       if (!numPins || !pinsPerRow) {
-        const structure = attrs["Structure"] || attrs["Holes Structure"]
+        const structure =
+          attrs["Structure"] ||
+          attrs["Holes Structure"] ||
+          attrs["Pin Structure"]
         if (structure) {
           const match = structure.match(/(\d+)x(\d+)/)
           if (match) {
