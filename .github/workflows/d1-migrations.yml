@@ -172,6 +172,10 @@ jobs:
           rm -f cache.sqlite3
           rm -rf .buildtmp
 
+      - name: Refresh OLED displays from the live JLCPCB category
+        if: env.SYNC_SCOPE == 'derived' && contains(format(',{0},', env.DERIVED_TABLES_LIST), ',oled_display,')
+        run: bun scripts/refresh-oled-displays.ts
+
       - name: Verify prepared derived tables
         run: |
           if [[ ! -s db.sqlite3 ]]; then
@@ -433,3 +437,7 @@ jobs:
             fi
             echo "Cached production API returned expected C${SMOKE_TEST_LCSC} stock ${expected_stock}."
           fi
+
+      - name: Verify refreshed OLED API and HTML
+        if: env.SYNC_SCOPE == 'derived' && contains(format(',{0},', env.DERIVED_TABLES_LIST), ',oled_display,')
+        run: bun scripts/verify-oled-displays.ts
