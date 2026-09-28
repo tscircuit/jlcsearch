@@ -319,7 +319,7 @@ jobs:
           fi
 
       - name: Clear production API cache
-        if: env.SYNC_SCOPE != 'derived'
+        if: env.SYNC_SCOPE != 'derived' || contains(format(',{0},', env.DERIVED_TABLES_LIST), ',oled_display,')
         working-directory: cf-proxy
         shell: bash
         run: |
