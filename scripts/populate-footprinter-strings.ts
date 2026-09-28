@@ -13,6 +13,11 @@ import {
   isPermanentEasyEdaMiss,
 } from "../lib/footprinter-strings"
 import {
+  D1_WRANGLER_RETRY_ATTEMPTS,
+  D1_WRANGLER_RETRY_BASE_DELAY_MS,
+  writeRowsWithFallback,
+} from "../lib/footprinter-write-fallback"
+import {
   POPULATION_BATCH_RESTART_EXIT_CODE,
   POPULATION_WASM_RESTART_EXIT_CODE,
   isManifoldWasmAbort,
@@ -165,11 +170,14 @@ const runWrangler = async (
   const child = Bun.spawn(["bunx", "wrangler", ...args], {
     cwd: CF_PROXY_DIRECTORY,
     env: process.env,
-    stderr: "inherit",
+    stderr: "pipe",
     stdout: "pipe",
   })
-  const output = await new Response(child.stdout).text()
-  const exitCode = await child.exited
+  const [output, errorOutput, exitCode] = await Promise.all([
+    new Response(child.stdout).text(),
+    new Response(child.stderr).text(),
+    child.exited,
+  ])
   const durationMs = Date.now() - startedAt
   if (operation === "read") {
     metrics.d1ReadCount += 1
@@ -179,7 +187,10 @@ const runWrangler = async (
     metrics.d1WriteDurationMs += durationMs
   }
   if (exitCode !== 0) {
-    throw new Error(`Wrangler exited with code ${exitCode}`)
+    const details = errorOutput.trim().slice(-1_000)
+    throw new Error(
+      `Wrangler exited with code ${exitCode}${details ? `: ${details}` : ""}`,
+    )
   }
 
   try {
@@ -187,6 +198,31 @@ const runWrangler = async (
   } catch {
     throw new Error(`Wrangler returned invalid JSON: ${output.slice(0, 500)}`)
   }
+}
+
+const runWranglerWithRetry = async (
+  args: readonly string[],
+  operation: WranglerOperation,
+  metrics: TimingMetrics,
+): Promise<unknown> => {
+  let lastError: unknown
+
+  for (let attempt = 1; attempt <= D1_WRANGLER_RETRY_ATTEMPTS; attempt += 1) {
+    try {
+      return await runWrangler(args, operation, metrics)
+    } catch (error) {
+      lastError = error
+      if (attempt >= D1_WRANGLER_RETRY_ATTEMPTS) break
+
+      const delayMs = D1_WRANGLER_RETRY_BASE_DELAY_MS * 2 ** (attempt - 1)
+      console.warn(
+        `Wrangler ${operation} failed on attempt ${attempt}/${D1_WRANGLER_RETRY_ATTEMPTS}; retrying in ${delayMs}ms: ${error instanceof Error ? error.message : String(error)}`,
+      )
+      await new Promise((resolve) => setTimeout(resolve, delayMs))
+    }
+  }
+
+  throw lastError
 }
 
 const getWranglerRows = (payload: unknown): unknown[] => {
@@ -233,7 +269,7 @@ const fetchComponents = async (
   retryNullEntries: boolean,
   metrics: TimingMetrics,
 ): Promise<ComponentCatalogRow[]> => {
-  const payload = await runWrangler(
+  const payload = await runWranglerWithRetry(
     [
       "d1",
       "execute",
@@ -302,20 +338,50 @@ const flushRows = async (
 ): Promise<void> => {
   if (rows.length === 0) return
 
-  await runWrangler(
-    [
-      "d1",
-      "execute",
-      DATABASE_NAME,
-      "--remote",
-      "--json",
-      "--command",
-      buildFootprinterStringUpsert(rows),
-    ],
-    "write",
-    metrics,
+  const result = await writeRowsWithFallback(
+    rows,
+    async (batch) => {
+      await runWrangler(
+        [
+          "d1",
+          "execute",
+          DATABASE_NAME,
+          "--remote",
+          "--json",
+          "--command",
+          buildFootprinterStringUpsert(batch),
+        ],
+        "write",
+        metrics,
+      )
+    },
+    {
+      onRetry: (batch, attempt, delayMs, error) => {
+        console.warn(
+          `Wrangler write failed for ${batch.length} rows on attempt ${attempt}/${D1_WRANGLER_RETRY_ATTEMPTS}; retrying in ${delayMs}ms: ${error instanceof Error ? error.message : String(error)}`,
+        )
+      },
+      onSplit: (batch, error) => {
+        console.warn(
+          `D1 write failed for ${batch.length} rows; retrying smaller batches: ${error instanceof Error ? error.message : String(error)}`,
+        )
+      },
+      onFailure: (batch, error) => {
+        console.warn(
+          `D1 write fallback exhausted for ${batch.length} rows; leaving them eligible for a future run: ${error instanceof Error ? error.message : String(error)}`,
+        )
+      },
+    },
   )
-  console.log(`Saved ${rows.length} footprinter_strings rows.`)
+  const savedRows = rows.length - result.failedRows.length
+  if (savedRows > 0) {
+    console.log(`Saved ${savedRows} footprinter_strings rows.`)
+  }
+  if (result.failedRows.length > 0) {
+    console.warn(
+      `Skipped ${result.failedRows.length} footprinter_strings rows after the D1 fallback; they remain eligible for retry.`,
+    )
+  }
   rows.length = 0
 }
 
