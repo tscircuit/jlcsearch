@@ -87,3 +87,20 @@ test("replaces old rows atomically and rolls back an invalid import", () => {
   expect(db.query("SELECT lcsc FROM oled_display").all()).toEqual([{ lcsc: 3 }])
   db.close()
 })
+
+test("does not mistake physical dimensions for pixel resolution", () => {
+  expect(
+    normalizeOled({
+      ...product(1),
+      attributes: [],
+      describe: "1.85 35.48x30.72mm OLED Display",
+    }).pixel_resolution,
+  ).toBeNull()
+  expect(
+    normalizeOled({
+      ...product(1),
+      attributes: [],
+      describe: "0.96 128x64 OLED Display",
+    }).pixel_resolution,
+  ).toBe("128x64")
+})

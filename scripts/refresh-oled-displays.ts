@@ -55,7 +55,9 @@ export function normalizeOled(row: any): OledRow {
     protocol: attributes.Interface ?? null,
     display_width: attributes.Size ?? null,
     pixel_resolution:
-      attributes["Dot Pixels"] ?? description.match(/\b\d+x\d+\b/)?.[0] ?? null,
+      attributes["Dot Pixels"] ??
+      description.match(/(?:^|\s)(\d+x\d+)(?=\s|$)/)?.[1] ??
+      null,
     is_basic: Number(row.componentLibraryType === "base"),
     is_preferred: Number(row.preferredComponentFlag === true),
     attributes: JSON.stringify(attributes),
