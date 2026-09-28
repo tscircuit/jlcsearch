@@ -175,3 +175,17 @@ The [top-100 USB audit](docs/microcontroller-usb-audit.md) and
 sources and exact part overrides used by the import pipeline and D1 migrations
 0011 and 0012. **Build and Sync D1** also supports `migrations_only` to apply
 pending migrations and clear cached responses without rebuilding any tables.
+
+### Refreshing OLED displays
+
+The upstream archive currently omits stocked OLED displays present in JLCPCB's
+website catalog. A `derived` sync including `oled_display` therefore refreshes
+that prepared table directly from JLCPCB's paginated OLED category, even on a
+prepared-database cache hit. It retains out-of-stock products and refuses empty,
+duplicate, changing-total, or incomplete responses before replacing local data.
+The workflow verifies stock in the public API and refreshes both HTML and JSON.
+
+Run **Build and Sync D1** with `sync_scope=derived`,
+`derived_tables=oled_display`, and
+`cache_bust_url=https://jlcsearch.tscircuit.com/oled_display/list.json`.
+For a local snapshot, run `SOURCE_DB_PATH=oled.sqlite3 bun scripts/refresh-oled-displays.ts`.
