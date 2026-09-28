@@ -699,6 +699,13 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
       max_resistance: { field: "max_resistance", type: "number" },
     },
   },
+  stepper_motor_driver: {
+    filters: {
+      package: { field: "package", type: "string" },
+      is_basic: { field: "is_basic", type: "boolean" },
+      is_preferred: { field: "is_preferred", type: "boolean" },
+    },
+  },
   relay: {
     filters: {
       package: { field: "package", type: "string" },
@@ -825,6 +832,7 @@ export const ROUTE_TO_TABLE: Record<string, string> = {
   "/pcie_m2_connectors/list": "pcie_m2_connector",
   "/potentiometers/list": "potentiometer",
   "/relays/list": "relay",
+  "/stepper_motor_drivers/list": "stepper_motor_driver",
   "/resistor_arrays/list": "resistor_array",
   "/sodimm_connectors/list": "sodimm_connector",
   "/spring_clamp_connectors/list": "spring_clamp_terminal_block",
@@ -881,6 +889,7 @@ export const TABLE_RESPONSE_KEY: Record<string, string> = {
   pcie_m2_connector: "pcie_m2_connectors",
   potentiometer: "potentiometers",
   relay: "relays",
+  stepper_motor_driver: "stepper_motor_drivers",
   resistor_array: "resistor_arrays",
   sodimm_connector: "sodimm_connectors",
   spring_clamp_terminal_block: "spring_clamp_terminal_blocks",
