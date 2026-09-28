@@ -75,6 +75,7 @@ const routeLabels: Record<string, string> = {
   "/tft_display_drivers/list": "TFT Display Drivers",
   "/switches/list": "Switches",
   "/relays/list": "Relays",
+  "/stepper_motor_drivers/list": "Stepper Motor Driver",
   "/fuses/list": "Fuses",
   "/bjt_transistors/list": "BJT Transistors",
 }

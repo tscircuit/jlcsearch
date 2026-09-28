@@ -65,6 +65,7 @@ DERIVED_TABLES=(
   photo_diode
   potentiometer
   relay
+  stepper_motor_driver
   resistor
   resistor_array
   sodimm_connector

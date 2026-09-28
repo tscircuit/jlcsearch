@@ -44,6 +44,7 @@ import { oledDisplayTableSpec } from "lib/db/derivedtables/oled_display"
 import { pcieM2ConnectorTableSpec } from "lib/db/derivedtables/pcie_m2_connector"
 import { photoDiodeTableSpec } from "lib/db/derivedtables/photo-diode"
 import { potentiometerTableSpec } from "lib/db/derivedtables/potentiometer"
+import { stepperMotorDriverTableSpec } from "lib/db/derivedtables/stepper-motor-driver"
 import { relayTableSpec } from "lib/db/derivedtables/relay"
 import { resistorArrayTableSpec } from "lib/db/derivedtables/resistor_array"
 import { resistorTableSpec } from "lib/db/derivedtables/resistor"
@@ -99,6 +100,7 @@ export const DERIVED_TABLES: DerivedTableSpec<any>[] = [
   bjtTransistorTableSpec,
   switchTableSpec,
   relayTableSpec,
+  stepperMotorDriverTableSpec,
   fpcConnectorTableSpec,
   usbCConnectorTableSpec,
   pcieM2ConnectorTableSpec,

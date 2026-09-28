@@ -10,6 +10,8 @@ describe("render helpers", () => {
     expect(html).toContain("/led_with_ic/list")
     expect(html).toContain("/lcd_drivers/list")
     expect(html).toContain("/tft_display_drivers/list")
+    expect(html).toContain("/stepper_motor_drivers/list")
+    expect(html).toContain("Stepper Motor Driver")
     expect(html).toContain("/resistors/list")
     expect(html).toContain("/barrel_jacks/list")
     expect(html).toContain("/drams/list")
