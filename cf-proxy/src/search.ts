@@ -90,7 +90,7 @@ export async function searchIndex(
   params: SearchQueryParams,
 ): Promise<SearchRow[]> {
   const limit = Number.parseInt(params.limit ?? "100", 10) || 100
-  const conditions: RawBuilder<unknown>[] = [sql`search_index.stock > 0`]
+  const conditions: RawBuilder<unknown>[] = []
   const fallbackSearchConditions: RawBuilder<unknown>[] = []
   const ftsSearchConditions: RawBuilder<unknown>[] = []
 
@@ -111,6 +111,18 @@ export async function searchIndex(
   }
 
   const raw = params.q?.trim()
+  // An exact part lookup should still identify a catalogued part when its
+  // recorded stock is zero. General discovery remains limited to stocked parts.
+  const exactMatch = raw
+    ? /^c?\d+$/i.test(raw)
+      ? sql`search_index.lcsc = ${Number.parseInt(raw.replace(/^c/i, ""), 10)}`
+      : sql`search_index.mfr = ${raw} COLLATE NOCASE`
+    : sql`0`
+  conditions.push(
+    raw
+      ? sql`(search_index.stock > 0 OR ${exactMatch})`
+      : sql`search_index.stock > 0`,
+  )
 
   if (raw) {
     if (/^c?\d+$/i.test(raw)) {
@@ -156,7 +168,7 @@ export async function searchIndex(
     FROM search_index
   `
   const orderLimitSql = sql`
-    ORDER BY search_index.stock DESC
+    ORDER BY ${raw ? sql`CASE WHEN ${exactMatch} THEN 0 ELSE 1 END,` : sql``} search_index.stock DESC
     LIMIT ${limit}
   `
 
