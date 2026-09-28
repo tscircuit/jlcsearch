@@ -325,7 +325,7 @@ jobs:
         run: |
           cache_keys_file="${RUNNER_TEMP}/jlcsearch-cache-keys.json"
           bash scripts/retry-command.sh bunx wrangler kv key list \
-            --binding CACHE_KV > "${cache_keys_file}"
+            --binding CACHE_KV --remote > "${cache_keys_file}"
 
           cache_key_count="$(jq 'length' "${cache_keys_file}")"
           if [[ "${cache_key_count}" == "0" ]]; then
@@ -337,7 +337,7 @@ jobs:
           bash scripts/retry-command.sh bunx wrangler kv bulk delete \
             "${cache_keys_file}" \
             --binding CACHE_KV \
-            --force
+            --force --remote
 
       - name: Refresh and verify the production API cache
         env:
