@@ -6,6 +6,9 @@ import path from "node:path"
 interface StockRow {
   lcsc: number
   stock: number | null
+  basic: number
+  preferred: number
+  is_extended_promotional: number
 }
 
 interface CatalogStats {
@@ -14,7 +17,9 @@ interface CatalogStats {
   null_lcsc_count: number
 }
 
-const STOCK_TABLES = ["component_catalog", "search_index"] as const
+interface TableInfoRow {
+  name: string
+}
 
 const integerLiteral = (value: number | null, label: string): string => {
   if (value === null) return "NULL"
@@ -24,33 +29,47 @@ const integerLiteral = (value: number | null, label: string): string => {
   return String(value)
 }
 
-const createStockUpdateStatement = (
-  table: (typeof STOCK_TABLES)[number],
-  rows: StockRow[],
-) => {
+const createStockUpdateStatement = (rows: StockRow[]) => {
   const values = rows
     .map(
-      ({ lcsc, stock }) =>
-        `(${integerLiteral(lcsc, "lcsc")},${integerLiteral(stock, "stock")})`,
+      ({ lcsc, stock, basic, preferred, is_extended_promotional }) =>
+        `(${integerLiteral(lcsc, "lcsc")},${integerLiteral(stock, "stock")},${integerLiteral(basic, "basic")},${integerLiteral(preferred, "preferred")},${integerLiteral(is_extended_promotional, "is_extended_promotional")})`,
     )
     .join(",")
 
-  return `WITH stock_updates(lcsc, stock) AS (VALUES ${values})
-UPDATE ${table} AS target
-SET stock = stock_updates.stock
-FROM stock_updates
-WHERE target.lcsc = stock_updates.lcsc
-  AND target.stock IS NOT stock_updates.stock;`
+  return `WITH component_updates(lcsc, stock, basic, preferred, is_extended_promotional) AS (VALUES ${values})
+UPDATE component_catalog AS target
+SET stock = component_updates.stock,
+    basic = component_updates.basic,
+    preferred = component_updates.preferred,
+    is_extended_promotional = component_updates.is_extended_promotional
+FROM component_updates
+WHERE target.lcsc = component_updates.lcsc
+  AND (
+    target.stock IS NOT component_updates.stock
+    OR target.basic IS NOT component_updates.basic
+    OR target.preferred IS NOT component_updates.preferred
+    OR target.is_extended_promotional IS NOT component_updates.is_extended_promotional
+  );`
 }
+
+const createStockBatchLcscList = (rows: StockRow[]) =>
+  `${rows.map((row) => integerLiteral(row.lcsc, "lcsc")).join("\n")}\n`
 
 export const createStockSyncBatchSql = (rows: StockRow[]): string => {
   if (rows.length === 0) {
     throw new Error("Cannot create an empty stock sync batch")
   }
 
-  return STOCK_TABLES.map((table) =>
-    createStockUpdateStatement(table, rows),
-  ).join("\n")
+  return createStockUpdateStatement(rows)
+}
+
+export const createStockSyncBatchLcscList = (rows: StockRow[]): string => {
+  if (rows.length === 0) {
+    throw new Error("Cannot create an empty stock sync batch")
+  }
+
+  return createStockBatchLcscList(rows)
 }
 
 export const writeStockSyncBatches = async ({
@@ -77,6 +96,28 @@ export const writeStockSyncBatches = async ({
 
   const database = new Database(resolvedSourcePath, { readonly: true })
   try {
+    const columns = new Set(
+      database
+        .query<TableInfoRow, []>("PRAGMA table_info(component_stock)")
+        .all()
+        .map((row) => row.name),
+    )
+    const requiredColumns = [
+      "lcsc",
+      "stock",
+      "basic",
+      "preferred",
+      "is_extended_promotional",
+    ]
+    const missingColumns = requiredColumns.filter(
+      (column) => !columns.has(column),
+    )
+    if (missingColumns.length > 0) {
+      throw new Error(
+        `component_stock is missing required columns: ${missingColumns.join(", ")}`,
+      )
+    }
+
     const stats = database
       .query<CatalogStats, []>(
         `SELECT
@@ -99,7 +140,7 @@ export const writeStockSyncBatches = async ({
 
     const rows = database
       .query<StockRow, []>(
-        `SELECT lcsc, stock
+        `SELECT lcsc, stock, basic, preferred, is_extended_promotional
          FROM component_stock
          ORDER BY rowid`,
       )
@@ -112,20 +153,28 @@ export const writeStockSyncBatches = async ({
       if (batch.length < batchSize) continue
 
       batchCount += 1
-      const filename = `batch-${String(batchCount).padStart(6, "0")}.sql`
+      const basename = `batch-${String(batchCount).padStart(6, "0")}`
       await Bun.write(
-        path.join(resolvedOutputDirectory, filename),
+        path.join(resolvedOutputDirectory, `${basename}.sql`),
         createStockSyncBatchSql(batch),
+      )
+      await Bun.write(
+        path.join(resolvedOutputDirectory, `${basename}.lcsc`),
+        createStockSyncBatchLcscList(batch),
       )
       batch = []
     }
 
     if (batch.length > 0) {
       batchCount += 1
-      const filename = `batch-${String(batchCount).padStart(6, "0")}.sql`
+      const basename = `batch-${String(batchCount).padStart(6, "0")}`
       await Bun.write(
-        path.join(resolvedOutputDirectory, filename),
+        path.join(resolvedOutputDirectory, `${basename}.sql`),
         createStockSyncBatchSql(batch),
+      )
+      await Bun.write(
+        path.join(resolvedOutputDirectory, `${basename}.lcsc`),
+        createStockSyncBatchLcscList(batch),
       )
     }
 

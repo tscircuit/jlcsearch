@@ -17,15 +17,16 @@ run_wrangler() {
 }
 
 echo "Fetching component_catalog bounds..."
-MAX_ROWID="$(
-  run_wrangler d1 execute "$DB_NAME" --remote --command \
+if ! MAX_ROWID="$(
+  run_wrangler d1 execute "$DB_NAME" --remote --json --command \
     "SELECT MAX(rowid) AS max_rowid FROM component_catalog;" \
-    | rg -o '"max_rowid":\s*[0-9]+' \
-    | rg -o '[0-9]+' \
-    | tail -n1
-)"
+    | jq -er '.[0].results[0].max_rowid // empty'
+)"; then
+  echo "Failed to determine component_catalog max_rowid"
+  exit 1
+fi
 
-if [[ -z "${MAX_ROWID}" ]]; then
+if [[ ! "${MAX_ROWID}" =~ ^[1-9][0-9]*$ ]]; then
   echo "Failed to determine component_catalog max_rowid"
   exit 1
 fi
@@ -43,6 +44,7 @@ run_wrangler d1 execute "$DB_NAME" --remote --command \
      price1 REAL,
      basic INTEGER,
      preferred INTEGER,
+     is_extended_promotional INTEGER,
      category TEXT,
      subcategory TEXT,
      manufacturer_name TEXT,
@@ -70,6 +72,7 @@ INSERT INTO search_index_next (
   price1,
   basic,
   preferred,
+  is_extended_promotional,
   category,
   subcategory,
   manufacturer_name,
@@ -102,6 +105,7 @@ SELECT
   END AS price1,
   basic,
   preferred,
+  is_extended_promotional,
   category,
   subcategory,
   CASE
@@ -144,7 +148,9 @@ run_wrangler d1 execute "$DB_NAME" --remote --command \
    CREATE INDEX IF NOT EXISTS idx_search_index_next_lcsc ON search_index_next(lcsc);
    CREATE INDEX IF NOT EXISTS idx_search_index_next_package ON search_index_next(package);
    CREATE INDEX IF NOT EXISTS idx_search_index_next_basic ON search_index_next(basic);
-   CREATE INDEX IF NOT EXISTS idx_search_index_next_preferred ON search_index_next(preferred);"
+   CREATE INDEX IF NOT EXISTS idx_search_index_next_preferred ON search_index_next(preferred);
+   CREATE INDEX IF NOT EXISTS idx_search_index_next_extended_promotional_stock
+     ON search_index_next(is_extended_promotional, stock DESC);"
 
 echo "Validating row count..."
 run_wrangler d1 execute "$DB_NAME" --remote --command \
@@ -168,11 +174,14 @@ run_wrangler d1 execute "$DB_NAME" --remote --command \
    DROP INDEX IF EXISTS idx_search_index_package;
    DROP INDEX IF EXISTS idx_search_index_basic;
    DROP INDEX IF EXISTS idx_search_index_preferred;
+   DROP INDEX IF EXISTS idx_search_index_extended_promotional_stock;
    ALTER TABLE search_index_next RENAME TO search_index;
    CREATE INDEX IF NOT EXISTS idx_search_index_stock ON search_index(stock DESC);
    CREATE INDEX IF NOT EXISTS idx_search_index_lcsc ON search_index(lcsc);
    CREATE INDEX IF NOT EXISTS idx_search_index_package ON search_index(package);
    CREATE INDEX IF NOT EXISTS idx_search_index_basic ON search_index(basic);
-   CREATE INDEX IF NOT EXISTS idx_search_index_preferred ON search_index(preferred);"
+   CREATE INDEX IF NOT EXISTS idx_search_index_preferred ON search_index(preferred);
+   CREATE INDEX IF NOT EXISTS idx_search_index_extended_promotional_stock
+     ON search_index(is_extended_promotional, stock DESC);"
 
 echo "Done. Old table kept as search_index_old for rollback."
