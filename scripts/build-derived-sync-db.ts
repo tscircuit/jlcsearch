@@ -2,10 +2,10 @@ import { Database } from "bun:sqlite"
 import { existsSync } from "node:fs"
 import { mkdir, rm } from "node:fs/promises"
 import path from "node:path"
-import { setupDerivedTables } from "lib/db/derivedtables/setup-derived-tables"
-import type { DB } from "lib/db/generated/kysely"
 import { Kysely } from "kysely"
 import { BunSqliteDialect } from "kysely-bun-sqlite"
+import { setupDerivedTables } from "lib/db/derivedtables/setup-derived-tables"
+import type { DB } from "lib/db/generated/kysely"
 
 const tableExists = (database: Database, schema: string, table: string) =>
   Boolean(
@@ -85,6 +85,7 @@ export const buildDerivedSyncDatabase = async ({
       0 AS manufacturer_id,
       CASE WHEN j.library_type = 'base' THEN 1 ELSE 0 END AS basic,
       j.preferred,
+      CASE WHEN j.library_type != 'base' AND j.preferred = 1 THEN 1 ELSE 0 END AS is_extended_promotional,
       j.description,
       j.datasheet,
       j.stock,
@@ -139,6 +140,7 @@ export const buildDerivedSyncDatabase = async ({
         j.package,
         CASE WHEN j.library_type = 'base' THEN 1 ELSE 0 END AS basic,
         j.preferred,
+        CASE WHEN j.library_type != 'base' AND j.preferred = 1 THEN 1 ELSE 0 END AS is_extended_promotional,
         j.description,
         j.stock,
         j.price,
