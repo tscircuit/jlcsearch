@@ -1,12 +1,5 @@
 import { existsSync } from "node:fs"
-import {
-  chmod,
-  copyFile,
-  mkdir,
-  mkdtemp,
-  readdir,
-  rm,
-} from "node:fs/promises"
+import { chmod, copyFile, mkdir, mkdtemp, readdir, rm } from "node:fs/promises"
 import { arch, platform, tmpdir } from "node:os"
 import { join } from "node:path"
 
@@ -64,9 +57,7 @@ export function getSevenZipSetupPlan(
 
   const archiveUrl = POSIX_BINARY_URLS[`${currentPlatform}-${currentArch}`]
   if (!archiveUrl) {
-    throw new Error(
-      `Unsupported platform: ${currentPlatform}-${currentArch}`,
-    )
+    throw new Error(`Unsupported platform: ${currentPlatform}-${currentArch}`)
   }
 
   return {
@@ -188,13 +179,7 @@ async function setupWindows(
     ])
 
     console.log("Extracting official 7za.exe...")
-    await run([
-      bootstrapPath,
-      "x",
-      archivePath,
-      `-o${extractDirectory}`,
-      "-y",
-    ])
+    await run([bootstrapPath, "x", archivePath, `-o${extractDirectory}`, "-y"])
 
     const candidates = await findFilesNamed(extractDirectory, "7za.exe")
     const sourceBinary = selectWindows7za(candidates, plan.preferredArch)
