@@ -268,6 +268,7 @@ export interface Component {
   lcsc: Generated<number>;
   manufacturer_id: number;
   mfr: string;
+  is_extended_promotional: Generated<number>;
   package: string;
   preferred: Generated<number>;
   price: string;
