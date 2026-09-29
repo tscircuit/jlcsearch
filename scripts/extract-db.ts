@@ -4,13 +4,10 @@ import { join } from "node:path"
 const binaryName = platform() === "win32" ? "7za.exe" : "7zz"
 const binaryPath = join(".bin", binaryName)
 
-const process = Bun.spawn(
-  [binaryPath, "x", ".buildtmp/cache.zip", "-y"],
-  {
-    stdout: "inherit",
-    stderr: "inherit",
-  },
-)
+const process = Bun.spawn([binaryPath, "x", ".buildtmp/cache.zip", "-y"], {
+  stdout: "inherit",
+  stderr: "inherit",
+})
 
 const exitCode = await process.exited
 if (exitCode !== 0) {
