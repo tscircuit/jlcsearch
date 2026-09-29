@@ -59,6 +59,7 @@ export const bleChipTableSpec: DerivedTableSpec<BleChip> = {
     { name: "has_usb", type: "boolean" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   listCandidateComponents: (db) =>
     db

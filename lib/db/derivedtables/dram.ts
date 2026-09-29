@@ -72,6 +72,7 @@ export const dramTableSpec: DerivedTableSpec<Dram> = {
     { name: "operating_temp_max", type: "real" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   indexes: [
     { name: "idx_dram_stock", columns: ["stock"] },
@@ -149,6 +150,7 @@ export const dramTableSpec: DerivedTableSpec<Dram> = {
           in_stock: Number(component.stock ?? 0) > 0,
           is_basic: Boolean(component.basic),
           is_preferred: Boolean(component.preferred),
+          is_extended_promotional: Boolean(component.is_extended_promotional),
           package: String(extra?.package ?? component.package ?? ""),
           memory_type: inferMemoryType(searchableText, subcategory),
           memory_size_mbit: parseMemorySizeMbit(sizeSource),

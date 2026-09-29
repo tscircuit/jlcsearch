@@ -93,6 +93,7 @@ export const hdmiPortTableSpec: DerivedTableSpec<HdmiPort> = {
     { name: "operating_temp_max", type: "real" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   indexes: [
     { name: "idx_hdmi_port_stock", columns: ["stock"] },
@@ -169,6 +170,7 @@ export const hdmiPortTableSpec: DerivedTableSpec<HdmiPort> = {
           in_stock: Boolean((component.stock || 0) > 0),
           is_basic: Boolean(component.basic),
           is_preferred: Boolean(component.preferred),
+          is_extended_promotional: Boolean(component.is_extended_promotional),
           package: packageName,
           mounting_style: inferMountingStyle(attrs, packageName, description),
           orientation: inferOrientation(description),
