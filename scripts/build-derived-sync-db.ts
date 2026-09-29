@@ -72,7 +72,7 @@ export const buildDerivedSyncDatabase = async ({
     SELECT DISTINCT category, subcategory
     FROM source.jlc_components
     WHERE present = 1
-      AND last_on_stock >= unixepoch('now', '-1 year')
+      AND last_on_stock >= CAST(strftime('%s', 'now', '-1 year') AS INTEGER)
     ORDER BY category, subcategory;
 
     CREATE TEMP VIEW components AS
@@ -85,6 +85,7 @@ export const buildDerivedSyncDatabase = async ({
       0 AS manufacturer_id,
       CASE WHEN j.library_type = 'base' THEN 1 ELSE 0 END AS basic,
       j.preferred,
+      CASE WHEN j.library_type != 'base' AND j.preferred = 1 THEN 1 ELSE 0 END AS is_extended_promotional,
       j.description,
       j.datasheet,
       j.stock,
@@ -125,7 +126,7 @@ export const buildDerivedSyncDatabase = async ({
       AND c.subcategory = j.subcategory
     LEFT JOIN source.lcsc_components AS l ON l.lcsc = j.lcsc
     WHERE j.present = 1
-      AND j.last_on_stock >= unixepoch('now', '-1 year');
+      AND j.last_on_stock >= CAST(strftime('%s', 'now', '-1 year') AS INTEGER);
   `)
 
   if (includeComponentCatalog) {
@@ -139,6 +140,7 @@ export const buildDerivedSyncDatabase = async ({
         j.package,
         CASE WHEN j.library_type = 'base' THEN 1 ELSE 0 END AS basic,
         j.preferred,
+        CASE WHEN j.library_type != 'base' AND j.preferred = 1 THEN 1 ELSE 0 END AS is_extended_promotional,
         j.description,
         j.stock,
         j.price,
@@ -181,10 +183,11 @@ export const buildDerivedSyncDatabase = async ({
       FROM source.jlc_components AS j
       LEFT JOIN source.lcsc_components AS l ON l.lcsc = j.lcsc
       WHERE j.present = 1
-        AND j.last_on_stock >= unixepoch('now', '-1 year');
+        AND j.last_on_stock >= CAST(strftime('%s', 'now', '-1 year') AS INTEGER);
 
       CREATE INDEX idx_component_catalog_lcsc ON component_catalog(lcsc);
       CREATE INDEX idx_component_catalog_stock ON component_catalog(stock DESC);
+      CREATE INDEX idx_component_catalog_is_extended_promotional ON component_catalog(is_extended_promotional);
     `)
   }
 
@@ -200,7 +203,7 @@ export const buildDerivedSyncDatabase = async ({
         lcsc,
         CASE WHEN present = 1 THEN coalesce(stock, 0) ELSE 0 END
       FROM source.jlc_components
-      WHERE last_on_stock >= unixepoch('now', '-1 year');
+      WHERE last_on_stock >= CAST(strftime('%s', 'now', '-1 year') AS INTEGER);
     `)
   }
 
