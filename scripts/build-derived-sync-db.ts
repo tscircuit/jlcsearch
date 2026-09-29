@@ -85,6 +85,15 @@ export const buildDerivedSyncDatabase = async ({
       0 AS manufacturer_id,
       CASE WHEN j.library_type = 'base' THEN 1 ELSE 0 END AS basic,
       j.preferred,
+      CASE
+        WHEN j.library_type IN ('promotional', 'expand_promotional', 'extended_promotional')
+             OR j.library_type LIKE '%promot%'
+             OR (json_valid(j.attributes) AND (
+               json_extract(j.attributes, '$.is_extended_promotional') = 1 OR
+               json_extract(j.attributes, '$.promotional') = 1
+             ))
+        THEN 1 ELSE 0
+      END AS is_extended_promotional,
       j.description,
       j.datasheet,
       j.stock,
@@ -139,6 +148,15 @@ export const buildDerivedSyncDatabase = async ({
         j.package,
         CASE WHEN j.library_type = 'base' THEN 1 ELSE 0 END AS basic,
         j.preferred,
+        CASE
+          WHEN j.library_type IN ('promotional', 'expand_promotional', 'extended_promotional')
+               OR j.library_type LIKE '%promot%'
+               OR (json_valid(j.attributes) AND (
+                 json_extract(j.attributes, '$.is_extended_promotional') = 1 OR
+                 json_extract(j.attributes, '$.promotional') = 1
+               ))
+          THEN 1 ELSE 0
+        END AS is_extended_promotional,
         j.description,
         j.stock,
         j.price,
@@ -185,6 +203,7 @@ export const buildDerivedSyncDatabase = async ({
 
       CREATE INDEX idx_component_catalog_lcsc ON component_catalog(lcsc);
       CREATE INDEX idx_component_catalog_stock ON component_catalog(stock DESC);
+      CREATE INDEX idx_component_catalog_is_extended_promotional ON component_catalog(is_extended_promotional);
     `)
   }
 

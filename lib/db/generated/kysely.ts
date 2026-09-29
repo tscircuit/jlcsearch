@@ -272,6 +272,8 @@ export interface Component {
   preferred: Generated<number>;
   price: string;
   stock: number;
+  in_stock?: number | null;
+  is_extended_promotional?: Generated<number | null>;
 }
 
 export interface ComponentsFt {
