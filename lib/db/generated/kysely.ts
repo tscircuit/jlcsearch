@@ -257,6 +257,7 @@ export interface Category {
 
 export interface Component {
   basic: number;
+  is_extended_promotional: number;
   category_id: number;
   datasheet: string;
   description: string;
