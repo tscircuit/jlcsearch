@@ -1,0 +1,11 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`header table derives two rows from C492422 Pin Structure 1`] = `
+{
+  "numPins": 10,
+  "numPinsPerRow": 5,
+  "numRows": 2,
+  "supplierPinStructure": "2x5P",
+  "supplierRowAttribute": "双排",
+}
+`;
