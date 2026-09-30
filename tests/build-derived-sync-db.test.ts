@@ -308,6 +308,9 @@ test("recovery restores absent records while preserving current stock and explic
   recovery.exec(
     "INSERT INTO jlc_components SELECT 99999, fetched_at, present, sync_seen, category, subcategory, mfr, package, joints, manufacturer, library_type, preferred, last_on_stock, description, datasheet, stock, price, attributes FROM jlc_components WHERE lcsc=12345; INSERT INTO jlc_components SELECT 54321, fetched_at, present, sync_seen, category, subcategory, mfr, package, joints, manufacturer, library_type, preferred, last_on_stock, description, datasheet, stock, price, attributes FROM jlc_components WHERE lcsc=12345",
   )
+  recovery.exec(
+    "UPDATE lcsc_components SET manufacturer='Older Manufacturer', attributes='{\"Gender\":\"Older\"}'; INSERT INTO lcsc_components SELECT 99999,fetched_at,'Recovered Manufacturer','{\"Gender\":\"Female\"}',image,url_slug FROM lcsc_components WHERE lcsc=12345",
+  )
   recovery.close()
   await buildDerivedSyncDatabase({
     sourcePath: current.sourcePath,
@@ -320,6 +323,18 @@ test("recovery restores absent records while preserving current stock and explic
   })
   const output = new Database(current.outputPath)
   try {
+    const catalogExtras = output
+      .query<{ lcsc: number; extra: string }, []>(
+        "SELECT lcsc, extra FROM component_catalog ORDER BY lcsc",
+      )
+      .all()
+    expect(JSON.parse(catalogExtras[0].extra).manufacturer.name).toBe(
+      "Example Inc.",
+    )
+    expect(JSON.parse(catalogExtras[1].extra).manufacturer.name).toBe(
+      "Recovered Manufacturer",
+    )
+    expect(JSON.parse(catalogExtras[1].extra).attributes.Gender).toBe("Female")
     expect(
       output
         .query("SELECT lcsc, stock FROM component_catalog ORDER BY lcsc")
