@@ -296,8 +296,81 @@ describe("buildDerivedSyncDatabase", () => {
   })
 })
 
+test("recovery restores absent records while preserving current stock and explicit removals", async () => {
+  const current = await createSourceDatabase()
+  const backup = await createSourceDatabase()
+  const source = new Database(current.sourcePath)
+  source.exec(
+    "UPDATE jlc_components SET stock=7; INSERT INTO jlc_components SELECT 54321, fetched_at, 0, sync_seen, category, subcategory, mfr, package, joints, manufacturer, library_type, preferred, last_on_stock, description, datasheet, 99, price, attributes FROM jlc_components WHERE lcsc=12345",
+  )
+  source.close()
+  const recovery = new Database(backup.sourcePath)
+  recovery.exec(
+    "INSERT INTO jlc_components SELECT 99999, fetched_at, present, sync_seen, category, subcategory, mfr, package, joints, manufacturer, library_type, preferred, last_on_stock, description, datasheet, stock, price, attributes FROM jlc_components WHERE lcsc=12345; INSERT INTO jlc_components SELECT 54321, fetched_at, present, sync_seen, category, subcategory, mfr, package, joints, manufacturer, library_type, preferred, last_on_stock, description, datasheet, stock, price, attributes FROM jlc_components WHERE lcsc=12345",
+  )
+  recovery.close()
+  await buildDerivedSyncDatabase({
+    sourcePath: current.sourcePath,
+    outputPath: current.outputPath,
+    recoveryPath: backup.sourcePath,
+    tableNames: ["hdmi_port"],
+    includeComponentCatalog: true,
+    includeStockSnapshot: true,
+    logger: () => {},
+  })
+  const output = new Database(current.outputPath)
+  try {
+    expect(
+      output
+        .query("SELECT lcsc, stock FROM component_catalog ORDER BY lcsc")
+        .all(),
+    ).toEqual([
+      { lcsc: 12345, stock: 7 },
+      { lcsc: 99999, stock: 250 },
+    ])
+    expect(
+      output
+        .query("SELECT lcsc, stock FROM component_stock ORDER BY lcsc")
+        .all(),
+    ).toEqual([
+      { lcsc: 12345, stock: 7 },
+      { lcsc: 54321, stock: 0 },
+      { lcsc: 99999, stock: 250 },
+    ])
+    expect(
+      output.query("SELECT lcsc, stock FROM hdmi_port ORDER BY lcsc").all(),
+    ).toEqual([
+      { lcsc: 12345, stock: 7 },
+      { lcsc: 99999, stock: 250 },
+    ])
+  } finally {
+    output.close()
+  }
+})
+
 describe("extractMinQPrice", () => {
   test("reads source-db-v2 price CSV", () => {
     expect(extractMinQPrice("10-:0.75,1-9:1.25")).toBe(1.25)
   })
+})
+
+test("refuses to overwrite the recovery source before touching either database", async () => {
+  const current = await createSourceDatabase()
+  const backup = await createSourceDatabase()
+  await expect(
+    buildDerivedSyncDatabase({
+      sourcePath: current.sourcePath,
+      outputPath: backup.sourcePath,
+      recoveryPath: backup.sourcePath,
+      tableNames: ["hdmi_port"],
+    }),
+  ).rejects.toThrow("differ from the output")
+  const source = new Database(backup.sourcePath, { readonly: true })
+  try {
+    expect(
+      source.query("SELECT stock FROM jlc_components WHERE lcsc=12345").get(),
+    ).toEqual({ stock: 250 })
+  } finally {
+    source.close()
+  }
 })
