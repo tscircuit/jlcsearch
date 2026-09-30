@@ -14,6 +14,8 @@ describe("render helpers", () => {
     expect(html).toContain("Stepper Motor Driver")
     expect(html).toContain("/resistors/list")
     expect(html).toContain("/barrel_jacks/list")
+    expect(html).toContain("/ethernet_controllers/list")
+    expect(html).toContain("Ethernet Controllers")
     expect(html).toContain("/drams/list")
     expect(html).toContain("/psrams/list")
     expect(html).toContain("/spring_clamp_terminal_blocks/list")

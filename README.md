@@ -189,3 +189,11 @@ Run **Build and Sync D1** with `sync_scope=derived`,
 `derived_tables=oled_display`, and
 `cache_bust_url=https://jlcsearch.tscircuit.com/oled_display/list.json`.
 For a local snapshot, run `SOURCE_DB_PATH=oled.sqlite3 bun scripts/refresh-oled-displays.ts`.
+
+### Ethernet controllers
+
+Use `/ethernet_controllers/list` or `/ethernet_controllers/list.json` for
+Ethernet controller ICs, including W5500, CH390H, and ENC28J60. Filters include
+`package`, `is_basic`, and `is_preferred`. The import includes the upstream
+Ethernet Controllers category and recognized controllers in mixed categories,
+while excluding PHY-only transceivers, PoE chips, modules, and connectors.

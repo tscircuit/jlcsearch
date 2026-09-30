@@ -541,6 +541,13 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
       num_channels: { field: "num_channels", type: "number" },
     },
   },
+  ethernet_controller: {
+    filters: {
+      package: { field: "package", type: "string" },
+      is_basic: { field: "is_basic", type: "boolean" },
+      is_preferred: { field: "is_preferred", type: "boolean" },
+    },
+  },
   dram: {
     filters: {
       package: { field: "package", type: "string" },
@@ -811,6 +818,7 @@ export const ROUTE_TO_TABLE: Record<string, string> = {
   "/buck_boost_converters/list": "buck_boost_converter",
   "/dacs/list": "dac",
   "/drams/list": "dram",
+  "/ethernet_controllers/list": "ethernet_controller",
   "/psrams/list": "psram",
   "/dimm_connectors/list": "dimm_connector",
   "/fpc_connectors/list": "fpc_connector",
@@ -868,6 +876,7 @@ export const TABLE_RESPONSE_KEY: Record<string, string> = {
   buck_boost_converter: "buck_boost_converters",
   dac: "dacs",
   dram: "drams",
+  ethernet_controller: "ethernet_controllers",
   psram: "psrams",
   dimm_connector: "dimm_connectors",
   fpc_connector: "fpc_connectors",
