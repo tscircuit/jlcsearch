@@ -153,7 +153,7 @@ jobs:
         id: cache-date
         run: |
           echo "bucket=$(($(date -u +%s) / 86400))" >> "${GITHUB_OUTPUT}"
-          echo "tables=${DERIVED_TABLES_LIST//,/-}" >> "${GITHUB_OUTPUT}"
+          echo "tables=$(printf '%s' "${DERIVED_TABLES_LIST}" | sha256sum | cut -d ' ' -f 1)" >> "${GITHUB_OUTPUT}"
 
       - name: Cache prepared SQLite database
         id: cache-database
