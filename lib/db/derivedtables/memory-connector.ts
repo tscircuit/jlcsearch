@@ -156,6 +156,7 @@ const createMemoryConnectorTableSpec = (
     { name: "is_right_angle", type: "boolean" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   indexes: [
     { name: `idx_${tableName}_stock`, columns: ["stock"] },
