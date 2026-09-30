@@ -97,7 +97,8 @@ export const buildDerivedSyncDatabase = async ({
       const columns = sourceColumns
         .map((column) => `"${column.replaceAll('"', '""')}"`)
         .join(",")
-      database.exec(`CREATE TEMP VIEW input_${table} AS
+      if (table === "jlc_components")
+        database.exec(`CREATE TEMP VIEW input_${table} AS
         SELECT ${columns} FROM source.${table}
         UNION ALL
         SELECT ${columns} FROM recovery.${table} AS old
@@ -107,12 +108,24 @@ export const buildDerivedSyncDatabase = async ({
       "Recovery enabled: current source records take precedence; recovered stock retains its original snapshot age.",
     )
   } else {
-    for (const table of ["jlc_components", "lcsc_components"]) {
+    for (const table of ["jlc_components"]) {
       database.exec(
         `CREATE TEMP VIEW input_${table} AS SELECT * FROM source.${table}`,
       )
     }
   }
+
+  // Joining a UNION ALL metadata view materializes every LCSC row on each
+  // derived-table batch. Direct joins use both source primary-key indexes.
+  const lcscJoin = resolvedRecoveryPath
+    ? `LEFT JOIN source.lcsc_components AS l ON l.lcsc = j.lcsc
+       LEFT JOIN recovery.lcsc_components AS recovered_l
+         ON recovered_l.lcsc = j.lcsc AND l.lcsc IS NULL`
+    : "LEFT JOIN source.lcsc_components AS l ON l.lcsc = j.lcsc"
+  const lcscColumn = (name: "attributes" | "manufacturer" | "url_slug") =>
+    resolvedRecoveryPath
+      ? `(CASE WHEN l.lcsc IS NOT NULL THEN l.${name} ELSE recovered_l.${name} END)`
+      : `l.${name}`
 
   database.exec(`
     CREATE TABLE categories (
@@ -156,20 +169,20 @@ export const buildDerivedSyncDatabase = async ({
               ELSE '{}'
             END,
             CASE
-              WHEN json_valid(l.attributes) THEN l.attributes
+              WHEN json_valid(${lcscColumn("attributes")}) THEN ${lcscColumn("attributes")}
               ELSE '{}'
             END
           )
         ),
         'manufacturer',
         coalesce(
-          NULLIF(l.manufacturer, ''),
+          NULLIF(${lcscColumn("manufacturer")}, ''),
           NULLIF(j.manufacturer, '')
         ),
         'url',
         CASE
-          WHEN l.url_slug IS NOT NULL AND l.url_slug != ''
-          THEN 'https://lcsc.com/product-detail/' || l.url_slug || '_C' || j.lcsc || '.html'
+          WHEN ${lcscColumn("url_slug")} IS NOT NULL AND ${lcscColumn("url_slug")} != ''
+          THEN 'https://lcsc.com/product-detail/' || ${lcscColumn("url_slug")} || '_C' || j.lcsc || '.html'
           ELSE NULL
         END
       ) AS extra
@@ -177,7 +190,7 @@ export const buildDerivedSyncDatabase = async ({
     INNER JOIN main.categories AS c
       ON c.category = j.category
       AND c.subcategory = j.subcategory
-    LEFT JOIN input_lcsc_components AS l ON l.lcsc = j.lcsc
+    ${lcscJoin}
     WHERE j.present = 1
       AND j.last_on_stock >= unixepoch('now', '-1 year');
   `)
@@ -200,13 +213,13 @@ export const buildDerivedSyncDatabase = async ({
           'number', 'C' || j.lcsc,
           'manufacturer', json_object(
             'name', coalesce(
-              NULLIF(l.manufacturer, ''),
+              NULLIF(${lcscColumn("manufacturer")}, ''),
               NULLIF(j.manufacturer, '')
             )
           ),
           'title', trim(
             coalesce(
-              NULLIF(l.manufacturer, ''),
+              NULLIF(${lcscColumn("manufacturer")}, ''),
               NULLIF(j.manufacturer, ''),
               ''
             ) || ' ' || j.mfr
@@ -220,20 +233,20 @@ export const buildDerivedSyncDatabase = async ({
                 ELSE '{}'
               END,
               CASE
-                WHEN json_valid(l.attributes) THEN l.attributes
+                WHEN json_valid(${lcscColumn("attributes")}) THEN ${lcscColumn("attributes")}
                 ELSE '{}'
               END
             )
           ),
           'description', j.description,
           'url', CASE
-            WHEN l.url_slug IS NOT NULL AND l.url_slug != ''
-            THEN 'https://lcsc.com/product-detail/' || l.url_slug || '_C' || j.lcsc || '.html'
+            WHEN ${lcscColumn("url_slug")} IS NOT NULL AND ${lcscColumn("url_slug")} != ''
+            THEN 'https://lcsc.com/product-detail/' || ${lcscColumn("url_slug")} || '_C' || j.lcsc || '.html'
             ELSE NULL
           END
         ) AS extra
       FROM input_jlc_components AS j
-      LEFT JOIN input_lcsc_components AS l ON l.lcsc = j.lcsc
+      ${lcscJoin}
       WHERE j.present = 1
         AND j.last_on_stock >= unixepoch('now', '-1 year');
 

@@ -153,7 +153,7 @@ jobs:
         id: cache-date
         run: |
           echo "bucket=$(($(date -u +%s) / 86400))" >> "${GITHUB_OUTPUT}"
-          echo "tables=${DERIVED_TABLES_LIST//,/-}" >> "${GITHUB_OUTPUT}"
+          echo "tables=$(printf '%s' "${DERIVED_TABLES_LIST}" | sha256sum | cut -d ' ' -f 1)" >> "${GITHUB_OUTPUT}"
 
       - name: Cache prepared SQLite database
         id: cache-database
@@ -286,6 +286,7 @@ jobs:
           SYNC_DERIVED_TABLES: ${{ env.SYNC_SCOPE == 'derived' && '1' || '0' }}
           SYNC_COMPONENT_CATALOG: ${{ env.SYNC_SCOPE == 'full_catalog' && '1' || '0' }}
           SYNC_SEARCH_INDEX: ${{ env.SYNC_SCOPE == 'full_catalog' && '1' || '0' }}
+          BATCH_ROWS: "1000"
           COMPONENT_CATALOG_BATCH_ROWS: ${{ env.SYNC_SCOPE == 'full_catalog' && '1000' || '250' }}
           SEARCH_INDEX_BATCH_ROWS: ${{ env.SYNC_SCOPE == 'full_catalog' && '1000' || '250' }}
           FTS_BATCH_ROWS: ${{ env.SYNC_SCOPE == 'full_catalog' && '5000' || '25000' }}
