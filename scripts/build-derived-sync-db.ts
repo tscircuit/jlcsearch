@@ -22,6 +22,7 @@ const tableExists = (database: Database, schema: string, table: string) =>
 export const buildDerivedSyncDatabase = async ({
   sourcePath,
   outputPath,
+  recoveryPath,
   tableNames,
   includeComponentCatalog = false,
   includeStockSnapshot = false,
@@ -29,6 +30,7 @@ export const buildDerivedSyncDatabase = async ({
 }: {
   sourcePath: string
   outputPath: string
+  recoveryPath?: string
   tableNames?: string[]
   includeComponentCatalog?: boolean
   includeStockSnapshot?: boolean
@@ -42,6 +44,17 @@ export const buildDerivedSyncDatabase = async ({
   }
   if (resolvedSourcePath === resolvedOutputPath) {
     throw new Error("Source and output database paths must be different")
+  }
+
+  const resolvedRecoveryPath = recoveryPath
+    ? path.resolve(recoveryPath)
+    : undefined
+  if (
+    resolvedRecoveryPath &&
+    (resolvedRecoveryPath === resolvedOutputPath ||
+      !existsSync(resolvedRecoveryPath))
+  ) {
+    throw new Error("Recovery database must exist and differ from the output")
   }
 
   await mkdir(path.dirname(resolvedOutputPath), { recursive: true })
@@ -60,6 +73,47 @@ export const buildDerivedSyncDatabase = async ({
     )
   }
 
+  if (resolvedRecoveryPath) {
+    database.run("ATTACH DATABASE ? AS recovery", [resolvedRecoveryPath])
+    for (const table of ["jlc_components", "lcsc_components"]) {
+      if (!tableExists(database, "recovery", table)) {
+        database.close()
+        throw new Error(`Recovery database is missing ${table}`)
+      }
+      const sourceColumns = database
+        .query<{ name: string }, []>(`PRAGMA source.table_info(${table})`)
+        .all()
+        .map((c) => c.name)
+      const recoveryColumns = new Set(
+        database
+          .query<{ name: string }, []>(`PRAGMA recovery.table_info(${table})`)
+          .all()
+          .map((c) => c.name),
+      )
+      if (sourceColumns.some((column) => !recoveryColumns.has(column))) {
+        database.close()
+        throw new Error(`Recovery schema does not match ${table}`)
+      }
+      const columns = sourceColumns
+        .map((column) => `"${column.replaceAll('"', '""')}"`)
+        .join(",")
+      database.exec(`CREATE TEMP VIEW input_${table} AS
+        SELECT ${columns} FROM source.${table}
+        UNION ALL
+        SELECT ${columns} FROM recovery.${table} AS old
+        WHERE NOT EXISTS (SELECT 1 FROM source.${table} AS current WHERE current.lcsc = old.lcsc);`)
+    }
+    logger(
+      "Recovery enabled: current source records take precedence; recovered stock retains its original snapshot age.",
+    )
+  } else {
+    for (const table of ["jlc_components", "lcsc_components"]) {
+      database.exec(
+        `CREATE TEMP VIEW input_${table} AS SELECT * FROM source.${table}`,
+      )
+    }
+  }
+
   database.exec(`
     CREATE TABLE categories (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -70,7 +124,7 @@ export const buildDerivedSyncDatabase = async ({
 
     INSERT INTO categories(category, subcategory)
     SELECT DISTINCT category, subcategory
-    FROM source.jlc_components
+    FROM input_jlc_components
     WHERE present = 1
       AND last_on_stock >= unixepoch('now', '-1 year')
     ORDER BY category, subcategory;
@@ -119,11 +173,11 @@ export const buildDerivedSyncDatabase = async ({
           ELSE NULL
         END
       ) AS extra
-    FROM source.jlc_components AS j
+    FROM input_jlc_components AS j
     INNER JOIN main.categories AS c
       ON c.category = j.category
       AND c.subcategory = j.subcategory
-    LEFT JOIN source.lcsc_components AS l ON l.lcsc = j.lcsc
+    LEFT JOIN input_lcsc_components AS l ON l.lcsc = j.lcsc
     WHERE j.present = 1
       AND j.last_on_stock >= unixepoch('now', '-1 year');
   `)
@@ -178,8 +232,8 @@ export const buildDerivedSyncDatabase = async ({
             ELSE NULL
           END
         ) AS extra
-      FROM source.jlc_components AS j
-      LEFT JOIN source.lcsc_components AS l ON l.lcsc = j.lcsc
+      FROM input_jlc_components AS j
+      LEFT JOIN input_lcsc_components AS l ON l.lcsc = j.lcsc
       WHERE j.present = 1
         AND j.last_on_stock >= unixepoch('now', '-1 year');
 
@@ -199,7 +253,7 @@ export const buildDerivedSyncDatabase = async ({
       SELECT
         lcsc,
         CASE WHEN present = 1 THEN coalesce(stock, 0) ELSE 0 END
-      FROM source.jlc_components
+      FROM input_jlc_components
       WHERE last_on_stock >= unixepoch('now', '-1 year');
     `)
   }
@@ -236,6 +290,7 @@ const main = async () => {
   await buildDerivedSyncDatabase({
     sourcePath,
     outputPath,
+    recoveryPath: process.env.RECOVERY_DB_PATH?.trim() || undefined,
     tableNames: configuredTables?.length ? configuredTables : undefined,
     includeComponentCatalog,
     includeStockSnapshot,

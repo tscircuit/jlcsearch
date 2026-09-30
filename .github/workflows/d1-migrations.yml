@@ -35,6 +35,11 @@ on:
         required: true
         default: npu_chip
         type: string
+      recover_missing_parts:
+        description: Fill upstream gaps from the last complete verified snapshot (recovered stock may be old)
+        required: true
+        default: true
+        type: boolean
       cache_bust_url:
         description: Production URL to refresh after the D1 upload
         required: false
@@ -101,6 +106,7 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       SYNC_SCOPE: ${{ github.event_name == 'schedule' && 'stock_only' || inputs.sync_scope || 'derived' }}
+      RECOVER_MISSING_PARTS: ${{ github.event_name != 'workflow_dispatch' || inputs.recover_missing_parts }}
       DERIVED_TABLES_LIST: ${{ inputs.derived_tables || 'photo_diode,micro_usb_connector,barrel_jack,dram,ethernet_controller,psram,npu_chip,linux_capable_processor,stepper_motor_driver' }}
       SMOKE_TEST_LCSC: ${{ inputs.smoke_test_lcsc || '7512' }}
 
@@ -154,7 +160,14 @@ jobs:
         uses: actions/cache@v4
         with:
           path: db.sqlite3
-          key: prepared-db-${{ runner.os }}-${{ env.SYNC_SCOPE }}-${{ steps.cache-date.outputs.tables }}-${{ steps.cache-date.outputs.bucket }}-${{ hashFiles('package.json', 'bunfig.toml', 'scripts/**', 'lib/**') }}
+          key: prepared-db-${{ runner.os }}-${{ env.SYNC_SCOPE }}-recovery-${{ env.RECOVER_MISSING_PARTS }}-${{ steps.cache-date.outputs.tables }}-${{ steps.cache-date.outputs.bucket }}-${{ hashFiles('package.json', 'bunfig.toml', 'scripts/**', 'lib/**') }}
+
+      - name: Cache verified recovery archive
+        if: env.RECOVER_MISSING_PARTS == 'true' && steps.cache-database.outputs.cache-hit != 'true'
+        uses: actions/cache@v4
+        with:
+          path: .recovery
+          key: source-recovery-75daa67a78f3acf4ce18bab8dd68a86ac28c2818
 
       - name: Build prepared SQLite database
         if: steps.cache-database.outputs.cache-hit != 'true'
@@ -162,6 +175,11 @@ jobs:
           bun run setup:7z
           bun run setup:download-cache-fragments
           bun run setup:extract-db
+          if [[ "${RECOVER_MISSING_PARTS}" == "true" ]]; then
+            bun scripts/download-recovery-cache.ts
+            .bin/7zz x .recovery/cache.zip -o.buildtmp/recovery -y
+            export RECOVERY_DB_PATH=".buildtmp/recovery/cache.sqlite3"
+          fi
           if [[ "${SYNC_SCOPE}" == "full_catalog" ]]; then
             INCLUDE_COMPONENT_CATALOG=1 bun run setup:derived-sync-db
           elif [[ "${SYNC_SCOPE}" == "stock_only" ]]; then
@@ -175,6 +193,10 @@ jobs:
       - name: Refresh OLED displays from the live JLCPCB category
         if: env.SYNC_SCOPE == 'derived' && contains(format(',{0},', env.DERIVED_TABLES_LIST), ',oled_display,')
         run: bun scripts/refresh-oled-displays.ts
+
+      - name: Refresh Ethernet controllers from the live JLCPCB category
+        if: env.SYNC_SCOPE != 'derived' || contains(format(',{0},', env.DERIVED_TABLES_LIST), ',ethernet_controller,')
+        run: bun scripts/refresh-ethernet-controllers.ts
 
       - name: Verify prepared derived tables
         run: |
@@ -269,6 +291,16 @@ jobs:
           FTS_BATCH_ROWS: ${{ env.SYNC_SCOPE == 'full_catalog' && '5000' || '25000' }}
           RETRY_MAX_ATTEMPTS: ${{ env.SYNC_SCOPE == 'full_catalog' && '6' || '3' }}
           RETRY_BASE_DELAY_SECONDS: ${{ env.SYNC_SCOPE == 'full_catalog' && '20' || '30' }}
+        run: bash ./cf-proxy/scripts/sync-db.sh
+
+      - name: Sync live Ethernet controllers during catalog and stock refreshes
+        if: env.SYNC_SCOPE != 'derived'
+        env:
+          SYNC_DERIVED_TABLES: "1"
+          DERIVED_TABLES_LIST: ethernet_controller
+          REBUILD_DERIVED_TABLES: "0"
+          SYNC_COMPONENT_CATALOG: "0"
+          SYNC_SEARCH_INDEX: "0"
         run: bash ./cf-proxy/scripts/sync-db.sh
 
       - name: Sync stock quantities to D1
@@ -443,3 +475,7 @@ jobs:
       - name: Verify refreshed OLED API and HTML
         if: env.SYNC_SCOPE == 'derived' && contains(format(',{0},', env.DERIVED_TABLES_LIST), ',oled_display,')
         run: bun scripts/verify-oled-displays.ts
+
+      - name: Verify refreshed Ethernet API and HTML
+        if: env.SYNC_SCOPE != 'derived' || contains(format(',{0},', env.DERIVED_TABLES_LIST), ',ethernet_controller,')
+        run: bun scripts/verify-ethernet-controllers.ts

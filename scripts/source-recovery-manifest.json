@@ -1,0 +1,70 @@
+{
+  "commit": "75daa67a78f3acf4ce18bab8dd68a86ac28c2818",
+  "files": [
+    {
+      "name": "cache.z01",
+      "size": 52428800,
+      "sha": "86d0e40bf5361a3d76c98b9f9f8bac24dd9a502c"
+    },
+    {
+      "name": "cache.z02",
+      "size": 52428800,
+      "sha": "1f73da5dbe862e9c7ea1a7c778e434bd00c7c8c1"
+    },
+    {
+      "name": "cache.z03",
+      "size": 52428800,
+      "sha": "a1cdf24ae7b9b8c9fc57e9b0cea59a7fa6efc545"
+    },
+    {
+      "name": "cache.z04",
+      "size": 52428800,
+      "sha": "50b6a1c3eb94d89e55a91e87a0f6e6206237af97"
+    },
+    {
+      "name": "cache.z05",
+      "size": 52428800,
+      "sha": "2c44f142cb9f8165eba83302368d6fbd46674266"
+    },
+    {
+      "name": "cache.z06",
+      "size": 52428800,
+      "sha": "682cc458b0ed05c4e333efefa519f2313f608ed5"
+    },
+    {
+      "name": "cache.z07",
+      "size": 52428800,
+      "sha": "086eb99b48eedb3c8e95e2abc9e69966d2b3c5cb"
+    },
+    {
+      "name": "cache.z08",
+      "size": 52428800,
+      "sha": "164f9ab188b2927f6001848cd83c0b1bdf2bd0ca"
+    },
+    {
+      "name": "cache.z09",
+      "size": 52428800,
+      "sha": "8aa1185e2bef7218ab756cd9f3400049aea9072e"
+    },
+    {
+      "name": "cache.z10",
+      "size": 52428800,
+      "sha": "2b9fc9eb59accb437eb8bee588c027598e841634"
+    },
+    {
+      "name": "cache.z11",
+      "size": 52428800,
+      "sha": "fe3502fb0d456fabbe07b04e16f6bcbcdcaf51be"
+    },
+    {
+      "name": "cache.z12",
+      "size": 52428800,
+      "sha": "d6c6e09124673a29598c4ab9edc946acfb7119c4"
+    },
+    {
+      "name": "cache.zip",
+      "size": 51466672,
+      "sha": "3c86e64ccc43f12b5aef42845301ae155e951cc7"
+    }
+  ]
+}
