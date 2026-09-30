@@ -1126,6 +1126,19 @@ export interface FootprinterStrings {
   updated_at: Generated<string>
 }
 
+export interface EthernetController {
+  attributes: string | null
+  description: string | null
+  in_stock: number | null
+  is_basic: number | null
+  is_preferred: number | null
+  lcsc: Generated<number | null>
+  mfr: string | null
+  package: string | null
+  price1: number | null
+  stock: number | null
+}
+
 export interface DB {
   accelerometer: Accelerometer
   adc: Adc
@@ -1142,6 +1155,7 @@ export interface DB {
   dac: Dac
   psram: Psram
   dram: Dram
+  ethernet_controller: EthernetController
   diode: Diode
   dimm_connector: DimmConnector
   fpc_connector: FpcConnector

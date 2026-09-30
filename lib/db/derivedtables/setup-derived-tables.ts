@@ -14,6 +14,7 @@ import { capacitorTableSpec } from "lib/db/derivedtables/capacitor"
 import { dacTableSpec } from "lib/db/derivedtables/dac"
 import { diodeTableSpec } from "lib/db/derivedtables/diode"
 import { psramTableSpec } from "lib/db/derivedtables/psram"
+import { ethernetControllerTableSpec } from "lib/db/derivedtables/ethernet-controller"
 import { dramTableSpec } from "lib/db/derivedtables/dram"
 import {
   dimmConnectorTableSpec,
@@ -70,6 +71,7 @@ export const DERIVED_TABLES: DerivedTableSpec<any>[] = [
   ioExpanderTableSpec,
   diodeTableSpec,
   dramTableSpec,
+  ethernetControllerTableSpec,
   psramTableSpec,
   dacTableSpec,
   dimmConnectorTableSpec,

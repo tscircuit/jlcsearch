@@ -37,6 +37,7 @@ DERIVED_TABLES=(
   dac
   diode
   dram
+  ethernet_controller
   psram
   dimm_connector
   fpc_connector
