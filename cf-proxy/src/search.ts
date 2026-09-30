@@ -9,6 +9,7 @@ export interface SearchQueryParams {
   limit?: string
   is_basic?: string
   is_preferred?: string
+  is_extended_promotional?: string
 }
 
 interface SearchRow {
@@ -21,6 +22,7 @@ interface SearchRow {
   price1: number | null
   basic: number | null
   preferred: number | null
+  is_extended_promotional: number | null
   category: string | null
   subcategory: string | null
 }
@@ -50,6 +52,17 @@ async function isFtsSearchReady(db: Kysely<DB>): Promise<boolean> {
     if (isMissingFtsReadinessTable(error)) return false
     throw error
   }
+}
+
+async function hasExtendedPromotionalColumn(db: Kysely<DB>): Promise<boolean> {
+  const result = await sql`
+    SELECT name
+    FROM pragma_table_info('search_index')
+    WHERE name = 'is_extended_promotional'
+    LIMIT 1
+  `.execute(db)
+
+  return result.rows.length > 0
 }
 
 const getSearchTokenGroups = (raw: string): string[][] => {
@@ -90,6 +103,12 @@ export async function searchIndex(
   params: SearchQueryParams,
 ): Promise<SearchRow[]> {
   const limit = Number.parseInt(params.limit ?? "100", 10) || 100
+  const extendedPromotionalExpression = (await hasExtendedPromotionalColumn(db))
+    ? sql`search_index.is_extended_promotional`
+    : sql`CASE
+        WHEN search_index.preferred = 1 AND coalesce(search_index.basic, 0) = 0 THEN 1
+        ELSE 0
+      END`
   const conditions: RawBuilder<unknown>[] = [sql`search_index.stock > 0`]
   const fallbackSearchConditions: RawBuilder<unknown>[] = []
   const ftsSearchConditions: RawBuilder<unknown>[] = []
@@ -108,6 +127,13 @@ export async function searchIndex(
 
   if (params.is_preferred === "true" || params.is_preferred === "1") {
     conditions.push(sql`search_index.preferred = 1`)
+  }
+
+  if (
+    params.is_extended_promotional === "true" ||
+    params.is_extended_promotional === "1"
+  ) {
+    conditions.push(sql`${extendedPromotionalExpression} = 1`)
   }
 
   const raw = params.q?.trim()
@@ -151,6 +177,7 @@ export async function searchIndex(
       search_index.price1,
       search_index.basic,
       search_index.preferred,
+      ${extendedPromotionalExpression} AS is_extended_promotional,
       search_index.category,
       search_index.subcategory
     FROM search_index
