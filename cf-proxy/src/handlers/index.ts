@@ -319,6 +319,16 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
       diode_type: { field: "diode_type", type: "string" },
     },
   },
+  optical_sensor: {
+    helpText:
+      "Optical sensing components, including motion/navigation sensors for mice and trackballs. Select Optical Motion to narrow the results to navigation sensors.",
+    filters: {
+      package: { field: "package", type: "string" },
+      sensor_type: { field: "sensor_type", type: "string" },
+      is_basic: { field: "is_basic", type: "boolean" },
+      is_preferred: { field: "is_preferred", type: "boolean" },
+    },
+  },
   photo_diode: {
     paramAliases: { wavelength_min: "wavelength" },
     targetSort: { field: "peak_wavelength_nm", param: "wavelength" },
@@ -803,6 +813,7 @@ export const ROUTE_TO_TABLE: Record<string, string> = {
   "/leds/list": "led",
   "/diodes/list": "diode",
   "/photo_diodes/list": "photo_diode",
+  "/optical_sensors/list": "optical_sensor",
   "/mosfets/list": "mosfet",
   "/switches/list": "switch",
   "/headers/list": "header",
@@ -861,6 +872,7 @@ export const TABLE_RESPONSE_KEY: Record<string, string> = {
   led: "leds",
   diode: "diodes",
   photo_diode: "photo_diodes",
+  optical_sensor: "optical_sensors",
   mosfet: "mosfets",
   switch: "switches",
   header: "headers",

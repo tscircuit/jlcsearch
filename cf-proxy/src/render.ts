@@ -53,6 +53,7 @@ const routeLabels: Record<string, string> = {
   "/microphones/list": "Microphones",
   "/diodes/list": "Diodes",
   "/photo_diodes/list": "Photo Diodes",
+  "/optical_sensors/list": "Optical Sensors",
   "/dacs/list": "DACs",
   "/wifi_modules/list": "WiFi Modules",
   "/microcontrollers/list": "Microcontrollers",

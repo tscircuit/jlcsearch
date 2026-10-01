@@ -1139,6 +1139,20 @@ export interface EthernetController {
   stock: number | null
 }
 
+export interface OpticalSensor {
+  attributes: string | null
+  description: string | null
+  in_stock: number | null
+  is_basic: number | null
+  is_preferred: number | null
+  lcsc: Generated<number | null>
+  mfr: string | null
+  package: string | null
+  sensor_type: string | null
+  price1: number | null
+  stock: number | null
+}
+
 export interface DB {
   accelerometer: Accelerometer
   adc: Adc
@@ -1183,6 +1197,7 @@ export interface DB {
   oled_display: OledDisplay
   pcie_m2_connector: PcieM2Connector
   photo_diode: PhotoDiode
+  optical_sensor: OpticalSensor
   potentiometer: Potentiometer
   stepper_motor_driver: StepperMotorDriver
   relay: Relay
