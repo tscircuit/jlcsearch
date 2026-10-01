@@ -28,6 +28,7 @@ test("recognizes mouse, trackball and optical flow sensors without optional meta
     "ADNS-9800",
     "ADNS-9500",
     "PAT9125EL-TKIT",
+    "PAA5100JE-Q",
   ]) {
     for (const extra of [null, "{invalid", "null", "{}"]) {
       expect(spec.mapToTable([component({ mfr, extra })])[0]).toMatchObject({
@@ -109,7 +110,7 @@ test("populates sensors across upstream categories and matches the D1 migration 
   const db = new Kysely<any>({ dialect: new BunSqliteDialect({ database }) })
   const migrated = new Database(":memory:")
   try {
-    database.exec(`CREATE TABLE categories (id INTEGER PRIMARY KEY, subcategory TEXT);
+    database.exec(`CREATE TABLE categories (id INTEGER PRIMARY KEY, category TEXT, subcategory TEXT);
       CREATE TABLE components (lcsc INTEGER PRIMARY KEY, category_id INTEGER, mfr TEXT, description TEXT, package TEXT, stock INTEGER, price TEXT, basic INTEGER, preferred INTEGER, extra TEXT);`)
     await db
       .insertInto("categories")
@@ -171,5 +172,74 @@ test("populates sensors across upstream categories and matches the D1 migration 
   } finally {
     migrated.close()
     await db.destroy()
+  }
+})
+
+test("covers every optical sensing type without adding emitters or capacitive sensors", () => {
+  for (const subcategory of [
+    "Photodiodes",
+    "Phototransistors",
+    "Photoresistors",
+    "Image Sensors",
+    "Fiber Optic / Laser Sensors",
+    "Photoelectric sensor",
+    "Infrared Remote Receiver (IRM)",
+    "Color Sensors",
+    "UV Sensors",
+    "Infrared Sensors",
+    "Optical Distance Sensors",
+    "Optical Position Sensors",
+    "Optical Sensors - Photodetectors",
+  ]) {
+    expect(
+      spec.mapToTable([
+        component({ mfr: "OTHER", source_subcategory: subcategory }),
+      ])[0]?.sensor_type,
+    ).toBe(subcategory)
+  }
+  for (const [mfr, description, attributes] of [
+    ["ADNS-3080", "", {}],
+    ["MLX90614ESF-BAA-000-TU", "", {}],
+    ["PAJ7620U2", "", {}],
+    ["MAX30102EFD+T", "", {}],
+    ["OTHER", "PIR motion sensor", {}],
+    ["OTHER", "Optical rotary encoder", {}],
+    ["VL53L0X", "", {}],
+    ["GP2Y1014AU0F", "", {}],
+    ["OTHER", "Infrared proximity sensor", {}],
+    ["OTHER", "", { "Sensor Type": "Optical" }],
+    ["OTHER", "", { Type: "Color" }],
+    ["OTHER", "", { "Detection Method": "Infrared" }],
+  ] as Array<[string, string, Record<string, string>]>) {
+    expect(
+      spec.mapToTable([
+        component({
+          mfr,
+          description,
+          source_subcategory: "Specialized Sensors",
+          extra: JSON.stringify({ attributes }),
+        }),
+      ])[0],
+    ).not.toBeNull()
+  }
+  expect(
+    spec.mapToTable([
+      component({
+        mfr: "OTHER",
+        source_category: "Optical Sensors",
+        source_subcategory: "Future Optical Type",
+      }),
+    ])[0]?.sensor_type,
+  ).toBe("Future Optical Type")
+  for (const description of [
+    "Infrared LED emitter",
+    "Capacitive proximity sensor",
+    "Optical fiber transceiver",
+    "MOSFET with optical interface",
+    "Ultrasonic time-of-flight sensor",
+  ]) {
+    expect(
+      spec.mapToTable([component({ mfr: "OTHER", description })])[0],
+    ).toBeNull()
   }
 })
