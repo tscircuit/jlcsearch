@@ -64,6 +64,7 @@ DERIVED_TABLES=(
   oled_display
   pcie_m2_connector
   photo_diode
+  optical_sensor
   potentiometer
   relay
   stepper_motor_driver

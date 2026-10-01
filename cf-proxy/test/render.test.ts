@@ -29,6 +29,7 @@ describe("render helpers", () => {
     expect(html).toContain("/micro_usb_connectors/list")
     expect(html).toContain("/hdmi_ports/list")
     expect(html).toContain("/photo_diodes/list")
+    expect(html).toContain('href="/optical_sensors/list">Optical Sensors</a>')
     expect(html).toContain("/npu_chips/list")
     expect(html).toContain("/linux_capable_processors/list")
     expect(html).toContain("Linux-capable Processors")

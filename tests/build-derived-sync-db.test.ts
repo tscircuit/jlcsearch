@@ -120,6 +120,46 @@ describe("buildDerivedSyncDatabase", () => {
     output.close()
   })
 
+  test("builds optical navigation sensors from mixed source-db-v2 categories", async () => {
+    const { sourcePath, outputPath } = await createSourceDatabase()
+    const source = new Database(sourcePath)
+    source.exec(`
+      DELETE FROM lcsc_components;
+      UPDATE jlc_components SET
+        category = 'Sensors', subcategory = 'Specialized Sensors',
+        mfr = 'PAW3220LU-TJDU', manufacturer = 'PixArt',
+        package = 'DIP-8', description = '', attributes = '{}';
+    `)
+    source.close()
+
+    await buildDerivedSyncDatabase({
+      sourcePath,
+      outputPath,
+      tableNames: ["optical_sensor"],
+      logger: () => {},
+    })
+
+    const output = new Database(outputPath, { readonly: true })
+    try {
+      expect(
+        output
+          .query(`SELECT mfr, package, sensor_type, stock,
+        price1, is_basic, is_preferred FROM optical_sensor`)
+          .get(),
+      ).toEqual({
+        mfr: "PAW3220LU-TJDU",
+        package: "DIP-8",
+        sensor_type: "Optical Motion",
+        stock: 250,
+        price1: 1.25,
+        is_basic: 1,
+        is_preferred: 1,
+      })
+    } finally {
+      output.close()
+    }
+  })
+
   test("uses JLC manufacturer metadata for NPU chips missing from LCSC", async () => {
     const { sourcePath, outputPath } = await createSourceDatabase()
     const source = new Database(sourcePath)
