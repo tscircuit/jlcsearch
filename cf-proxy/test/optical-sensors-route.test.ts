@@ -7,9 +7,9 @@ describe("Optical Sensors route", () => {
     mfr: "PMW3360DM-T2QU",
     package: "DIP-16",
     sensor_type: "Optical Motion",
-    stock: 100,
+    stock: 0,
     price1: 2.4,
-    in_stock: 1,
+    in_stock: 0,
     is_basic: 0,
     is_preferred: 1,
     attributes: "{}",
@@ -43,7 +43,7 @@ describe("Optical Sensors route", () => {
 
     try {
       const response = await self.fetch(
-        "https://example.com/optical_sensors/list?package=DIP-16&sensor_type=Optical%20Motion&is_basic=false&is_preferred=true",
+        "https://example.com/optical_sensors/list?package=DIP-16&sensor_type=Optical%20Motion&in_stock=false&is_basic=false&is_preferred=true",
       )
 
       expect(response.status).toBe(200)
@@ -58,11 +58,14 @@ describe("Optical Sensors route", () => {
         "motion/navigation sensors for mice and trackballs",
       )
       expect(html).toContain(
-        "/optical_sensors/list.json?package=DIP-16&amp;sensor_type=Optical+Motion&amp;is_basic=false&amp;is_preferred=true",
+        "Out-of-stock catalog parts are included with stock 0.",
+      )
+      expect(html).toContain(
+        "/optical_sensors/list.json?package=DIP-16&amp;sensor_type=Optical+Motion&amp;in_stock=false&amp;is_basic=false&amp;is_preferred=true",
       )
 
       const jsonResponse = await self.fetch(
-        "https://example.com/optical_sensors/list.json?package=DIP-16&sensor_type=Optical%20Motion&is_basic=false&is_preferred=true",
+        "https://example.com/optical_sensors/list.json?package=DIP-16&sensor_type=Optical%20Motion&in_stock=false&is_basic=false&is_preferred=true",
       )
 
       expect(jsonResponse.status).toBe(200)
@@ -74,7 +77,7 @@ describe("Optical Sensors route", () => {
         optical_sensors: [
           {
             ...opticalSensor,
-            in_stock: true,
+            in_stock: false,
             is_basic: false,
             is_preferred: true,
           },
@@ -83,9 +86,9 @@ describe("Optical Sensors route", () => {
       expect(partsQueries).toHaveLength(2)
       for (const query of partsQueries) {
         expect(query.sql).toContain(
-          'WHERE "package" = ? AND "sensor_type" = ? AND "is_basic" = ? AND "is_preferred" = ?',
+          'WHERE "package" = ? AND "sensor_type" = ? AND "in_stock" = ? AND "is_basic" = ? AND "is_preferred" = ?',
         )
-        expect(query.parameters).toEqual(["DIP-16", "Optical Motion", 0, 1])
+        expect(query.parameters).toEqual(["DIP-16", "Optical Motion", 0, 0, 1])
       }
     } finally {
       await self.flushWaitUntil()

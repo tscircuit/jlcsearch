@@ -198,6 +198,10 @@ jobs:
         if: env.SYNC_SCOPE != 'derived' || contains(format(',{0},', env.DERIVED_TABLES_LIST), ',ethernet_controller,')
         run: bun scripts/refresh-ethernet-controllers.ts
 
+      - name: Refresh all optical sensor types from the live JLCPCB catalog
+        if: env.SYNC_SCOPE != 'derived' || contains(format(',{0},', env.DERIVED_TABLES_LIST), ',optical_sensor,')
+        run: bun scripts/refresh-optical-sensors.ts
+
       - name: Verify prepared derived tables
         run: |
           if [[ ! -s db.sqlite3 ]]; then
@@ -304,6 +308,16 @@ jobs:
           SYNC_SEARCH_INDEX: "0"
         run: bash ./cf-proxy/scripts/sync-db.sh
 
+      - name: Sync live optical sensors during catalog and stock refreshes
+        if: env.SYNC_SCOPE != 'derived'
+        env:
+          SYNC_DERIVED_TABLES: "1"
+          DERIVED_TABLES_LIST: optical_sensor
+          REBUILD_DERIVED_TABLES: "0"
+          SYNC_COMPONENT_CATALOG: "0"
+          SYNC_SEARCH_INDEX: "0"
+        run: bash ./cf-proxy/scripts/sync-db.sh
+
       - name: Sync stock quantities to D1
         if: env.SYNC_SCOPE == 'stock_only'
         env:
@@ -380,6 +394,8 @@ jobs:
           if [[ -z "${CACHE_BUST_URL}" ]]; then
             if [[ "${SYNC_SCOPE}" != "derived" ]]; then
               CACHE_BUST_URL="https://jlcsearch.tscircuit.com/components/list?search=C${SMOKE_TEST_LCSC}&json=true"
+            elif [[ ",${DERIVED_TABLES_LIST}," == *",optical_sensor,"* ]]; then
+              CACHE_BUST_URL="https://jlcsearch.tscircuit.com/optical_sensors/list.json?sensor_type=Optical+Motion"
             elif [[ ",${DERIVED_TABLES_LIST}," == *",stepper_motor_driver,"* ]]; then
               CACHE_BUST_URL="https://jlcsearch.tscircuit.com/stepper_motor_drivers/list.json"
             elif [[ ",${DERIVED_TABLES_LIST}," == *",linux_capable_processor,"* ]]; then
@@ -480,3 +496,7 @@ jobs:
       - name: Verify refreshed Ethernet API and HTML
         if: env.SYNC_SCOPE != 'derived' || contains(format(',{0},', env.DERIVED_TABLES_LIST), ',ethernet_controller,')
         run: bun scripts/verify-ethernet-controllers.ts
+
+      - name: Verify refreshed optical sensor API and HTML
+        if: env.SYNC_SCOPE != 'derived' || contains(format(',{0},', env.DERIVED_TABLES_LIST), ',optical_sensor,')
+        run: bun scripts/verify-optical-sensors.ts

@@ -321,10 +321,11 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
   },
   optical_sensor: {
     helpText:
-      "Optical sensing components, including motion/navigation sensors for mice and trackballs. Select Optical Motion to narrow the results to navigation sensors.",
+      "Optical sensing components, including motion/navigation sensors for mice and trackballs, image sensors, photodiodes, phototransistors, light, infrared, UV, proximity, and laser sensors. Select Optical Motion for navigation sensors. Out-of-stock catalog parts are included with stock 0.",
     filters: {
       package: { field: "package", type: "string" },
       sensor_type: { field: "sensor_type", type: "string" },
+      in_stock: { field: "in_stock", type: "boolean" },
       is_basic: { field: "is_basic", type: "boolean" },
       is_preferred: { field: "is_preferred", type: "boolean" },
     },
