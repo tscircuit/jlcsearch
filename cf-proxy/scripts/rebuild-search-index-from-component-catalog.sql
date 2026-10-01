@@ -5,6 +5,7 @@ SELECT
   lcsc,
   mfr,
   package,
+  datasheet,
   description,
   stock,
   price,

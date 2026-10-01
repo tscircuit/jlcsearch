@@ -20,6 +20,7 @@ export async function queryComponentCatalog(
     subcategory: string | null
     mfr: string | null
     package: string | null
+    datasheet: string | null
     basic: number | null
     preferred: number | null
     description: string | null
