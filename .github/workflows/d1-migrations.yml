@@ -202,6 +202,10 @@ jobs:
         if: env.SYNC_SCOPE != 'derived' || contains(format(',{0},', env.DERIVED_TABLES_LIST), ',optical_sensor,')
         run: bun scripts/refresh-optical-sensors.ts
 
+      - name: Refresh stepper motor drivers from the live JLCPCB category
+        if: env.SYNC_SCOPE != 'derived' || contains(format(',{0},', env.DERIVED_TABLES_LIST), ',stepper_motor_driver,')
+        run: bun scripts/refresh-stepper-motor-drivers.ts
+
       - name: Verify prepared derived tables
         run: |
           if [[ ! -s db.sqlite3 ]]; then
@@ -313,6 +317,16 @@ jobs:
         env:
           SYNC_DERIVED_TABLES: "1"
           DERIVED_TABLES_LIST: optical_sensor
+          REBUILD_DERIVED_TABLES: "0"
+          SYNC_COMPONENT_CATALOG: "0"
+          SYNC_SEARCH_INDEX: "0"
+        run: bash ./cf-proxy/scripts/sync-db.sh
+
+      - name: Sync live stepper motor drivers during catalog and stock refreshes
+        if: env.SYNC_SCOPE != 'derived'
+        env:
+          SYNC_DERIVED_TABLES: "1"
+          DERIVED_TABLES_LIST: stepper_motor_driver
           REBUILD_DERIVED_TABLES: "0"
           SYNC_COMPONENT_CATALOG: "0"
           SYNC_SEARCH_INDEX: "0"
@@ -500,3 +514,7 @@ jobs:
       - name: Verify refreshed optical sensor API and HTML
         if: env.SYNC_SCOPE != 'derived' || contains(format(',{0},', env.DERIVED_TABLES_LIST), ',optical_sensor,')
         run: bun scripts/verify-optical-sensors.ts
+
+      - name: Verify refreshed stepper motor driver API and HTML
+        if: env.SYNC_SCOPE != 'derived' || contains(format(',{0},', env.DERIVED_TABLES_LIST), ',stepper_motor_driver,')
+        run: bun scripts/verify-stepper-motor-drivers.ts
