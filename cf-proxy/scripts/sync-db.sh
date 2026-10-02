@@ -100,7 +100,7 @@ rebuild_remote_search_fts_index() {
   fi
 
   echo "Initializing search_index_fts..."
-  run_wrangler d1 execute "${DB_NAME}" --remote --file="${SCRIPT_DIR}/setup-fts5.sql"
+  run_wrangler d1 execute "${DB_NAME}" --remote --command "$(cat "${SCRIPT_DIR}/setup-fts5.sql")"
 
   for ((start=1; start<=row_count; start+=FTS_BATCH_ROWS)); do
     end=$((start + FTS_BATCH_ROWS - 1))
