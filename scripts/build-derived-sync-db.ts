@@ -156,6 +156,7 @@ export const buildDerivedSyncDatabase = async ({
       j.datasheet,
       j.stock,
       j.price,
+      j.is_extended_promotional,
       j.last_on_stock,
       j.fetched_at AS last_update,
       j.sync_seen AS flag,
@@ -209,6 +210,7 @@ export const buildDerivedSyncDatabase = async ({
         j.description,
         j.stock,
         j.price,
+      j.is_extended_promotional,
         json_object(
           'number', 'C' || j.lcsc,
           'manufacturer', json_object(

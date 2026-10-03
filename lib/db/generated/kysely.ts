@@ -263,6 +263,7 @@ export interface Component {
   extra: string | null;
   flag: Generated<number>;
   joints: number;
+  is_extended_promotional: number | null;
   last_on_stock: Generated<number>;
   last_update: number;
   lcsc: Generated<number>;
