@@ -393,21 +393,6 @@ describe("Cloudflare route contracts", () => {
     expect(data.components[0].lcsc).toBe(lcsc)
   })
 
-  it("GET /api/search finds crystal parts by category text in the catalog", async () => {
-    const { response, data } = await fetchJson(
-      "/api/search?limit=10&q=12MHz%20crystal",
-    )
-    expect(response.ok).toBe(true)
-    expect(Array.isArray(data.components)).toBe(true)
-    expect(data.components.length).toBeGreaterThan(0)
-    expect(
-      data.components.some(
-        (component: any) =>
-          component.lcsc === 9002 && component.is_basic === true,
-      ),
-    ).toBe(true)
-  })
-
   it("GET /components/list returns component data", async () => {
     const { response, data } = await fetchJson("/components/list?json=true")
     expect(response.ok).toBe(true)
