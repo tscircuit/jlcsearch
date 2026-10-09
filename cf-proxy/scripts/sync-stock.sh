@@ -36,11 +36,17 @@ if [[ ! "${STOCK_BATCH_ROWS}" =~ ^[1-9][0-9]*$ ]]; then
   exit 1
 fi
 
+echo "Discovering deployed stock tables..."
+stock_targets_query="$(cd "${REPO_ROOT}" && bun run scripts/generate-stock-sync-sql.ts --print-targets-query)"
+run_wrangler d1 execute "${DB_NAME}" --remote --json \
+  --command "${stock_targets_query}" > "${STOCK_SYNC_TEMP_DIR}/targets.json"
+
 echo "Generating stock-only D1 update batches..."
 (
   cd "${REPO_ROOT}"
   SOURCE_DB_PATH="${SOURCE_DB_PATH}" \
     STOCK_SYNC_OUTPUT_DIR="${STOCK_SYNC_TEMP_DIR}" \
+    STOCK_SYNC_TARGETS_PATH="${STOCK_SYNC_TEMP_DIR}/targets.json" \
     STOCK_BATCH_ROWS="${STOCK_BATCH_ROWS}" \
     bun run scripts/generate-stock-sync-sql.ts
 )
