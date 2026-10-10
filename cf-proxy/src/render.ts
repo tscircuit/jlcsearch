@@ -409,6 +409,8 @@ const renderCell = (
   column: string,
   value: unknown,
 ): string => {
+  if (column === "stock" && (value === null || value === undefined))
+    return "Unknown"
   if (value === null || value === undefined || value === "") return ""
   if (column === "attributes") {
     const rawValue = String(value)

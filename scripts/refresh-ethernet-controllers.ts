@@ -1,4 +1,5 @@
 import { Database } from "bun:sqlite"
+import { createLiveStockWriter } from "./live-stock-observation"
 
 const ENDPOINT =
   "https://jlcpcb.com/api/overseas-pcb-order/v1/shoppingCart/smtGood/selectSmtComponentList/v2"
@@ -172,10 +173,8 @@ export function replaceEthernetControllers(
         )
         .get()
     ) {
-      const stock = db.prepare(
-        "INSERT INTO component_stock (lcsc,stock) VALUES (?,?) ON CONFLICT(lcsc) DO UPDATE SET stock=excluded.stock",
-      )
-      for (const row of rows) stock.run(row.lcsc, row.stock)
+      const writeStock = createLiveStockWriter(db)
+      for (const row of rows) writeStock(row.lcsc, row.stock)
     }
   })()
 }

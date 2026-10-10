@@ -99,18 +99,18 @@ export const buildDerivedSyncDatabase = async ({
         .join(",")
       if (table === "jlc_components")
         database.exec(`CREATE TEMP VIEW input_${table} AS
-        SELECT ${columns} FROM source.${table}
+        SELECT ${columns}, 'upstream_snapshot' AS stock_source FROM source.${table}
         UNION ALL
-        SELECT ${columns} FROM recovery.${table} AS old
+        SELECT ${columns}, 'recovery_metadata' AS stock_source FROM recovery.${table} AS old
         WHERE NOT EXISTS (SELECT 1 FROM source.${table} AS current WHERE current.lcsc = old.lcsc);`)
     }
     logger(
-      "Recovery enabled: current source records take precedence; recovered stock retains its original snapshot age.",
+      "Recovery enabled: current source records take precedence; recovered stock is unknown until verified live.",
     )
   } else {
     for (const table of ["jlc_components"]) {
       database.exec(
-        `CREATE TEMP VIEW input_${table} AS SELECT * FROM source.${table}`,
+        `CREATE TEMP VIEW input_${table} AS SELECT *, 'upstream_snapshot' AS stock_source FROM source.${table}`,
       )
     }
   }
@@ -126,6 +126,11 @@ export const buildDerivedSyncDatabase = async ({
     resolvedRecoveryPath
       ? `(CASE WHEN l.lcsc IS NOT NULL THEN l.${name} ELSE recovered_l.${name} END)`
       : `l.${name}`
+
+  // The pinned archive recovers catalog metadata, not current availability.
+  // An unknown quantity stays NULL and is excluded from in-stock searches.
+  const stockColumn =
+    "CASE WHEN j.stock_source = 'recovery_metadata' THEN NULL ELSE j.stock END"
 
   database.exec(`
     CREATE TABLE categories (
@@ -154,12 +159,12 @@ export const buildDerivedSyncDatabase = async ({
       j.preferred,
       j.description,
       j.datasheet,
-      j.stock,
+      ${stockColumn} AS stock,
       j.price,
       j.last_on_stock,
       j.fetched_at AS last_update,
       j.sync_seen AS flag,
-      CASE WHEN j.stock > 0 THEN 1 ELSE 0 END AS in_stock,
+      CASE WHEN (${stockColumn}) > 0 THEN 1 ELSE 0 END AS in_stock,
       json_object(
         'attributes',
         json(
@@ -207,7 +212,7 @@ export const buildDerivedSyncDatabase = async ({
         CASE WHEN j.library_type = 'base' THEN 1 ELSE 0 END AS basic,
         j.preferred,
         j.description,
-        j.stock,
+        ${stockColumn} AS stock,
         j.price,
         json_object(
           'number', 'C' || j.lcsc,
@@ -259,13 +264,21 @@ export const buildDerivedSyncDatabase = async ({
     database.exec(`
       CREATE TABLE component_stock (
         lcsc INTEGER PRIMARY KEY,
-        stock INTEGER NOT NULL
+        stock INTEGER,
+        subcategory TEXT,
+        stock_source TEXT,
+        record_fetched_at INTEGER,
+        stock_checked_at INTEGER
       );
 
-      INSERT INTO component_stock(lcsc, stock)
+      INSERT INTO component_stock(lcsc, stock, subcategory, stock_source, record_fetched_at)
       SELECT
         lcsc,
-        CASE WHEN present = 1 THEN coalesce(stock, 0) ELSE 0 END
+        CASE WHEN stock_source = 'recovery_metadata' THEN NULL
+             WHEN present = 1 THEN coalesce(stock, 0) ELSE 0 END,
+        subcategory,
+        stock_source,
+        fetched_at
       FROM input_jlc_components
       WHERE last_on_stock >= unixepoch('now', '-1 year');
     `)

@@ -36,7 +36,7 @@ on:
         default: npu_chip
         type: string
       recover_missing_parts:
-        description: Fill upstream gaps from the last complete verified snapshot (recovered stock may be old)
+        description: Recover missing catalog metadata (stock remains unknown until verified live)
         required: true
         default: true
         type: boolean
@@ -157,6 +157,9 @@ jobs:
 
       - name: Cache prepared SQLite database
         id: cache-database
+        # Stock refreshes must read upstream again, even if a snapshot was
+        # prepared earlier today before the upstream 03:00 UTC update.
+        if: env.SYNC_SCOPE == 'derived'
         uses: actions/cache@v4
         with:
           path: db.sqlite3
@@ -201,6 +204,10 @@ jobs:
       - name: Refresh all optical sensor types from the live JLCPCB catalog
         if: env.SYNC_SCOPE != 'derived' || contains(format(',{0},', env.DERIVED_TABLES_LIST), ',optical_sensor,')
         run: bun scripts/refresh-optical-sensors.ts
+
+      - name: Refresh slide-switch stock directly from JLCPCB
+        if: env.SYNC_SCOPE != 'derived' || contains(format(',{0},', env.DERIVED_TABLES_LIST), ',switch,')
+        run: bun scripts/refresh-slide-switch-stock.ts
 
       - name: Verify prepared derived tables
         run: |
@@ -344,12 +351,12 @@ jobs:
             if [[ "${SYNC_SCOPE}" == "stock_only" ]]; then
               source_stock_table="component_stock"
             fi
-            expected_stock="$(sqlite3 ../db.sqlite3 "SELECT stock FROM ${source_stock_table} WHERE lcsc=${SMOKE_TEST_LCSC};")"
+            expected_stock="$(sqlite3 ../db.sqlite3 "SELECT CASE WHEN stock IS NULL THEN 'unknown' ELSE CAST(stock AS TEXT) END FROM ${source_stock_table} WHERE lcsc=${SMOKE_TEST_LCSC};")"
             remote_result_file="${RUNNER_TEMP}/jlcsearch-remote-stock.json"
             bash scripts/retry-command.sh bunx wrangler d1 execute jlcsearch --remote --json \
               --command "SELECT lcsc, mfr, stock FROM search_index WHERE lcsc=${SMOKE_TEST_LCSC};" \
               > "${remote_result_file}"
-            remote_stock="$(jq -r '.[0].results[0].stock // empty' "${remote_result_file}")"
+            remote_stock="$(jq -r '.[0].results | if length == 1 then (.[0].stock | if . == null then "unknown" else tostring end) else "missing" end' "${remote_result_file}")"
             if [[ -z "${expected_stock}" || "${remote_stock}" != "${expected_stock}" ]]; then
               echo "::error::Remote C${SMOKE_TEST_LCSC} stock ${remote_stock:-missing} did not match source stock ${expected_stock:-missing}."
               cat "${remote_result_file}"
@@ -454,24 +461,28 @@ jobs:
           fi
 
           if [[ "${SYNC_SCOPE}" != "derived" ]]; then
-            component_count="$(jq '.components | length' /tmp/d1-sync-response.json)"
-            if [[ "${component_count}" == "0" || "${component_count}" == "null" ]]; then
-              echo "::error::Production component API did not return C${SMOKE_TEST_LCSC}."
-              cat /tmp/d1-sync-response.json
-              exit 1
-            fi
             source_stock_table="component_catalog"
             if [[ "${SYNC_SCOPE}" == "stock_only" ]]; then
               source_stock_table="component_stock"
             fi
-            expected_stock="$(sqlite3 db.sqlite3 "SELECT stock FROM ${source_stock_table} WHERE lcsc=${SMOKE_TEST_LCSC};")"
-            api_stock="$(jq -r '.components[0].stock // empty' /tmp/d1-sync-response.json)"
-            if [[ -z "${expected_stock}" || "${api_stock}" != "${expected_stock}" ]]; then
-              echo "::error::Production C${SMOKE_TEST_LCSC} stock ${api_stock:-missing} did not match source stock ${expected_stock:-missing}."
-              cat /tmp/d1-sync-response.json
+            expected_stock="$(sqlite3 db.sqlite3 "SELECT CASE WHEN stock IS NULL THEN 'unknown' ELSE CAST(stock AS TEXT) END FROM ${source_stock_table} WHERE lcsc=${SMOKE_TEST_LCSC};")"
+            if [[ -z "${expected_stock}" ]]; then
+              echo "::error::Prepared source is missing C${SMOKE_TEST_LCSC}."
               exit 1
             fi
-            echo "Cache-busted production API returned expected C${SMOKE_TEST_LCSC} stock ${expected_stock}."
+
+            verify_component_response() {
+              local response_file="$1"
+              if [[ "${expected_stock}" == "unknown" || "${expected_stock}" == "0" ]]; then
+                jq -e --argjson lcsc "${SMOKE_TEST_LCSC}" \
+                  '(.components | type == "array") and all(.components[]; .lcsc != $lcsc)' "${response_file}"
+              else
+                jq -e --argjson lcsc "${SMOKE_TEST_LCSC}" --argjson stock "${expected_stock}" \
+                  '[.components[] | select(.lcsc == $lcsc)] | length == 1 and .[0].stock == $stock' "${response_file}"
+              fi
+            }
+            verify_component_response /tmp/d1-sync-response.json
+            echo "Cache-busted production API matches C${SMOKE_TEST_LCSC} source stock: ${expected_stock}."
 
             curl --fail --silent --show-error \
               --retry 3 \
@@ -480,13 +491,8 @@ jobs:
               "${CACHE_BUST_URL}" \
               --output /tmp/d1-sync-cached-response.json
 
-            cached_api_stock="$(jq -r '.components[0].stock // empty' /tmp/d1-sync-cached-response.json)"
-            if [[ "${cached_api_stock}" != "${expected_stock}" ]]; then
-              echo "::error::Cached production C${SMOKE_TEST_LCSC} stock ${cached_api_stock:-missing} did not match source stock ${expected_stock}."
-              cat /tmp/d1-sync-cached-response.json
-              exit 1
-            fi
-            echo "Cached production API returned expected C${SMOKE_TEST_LCSC} stock ${expected_stock}."
+            verify_component_response /tmp/d1-sync-cached-response.json
+            echo "Cached production API matches C${SMOKE_TEST_LCSC} source stock: ${expected_stock}."
           fi
 
       - name: Verify refreshed OLED API and HTML
@@ -500,3 +506,4 @@ jobs:
       - name: Verify refreshed optical sensor API and HTML
         if: env.SYNC_SCOPE != 'derived' || contains(format(',{0},', env.DERIVED_TABLES_LIST), ',optical_sensor,')
         run: bun scripts/verify-optical-sensors.ts
+

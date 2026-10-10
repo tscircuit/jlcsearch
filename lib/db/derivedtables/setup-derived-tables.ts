@@ -222,6 +222,10 @@ const createTable = async (
         ? null
         : {
             ...c,
+            // Some category mappers coerce NULL stock to zero. Preserve an
+            // unknown source quantity rather than claiming it is out of stock.
+            stock: components[i].stock === null ? null : c.stock,
+            in_stock: components[i].stock === null ? false : c.in_stock,
             attributes: jsonParseOrNull(components[i].extra)?.attributes,
           },
     )
