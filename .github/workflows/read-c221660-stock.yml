@@ -1,0 +1,32 @@
+name: Read current C221660 stock
+on:
+  push:
+    branches: [ops/verify-stock-c221660]
+    paths: [.github/workflows/read-c221660-stock.yml]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+        working-directory: cf-proxy
+      - name: Read C221660 stock from production tables and API
+        working-directory: cf-proxy
+        run: |
+          bunx wrangler d1 execute jlcsearch --remote --json \
+            --command "SELECT 'component_catalog' AS source, lcsc, stock, NULL AS in_stock FROM component_catalog WHERE lcsc=221660 UNION ALL SELECT 'search_index', lcsc, stock, NULL FROM search_index WHERE lcsc=221660 UNION ALL SELECT 'switch', lcsc, stock, in_stock FROM switch WHERE lcsc=221660;"
+          echo "Cache-bypassed public API:"
+          curl --fail --silent --show-error --retry 3 --retry-all-errors \
+            "https://jlcsearch.tscircuit.com/components/list?search=C221660&json=true&cachebust=1"
+          echo
+          echo "Cached public API:"
+          curl --fail --silent --show-error --retry 3 --retry-all-errors \
+            "https://jlcsearch.tscircuit.com/components/list?search=C221660&json=true"
+          echo
