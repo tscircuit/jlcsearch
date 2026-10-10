@@ -1,4 +1,4 @@
-import { sql, type Kysely, type RawBuilder } from "kysely"
+import { type Kysely, type RawBuilder, sql } from "kysely"
 import type { DB } from "./db/types"
 import { buildSearchTokenGroups } from "./search-query"
 
@@ -9,6 +9,7 @@ export interface SearchQueryParams {
   limit?: string
   is_basic?: string
   is_preferred?: string
+  is_extended_promotional?: string
 }
 
 interface SearchRow {
@@ -21,12 +22,18 @@ interface SearchRow {
   price1: number | null
   basic: number | null
   preferred: number | null
+  is_extended_promotional: number | null
   category: string | null
   subcategory: string | null
 }
 
 const buildWhereClause = (conditions: RawBuilder<unknown>[]) =>
   conditions.length > 0 ? sql.join(conditions, sql` AND `) : sql`1 = 1`
+
+const isTruthyFilter = (value: string | undefined): boolean =>
+  value === "true" || value === "1"
+
+const isExtendedPromotionalSql = sql`search_index.preferred = 1 AND search_index.basic = 0`
 
 const canFallbackToLikeSearch = (error: unknown): boolean =>
   error instanceof Error &&
@@ -102,12 +109,16 @@ export async function searchIndex(
     conditions.push(sql`search_index.subcategory = ${params.subcategory_name}`)
   }
 
-  if (params.is_basic === "true" || params.is_basic === "1") {
+  if (isTruthyFilter(params.is_basic)) {
     conditions.push(sql`search_index.basic = 1`)
   }
 
-  if (params.is_preferred === "true" || params.is_preferred === "1") {
+  if (isTruthyFilter(params.is_preferred)) {
     conditions.push(sql`search_index.preferred = 1`)
+  }
+
+  if (isTruthyFilter(params.is_extended_promotional)) {
+    conditions.push(sql`(${isExtendedPromotionalSql})`)
   }
 
   const raw = params.q?.trim()
@@ -151,6 +162,10 @@ export async function searchIndex(
       search_index.price1,
       search_index.basic,
       search_index.preferred,
+      CASE
+        WHEN ${isExtendedPromotionalSql} THEN 1
+        ELSE 0
+      END AS is_extended_promotional,
       search_index.category,
       search_index.subcategory
     FROM search_index
