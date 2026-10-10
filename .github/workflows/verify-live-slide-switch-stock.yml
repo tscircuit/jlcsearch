@@ -1,0 +1,58 @@
+name: Verify live slide-switch stock in production
+on:
+  push:
+    branches: [ops/verify-live-slide-switch-stock]
+    paths: [.github/workflows/verify-live-slide-switch-stock.yml]
+permissions:
+  contents: read
+concurrency:
+  group: production-d1-sync
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      SOURCE_DB_PATH: ${{ runner.temp }}/live-slide-switch-stock.sqlite3
+      STOCK_BATCH_ROWS: "1000"
+      RETRY_MAX_ATTEMPTS: "3"
+      RETRY_BASE_DELAY_SECONDS: "10"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+        working-directory: cf-proxy
+      - name: Prepare regression snapshot and fetch actual JLCPCB stock
+        run: |
+          bun -e 'import {Database} from "bun:sqlite"; const db=new Database(process.env.SOURCE_DB_PATH,{create:true}); db.exec("CREATE TABLE component_stock (lcsc INTEGER PRIMARY KEY, stock INTEGER, subcategory TEXT)"); db.query("INSERT INTO component_stock VALUES (?,?,?)").run(221660,2184,"Slide Switches"); db.close();'
+          bun scripts/refresh-slide-switch-stock.ts
+      - name: Apply verified live slide-switch stock to deployed tables
+        run: bash cf-proxy/scripts/sync-stock.sh
+      - name: Verify C221660 in all production tables
+        working-directory: cf-proxy
+        run: |
+          expected_stock="$(bun -e 'import {Database} from "bun:sqlite"; const db=new Database(process.env.SOURCE_DB_PATH,{readonly:true}); console.log(JSON.stringify(db.query("SELECT stock FROM component_stock WHERE lcsc=221660").get().stock)); db.close();')"
+          echo "Verified source C221660 stock: ${expected_stock}"
+          bash scripts/retry-command.sh bunx wrangler d1 execute jlcsearch --remote --json \
+            --command "SELECT 'component_catalog' AS source, lcsc, stock, NULL AS in_stock FROM component_catalog WHERE lcsc=221660 UNION ALL SELECT 'search_index', lcsc, stock, NULL FROM search_index WHERE lcsc=221660 UNION ALL SELECT 'switch', lcsc, stock, in_stock FROM switch WHERE lcsc=221660;" \
+            > "${RUNNER_TEMP}/c221660-remote.json"
+          cat "${RUNNER_TEMP}/c221660-remote.json"
+          jq -e --argjson expected "${expected_stock}" '.[0].results | length == 3 and all(.[]; .stock == $expected and (.source != "switch" or .in_stock == (if $expected != null and $expected > 0 then 1 else 0 end)))' "${RUNNER_TEMP}/c221660-remote.json"
+      - name: Clear cached responses and verify cached and uncached API
+        working-directory: cf-proxy
+        run: |
+          cache_keys_file="${RUNNER_TEMP}/cache-keys.json"
+          bash scripts/retry-command.sh bunx wrangler kv key list --binding CACHE_KV > "${cache_keys_file}"
+          if [[ "$(jq 'length' "${cache_keys_file}")" != "0" ]]; then
+            bash scripts/retry-command.sh bunx wrangler kv bulk delete "${cache_keys_file}" --binding CACHE_KV --force
+          fi
+          expected_stock="$(bun -e 'import {Database} from "bun:sqlite"; const db=new Database(process.env.SOURCE_DB_PATH,{readonly:true}); console.log(JSON.stringify(db.query("SELECT stock FROM component_stock WHERE lcsc=221660").get().stock)); db.close();')"
+          for suffix in "&cachebust=1" ""; do
+            curl --fail --silent --show-error --retry 3 --retry-all-errors \
+              "https://jlcsearch.tscircuit.com/components/list?search=C221660&json=true${suffix}" \
+              > "${RUNNER_TEMP}/c221660-api.json"
+            cat "${RUNNER_TEMP}/c221660-api.json"
+            jq -e --argjson expected "${expected_stock}" 'if $expected != null and $expected > 0 then [.components[] | select(.lcsc == 221660)] | length == 1 and .[0].stock == $expected else (.components | type == "array") and all(.components[]; .lcsc != 221660) end' "${RUNNER_TEMP}/c221660-api.json"
+          done
