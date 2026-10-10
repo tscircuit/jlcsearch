@@ -336,7 +336,7 @@ describe("buildDerivedSyncDatabase", () => {
   })
 })
 
-test("recovery restores absent records while preserving current stock and explicit removals", async () => {
+test("recovery restores metadata with unknown stock while preserving current stock and explicit removals", async () => {
   const current = await createSourceDatabase()
   const backup = await createSourceDatabase()
   const source = new Database(current.sourcePath)
@@ -363,6 +363,16 @@ test("recovery restores absent records while preserving current stock and explic
   })
   const output = new Database(current.outputPath)
   try {
+    expect(
+      output
+        .query(
+          "SELECT stock_source, stock_checked_at FROM component_stock WHERE lcsc=99999",
+        )
+        .get(),
+    ).toEqual({ stock_source: "recovery_metadata", stock_checked_at: null })
+    expect(
+      output.query("SELECT in_stock FROM hdmi_port WHERE lcsc=99999").get(),
+    ).toEqual({ in_stock: 0 })
     const catalogExtras = output
       .query<{ lcsc: number; extra: string }, []>(
         "SELECT lcsc, extra FROM component_catalog ORDER BY lcsc",
@@ -381,7 +391,7 @@ test("recovery restores absent records while preserving current stock and explic
         .all(),
     ).toEqual([
       { lcsc: 12345, stock: 7 },
-      { lcsc: 99999, stock: 250 },
+      { lcsc: 99999, stock: null },
     ])
     expect(
       output
@@ -390,13 +400,13 @@ test("recovery restores absent records while preserving current stock and explic
     ).toEqual([
       { lcsc: 12345, stock: 7 },
       { lcsc: 54321, stock: 0 },
-      { lcsc: 99999, stock: 250 },
+      { lcsc: 99999, stock: null },
     ])
     expect(
       output.query("SELECT lcsc, stock FROM hdmi_port ORDER BY lcsc").all(),
     ).toEqual([
       { lcsc: 12345, stock: 7 },
-      { lcsc: 99999, stock: 250 },
+      { lcsc: 99999, stock: null },
     ])
   } finally {
     output.close()

@@ -745,4 +745,19 @@ describe("render helpers", () => {
       "Feature&quot;:&quot;Overcurrent Protection(OCP)&quot;",
     )
   })
+  it("labels unknown stock distinctly from verified zero stock", () => {
+    const html = renderD1TablePage(
+      "/switches/list",
+      {
+        switches: [
+          { lcsc: 221660, mfr: "JS102011SAQN", stock: null },
+          { lcsc: 2, mfr: "Verified zero", stock: 0 },
+        ],
+      },
+      {},
+      "https://example.com/switches/list",
+    )
+    expect(html).toContain(">Unknown</td>")
+    expect(html).toContain(">0</td>")
+  })
 })
