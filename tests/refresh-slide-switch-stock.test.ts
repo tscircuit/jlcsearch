@@ -58,7 +58,8 @@ test("rejects incomplete, duplicate, changing, wrong-category and invalid stock 
   ).rejects.toThrow()
   await expect(
     fetchSlideSwitchStock(
-      (async () => new Response("", { status: 503 })) as typeof fetch,
+      (async (_url: any, _init: any) =>
+        new Response("", { status: 503 })) as typeof fetch,
     ),
   ).rejects.toThrow("HTTP 503")
 })
