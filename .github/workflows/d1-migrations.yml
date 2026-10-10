@@ -5,7 +5,7 @@ on:
     # Runs after the upstream jlcparts 03:00 UTC refresh has completed.
     - cron: "0 5 * * *"
   push:
-    branches: [ops/verify-stock-c221660]
+    branches: [main]
     paths:
       - "lib/**"
       - "scripts/**"

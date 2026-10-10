@@ -1,4 +1,4 @@
-name: Diagnose stock table discovery
+name: Verify repaired stock sync for C221660
 on:
   push:
     branches: [ops/verify-stock-c221660]
@@ -17,16 +17,18 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - name: Install worker dependencies
         run: bun install --cwd cf-proxy --frozen-lockfile
-      - name: Read D1 discovery error
-        working-directory: cf-proxy
+      - name: Verify the repaired stock sync for C221660
+        env:
+          SOURCE_DB_PATH: ${{ runner.temp }}/c221660.sqlite3
+          STOCK_BATCH_ROWS: "1"
+          RETRY_MAX_ATTEMPTS: "1"
         run: |
-          query="$(bun ../scripts/generate-stock-sync-sql.ts --print-targets-query)"
-          result_file="${RUNNER_TEMP}/stock-targets.json"
-          set +e
-          bunx wrangler d1 execute jlcsearch --remote --json --command "${query}" > "${result_file}" 2>&1
-          status=$?
-          set -e
-          cat "${result_file}"
-          echo "Discovery exit status: ${status}"
-          bunx wrangler d1 execute jlcsearch --remote --json --command "SELECT name, sql FROM sqlite_master WHERE type='table' AND name IN ('switch', 'search_index', 'component_catalog');"
-          exit "${status}"
+          # Use the C221660 quantity recorded in the full prepared snapshot:
+          # https://github.com/tscircuit/jlcsearch/actions/runs/38007299250
+          bun -e 'import { Database } from "bun:sqlite"; const db = new Database(process.env.SOURCE_DB_PATH); db.exec("CREATE TABLE component_stock (lcsc INTEGER PRIMARY KEY, stock INTEGER); INSERT INTO component_stock VALUES (221660, 2184);"); db.close();'
+          bash cf-proxy/scripts/sync-stock.sh
+          cd cf-proxy
+          bunx wrangler d1 execute jlcsearch --remote --json \
+            --command "SELECT 'search_index' AS source, lcsc, stock, NULL AS in_stock FROM search_index WHERE lcsc=221660 UNION ALL SELECT 'component_catalog', lcsc, stock, NULL FROM component_catalog WHERE lcsc=221660 UNION ALL SELECT 'switch', lcsc, stock, in_stock FROM switch WHERE lcsc=221660;"
+          curl --fail --silent --show-error --retry 3 --retry-all-errors \
+            "https://jlcsearch.tscircuit.com/api/search?q=C221660&limit=1&cachebust=1"

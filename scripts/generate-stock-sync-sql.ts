@@ -25,17 +25,59 @@ const DEFAULT_STOCK_TARGETS: StockSyncTarget[] = [
 ]
 const STOCK_BATCH_TABLE = "_jlcsearch_stock_sync_batch"
 
-// Discover deployed tables rather than assuming every derived table exists.
-export const STOCK_SYNC_TARGETS_QUERY = `SELECT tables.name,
-  MAX(columns.name = 'in_stock') AS has_in_stock
-FROM sqlite_master AS tables
-JOIN pragma_table_info(tables.name) AS columns
-WHERE tables.type = 'table'
-  AND tables.name != '${STOCK_BATCH_TABLE}'
-GROUP BY tables.name
-HAVING MAX(columns.name = 'lcsc') = 1
-  AND MAX(columns.name = 'stock') = 1
-ORDER BY tables.name;`
+// D1 denies table-valued PRAGMA functions. Read ordinary CREATE TABLE schema
+// instead and inspect its columns in an isolated local SQLite database.
+export const STOCK_SYNC_TARGETS_QUERY = `SELECT name, sql
+FROM sqlite_master
+WHERE type = 'table'
+  AND sql IS NOT NULL
+  AND sql NOT LIKE 'CREATE VIRTUAL TABLE%'
+  AND name NOT LIKE 'sqlite_%'
+  AND name NOT LIKE '_cf_%'
+  AND name != '${STOCK_BATCH_TABLE}'
+ORDER BY name;`
+
+export const stockSyncTargetsFromSchema = (
+  schemas: Array<{ name: string; sql: string }>,
+): StockSyncTarget[] => {
+  const database = new Database(":memory:")
+  const targets: StockSyncTarget[] = []
+  const names = new Set<string>()
+  try {
+    for (const schema of schemas) {
+      if (
+        !schema ||
+        typeof schema.name !== "string" ||
+        !/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(schema.name) ||
+        typeof schema.sql !== "string" ||
+        !/^CREATE\s+TABLE\s/i.test(schema.sql) ||
+        names.has(schema.name)
+      ) {
+        throw new Error("Invalid stock sync target schema")
+      }
+      names.add(schema.name)
+      // Prepare a single CREATE statement; never execute a SQL script from
+      // the manifest. No rows or production data are copied locally.
+      database.query(schema.sql).run()
+      const columns = new Set(
+        database
+          .query<{ name: string }, []>(`PRAGMA table_info("${schema.name}")`)
+          .all()
+          .map((column) => column.name),
+      )
+      if (columns.has("lcsc") && columns.has("stock")) {
+        targets.push({
+          name: schema.name,
+          has_in_stock: columns.has("in_stock") ? 1 : 0,
+        })
+      }
+    }
+    validateTargets(targets)
+    return targets
+  } finally {
+    database.close()
+  }
+}
 
 const validateTargets = (targets: StockSyncTarget[]) => {
   if (targets.length === 0) throw new Error("No stock sync targets found")
@@ -65,11 +107,7 @@ export const readStockSyncTargets = async (
   ) {
     throw new Error("Invalid D1 stock target discovery response")
   }
-  const targets: StockSyncTarget[] = result[0].results
-  if (targets.some((target) => !target || typeof target.name !== "string")) {
-    throw new Error("Invalid stock sync target")
-  }
-  validateTargets(targets)
+  const targets = stockSyncTargetsFromSchema(result[0].results)
   for (const required of DEFAULT_STOCK_TARGETS) {
     if (!targets.some((target) => target.name === required.name)) {
       throw new Error(`Missing required stock table: ${required.name}`)
