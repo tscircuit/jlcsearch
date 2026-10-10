@@ -5,11 +5,29 @@ on:
     paths: [.github/workflows/verify-live-slide-switch-stock.yml]
 permissions:
   contents: read
-concurrency:
-  group: production-d1-sync
-  cancel-in-progress: false
 jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SOURCE_DB_PATH: /tmp/live-slide-switch-stock.sqlite3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+        working-directory: cf-proxy
+      - name: Verify unknown and zero stock HTML rendering
+        working-directory: cf-proxy
+        run: bunx vitest run test/render.test.ts -t "labels unknown stock"
+      - name: Read and validate live slide-switch stock without production writes
+        run: |
+          bun -e 'import {Database} from "bun:sqlite"; const db=new Database(process.env.SOURCE_DB_PATH,{create:true}); db.exec("CREATE TABLE component_stock (lcsc INTEGER PRIMARY KEY, stock INTEGER, subcategory TEXT)"); db.query("INSERT INTO component_stock VALUES (?,?,?)").run(221660,2184,"Slide Switches"); db.close();'
+          bun scripts/refresh-slide-switch-stock.ts
   verify:
+    needs: prepare
+    concurrency:
+      group: production-d1-sync
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
