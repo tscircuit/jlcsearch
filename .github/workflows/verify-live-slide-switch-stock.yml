@@ -15,7 +15,7 @@ jobs:
     env:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      SOURCE_DB_PATH: ${{ runner.temp }}/live-slide-switch-stock.sqlite3
+      SOURCE_DB_PATH: /tmp/live-slide-switch-stock.sqlite3
       STOCK_BATCH_ROWS: "1000"
       RETRY_MAX_ATTEMPTS: "3"
       RETRY_BASE_DELAY_SECONDS: "10"
@@ -24,6 +24,9 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
         working-directory: cf-proxy
+      - name: Verify unknown and zero stock HTML rendering
+        working-directory: cf-proxy
+        run: bunx vitest run test/render.test.ts -t "labels unknown stock"
       - name: Prepare regression snapshot and fetch actual JLCPCB stock
         run: |
           bun -e 'import {Database} from "bun:sqlite"; const db=new Database(process.env.SOURCE_DB_PATH,{create:true}); db.exec("CREATE TABLE component_stock (lcsc INTEGER PRIMARY KEY, stock INTEGER, subcategory TEXT)"); db.query("INSERT INTO component_stock VALUES (?,?,?)").run(221660,2184,"Slide Switches"); db.close();'
