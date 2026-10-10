@@ -1,3 +1,4 @@
+# Verify the final stock-observation writer: 2e1e5f63d21589cdbb63d06fff0d47911db2c177
 name: Verify live slide-switch stock in production
 on:
   push:

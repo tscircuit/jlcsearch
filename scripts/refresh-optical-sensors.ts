@@ -1,4 +1,5 @@
 import { Database } from "bun:sqlite"
+import { createLiveStockWriter } from "./live-stock-observation"
 import {
   getOpticalSensorType,
   opticalSensorTableSpec,
@@ -204,22 +205,13 @@ export function mergeOpticalSensors(db: Database, rows: OpticalSensorRow[]) {
         .map((c) => `${c}=excluded.${c}`)
         .join(",")}`)
     const seen = new Set<number>()
-    const hasStock = db
-      .query(
-        "SELECT 1 FROM sqlite_master WHERE type='table' AND name='component_stock'",
-      )
-      .get()
-    const stock = hasStock
-      ? db.prepare(
-          "INSERT INTO component_stock (lcsc,stock) VALUES (?,?) ON CONFLICT(lcsc) DO UPDATE SET stock=excluded.stock",
-        )
-      : null
+    const writeStock = createLiveStockWriter(db)
     for (const row of rows) {
       if (seen.has(row.lcsc))
         throw new Error(`Duplicate optical sensor C${row.lcsc}`)
       seen.add(row.lcsc)
       insert.run(...columns.map((c) => row[c as keyof OpticalSensorRow]))
-      stock?.run(row.lcsc, row.stock)
+      writeStock(row.lcsc, row.stock)
     }
   })()
 }
