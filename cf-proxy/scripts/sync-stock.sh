@@ -38,8 +38,11 @@ fi
 
 echo "Discovering deployed stock tables..."
 stock_targets_query="$(cd "${REPO_ROOT}" && bun run scripts/generate-stock-sync-sql.ts --print-targets-query)"
-run_wrangler d1 execute "${DB_NAME}" --remote --json \
-  --command "${stock_targets_query}" > "${STOCK_SYNC_TEMP_DIR}/targets.json"
+if ! run_wrangler d1 execute "${DB_NAME}" --remote --json \
+  --command "${stock_targets_query}" > "${STOCK_SYNC_TEMP_DIR}/targets.json"; then
+  cat "${STOCK_SYNC_TEMP_DIR}/targets.json" >&2
+  exit 1
+fi
 
 echo "Generating stock-only D1 update batches..."
 (
