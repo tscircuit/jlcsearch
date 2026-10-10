@@ -15,6 +15,7 @@ import {
   createStockSyncBatchSql,
   readStockSyncTargets,
   STOCK_SYNC_TARGETS_QUERY,
+  stockSyncTargetsFromSchema,
   type StockSyncTarget,
   writeStockSyncBatches,
 } from "../scripts/generate-stock-sync-sql"
@@ -153,9 +154,11 @@ describe("stock sync SQL generation", () => {
         (4, 1, 1, 'Unknown quantity'), (99, 99, 1, 'Missing from snapshot');
       INSERT INTO resistor VALUES (2, 0, 0);
     `)
-    const targets = target
-      .query<StockSyncTarget, []>(STOCK_SYNC_TARGETS_QUERY)
-      .all()
+    const targets = stockSyncTargetsFromSchema(
+      target
+        .query<{ name: string; sql: string }, []>(STOCK_SYNC_TARGETS_QUERY)
+        .all(),
+    )
     expect(targets).toEqual([
       { name: "component_catalog", has_in_stock: 0 },
       { name: "resistor", has_in_stock: 1 },
@@ -233,28 +236,35 @@ describe("stock sync SQL generation", () => {
       { name: "search_index", has_in_stock: 0 },
       { name: "switch", has_in_stock: 1 },
     ]
+    const schemas = targets.map((target) => ({
+      name: target.name,
+      sql: `CREATE TABLE "${target.name}" (lcsc INTEGER, stock INTEGER${target.has_in_stock ? ", in_stock INTEGER" : ""})`,
+    }))
     const writeTargets = async (results: unknown) =>
       writeFile(filename, JSON.stringify([{ success: true, results }]))
-    await writeTargets(targets)
+    await writeTargets(schemas)
     expect(await readStockSyncTargets(filename)).toEqual(targets)
-    await writeTargets(targets.slice(1))
+    await writeTargets(schemas.slice(1))
     await expect(readStockSyncTargets(filename)).rejects.toThrow(
       "Missing required stock table",
     )
     await writeTargets([
-      ...targets,
-      { name: "bad; DROP TABLE switch", has_in_stock: 1 },
+      ...schemas,
+      {
+        name: "bad; DROP TABLE switch",
+        sql: "CREATE TABLE bad (lcsc INTEGER, stock INTEGER)",
+      },
     ])
     await expect(readStockSyncTargets(filename)).rejects.toThrow(
       "Invalid stock sync target",
     )
-    await writeTargets([...targets, targets[2]])
+    await writeTargets([...schemas, schemas[2]])
     await expect(readStockSyncTargets(filename)).rejects.toThrow(
       "Invalid stock sync target",
     )
     await writeFile(
       filename,
-      JSON.stringify([{ success: false, results: targets }]),
+      JSON.stringify([{ success: false, results: schemas }]),
     )
     await expect(readStockSyncTargets(filename)).rejects.toThrow(
       "Invalid D1 stock target discovery response",
