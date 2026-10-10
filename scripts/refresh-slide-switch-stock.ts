@@ -1,4 +1,5 @@
 import { Database } from "bun:sqlite"
+import { createLiveStockWriter } from "./live-stock-observation"
 
 const ENDPOINT =
   "https://jlcpcb.com/api/overseas-pcb-order/v1/shoppingCart/smtGood/selectSmtComponentList/v2"
@@ -117,13 +118,6 @@ export function mergeSlideSwitchStock(
           if (!seen.has(row.lcsc)) observations.set(row.lcsc, null)
         }
       }
-      for (const [name, type] of [
-        ["stock_source", "TEXT"],
-        ["stock_checked_at", "INTEGER"],
-      ]) {
-        if (!columns.has(name))
-          db.exec(`ALTER TABLE component_stock ADD COLUMN ${name} ${type}`)
-      }
     }
     const catalogExists = hasTable(db, "component_catalog")
     if (catalogExists) {
@@ -145,11 +139,7 @@ export function mergeSlideSwitchStock(
         if (!seen.has(row.lcsc)) observations.set(row.lcsc, null)
       }
     }
-    const stock = stockExists
-      ? db.prepare(`INSERT INTO component_stock(lcsc,stock,stock_source,stock_checked_at)
-      VALUES (?,?,?,?) ON CONFLICT(lcsc) DO UPDATE SET stock=excluded.stock,
-      stock_source=excluded.stock_source, stock_checked_at=excluded.stock_checked_at`)
-      : null
+    const writeStock = createLiveStockWriter(db, checkedAt)
     const catalog = catalogExists
       ? db.prepare("UPDATE component_catalog SET stock=? WHERE lcsc=?")
       : null
@@ -157,12 +147,7 @@ export function mergeSlideSwitchStock(
       ? db.prepare('UPDATE "switch" SET stock=?, in_stock=? WHERE lcsc=?')
       : null
     for (const [lcsc, quantity] of observations) {
-      stock?.run(
-        lcsc,
-        quantity,
-        quantity === null ? "jlcpcb_live_missing" : "jlcpcb_live",
-        checkedAt,
-      )
+      writeStock(lcsc, quantity)
       catalog?.run(quantity, lcsc)
       switches?.run(quantity, Number(quantity !== null && quantity > 0), lcsc)
     }
