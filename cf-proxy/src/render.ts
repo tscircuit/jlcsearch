@@ -261,9 +261,58 @@ const COLUMN_LABELS: Record<string, string> = {
   height_mm: "Height",
 }
 
+const COLUMN_UNITS: Record<string, string> = {
+  capacitance_farads: "F",
+  tolerance_fraction: "%",
+  voltage_rating: "V",
+  current_rating: "A",
+  resistance: "Ω",
+  power_watts: "W",
+  current_rating_a: "A",
+  current_rating_amp: "A",
+  voltage_rating_volt: "V",
+  wavelength_nm: "nm",
+  peak_wavelength_nm: "nm",
+  spectral_range_min_nm: "nm",
+  spectral_range_max_nm: "nm",
+  reverse_voltage_min: "V",
+  dark_current_a: "A",
+  dark_current_max: "A",
+  inside_diameter_mm: "mm",
+  outside_diameter_mm: "mm",
+  current_rating_min: "A",
+  memory_size_mbit: "Mbit",
+  clock_frequency_mhz: "MHz",
+  clock_frequency_min_mhz: "MHz",
+  voltage_rating_min: "V",
+  reception_angle_deg: "°",
+  luminous_intensity_mcd: "mcd",
+  cpu_speed_hz: "Hz",
+  clock_frequency_hz: "Hz",
+  frequency_ghz: "GHz",
+  data_rate_mbps: "Mbps",
+  npu_performance_tops: "TOPS",
+  performance_min_tops: "TOPS",
+  forward_current: "A",
+  forward_voltage: "V",
+  supply_voltage_min: "V",
+  supply_voltage_max: "V",
+  output_voltage_min: "V",
+  output_voltage_max: "V",
+  input_voltage_min: "V",
+  input_voltage_max: "V",
+  output_current_max: "A",
+  operating_temp_min: "°C",
+  operating_temp_max: "°C",
+  pitch_mm: "mm",
+  height_above_board_mm: "mm",
+  height_mm: "mm",
+}
+
 const getColumnLabel = (column: string): string => {
-  if (COLUMN_LABELS[column]) return COLUMN_LABELS[column]
-  return titleCase(column)
+  const label = COLUMN_LABELS[column] ?? titleCase(column)
+  const unit = COLUMN_UNITS[column]
+  return unit && !label.includes("(") ? `${label} (${unit})` : label
 }
 
 const withUnit = (value: unknown, unit: string): string => {
