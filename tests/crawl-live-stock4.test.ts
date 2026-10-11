@@ -19,7 +19,7 @@ test("rejects malformed and incomplete responses without changing stock or curso
         total: 1,
         list: [{ ...good, stockCount }],
       })),
-      { total: 2, list: [good, good] },
+      { total: 1, list: [null] },
     ]
     for (const info of cases) {
       const fetcher = (async (_url: any, _init: any) =>

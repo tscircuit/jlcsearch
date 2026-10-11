@@ -122,32 +122,45 @@ export async function fetchStockPage(
     throw new Error(
       `Incomplete JLCPCB stock page for ${category}/${subcategory}: code=${body.code}, total=${info?.total}, rows=${info?.list?.length}`,
     )
-  const seen = new Set<number>()
-  const rows: LiveStockRow[] = info.list.map((product: any) => {
+  // Check the raw page size before removing duplicate or malformed rows.
+  const expectedLength = Math.max(
+    0,
+    Math.min(100, info.total - (page - 1) * 100),
+  )
+  if (info.list.length !== expectedLength)
+    throw new Error("Incomplete JLCPCB pagination")
+  const distinct = new Map<number, LiveStockRow>()
+  let duplicateRows = 0
+  let rejectedRows = 0
+  for (const product of info.list) {
     const code = product?.componentCode
     const lcsc =
       typeof code === "string" && /^C[1-9]\d*$/.test(code)
         ? Number(code.slice(1))
         : NaN
     if (
-      product.componentTypeEn !== subcategory ||
+      product?.componentTypeEn !== subcategory ||
       !Number.isSafeInteger(lcsc) ||
       !Number.isSafeInteger(product.stockCount) ||
-      product.stockCount < 0 ||
-      seen.has(lcsc)
+      product.stockCount < 0
+    ) {
+      rejectedRows++
+      continue
+    }
+    if (distinct.has(lcsc)) duplicateRows++
+    // Keep the last validated quantity, as with duplicates across pages.
+    distinct.set(lcsc, { lcsc, stock: product.stockCount })
+  }
+  if (info.list.length && !distinct.size)
+    throw new Error(
+      `No valid live stock rows for ${category}/${subcategory} page ${page}: rejected=${rejectedRows}`,
     )
-      throw new Error("Invalid or duplicate live stock row")
-    seen.add(lcsc)
-    return { lcsc, stock: product.stockCount }
-  })
-  // Full non-final pages are necessary for a stable resumable page cursor.
-  const expectedLength = Math.max(
-    0,
-    Math.min(100, info.total - (page - 1) * 100),
-  )
-  if (rows.length !== expectedLength)
-    throw new Error("Incomplete JLCPCB pagination")
-  return { total: info.total as number, rows }
+  return {
+    total: info.total as number,
+    rows: [...distinct.values()],
+    duplicateRows,
+    rejectedRows,
+  }
 }
 
 const predicate = (c: StockCategory) =>
@@ -186,6 +199,8 @@ export async function crawlCategory({
   let consistent = c.consistent ?? 1
   let pages = 0
   let checked = 0
+  let duplicateRows = 0
+  let rejectedRows = 0
   let complete = false
   let batch: LiveStockRow[] = []
   const flush = async () => {
@@ -211,6 +226,16 @@ export async function crawlCategory({
       fetcher,
     )
     pages++
+    duplicateRows += result.duplicateRows
+    rejectedRows += result.rejectedRows
+    // Valid observations still refresh stock, but a damaged page cannot
+    // prove that parts absent from this pass have disappeared upstream.
+    if (result.duplicateRows || result.rejectedRows) {
+      consistent = 0
+      console.warn(
+        `${c.category}/${c.subcategory} page ${page}: duplicates=${result.duplicateRows}, rejected=${result.rejectedRows}`,
+      )
+    }
     // Keep making progress through a changing category. Restarting on each
     // change would permanently strand the later pages of large categories.
     // Such a pass can update observations but cannot infer missing parts.
@@ -242,7 +267,14 @@ export async function crawlCategory({
       await execute(
         `UPDATE _jlcsearch_stock_categories SET next_page=1, cycle='', expected_total=NULL, consistent=1 WHERE ${predicate(c)};`,
       )
-      return { pages, checked, complete: false, restarted: true }
+      return {
+        pages,
+        checked,
+        duplicateRows,
+        rejectedRows,
+        complete: false,
+        restarted: true,
+      }
     }
     // Only a complete, duplicate-free scan can establish missing parts. Keep
     // their metadata and publish unknown rather than inventing zero stock.
@@ -271,7 +303,14 @@ export async function crawlCategory({
     await execute(`UPDATE _jlcsearch_stock_categories SET next_page=1, cycle='', expected_total=NULL,
       consistent=1, completed_at=${now()} WHERE ${predicate(c)};`)
   }
-  return { pages, checked, complete, restarted: false }
+  return {
+    pages,
+    checked,
+    duplicateRows,
+    rejectedRows,
+    complete,
+    restarted: false,
+  }
 }
 
 export async function expireLiveStock(
@@ -498,6 +537,8 @@ async function main() {
   let pages = 0
   let checked = 0
   let failures = 0
+  let duplicateRows = 0
+  let rejectedRows = 0
   for (const category of categories) {
     if (pages >= maxPages) break
     try {
@@ -509,6 +550,8 @@ async function main() {
       })
       pages += result.pages
       checked += result.checked
+      duplicateRows += result.duplicateRows
+      rejectedRows += result.rejectedRows
       console.log(JSON.stringify({ ...category, ...result }))
     } catch (error) {
       failures++
@@ -531,6 +574,8 @@ async function main() {
     expired,
     unverifiedExpired,
     failures,
+    duplicateRows,
+    rejectedRows,
     coverage,
   }
   console.log(JSON.stringify(report, null, 2))
