@@ -284,6 +284,7 @@ export const linuxCapableProcessorTableSpec: DerivedTableSpec<LinuxCapableProces
       { name: "cpu_core", type: "text" },
       { name: "is_basic", type: "boolean" },
       { name: "is_preferred", type: "boolean" },
+      { name: "is_extended_promotional", type: "boolean" },
     ],
     indexes: [
       { name: "idx_linux_capable_processor_stock", columns: ["stock"] },
@@ -385,6 +386,7 @@ export const linuxCapableProcessorTableSpec: DerivedTableSpec<LinuxCapableProces
           in_stock: Number(component.stock ?? 0) > 0,
           is_basic: Boolean(component.basic),
           is_preferred: Boolean(component.preferred),
+          is_extended_promotional: Boolean(component.extended_promotional),
           package: packageName,
           manufacturer,
           chip_family: rule.chipFamily,
