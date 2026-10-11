@@ -411,6 +411,67 @@ jobs:
         run: |
           if [[ -z "${CACHE_BUST_URL}" ]]; then
             if [[ "${SYNC_SCOPE}" != "derived" ]]; then
+              CACHE_BUST_URL="https://jlcsearch.tscircuit.com/components/list?search=C${SMOKE_TEST_LCSC}&json=true"
+            elif [[ ",${DERIVED_TABLES_LIST}," == *",optical_sensor,"* ]]; then
+              CACHE_BUST_URL="https://jlcsearch.tscircuit.com/optical_sensors/list.json?sensor_type=Optical+Motion"
+            elif [[ ",${DERIVED_TABLES_LIST}," == *",stepper_motor_driver,"* ]]; then
+              CACHE_BUST_URL="https://jlcsearch.tscircuit.com/stepper_motor_drivers/list.json"
+            elif [[ ",${DERIVED_TABLES_LIST}," == *",linux_capable_processor,"* ]]; then
+              CACHE_BUST_URL="https://jlcsearch.tscircuit.com/linux_capable_processors/list.json"
+            elif [[ ",${DERIVED_TABLES_LIST}," == *",npu_chip,"* ]]; then
+              CACHE_BUST_URL="https://jlcsearch.tscircuit.com/npu_chips/list.json"
+            elif [[ ",${DERIVED_TABLES_LIST}," == *",barrel_jack,"* ]]; then
+              CACHE_BUST_URL="https://jlcsearch.tscircuit.com/barrel_jacks/list.json"
+            elif [[ ",${DERIVED_TABLES_LIST}," == *",micro_usb_connector,"* ]]; then
+              CACHE_BUST_URL="https://jlcsearch.tscircuit.com/micro_usb_connectors/list.json"
+            else
+              CACHE_BUST_URL="https://jlcsearch.tscircuit.com/photo_diodes/list.json"
+            fi
+          fi
+
+          separator="?"
+          if [[ "${CACHE_BUST_URL}" == *"?"* ]]; then
+            separator="&"
+          fi
+
+          curl --fail --silent --show-error \
+            --retry 3 \
+            --retry-all-errors \
+            --retry-delay 10 \
+            "${CACHE_BUST_URL}${separator}cachebust=1" \
+            --output /tmp/d1-sync-response.json
+
+          if [[ "${CACHE_BUST_URL}" == *"/hdmi_ports/list.json"* ]]; then
+            hdmi_port_count="$(jq '.hdmi_ports | length' /tmp/d1-sync-response.json)"
+            if [[ "${hdmi_port_count}" == "0" || "${hdmi_port_count}" == "null" ]]; then
+              echo "::error::Production HDMI API still returned no ports."
+              cat /tmp/d1-sync-response.json
+              exit 1
+            fi
+            echo "Production HDMI API returned ${hdmi_port_count} ports."
+          fi
+
+          if [[ "${CACHE_BUST_URL}" == *"/micro_usb_connectors/list.json"* ]]; then
+            micro_usb_connector_count="$(jq '.micro_usb_connectors | length' /tmp/d1-sync-response.json)"
+            if [[ "${micro_usb_connector_count}" == "0" || "${micro_usb_connector_count}" == "null" ]]; then
+              echo "::error::Production Micro USB API still returned no connectors."
+              cat /tmp/d1-sync-response.json
+              exit 1
+            fi
+            echo "Production Micro USB API returned ${micro_usb_connector_count} connectors."
+          fi
+
+          if [[ "${CACHE_BUST_URL}" == *"/barrel_jacks/list.json"* ]]; then
+            barrel_jack_count="$(jq '.barrel_jacks | length' /tmp/d1-sync-response.json)"
+            if [[ "${barrel_jack_count}" == "0" || "${barrel_jack_count}" == "null" ]]; then
+              echo "::error::Production Barrel Jacks API still returned no connectors."
+              cat /tmp/d1-sync-response.json
+              exit 1
+            fi
+            echo "Production Barrel Jacks API returned ${barrel_jack_count} connectors."
+          fi
+
+          if [[ "${SYNC_SCOPE}" != "derived" ]]; then
             expected_stock="${SMOKE_TEST_EFFECTIVE_STOCK}"
             if [[ -z "${expected_stock}" ]]; then
               echo "::error::Prepared source is missing C${SMOKE_TEST_LCSC}."
