@@ -4,7 +4,7 @@ import { getD1Handler } from "./d1-routes"
 import { getD1Client } from "./db/get-d1-client"
 import { handleEasyEdaComponentCache } from "./easyeda-component-cache"
 import { renderD1TablePage, renderHomePage } from "./render"
-import { searchIndex } from "./search"
+import { isExtendedPromotional, searchIndex } from "./search"
 
 export interface Env {
   CACHE_KV: KVNamespace
@@ -456,6 +456,7 @@ async function handleD1Search(
       package: row.package ?? "",
       is_basic: Boolean(row.basic),
       is_preferred: Boolean(row.preferred),
+      is_extended_promotional: isExtendedPromotional(row.basic, row.preferred),
       description: row.description ?? "",
       stock: row.stock ?? 0,
       price: row.price1 ?? extractSmallQuantityPrice(row.price),
@@ -581,6 +582,10 @@ async function handleD1ComponentsList(
         subcategory: row.subcategory ?? "",
         is_basic: Boolean(row.basic),
         is_preferred: Boolean(row.preferred),
+        is_extended_promotional: isExtendedPromotional(
+          row.basic,
+          row.preferred,
+        ),
       })),
     }
 
