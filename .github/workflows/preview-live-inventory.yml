@@ -23,3 +23,4 @@ jobs:
           name: live-stock-preview
           path: live-stock-report.json
 # Collect website taxonomy diagnostics.
+# Verify resolved taxonomy for every sampled category.

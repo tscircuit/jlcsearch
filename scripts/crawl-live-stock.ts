@@ -18,16 +18,71 @@ export interface StockCategory {
   next_page: number
   cycle: string
   expected_total: number | null
+  consistent?: number
+  web_category?: string | null
+  web_subcategory?: string | null
 }
 export type Execute = (sql: string) => Promise<any[]>
-class ChangedCategoryTotal extends Error {}
+
+export async function resolveStockCategory(
+  c: StockCategory,
+  execute: Execute,
+  fetcher: typeof fetch = fetch,
+): Promise<StockCategory> {
+  if (c.web_category && c.web_subcategory) return c
+  const samples: Array<{ lcsc: number }> =
+    await execute(`SELECT lcsc FROM component_catalog
+    WHERE category=${sqlString(c.category)} AND subcategory=${sqlString(c.subcategory)} ORDER BY stock DESC LIMIT 5;`)
+  for (const sample of samples) {
+    const response = await fetcher(ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      signal: AbortSignal.timeout(30_000),
+      body: JSON.stringify({
+        currentPage: 1,
+        pageSize: 25,
+        keyword: `C${sample.lcsc}`,
+        searchSource: "search",
+        searchType: 2,
+        componentBrandList: [],
+        componentSpecificationList: [],
+        componentAttributeList: [],
+        paramList: [],
+      }),
+    })
+    if (!response.ok) throw new Error(`JLCPCB taxonomy HTTP ${response.status}`)
+    const body: any = await response.json()
+    if (body.code !== 200 || !Array.isArray(body.data?.componentPageInfo?.list))
+      throw new Error("Invalid JLCPCB taxonomy response")
+    const row = body.data.componentPageInfo.list.find(
+      (row: any) => row.componentCode === `C${sample.lcsc}`,
+    )
+    if (!row) continue
+    // Website response fields reverse the order of the request fields.
+    if (
+      typeof row.secondSortName !== "string" ||
+      !row.secondSortName.trim() ||
+      typeof row.firstSortName !== "string" ||
+      !row.firstSortName.trim() ||
+      row.firstSortName !== row.componentTypeEn
+    )
+      throw new Error("Invalid JLCPCB category mapping")
+    return {
+      ...c,
+      web_category: row.secondSortName,
+      web_subcategory: row.firstSortName,
+    }
+  }
+  throw new Error(
+    `Could not resolve website category for ${c.category}/${c.subcategory}`,
+  )
+}
 
 export async function fetchStockPage(
   category: string,
   subcategory: string,
   page: number,
   fetcher: typeof fetch = fetch,
-  expectedTotal: number | null = null,
 ) {
   if (
     !category.trim() ||
@@ -58,18 +113,10 @@ export async function fetchStockPage(
   const body: any = await response.json()
   const info = body.data?.componentPageInfo
   if (
-    body.code === 200 &&
-    Number.isSafeInteger(info?.total) &&
-    expectedTotal !== null &&
-    info.total !== expectedTotal
-  )
-    throw new ChangedCategoryTotal("JLCPCB category total changed")
-  if (
     body.code !== 200 ||
     !Number.isSafeInteger(info?.total) ||
     info.total <= 0 ||
     !Array.isArray(info.list) ||
-    info.list.length === 0 ||
     info.list.length > 100
   )
     throw new Error(
@@ -94,7 +141,10 @@ export async function fetchStockPage(
     return { lcsc, stock: product.stockCount }
   })
   // Full non-final pages are necessary for a stable resumable page cursor.
-  const expectedLength = Math.min(100, info.total - (page - 1) * 100)
+  const expectedLength = Math.max(
+    0,
+    Math.min(100, info.total - (page - 1) * 100),
+  )
   if (rows.length !== expectedLength)
     throw new Error("Incomplete JLCPCB pagination")
   return { total: info.total as number, rows }
@@ -105,12 +155,13 @@ const predicate = (c: StockCategory) =>
 
 export const CATEGORY_CRAWL_QUERY = `SELECT c.category, c.subcategory,
   COALESCE(p.next_page, 1) AS next_page, COALESCE(p.cycle, '') AS cycle,
-  p.expected_total
+  p.expected_total, COALESCE(p.consistent, 1) AS consistent, p.web_category, p.web_subcategory
 FROM (SELECT DISTINCT category, subcategory FROM component_catalog
   WHERE category IS NOT NULL AND category != '' AND subcategory IS NOT NULL AND subcategory != '') AS c
 LEFT JOIN _jlcsearch_stock_categories AS p
   ON p.category=c.category AND p.subcategory=c.subcategory
-ORDER BY MAX(COALESCE(p.completed_at, 0), COALESCE(p.attempted_at, 0)), c.category, c.subcategory;`
+ORDER BY CASE WHEN COALESCE(p.cycle, '') != '' THEN 0 ELSE 1 END,
+  MAX(COALESCE(p.completed_at, 0), COALESCE(p.attempted_at, 0)), c.category, c.subcategory;`
 
 export async function crawlCategory({
   category: c,
@@ -132,6 +183,7 @@ export async function crawlCategory({
   let page = c.next_page
   const cycle = c.cycle || randomUUID()
   let total = c.expected_total
+  let consistent = c.consistent ?? 1
   let pages = 0
   let checked = 0
   let complete = false
@@ -143,40 +195,26 @@ export async function crawlCategory({
     const distinct = [...new Map(batch.map((row) => [row.lcsc, row])).values()]
     await execute(`${createStockSyncBatchSql(distinct, targets, true)}
       INSERT INTO _jlcsearch_stock_categories
-        (category, subcategory, next_page, cycle, expected_total, attempted_at)
-      VALUES (${sqlString(c.category)},${sqlString(c.subcategory)},${page},${sqlString(cycle)},${total},${now()})
+        (category, subcategory, next_page, cycle, expected_total, attempted_at, consistent, web_category, web_subcategory)
+      VALUES (${sqlString(c.category)},${sqlString(c.subcategory)},${page},${sqlString(cycle)},${total},${now()},${consistent},${sqlString(c.web_category)},${sqlString(c.web_subcategory)})
       ON CONFLICT(category, subcategory) DO UPDATE SET
         next_page=excluded.next_page, cycle=excluded.cycle,
-        expected_total=excluded.expected_total, attempted_at=excluded.attempted_at;`)
+        expected_total=excluded.expected_total, attempted_at=excluded.attempted_at, consistent=excluded.consistent,
+        web_category=excluded.web_category, web_subcategory=excluded.web_subcategory;`)
     batch = []
   }
   while (pages < maxPages) {
-    let result: Awaited<ReturnType<typeof fetchStockPage>>
-    try {
-      result = await fetchStockPage(
-        c.category,
-        c.subcategory,
-        page,
-        fetcher,
-        total,
-      )
-    } catch (error) {
-      if (!(error instanceof ChangedCategoryTotal)) throw error
-      await flush()
-      await execute(`UPDATE _jlcsearch_stock_categories SET next_page=1, cycle='', expected_total=NULL,
-        attempted_at=${now()} WHERE ${predicate(c)};`)
-      return { pages: pages + 1, checked, complete: false, restarted: true }
-    }
+    const result = await fetchStockPage(
+      c.web_category || c.category,
+      c.web_subcategory || c.subcategory,
+      page,
+      fetcher,
+    )
     pages++
-    if (total !== null && total !== result.total) {
-      // The website inventory changed while a multi-run scan was in progress.
-      // Restart without declaring any missing parts or advancing past a gap.
-      await flush()
-      await execute(`INSERT INTO _jlcsearch_stock_categories
-        (category, subcategory, attempted_at) VALUES (${sqlString(c.category)},${sqlString(c.subcategory)},${now()})
-        ON CONFLICT(category, subcategory) DO UPDATE SET next_page=1, cycle='', expected_total=NULL, attempted_at=excluded.attempted_at;`)
-      return { pages, checked, complete: false, restarted: true }
-    }
+    // Keep making progress through a changing category. Restarting on each
+    // change would permanently strand the later pages of large categories.
+    // Such a pass can update observations but cannot infer missing parts.
+    if (total !== null && total !== result.total) consistent = 0
     total = result.total
     const checkedAt = now()
     batch.push(
@@ -200,9 +238,9 @@ export async function crawlCategory({
     const [{ count }] = await execute(
       `SELECT COUNT(*) AS count FROM _jlcsearch_live_stock WHERE ${predicate(c)} AND seen_cycle=${sqlString(cycle)};`,
     )
-    if (count !== total) {
+    if (count !== total || !consistent) {
       await execute(
-        `UPDATE _jlcsearch_stock_categories SET next_page=1, cycle='', expected_total=NULL WHERE ${predicate(c)};`,
+        `UPDATE _jlcsearch_stock_categories SET next_page=1, cycle='', expected_total=NULL, consistent=1 WHERE ${predicate(c)};`,
       )
       return { pages, checked, complete: false, restarted: true }
     }
@@ -231,7 +269,7 @@ export async function crawlCategory({
       )
     }
     await execute(`UPDATE _jlcsearch_stock_categories SET next_page=1, cycle='', expected_total=NULL,
-      completed_at=${now()} WHERE ${predicate(c)};`)
+      consistent=1, completed_at=${now()} WHERE ${predicate(c)};`)
   }
   return { pages, checked, complete, restarted: false }
 }
@@ -344,9 +382,13 @@ async function main() {
     for (const category of categories) {
       console.log(JSON.stringify({ preview_category: category }))
       try {
+        const resolved = await resolveStockCategory(
+          { ...category, next_page: 1, cycle: "", expected_total: null },
+          remoteExecute,
+        )
         const page = await fetchStockPage(
-          category.category,
-          category.subcategory,
+          resolved.web_category!,
+          resolved.web_subcategory!,
           1,
         )
         const current: Array<{ lcsc: number; stock: number | null }> =
@@ -356,6 +398,8 @@ async function main() {
         const byCode = new Map(page.rows.map((row) => [row.lcsc, row.stock]))
         report.push({
           ...category,
+          web_category: resolved.web_category,
+          web_subcategory: resolved.web_subcategory,
           website_parts: page.total,
           compared: current.length,
           mismatched: current.filter(
@@ -368,44 +412,6 @@ async function main() {
         })
       } catch (error) {
         report.push({ ...category, error: String(error) })
-        const [sample] =
-          await remoteExecute(`SELECT lcsc FROM component_catalog WHERE category=${sqlString(category.category)}
-          AND subcategory=${sqlString(category.subcategory)} ORDER BY stock DESC LIMIT 1;`)
-        if (sample) {
-          const result = await fetch(ENDPOINT, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            signal: AbortSignal.timeout(30_000),
-            body: JSON.stringify({
-              currentPage: 1,
-              pageSize: 25,
-              keyword: `C${sample.lcsc}`,
-              searchSource: "search",
-              searchType: 2,
-              componentBrandList: [],
-              componentSpecificationList: [],
-              componentAttributeList: [],
-              paramList: [],
-            }),
-          })
-          const body: any = await result.json()
-          const row = body.data?.componentPageInfo?.list?.find(
-            (r: any) => r.componentCode === `C${sample.lcsc}`,
-          )
-          console.log(
-            JSON.stringify({
-              taxonomy_sample: sample.lcsc,
-              fields: row ? Object.keys(row) : [],
-              taxonomy: row
-                ? Object.fromEntries(
-                    Object.entries(row).filter(([key]) =>
-                      /type|sort|category/i.test(key),
-                    ),
-                  )
-                : null,
-            }),
-          )
-        }
       }
     }
     console.log(JSON.stringify(report, null, 2))
@@ -413,6 +419,8 @@ async function main() {
       process.env.LIVE_STOCK_REPORT_PATH || "live-stock-report.json",
       JSON.stringify(report, null, 2),
     )
+    if (report.some((row) => "error" in row))
+      throw new Error("Live stock preview found unsupported categories")
     return
   }
   // A production-free probe validates the actual website response in Actions.
@@ -431,9 +439,9 @@ async function main() {
     )
     return
   }
-  const maxPages = Number(process.env.LIVE_STOCK_MAX_PAGES || 400)
+  const maxPages = Number(process.env.LIVE_STOCK_MAX_PAGES || 1000)
   const pagesPerCategory = Number(
-    process.env.LIVE_STOCK_PAGES_PER_CATEGORY || 20,
+    process.env.LIVE_STOCK_PAGES_PER_CATEGORY || 1000,
   )
   if (
     ![maxPages, pagesPerCategory].every(
@@ -458,7 +466,7 @@ async function main() {
     if (pages >= maxPages) break
     try {
       const result = await crawlCategory({
-        category,
+        category: await resolveStockCategory(category, remoteExecute),
         execute: remoteExecute,
         targets,
         maxPages: Math.min(pagesPerCategory, maxPages - pages),
@@ -473,11 +481,11 @@ async function main() {
       console.error(
         `${category.category}/${category.subcategory}: ${String(error)}`,
       )
-      // Move a failing category to the back of the rotation without modifying
-      // its cursor, quantities, or successful verification timestamp.
+      // Retain its cursor but stop prioritizing a failing scan. On resuming,
+      // it can update quantities but cannot infer missing parts in this pass.
       await remoteExecute(`INSERT INTO _jlcsearch_stock_categories (category, subcategory, attempted_at)
         VALUES (${sqlString(category.category)},${sqlString(category.subcategory)},unixepoch())
-        ON CONFLICT(category, subcategory) DO UPDATE SET attempted_at=excluded.attempted_at;`)
+        ON CONFLICT(category, subcategory) DO UPDATE SET attempted_at=excluded.attempted_at, cycle='', consistent=0, web_category=NULL, web_subcategory=NULL;`)
     }
   }
   const coverage = await remoteExecute(STOCK_COVERAGE_QUERY)
@@ -489,7 +497,7 @@ async function main() {
   )
   if (failures)
     throw new Error(
-      `${failures} stock categories failed; other categories were refreshed`,
+      `${failures} stock categories failed; completed observations were retained`,
     )
 }
 
