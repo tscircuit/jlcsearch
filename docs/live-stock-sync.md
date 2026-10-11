@@ -31,14 +31,18 @@ import batch and stock-only batch applies these observations before publishing
 its quantities. An older observation cannot replace a newer one. Explicit
 zero is out of stock; missing or expired stock is NULL (unknown).
 
-The default verification lifetime is 72 hours. The hourly workflow expires
-up to 10,000 observations per run, updating availability across every deployed
+The default verification lifetime is 72 hours. Scheduling delays or an
+expiration backlog can delay enforcement; the coverage report exposes how
+many catalog observations are still within the limit. The hourly workflow expires
+up to 100,000 observations per run, updating availability across every deployed
 stock table. Imports also enforce expiration immediately for their affected
 parts. Successful refreshes make expired parts known again.
 
 The migration starts a seven-day rollout window. During that window only,
 parts without any live observation may retain upstream snapshot quantities.
-Afterward, imports publish unknown for unverified parts. This can reduce
+Afterward, imports publish unknown for unverified parts. The hourly job also
+clears up to 100,000 unverified legacy rows, including parts that survive only
+in derived tables or disappear from newer snapshots. This can reduce
 available search results if crawler coverage is inadequate; monitor coverage
 before the window ends. To extend the initial window explicitly:
 

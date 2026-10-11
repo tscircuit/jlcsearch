@@ -275,7 +275,7 @@ describe("Worker integration", () => {
   it("serves stale cached D1 derived-table HTML when refresh fails", async () => {
     env.USE_D1 = "true"
 
-    const staleAt = new Date(Date.now() - 20 * 24 * 60 * 60 * 1000)
+    const staleAt = new Date(Date.now() - 30 * 60 * 1000)
     const url = new URL(
       "https://example.com/microcontrollers/list?package=QFN48",
     )

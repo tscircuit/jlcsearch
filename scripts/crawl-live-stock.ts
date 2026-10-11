@@ -277,7 +277,7 @@ export async function crawlCategory({
 export async function expireLiveStock(
   execute: Execute,
   targets: StockSyncTarget[],
-  maxBatches = 10,
+  maxBatches = 100,
 ) {
   let expired = 0
   for (let i = 0; i < maxBatches; i++) {
@@ -293,6 +293,41 @@ export async function expireLiveStock(
     )}
       UPDATE _jlcsearch_live_stock SET expired=1 WHERE lcsc IN (${rows.map((row) => row.lcsc).join(",")});`)
     expired += rows.length
+  }
+  return expired
+}
+
+export async function expireUnverifiedStock(
+  execute: Execute,
+  targets: StockSyncTarget[],
+  maxBatches = 100,
+) {
+  const [{ enforce }] = await execute(
+    "SELECT unixepoch() >= grace_until AS enforce FROM _jlcsearch_stock_policy WHERE id=1;",
+  )
+  if (!enforce) return 0
+  let batches = 0
+  let expired = 0
+  // Include rows retained in derived tables or omitted from a new snapshot.
+  // Clearing one LCSC number corrects every table, so it cannot be selected
+  // repeatedly. The normal nightly import handles most of this work in bulk.
+  for (const target of targets) {
+    while (batches < maxBatches) {
+      const rows: Array<{ lcsc: number }> =
+        await execute(`SELECT lcsc FROM "${target.name}" AS t
+        WHERE stock IS NOT NULL AND NOT EXISTS (SELECT 1 FROM _jlcsearch_live_stock AS o WHERE o.lcsc=t.lcsc) LIMIT 1000;`)
+      if (!rows.length) break
+      await execute(
+        createStockSyncBatchSql(
+          rows.map((row) => ({ ...row, stock: null })),
+          targets,
+          true,
+        ),
+      )
+      expired += rows.length
+      batches++
+    }
+    if (batches >= maxBatches) break
   }
   return expired
 }
@@ -458,6 +493,7 @@ async function main() {
   )
     throw new Error("Missing required production stock tables")
   const expired = await expireLiveStock(remoteExecute, targets)
+  const unverifiedExpired = await expireUnverifiedStock(remoteExecute, targets)
   const categories: StockCategory[] = await remoteExecute(CATEGORY_CRAWL_QUERY)
   let pages = 0
   let checked = 0
@@ -489,7 +525,14 @@ async function main() {
     }
   }
   const coverage = await remoteExecute(STOCK_COVERAGE_QUERY)
-  const report = { pages, checked, expired, failures, coverage }
+  const report = {
+    pages,
+    checked,
+    expired,
+    unverifiedExpired,
+    failures,
+    coverage,
+  }
   console.log(JSON.stringify(report, null, 2))
   await Bun.write(
     process.env.LIVE_STOCK_REPORT_PATH || "live-stock-report.json",

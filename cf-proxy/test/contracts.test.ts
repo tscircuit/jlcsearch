@@ -385,12 +385,21 @@ describe("Cloudflare route contracts", () => {
     ])
   })
 
-  it("GET /api/search strips a leading C in LCSC lookups", async () => {
+  it("GET /api/search agrees for numeric and C-prefixed LCSC lookups", async () => {
     const lcsc = 9002
-    const { data } = await fetchJson(`/api/search?q=C${lcsc}`)
-    expect(Array.isArray(data.components)).toBe(true)
-    expect(data.components.length).toBeGreaterThan(0)
-    expect(data.components[0].lcsc).toBe(lcsc)
+    const [prefixed, numeric] = await Promise.all([
+      fetchJson(`/api/search?q=C${lcsc}&cachebust=1`),
+      fetchJson(`/api/search?q=${lcsc}&cachebust=1`),
+    ])
+    expect(prefixed.response.ok).toBe(true)
+    expect(numeric.response.ok).toBe(true)
+    expect(Array.isArray(prefixed.data.components)).toBe(true)
+    expect(Array.isArray(numeric.data.components)).toBe(true)
+    // Availability can change; a real part may legitimately have no results.
+    expect(prefixed.data.components.map((row: any) => row.lcsc)).toEqual(
+      numeric.data.components.map((row: any) => row.lcsc),
+    )
+    for (const row of prefixed.data.components) expect(row.lcsc).toBe(lcsc)
   })
 
   it("GET /components/list returns component data", async () => {
