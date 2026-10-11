@@ -22,7 +22,9 @@ afterEach(() => {
   }
 
   if (tempDir) {
-    rmSync(tempDir, { recursive: true, force: true })
+    try {
+      rmSync(tempDir, { recursive: true, force: true })
+    } catch {}
     tempDir = undefined
   }
 })
