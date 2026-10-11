@@ -3,8 +3,8 @@ import { afterEach, describe, expect, test } from "bun:test"
 import {
   chmod,
   mkdtemp,
-  readdir,
   readFile,
+  readdir,
   rm,
   symlink,
   writeFile,
@@ -12,11 +12,11 @@ import {
 import { tmpdir } from "node:os"
 import path from "node:path"
 import {
+  STOCK_SYNC_TARGETS_QUERY,
+  type StockSyncTarget,
   createStockSyncBatchSql,
   readStockSyncTargets,
-  STOCK_SYNC_TARGETS_QUERY,
   stockSyncTargetsFromSchema,
-  type StockSyncTarget,
   writeStockSyncBatches,
 } from "../scripts/generate-stock-sync-sql"
 
@@ -288,6 +288,14 @@ describe("stock sync SQL generation", () => {
       CREATE TABLE switch (lcsc INTEGER PRIMARY KEY, stock INTEGER, in_stock INTEGER);
       INSERT INTO switch VALUES (221660, 2184, 1), (2, 0, 0);
     `)
+    target.exec(
+      await Bun.file(
+        path.resolve(
+          import.meta.dir,
+          "../cf-proxy/migrations/0017_live_stock.sql",
+        ),
+      ).text(),
+    )
     target.close()
 
     const mockWrangler = path.join(directory, "wrangler.ts")
@@ -300,7 +308,9 @@ describe("stock sync SQL generation", () => {
         throw new Error("Unexpected Wrangler arguments")
       }
       const db = new Database(process.env.MOCK_D1_PATH!)
-      const sql = args[args.indexOf("--command") + 1]
+      const sql = args.includes("--file")
+        ? await Bun.file(args[args.indexOf("--file") + 1]).text()
+        : args[args.indexOf("--command") + 1]
       if (args.includes("--json")) {
         console.log(JSON.stringify([{ success: true, results: db.query(sql).all() }]))
       } else {

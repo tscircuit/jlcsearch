@@ -184,7 +184,7 @@ jobs:
             export RECOVERY_DB_PATH=".buildtmp/recovery/cache.sqlite3"
           fi
           if [[ "${SYNC_SCOPE}" == "full_catalog" ]]; then
-            INCLUDE_COMPONENT_CATALOG=1 bun run setup:derived-sync-db
+            INCLUDE_COMPONENT_CATALOG=1 INCLUDE_STOCK_SNAPSHOT=1 bun run setup:derived-sync-db
           elif [[ "${SYNC_SCOPE}" == "stock_only" ]]; then
             INCLUDE_STOCK_SNAPSHOT=1 bun run setup:derived-sync-db
           else
@@ -325,14 +325,20 @@ jobs:
           SYNC_SEARCH_INDEX: "0"
         run: bash ./cf-proxy/scripts/sync-db.sh
 
-      - name: Sync stock quantities to D1
-        if: env.SYNC_SCOPE == 'stock_only'
+      - name: Sync stock quantities and live observations to every D1 stock table
         env:
           SOURCE_DB_PATH: ${{ github.workspace }}/db.sqlite3
           STOCK_BATCH_ROWS: "1000"
           RETRY_MAX_ATTEMPTS: "6"
           RETRY_BASE_DELAY_SECONDS: "20"
-        run: bash ./cf-proxy/scripts/sync-stock.sh
+        run: |
+          stock_table_exists="$(sqlite3 db.sqlite3 "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type='table' AND name='component_stock');")"
+          if [[ "${stock_table_exists}" == "1" ]]; then
+            bash ./cf-proxy/scripts/sync-stock.sh
+          elif [[ "${SYNC_SCOPE}" != "derived" ]]; then
+            echo '::error::Prepared stock snapshot is missing.'
+            exit 1
+          fi
 
       - name: Verify migration status and remote row counts
         working-directory: cf-proxy
@@ -352,17 +358,22 @@ jobs:
               source_stock_table="component_stock"
             fi
             expected_stock="$(sqlite3 ../db.sqlite3 "SELECT CASE WHEN stock IS NULL THEN 'unknown' ELSE CAST(stock AS TEXT) END FROM ${source_stock_table} WHERE lcsc=${SMOKE_TEST_LCSC};")"
+            expected_literal="${expected_stock}"
+            if [[ "${expected_literal}" == "unknown" ]]; then expected_literal="NULL"; fi
+            effective_expression="$(bun -e 'import { effectiveStockSql } from "../scripts/live-stock-policy.ts"; console.log(effectiveStockSql(process.argv[1], process.argv[2]))' "${SMOKE_TEST_LCSC}" "${expected_literal}")"
             remote_result_file="${RUNNER_TEMP}/jlcsearch-remote-stock.json"
             bash scripts/retry-command.sh bunx wrangler d1 execute jlcsearch --remote --json \
-              --command "SELECT lcsc, mfr, stock FROM search_index WHERE lcsc=${SMOKE_TEST_LCSC};" \
+              --command "SELECT lcsc, mfr, stock, (${effective_expression}) AS expected_stock FROM search_index WHERE lcsc=${SMOKE_TEST_LCSC};" \
               > "${remote_result_file}"
             remote_stock="$(jq -r '.[0].results | if length == 1 then (.[0].stock | if . == null then "unknown" else tostring end) else "missing" end' "${remote_result_file}")"
-            if [[ -z "${expected_stock}" || "${remote_stock}" != "${expected_stock}" ]]; then
+            expected_stock="$(jq -r '.[0].results | if length == 1 then (.[0].expected_stock | if . == null then "unknown" else tostring end) else "missing" end' "${remote_result_file}")"
+            if [[ "${expected_stock}" == "missing" || "${remote_stock}" != "${expected_stock}" ]]; then
               echo "::error::Remote C${SMOKE_TEST_LCSC} stock ${remote_stock:-missing} did not match source stock ${expected_stock:-missing}."
               cat "${remote_result_file}"
               exit 1
             fi
-            echo "Remote C${SMOKE_TEST_LCSC} stock matches source: ${expected_stock}."
+            echo "SMOKE_TEST_EFFECTIVE_STOCK=${expected_stock}" >> "${GITHUB_ENV}"
+            echo "Remote C${SMOKE_TEST_LCSC} stock matches live precedence: ${expected_stock}."
           else
             IFS=',' read -ra tables <<< "${DERIVED_TABLES_LIST}"
             for raw_table in "${tables[@]}"; do
@@ -400,72 +411,7 @@ jobs:
         run: |
           if [[ -z "${CACHE_BUST_URL}" ]]; then
             if [[ "${SYNC_SCOPE}" != "derived" ]]; then
-              CACHE_BUST_URL="https://jlcsearch.tscircuit.com/components/list?search=C${SMOKE_TEST_LCSC}&json=true"
-            elif [[ ",${DERIVED_TABLES_LIST}," == *",optical_sensor,"* ]]; then
-              CACHE_BUST_URL="https://jlcsearch.tscircuit.com/optical_sensors/list.json?sensor_type=Optical+Motion"
-            elif [[ ",${DERIVED_TABLES_LIST}," == *",stepper_motor_driver,"* ]]; then
-              CACHE_BUST_URL="https://jlcsearch.tscircuit.com/stepper_motor_drivers/list.json"
-            elif [[ ",${DERIVED_TABLES_LIST}," == *",linux_capable_processor,"* ]]; then
-              CACHE_BUST_URL="https://jlcsearch.tscircuit.com/linux_capable_processors/list.json"
-            elif [[ ",${DERIVED_TABLES_LIST}," == *",npu_chip,"* ]]; then
-              CACHE_BUST_URL="https://jlcsearch.tscircuit.com/npu_chips/list.json"
-            elif [[ ",${DERIVED_TABLES_LIST}," == *",barrel_jack,"* ]]; then
-              CACHE_BUST_URL="https://jlcsearch.tscircuit.com/barrel_jacks/list.json"
-            elif [[ ",${DERIVED_TABLES_LIST}," == *",micro_usb_connector,"* ]]; then
-              CACHE_BUST_URL="https://jlcsearch.tscircuit.com/micro_usb_connectors/list.json"
-            else
-              CACHE_BUST_URL="https://jlcsearch.tscircuit.com/photo_diodes/list.json"
-            fi
-          fi
-
-          separator="?"
-          if [[ "${CACHE_BUST_URL}" == *"?"* ]]; then
-            separator="&"
-          fi
-
-          curl --fail --silent --show-error \
-            --retry 3 \
-            --retry-all-errors \
-            --retry-delay 10 \
-            "${CACHE_BUST_URL}${separator}cachebust=1" \
-            --output /tmp/d1-sync-response.json
-
-          if [[ "${CACHE_BUST_URL}" == *"/hdmi_ports/list.json"* ]]; then
-            hdmi_port_count="$(jq '.hdmi_ports | length' /tmp/d1-sync-response.json)"
-            if [[ "${hdmi_port_count}" == "0" || "${hdmi_port_count}" == "null" ]]; then
-              echo "::error::Production HDMI API still returned no ports."
-              cat /tmp/d1-sync-response.json
-              exit 1
-            fi
-            echo "Production HDMI API returned ${hdmi_port_count} ports."
-          fi
-
-          if [[ "${CACHE_BUST_URL}" == *"/micro_usb_connectors/list.json"* ]]; then
-            micro_usb_connector_count="$(jq '.micro_usb_connectors | length' /tmp/d1-sync-response.json)"
-            if [[ "${micro_usb_connector_count}" == "0" || "${micro_usb_connector_count}" == "null" ]]; then
-              echo "::error::Production Micro USB API still returned no connectors."
-              cat /tmp/d1-sync-response.json
-              exit 1
-            fi
-            echo "Production Micro USB API returned ${micro_usb_connector_count} connectors."
-          fi
-
-          if [[ "${CACHE_BUST_URL}" == *"/barrel_jacks/list.json"* ]]; then
-            barrel_jack_count="$(jq '.barrel_jacks | length' /tmp/d1-sync-response.json)"
-            if [[ "${barrel_jack_count}" == "0" || "${barrel_jack_count}" == "null" ]]; then
-              echo "::error::Production Barrel Jacks API still returned no connectors."
-              cat /tmp/d1-sync-response.json
-              exit 1
-            fi
-            echo "Production Barrel Jacks API returned ${barrel_jack_count} connectors."
-          fi
-
-          if [[ "${SYNC_SCOPE}" != "derived" ]]; then
-            source_stock_table="component_catalog"
-            if [[ "${SYNC_SCOPE}" == "stock_only" ]]; then
-              source_stock_table="component_stock"
-            fi
-            expected_stock="$(sqlite3 db.sqlite3 "SELECT CASE WHEN stock IS NULL THEN 'unknown' ELSE CAST(stock AS TEXT) END FROM ${source_stock_table} WHERE lcsc=${SMOKE_TEST_LCSC};")"
+            expected_stock="${SMOKE_TEST_EFFECTIVE_STOCK}"
             if [[ -z "${expected_stock}" ]]; then
               echo "::error::Prepared source is missing C${SMOKE_TEST_LCSC}."
               exit 1

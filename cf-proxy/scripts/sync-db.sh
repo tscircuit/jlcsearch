@@ -308,6 +308,9 @@ EOF
     sed 's/^INSERT INTO /INSERT OR IGNORE INTO /' "${chunk_file}" > "${chunk_file}.retry"
     mv "${chunk_file}.retry" "${chunk_file}"
 
+    # Keep live observations authoritative in the same bounded import request.
+    bun "${REPO_ROOT}/scripts/overlay-import-stock.ts" db.sqlite3 "${table}" "${offset}" "${batch_size}" >> "${chunk_file}"
+
     echo "  importing rows $((offset + 1))-${batch_end}"
     run_wrangler d1 execute "${DB_NAME}" --remote --file="${chunk_file}"
   done
