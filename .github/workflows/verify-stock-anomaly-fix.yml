@@ -1,0 +1,24 @@
+name: Verify upstream stock anomaly fix
+on:
+  push:
+    branches: [ops/verify-stock-anomaly-fix]
+    paths: [.github/workflows/verify-stock-anomaly-fix.yml]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - name: Read the upstream page that stopped the hourly crawler
+        run: |
+          bun -e '
+            const {fetchStockPage}=await import("./scripts/crawl-live-stock.ts");
+            for(const page of [172,173]){
+              const result=await fetchStockPage("Amplifiers/Comparators","Operational Amplifier",page);
+              console.log(JSON.stringify({page,total:result.total,checked:result.rows.length,duplicateRows:result.duplicateRows,rejectedRows:result.rejectedRows}));
+              if(!result.rows.length) throw new Error("No valid stock rows");
+            }
+          '
