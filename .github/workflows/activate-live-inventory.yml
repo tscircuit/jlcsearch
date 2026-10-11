@@ -1,0 +1,73 @@
+name: Activate live inventory
+on:
+  push:
+    branches: [ops/activate-live-inventory]
+    paths: [.github/workflows/activate-live-inventory.yml]
+permissions:
+  contents: read
+env:
+  CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --cwd cf-proxy --frozen-lockfile
+      - name: Deploy production Worker
+        working-directory: cf-proxy
+        run: bash scripts/retry-command.sh bunx wrangler deploy
+      - name: Verify production cache policy
+        run: |
+          bun -e '
+            const response = await fetch("https://jlcsearch.tscircuit.com/components/list?search=C221660&cachebust=" + Date.now());
+            const body = await response.json();
+            console.log(JSON.stringify({status: response.status, cacheControl: response.headers.get("cache-control"), body}));
+            if (!response.ok || !response.headers.get("cache-control")?.includes("max-age=300")) throw new Error("Production cache policy was not deployed");
+          '
+  refresh:
+    needs: deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    concurrency:
+      group: production-d1-sync
+      cancel-in-progress: false
+    env:
+      LIVE_STOCK_MAX_PAGES: "100"
+      LIVE_STOCK_PAGES_PER_CATEGORY: "100"
+      LIVE_STOCK_REPORT_PATH: ${{ github.workspace }}/live-stock-report.json
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --cwd cf-proxy --frozen-lockfile
+      - name: Apply live inventory migrations
+        working-directory: cf-proxy
+        run: bash scripts/retry-command.sh bunx wrangler d1 migrations apply jlcsearch --remote
+      - name: Run first live inventory refresh
+        run: bun scripts/crawl-live-stock.ts
+      - name: Verify live inventory records and rollout policy
+        working-directory: cf-proxy
+        run: |
+          bash scripts/retry-command.sh bunx wrangler d1 execute jlcsearch --remote --json --command "SELECT COUNT(*) AS observations, MAX(checked_at) AS latest_check, SUM(observed_stock = 0) AS observed_zero_stock FROM _jlcsearch_live_stock; SELECT * FROM _jlcsearch_stock_policy; SELECT category, subcategory, next_page, completed_at FROM _jlcsearch_stock_categories ORDER BY attempted_at DESC LIMIT 5; SELECT lcsc,stock FROM component_catalog WHERE lcsc=221660; SELECT lcsc,stock FROM search_index WHERE lcsc=221660;"
+      - name: Verify production stock response
+        run: |
+          bun -e '
+            for (const suffix of ["", "&cachebust=" + Date.now()]) {
+              const response = await fetch("https://jlcsearch.tscircuit.com/components/list?search=C221660" + suffix);
+              const body = await response.json();
+              console.log(JSON.stringify({status:response.status,cacheControl:response.headers.get("cache-control"),body}));
+              if (!response.ok || !Array.isArray(body.components) || body.components.some(c=>String(c.lcsc).replace(/^C/,"")==="221660")) throw new Error("Unavailable component incorrectly returned");
+            }
+          '
+      - name: Save coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: activation-live-stock-coverage
+          path: live-stock-report.json
+          if-no-files-found: warn
+      - name: Print coverage report
+        if: always()
+        run: if [[ -s live-stock-report.json ]]; then cat live-stock-report.json; fi
