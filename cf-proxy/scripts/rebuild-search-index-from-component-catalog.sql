@@ -25,6 +25,7 @@ SELECT
   END AS price1,
   basic,
   preferred,
+  component_product_type,
   category,
   subcategory,
   CASE
