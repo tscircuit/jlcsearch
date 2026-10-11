@@ -15,20 +15,13 @@ export interface CacheEntry {
   metadata: CacheMetadata
 }
 
-// Cache freshness thresholds in milliseconds
-const ONE_DAY_MS = 24 * 60 * 60 * 1000
-const TWO_WEEKS_MS = 14 * ONE_DAY_MS
-const ONE_MONTH_MS = 30 * ONE_DAY_MS
-
-// Clients revalidate daily so a nightly stock sync is not hidden by an old
-// browser or intermediary cache. The longer KV lifetime below still protects
-// D1 from repeated queries between catalog syncs.
-export const CLIENT_CACHE_MAX_AGE_SECONDS = 24 * 60 * 60
-export const CLIENT_CACHE_STALE_WHILE_REVALIDATE_SECONDS = 60 * 60
-export const CLIENT_CACHE_STALE_IF_ERROR_SECONDS = 24 * 60 * 60
-
-// KV TTL in seconds (1 month)
-export const KV_TTL_SECONDS = 30 * 24 * 60 * 60
+// Inventory changes hourly; cache freshness must not hide live corrections.
+const FRESH_MS = 15 * 60 * 1000
+const USABLE_STALE_MS = 60 * 60 * 1000
+export const CLIENT_CACHE_MAX_AGE_SECONDS = 5 * 60
+export const CLIENT_CACHE_STALE_WHILE_REVALIDATE_SECONDS = 60
+export const CLIENT_CACHE_STALE_IF_ERROR_SECONDS = 5 * 60
+export const KV_TTL_SECONDS = 60 * 60
 
 export const CACHE_CONTROL_HEADER_VALUE = [
   "public",
@@ -39,7 +32,7 @@ export const CACHE_CONTROL_HEADER_VALUE = [
 ].join(", ")
 
 /**
- * Checks if a cached entry is fresh (less than 2 weeks old).
+ * Checks if a cached entry is fresh (less than 15 minutes old).
  */
 export function isFresh(
   metadata: CacheMetadata,
@@ -47,11 +40,11 @@ export function isFresh(
 ): boolean {
   const cachedAt = new Date(metadata.cachedAt)
   const age = now.getTime() - cachedAt.getTime()
-  return age < TWO_WEEKS_MS
+  return age >= 0 && age < FRESH_MS
 }
 
 /**
- * Checks if a cached entry is usable as stale (less than 1 month old).
+ * Checks if a cached entry is usable as stale (less than 1 hour old).
  */
 export function isUsableStale(
   metadata: CacheMetadata,
@@ -59,7 +52,7 @@ export function isUsableStale(
 ): boolean {
   const cachedAt = new Date(metadata.cachedAt)
   const age = now.getTime() - cachedAt.getTime()
-  return age < ONE_MONTH_MS
+  return age >= 0 && age < USABLE_STALE_MS
 }
 
 /**

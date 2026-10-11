@@ -9,15 +9,10 @@ export function createLiveStockWriter(
   if (!Number.isSafeInteger(checkedAt) || checkedAt <= 0) {
     throw new Error("Invalid live stock observation time")
   }
-  if (
-    !db
-      .query(
-        "SELECT 1 FROM sqlite_master WHERE type='table' AND name='component_stock'",
-      )
-      .get()
-  ) {
-    return (_lcsc: number, _stock: number | null) => {}
-  }
+  db.exec(`CREATE TABLE IF NOT EXISTS component_stock (
+    lcsc INTEGER PRIMARY KEY, stock INTEGER, stock_source TEXT, stock_checked_at INTEGER
+  )`)
+
   const columns = new Set(
     db
       .query<{ name: string }, []>("PRAGMA table_info(component_stock)")

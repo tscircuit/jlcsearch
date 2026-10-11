@@ -2,11 +2,13 @@ import { Database } from "bun:sqlite"
 import { existsSync } from "node:fs"
 import { mkdir, readFile, rm } from "node:fs/promises"
 import path from "node:path"
+import {
+  type LiveStockRow,
+  effectiveStockSql,
+  liveObservationUpsertSql,
+} from "./live-stock-policy"
 
-interface StockRow {
-  lcsc: number
-  stock: number | null
-}
+interface StockRow extends LiveStockRow {}
 
 interface CatalogStats {
   row_count: number
@@ -144,12 +146,25 @@ WHERE target.lcsc IN (SELECT lcsc FROM ${STOCK_BATCH_TABLE})
 export const createStockSyncBatchSql = (
   rows: StockRow[],
   targets: StockSyncTarget[] = DEFAULT_STOCK_TARGETS,
+  livePolicy = false,
 ): string => {
   if (rows.length === 0) {
     throw new Error("Cannot create an empty stock sync batch")
   }
   validateTargets(targets)
 
+  const seen = new Set<number>()
+  for (const row of rows) {
+    if (
+      !Number.isSafeInteger(row.lcsc) ||
+      row.lcsc <= 0 ||
+      seen.has(row.lcsc) ||
+      (row.stock !== null &&
+        (!Number.isSafeInteger(row.stock) || row.stock < 0))
+    )
+      throw new Error("Invalid or duplicate stock row")
+    seen.add(row.lcsc)
+  }
   const values = rows
     .map(
       ({ lcsc, stock }) =>
@@ -165,6 +180,12 @@ export const createStockSyncBatchSql = (
     `CREATE TABLE IF NOT EXISTS ${STOCK_BATCH_TABLE} (lcsc INTEGER PRIMARY KEY, stock INTEGER);`,
     `DELETE FROM ${STOCK_BATCH_TABLE};`,
     `INSERT INTO ${STOCK_BATCH_TABLE}(lcsc, stock) VALUES ${values};`,
+    ...(livePolicy
+      ? [
+          liveObservationUpsertSql(rows),
+          `UPDATE ${STOCK_BATCH_TABLE} SET stock = ${effectiveStockSql(`${STOCK_BATCH_TABLE}.lcsc`, `${STOCK_BATCH_TABLE}.stock`)};`,
+        ]
+      : []),
     ...targets.map(createStockUpdateStatement),
     `DROP TABLE ${STOCK_BATCH_TABLE};`,
   ].join("\n")
@@ -175,11 +196,13 @@ export const writeStockSyncBatches = async ({
   outputDirectory,
   batchSize = 1000,
   targets = DEFAULT_STOCK_TARGETS,
+  livePolicy = false,
 }: {
   sourcePath: string
   outputDirectory: string
   batchSize?: number
   targets?: StockSyncTarget[]
+  livePolicy?: boolean
 }) => {
   if (!Number.isSafeInteger(batchSize) || batchSize <= 0) {
     throw new Error("batchSize must be a positive integer")
@@ -217,9 +240,18 @@ export const writeStockSyncBatches = async ({
       throw new Error("component_stock.lcsc must be unique and non-null")
     }
 
+    const columns = new Set(
+      database
+        .query<{ name: string }, []>("PRAGMA table_info(component_stock)")
+        .all()
+        .map((c) => c.name),
+    )
+    const observationColumns = ["stock_checked_at", "category", "subcategory"]
+      .map((column) => (columns.has(column) ? column : `NULL AS ${column}`))
+      .join(", ")
     const rows = database
       .query<StockRow, []>(
-        `SELECT lcsc, stock
+        `SELECT lcsc, stock, ${observationColumns}
          FROM component_stock
          ORDER BY rowid`,
       )
@@ -235,7 +267,7 @@ export const writeStockSyncBatches = async ({
       const filename = `batch-${String(batchCount).padStart(6, "0")}.sql`
       await Bun.write(
         path.join(resolvedOutputDirectory, filename),
-        createStockSyncBatchSql(batch, targets),
+        createStockSyncBatchSql(batch, targets, livePolicy),
       )
       batch = []
     }
@@ -245,7 +277,7 @@ export const writeStockSyncBatches = async ({
       const filename = `batch-${String(batchCount).padStart(6, "0")}.sql`
       await Bun.write(
         path.join(resolvedOutputDirectory, filename),
-        createStockSyncBatchSql(batch, targets),
+        createStockSyncBatchSql(batch, targets, livePolicy),
       )
     }
 
@@ -279,6 +311,7 @@ const main = async () => {
     outputDirectory,
     batchSize,
     targets,
+    livePolicy: true,
   })
   console.log(
     `Generated ${result.batchCount} stock batches for ${result.rowCount} components across ${targets.length} tables.`,

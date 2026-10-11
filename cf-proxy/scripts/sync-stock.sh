@@ -65,9 +65,8 @@ batch_count="${#batch_files[@]}"
 batch_number=0
 for batch_file in "${batch_files[@]}"; do
   batch_number=$((batch_number + 1))
-  batch_sql="$(<"${batch_file}")"
   echo "Updating stock batch ${batch_number}/${batch_count}..."
-  run_wrangler d1 execute "${DB_NAME}" --remote --command "${batch_sql}"
+  run_wrangler d1 execute "${DB_NAME}" --remote --file "${batch_file}"
 done
 
 echo "Stock-only sync complete."
