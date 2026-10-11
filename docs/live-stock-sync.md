@@ -7,11 +7,13 @@ directly from JLCPCB's website category API and is stored independently in D1.
 ## Rotation and coverage
 
 `Refresh live inventory` runs hourly at minute 23, sharing the
-`production-d1-sync` lock with catalog imports. It defaults to 400 pages per
-run (up to 40,000 observations) and 20 pages per category visit. The oldest
-attempted/completed categories go first. Large categories save their page
+`production-d1-sync` lock with catalog imports. It defaults to 1,000 pages per
+run (up to 100,000 observations) and 1,000 pages per category visit. It finishes
+an ongoing scan before starting the oldest attempted/completed category. Large categories save their page
 cursor and continue on a later visit; a failed category cannot starve others.
-Requests are serial with a 250 ms delay between pages and a 30 second timeout.
+Website category names are resolved from exact LCSC matches and saved separately
+from the catalog taxonomy. Requests are serial with a 250 ms delay between
+pages and a 30 second timeout.
 
 The initial goal is a complete sweep every 24–48 hours. This is a target,
 not a guarantee: website categories include parts outside our catalog, and
@@ -51,7 +53,8 @@ make them current. Never update `checked_at` to an import or deployment time.
 
 Each page must have valid, nonnegative integer quantities, exact LCSC codes,
 the requested subcategory, and the expected page length. Malformed responses
-do not change stock. A changed total restarts that category's scan. A complete
+do not change stock. A changed total invalidates completeness but retains the cursor, so later
+pages still get refreshed. A complete
 scan must contain the advertised number of distinct parts before previously
 known missing parts are marked unknown. Partial scans still update the parts
 they successfully observed, but do not infer absence.

@@ -20,6 +20,9 @@ CREATE TABLE IF NOT EXISTS _jlcsearch_stock_categories (
   next_page INTEGER NOT NULL DEFAULT 1,
   cycle TEXT NOT NULL DEFAULT '',
   expected_total INTEGER,
+  consistent INTEGER NOT NULL DEFAULT 1,
+  web_category TEXT,
+  web_subcategory TEXT,
   attempted_at INTEGER NOT NULL DEFAULT 0,
   completed_at INTEGER NOT NULL DEFAULT 0,
   PRIMARY KEY(category, subcategory)

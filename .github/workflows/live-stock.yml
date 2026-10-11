@@ -8,11 +8,11 @@ on:
       max_pages:
         description: Maximum website pages (100 parts per page)
         type: number
-        default: 400
+        default: 1000
       pages_per_category:
         description: Maximum pages per category visit before rotating
         type: number
-        default: 20
+        default: 1000
   pull_request:
     paths:
       - "scripts/crawl-live-stock.ts"
@@ -49,8 +49,8 @@ jobs:
     env:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      LIVE_STOCK_MAX_PAGES: ${{ inputs.max_pages || '400' }}
-      LIVE_STOCK_PAGES_PER_CATEGORY: ${{ inputs.pages_per_category || '20' }}
+      LIVE_STOCK_MAX_PAGES: ${{ inputs.max_pages || '1000' }}
+      LIVE_STOCK_PAGES_PER_CATEGORY: ${{ inputs.pages_per_category || '1000' }}
       LIVE_STOCK_REPORT_PATH: ${{ github.workspace }}/live-stock-report.json
     steps:
       - uses: actions/checkout@v4
