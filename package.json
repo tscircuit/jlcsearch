@@ -5,7 +5,9 @@
     "@types/bun": "^1.2.19",
     "better-sqlite3": "^11.7.0",
     "kysely": "^0.28.3",
-    "kysely-codegen": "^0.17.0"
+    "kysely-codegen": "^0.17.0",
+    "circuit-to-svg": "^0.0.444",
+    "bun-match-svg": "^0.0.17"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
@@ -31,7 +33,7 @@
   "dependencies": {
     "@tscircuit/footprinter": "^0.0.143",
     "circuit-json-to-footprinter": "^0.0.40",
-    "easyeda": "^0.0.310",
+    "easyeda": "^0.0.372",
     "format-si-unit": "^0.0.10",
     "kysely-bun-sqlite": "^0.3.2"
   }

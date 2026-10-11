@@ -36,6 +36,7 @@ const getErrorMessage = (error: unknown): string =>
 
 const isPermanentNotFound = (message: string): boolean =>
   message === "Component not found" ||
+  message.startsWith('Component not found in EasyEDA library search for "') ||
   message.startsWith('No exact EasyEDA component match for "') ||
   message.includes("Failed to fetch the component details (HTTP 404)")
 
@@ -128,7 +129,7 @@ const fetchAndCacheEntry = async (
       status: "not_found",
       lcsc,
       fetchedAt: new Date().toISOString(),
-      reason,
+      reason: "Component not found",
     }
     await writeCacheEntry(bucket, entry)
     return entry
