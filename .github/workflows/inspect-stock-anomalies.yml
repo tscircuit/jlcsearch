@@ -1,0 +1,48 @@
+name: Inspect upstream stock row anomalies
+on:
+  push:
+    branches: [ops/inspect-stock-anomalies]
+    paths: [.github/workflows/inspect-stock-anomalies.yml]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --cwd cf-proxy --frozen-lockfile
+      - name: Inspect cursor and upstream rows without production writes
+        run: |
+          bun -e '
+            const {resolveStockCategory}=await import("./scripts/crawl-live-stock.ts");
+            const execute=async sql=>{
+              const child=Bun.spawn(["bunx","wrangler","d1","execute","jlcsearch","--remote","--json","--command",sql],{cwd:"cf-proxy",stdout:"pipe",stderr:"inherit"});
+              const text=await new Response(child.stdout).text();
+              if(await child.exited) throw new Error("D1 read failed");
+              return JSON.parse(text)[0].results;
+            };
+            const [saved]=await execute("SELECT * FROM _jlcsearch_stock_categories WHERE category=\u0027Amplifiers\u0027 AND subcategory=\u0027General Purpose Amplifiers\u0027;");
+            const c=await resolveStockCategory(saved,execute);
+            console.log(JSON.stringify({saved,resolved:c}));
+            for(let page=c.next_page;page<c.next_page+12;page++){
+              const r=await fetch("https://jlcpcb.com/api/overseas-pcb-order/v1/shoppingCart/smtGood/selectSmtComponentList/v2",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({currentPage:page,pageSize:100,keyword:"",firstSortName:c.web_category,secondSortName:c.web_subcategory,searchSource:"search",searchType:2,componentBrandList:[],componentSpecificationList:[],componentAttributeList:[],paramList:[]})});
+              const b=await r.json(), info=b.data?.componentPageInfo, seen=new Set();
+              const anomalies=[];
+              for(const p of info?.list||[]){
+                const reasons=[];
+                if(p?.componentTypeEn!==c.web_subcategory) reasons.push("category");
+                if(!/^C[1-9]\d*$/.test(p?.componentCode)) reasons.push("code");
+                if(!Number.isSafeInteger(p?.stockCount)||p.stockCount<0) reasons.push("stock");
+                if(seen.has(p?.componentCode)) reasons.push("duplicate");
+                seen.add(p?.componentCode);
+                if(reasons.length) anomalies.push({reasons,code:p?.componentCode,subcategory:p?.componentTypeEn,stock:p?.stockCount});
+              }
+              console.log(JSON.stringify({page,code:b.code,total:info?.total,rows:info?.list?.length,anomalies}));
+              await Bun.sleep(250);
+            }
+          '
