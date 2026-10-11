@@ -72,7 +72,9 @@ export async function fetchStockPage(
     info.list.length === 0 ||
     info.list.length > 100
   )
-    throw new Error("Incomplete JLCPCB stock page")
+    throw new Error(
+      `Incomplete JLCPCB stock page for ${category}/${subcategory}: code=${body.code}, total=${info?.total}, rows=${info?.list?.length}`,
+    )
   const seen = new Set<number>()
   const rows: LiveStockRow[] = info.list.map((product: any) => {
     const code = product?.componentCode
@@ -340,27 +342,71 @@ async function main() {
       GROUP BY category, subcategory ORDER BY COUNT(*) DESC LIMIT 5;`)
     const report = []
     for (const category of categories) {
-      const page = await fetchStockPage(
-        category.category,
-        category.subcategory,
-        1,
-      )
-      const current: Array<{ lcsc: number; stock: number | null }> =
-        await remoteExecute(
-          `SELECT lcsc, stock FROM component_catalog WHERE lcsc IN (${page.rows.map((row) => row.lcsc).join(",")});`,
+      console.log(JSON.stringify({ preview_category: category }))
+      try {
+        const page = await fetchStockPage(
+          category.category,
+          category.subcategory,
+          1,
         )
-      const byCode = new Map(page.rows.map((row) => [row.lcsc, row.stock]))
-      report.push({
-        ...category,
-        website_parts: page.total,
-        compared: current.length,
-        mismatched: current.filter((row) => row.stock !== byCode.get(row.lcsc))
-          .length,
-        stale_positive: current.filter(
-          (row) =>
-            row.stock !== null && row.stock > 0 && byCode.get(row.lcsc) === 0,
-        ).length,
-      })
+        const current: Array<{ lcsc: number; stock: number | null }> =
+          await remoteExecute(
+            `SELECT lcsc, stock FROM component_catalog WHERE lcsc IN (${page.rows.map((row) => row.lcsc).join(",")});`,
+          )
+        const byCode = new Map(page.rows.map((row) => [row.lcsc, row.stock]))
+        report.push({
+          ...category,
+          website_parts: page.total,
+          compared: current.length,
+          mismatched: current.filter(
+            (row) => row.stock !== byCode.get(row.lcsc),
+          ).length,
+          stale_positive: current.filter(
+            (row) =>
+              row.stock !== null && row.stock > 0 && byCode.get(row.lcsc) === 0,
+          ).length,
+        })
+      } catch (error) {
+        report.push({ ...category, error: String(error) })
+        const [sample] =
+          await remoteExecute(`SELECT lcsc FROM component_catalog WHERE category=${sqlString(category.category)}
+          AND subcategory=${sqlString(category.subcategory)} ORDER BY stock DESC LIMIT 1;`)
+        if (sample) {
+          const result = await fetch(ENDPOINT, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            signal: AbortSignal.timeout(30_000),
+            body: JSON.stringify({
+              currentPage: 1,
+              pageSize: 25,
+              keyword: `C${sample.lcsc}`,
+              searchSource: "search",
+              searchType: 2,
+              componentBrandList: [],
+              componentSpecificationList: [],
+              componentAttributeList: [],
+              paramList: [],
+            }),
+          })
+          const body: any = await result.json()
+          const row = body.data?.componentPageInfo?.list?.find(
+            (r: any) => r.componentCode === `C${sample.lcsc}`,
+          )
+          console.log(
+            JSON.stringify({
+              taxonomy_sample: sample.lcsc,
+              fields: row ? Object.keys(row) : [],
+              taxonomy: row
+                ? Object.fromEntries(
+                    Object.entries(row).filter(([key]) =>
+                      /type|sort|category/i.test(key),
+                    ),
+                  )
+                : null,
+            }),
+          )
+        }
+      }
     }
     console.log(JSON.stringify(report, null, 2))
     await Bun.write(
