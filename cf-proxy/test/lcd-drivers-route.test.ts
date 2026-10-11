@@ -113,6 +113,7 @@ describe("LCD driver route", () => {
               description: "LCD driver",
               is_basic: false,
               is_preferred: true,
+              is_extended_promotional: true,
               stock: 18416,
               price1: 0.464285714,
               attributes:

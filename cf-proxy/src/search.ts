@@ -1,5 +1,6 @@
-import { sql, type Kysely, type RawBuilder } from "kysely"
+import { type Kysely, type RawBuilder, sql } from "kysely"
 import type { DB } from "./db/types"
+import { wantsExtendedPromotional } from "./is-extended-promotional"
 import { buildSearchTokenGroups } from "./search-query"
 
 export interface SearchQueryParams {
@@ -9,6 +10,7 @@ export interface SearchQueryParams {
   limit?: string
   is_basic?: string
   is_preferred?: string
+  is_extended_promotional?: string
 }
 
 interface SearchRow {
@@ -108,6 +110,11 @@ export async function searchIndex(
 
   if (params.is_preferred === "true" || params.is_preferred === "1") {
     conditions.push(sql`search_index.preferred = 1`)
+  }
+
+  if (wantsExtendedPromotional(params.is_extended_promotional)) {
+    // JLCPCB extended promotional = preferred parts that are not basic
+    conditions.push(sql`search_index.preferred = 1 AND search_index.basic = 0`)
   }
 
   const raw = params.q?.trim()

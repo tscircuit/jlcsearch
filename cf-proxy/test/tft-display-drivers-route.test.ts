@@ -158,6 +158,7 @@ describe("TFT display driver route", () => {
           description: "TFT LCD controller",
           is_basic: false,
           is_preferred: true,
+          is_extended_promotional: true,
           stock: 604,
           price1: 5.845714286,
           attributes: '{"Interface":"8080/6800"}',
