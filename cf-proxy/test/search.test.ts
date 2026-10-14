@@ -78,9 +78,9 @@ describe("searchIndex", () => {
 
     await searchIndex(getD1Client(d1), { q: "C8734" })
 
-    expect(statements.some((statement) => /search_index_fts/.test(statement))).toBe(
-      false,
-    )
+    expect(
+      statements.some((statement) => /search_index_fts/.test(statement)),
+    ).toBe(false)
     expect(findSearchStatement(statements)).toContain("search_index.lcsc = ?")
   })
 })
