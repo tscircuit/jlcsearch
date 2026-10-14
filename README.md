@@ -128,7 +128,12 @@ manually in `derived`, `stock_only`, or `full_catalog` mode. `derived` accepts a
 comma-separated `derived_tables` input. `stock_only` performs the same in-place
 stock refresh used by the nightly schedule. `full_catalog` rebuilds and uploads
 the component catalog, search index, and FTS index from the current source-db-v2
-snapshot. Catalog and stock syncs require a numeric `smoke_test_lcsc` whose
+snapshot. The FTS index stores each row's `lcsc` and the worker joins on it, so
+a rebuilt `search_index` with new rowids cannot point text matches at the wrong
+parts. After deploying a worker that expects this layout, run one `full_catalog`
+sync or `cf-proxy/scripts/rebuild-search-index-fts-batched.sh` so the index
+carries `lcsc` and its schema marker; until then search serves the slower LIKE
+fallback. Catalog and stock syncs require a numeric `smoke_test_lcsc` whose
 remote stock must match the prepared source database. All modes accept an
 optional `cache_bust_url`. The workflow requires the
 `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` repository secrets.

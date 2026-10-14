@@ -113,8 +113,8 @@ rebuild_remote_search_fts_index() {
       DELETE FROM search_index_fts
       WHERE rowid BETWEEN ${start} AND ${end};
 
-      INSERT INTO search_index_fts(rowid, search_text)
-      SELECT rowid, search_text
+      INSERT INTO search_index_fts(rowid, lcsc, search_text)
+      SELECT rowid, lcsc, search_text
       FROM search_index
       WHERE rowid BETWEEN ${start} AND ${end}
         AND search_text IS NOT NULL

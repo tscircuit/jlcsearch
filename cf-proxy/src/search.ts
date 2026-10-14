@@ -36,16 +36,26 @@ const isMissingFtsReadinessTable = (error: unknown): boolean =>
   error instanceof Error &&
   /no such table: search_index_fts_meta/i.test(error.message)
 
+const FTS_SCHEMA_VERSION = "2"
+
 async function isFtsSearchReady(db: Kysely<DB>): Promise<boolean> {
   try {
     const result = await sql`
-      SELECT value
+      SELECT key, value
       FROM search_index_fts_meta
-      WHERE key = 'ready'
-      LIMIT 1
+      WHERE key IN ('ready', 'schema')
     `.execute(db)
 
-    return (result.rows[0] as { value?: string } | undefined)?.value === "1"
+    const meta = new Map(
+      (result.rows as Array<{ key?: string; value?: string }>).map((row) => [
+        row.key,
+        row.value,
+      ]),
+    )
+
+    return (
+      meta.get("ready") === "1" && meta.get("schema") === FTS_SCHEMA_VERSION
+    )
   } catch (error) {
     if (isMissingFtsReadinessTable(error)) return false
     throw error
@@ -163,8 +173,12 @@ export async function searchIndex(
   if (ftsSearchConditions.length > 0 && (await isFtsSearchReady(db))) {
     const ftsQuery = sql`
       ${selectSql}
-      JOIN search_index_fts ON search_index_fts.rowid = search_index.rowid
-      WHERE ${buildWhereClause([...conditions, ...searchConditions])}
+      JOIN search_index_fts ON search_index_fts.lcsc = search_index.lcsc
+      WHERE ${buildWhereClause([
+        ...conditions,
+        ...searchConditions,
+        ...fallbackSearchConditions,
+      ])}
       ${orderLimitSql}
     `
 
