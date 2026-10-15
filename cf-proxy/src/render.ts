@@ -24,13 +24,19 @@ const routeLabels: Record<string, string> = {
   "/capacitors/list": "Capacitors",
   "/potentiometers/list": "Potentiometers",
   "/headers/list": "Headers",
+  "/barrel_jacks/list": "Barrel Jacks",
   "/dimm_connectors/list": "DIMM Connectors",
+  "/drams/list": "DRAM",
+  "/ethernet_controllers/list": "Ethernet Controllers",
+  "/psrams/list": "PSRAM",
   "/sodimm_connectors/list": "SO-DIMM Connectors",
+  "/micro_usb_connectors/list": "Micro USB Connectors",
   "/usb_c_connectors/list": "USB-C Connectors",
   "/pcie_m2_connectors/list": "PCIe M.2 Connectors",
   "/fpc_connectors/list": "FPC Connectors",
   "/jst_connectors/list": "JST Connectors",
   "/wire_to_board_connectors/list": "Wire to Board Connectors",
+  "/spring_clamp_connectors/list": "Spring-Clamp Connectors",
   "/spring_clamp_terminal_blocks/list": "Spring Clamp Terminal Blocks",
   "/battery_holders/list": "Battery Holders",
   "/ble_modules/list": "BLE Modules",
@@ -47,12 +53,15 @@ const routeLabels: Record<string, string> = {
   "/microphones/list": "Microphones",
   "/diodes/list": "Diodes",
   "/photo_diodes/list": "Photo Diodes",
+  "/optical_sensors/list": "Optical Sensors",
   "/dacs/list": "DACs",
   "/wifi_modules/list": "WiFi Modules",
   "/microcontrollers/list": "Microcontrollers",
   "/arm_processors/list": "ARM Processors",
   "/risc_v_processors/list": "RISC-V Processors",
+  "/linux_capable_processors/list": "Linux-capable Processors",
   "/fpgas/list": "FPGAs & CPLDs",
+  "/npu_chips/list": "NPU Chips",
   "/voltage_regulators/list": "Voltage Regulators",
   "/ldos/list": "LDO Regulators",
   "/boost_converters/list": "Boost DC-DC Converters",
@@ -68,6 +77,7 @@ const routeLabels: Record<string, string> = {
   "/tft_display_drivers/list": "TFT Display Drivers",
   "/switches/list": "Switches",
   "/relays/list": "Relays",
+  "/stepper_motor_drivers/list": "Stepper Motor Driver",
   "/fuses/list": "Fuses",
   "/bjt_transistors/list": "BJT Transistors",
 }
@@ -93,6 +103,7 @@ const routeHeadings: Record<string, string> = {
   "/components/list": "Components",
   "/footprint_index/list": "Package Index",
   "/led_with_ic/list": "LEDs with Built-in IC",
+  "/npu_chips/list": "NPU Chips (Neural Processing Units)",
 }
 
 const titleCase = (value: string): string =>
@@ -113,8 +124,23 @@ const getPageTitle = (pathname: string): string => {
 const getPageHeading = (pathname: string): string =>
   routeHeadings[pathname] ?? getPageTitle(pathname)
 
+const extractSmallQuantityPrice = (value: string): number => {
+  try {
+    const priceTiers = JSON.parse(value)
+    return Number(priceTiers[0]?.price) || 0
+  } catch {
+    const firstTier = value.split(",", 1)[0]
+    return Number(firstTier?.split(":").at(-1)) || 0
+  }
+}
+
 const formatPrice = (value: unknown): string => {
-  const price = typeof value === "number" ? value : Number(value)
+  const price =
+    typeof value === "number"
+      ? value
+      : typeof value === "string" && value.includes(":")
+        ? extractSmallQuantityPrice(value)
+        : Number(value)
   if (!price) return ""
   return price.toLocaleString("en-US", {
     style: "currency",
@@ -178,6 +204,13 @@ const COLUMN_LABELS: Record<string, string> = {
   reverse_voltage_min: "Min Reverse Voltage",
   dark_current_a: "Dark Current",
   dark_current_max: "Max Dark Current",
+  inside_diameter_mm: "Inside Diameter",
+  outside_diameter_mm: "Outside Diameter",
+  current_rating_min: "Min Current",
+  memory_size_mbit: "Memory Size",
+  clock_frequency_mhz: "Clock Frequency",
+  clock_frequency_min_mhz: "Min Clock Frequency",
+  voltage_rating_min: "Min Voltage",
   reception_angle_deg: "Reception Angle",
   luminous_intensity_mcd: "Intensity",
   number_of_contacts: "Contacts",
@@ -193,6 +226,9 @@ const COLUMN_LABELS: Record<string, string> = {
   relay_type: "Relay Type",
   switch_type: "Switch Type",
   contact_type: "Contact Type",
+  connector_type: "Connector Type",
+  usb_standard: "USB Standard",
+  has_usb: "Has USB",
   output_type: "Output Type",
   mounting_style: "Mounting",
   cpu_core: "Core",
@@ -203,6 +239,10 @@ const COLUMN_LABELS: Record<string, string> = {
   clock_frequency_hz: "Clock",
   frequency_ghz: "Frequency",
   data_rate_mbps: "Data Rate",
+  chip_family: "Chip Family",
+  npu_name: "NPU",
+  npu_performance_tops: "NPU Performance",
+  performance_min_tops: "Min NPU Performance",
   display_type: "Display Type",
   matrix_size: "Matrix Size",
   forward_current: "Forward Current",
@@ -282,8 +322,14 @@ const formatDisplayValue = (column: string, value: unknown): string | null => {
       return `${formatSiUnit(value)}Hz`
     case "frequency_ghz":
       return withUnit(value, "GHz")
+    case "memory_size_mbit":
+      return withUnit(value, "Mbit")
+    case "clock_frequency_mhz":
+      return withUnit(value, "MHz")
     case "data_rate_mbps":
       return withUnit(value, "Mbps")
+    case "npu_performance_tops":
+      return withUnit(value, "TOPS")
     case "wavelength_nm":
     case "peak_wavelength_nm":
     case "spectral_range_min_nm":
@@ -344,6 +390,8 @@ const formatDisplayValue = (column: string, value: unknown): string | null => {
     case "length_mm":
     case "switch_height_mm":
     case "height_above_board_mm":
+    case "inside_diameter_mm":
+    case "outside_diameter_mm":
       return withUnit(value, "mm")
     case "operating_temp_min":
     case "operating_temp_max":
@@ -362,6 +410,8 @@ const renderCell = (
   column: string,
   value: unknown,
 ): string => {
+  if (column === "stock" && (value === null || value === undefined))
+    return "Unknown"
   if (value === null || value === undefined || value === "") return ""
   if (column === "attributes") {
     const rawValue = String(value)

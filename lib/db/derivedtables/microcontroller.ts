@@ -2,6 +2,7 @@ import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
 import type { DerivedTableSpec } from "./types"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import { BaseComponent } from "./component-base"
+import { getMicrocontrollerUsbOverride } from "./microcontroller-usb"
 
 export interface Microcontroller extends BaseComponent {
   // Extra columns
@@ -171,11 +172,13 @@ export const microcontrollerTableSpec: DerivedTableSpec<Microcontroller> = {
           attrs["CAN"]?.includes("1") ||
           desc.includes("can"),
       )
-      const hasUsb = Boolean(
-        peripheral.includes("usb") ||
-          attrs["Universal Serial Bus"] === "Yes" ||
-          desc.includes("usb"),
-      )
+      const hasUsb =
+        getMicrocontrollerUsbOverride(c.mfr) ??
+        Boolean(
+          peripheral.includes("usb") ||
+            attrs["Universal Serial Bus"] === "Yes" ||
+            desc.includes("usb"),
+        )
       const hasAdc = Boolean(attrs["ADC (Bit)"] || desc.includes("adc"))
       const hasDac = Boolean(attrs["DAC (Bit)"] || desc.includes("dac"))
       const hasPwm = Boolean(

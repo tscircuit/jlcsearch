@@ -7,6 +7,7 @@ export default defineWorkersConfig({
         wrangler: { configPath: "./wrangler.toml" },
         miniflare: {
           kvNamespaces: ["CACHE_KV"],
+          r2Buckets: ["EASYEDA_COMPONENT_CACHE"],
         },
       },
     },

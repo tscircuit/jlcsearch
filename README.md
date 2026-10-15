@@ -36,6 +36,48 @@ curl https://jlcsearch.tscircuit.com/resistors/list.json?package=&resistance=1k
 #      ...
 ```
 
+Look up a generated tscircuit footprinter string by numeric or `C`-prefixed
+LCSC number:
+
+```bash
+curl https://jlcsearch.tscircuit.com/api/footprinter_strings/C2906861
+
+# {
+#   "component_footprinter_details": {
+#     "lcsc": 2906861,
+#     "footprinter_string": "sod723_p0.865mm_pw0.54mm_pl0.57mm",
+#     "copper_iou": 0.9923751612092405,
+#     "updated_at": "2026-08-12 04:34:12"
+#   }
+# }
+```
+
+A `200` response with a null `footprinter_string` means the component was
+processed without a match above 95% copper IoU. A `404` means the component has
+not been processed yet.
+
+Fetch raw EasyEDA component JSON through the shared R2-backed cache:
+
+```bash
+curl https://jlcsearch.tscircuit.com/api/easyeda_components/C2906861
+
+# {
+#   "easyeda_component_details": {
+#     "lcsc": 2906861,
+#     "easyeda_uuid": "...",
+#     "fetched_at": "2026-08-13T16:00:00.000Z",
+#     "easyeda_json": { "...": "..." }
+#   }
+# }
+```
+
+The endpoint normalizes numeric and `C`-prefixed LCSC numbers. It serves fresh
+objects from the shared R2 bucket and fills missing objects from EasyEDA.
+Successful payloads are refreshed after 90 days; definitive not-found results
+are negative-cached for six hours. Callers that only want an existing object
+can add `?cache_only=true`; a `cache_miss` response never contacts EasyEDA.
+The `x-cache` response header reports `R2-HIT`, `R2-MISS`, or `R2-STALE`.
+
 ## Development
 
 [Bun](https://bun.com/) is required. Install dependencies for both the data
@@ -64,17 +106,41 @@ worker. Use `cf-proxy/scripts/sync-db.sh` to rebuild and synchronize derived
 table data from a prepared local SQLite database.
 
 Production D1 data is populated by the **Build and Sync D1** GitHub Actions
-workflow. On relevant merges to `main`, it downloads the current upstream
-source-db-v2 database, builds and verifies a compact `db.sqlite3` containing
-the requested derived tables, applies D1 migrations, uploads those tables, and
-refreshes the affected production API cache. The workflow can also be run
-manually in `derived` or `full_catalog` mode. `derived` accepts a
-comma-separated `derived_tables` input. `full_catalog` rebuilds and uploads the
-component catalog, search index, and FTS index from the current source-db-v2
-snapshot, and requires a numeric `smoke_test_lcsc` that must be present before
-and after the upload. Both modes accept an optional `cache_bust_url`. The
-workflow requires the `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN`
-repository secrets.
+workflow. Every night at 05:00 UTC, after the upstream jlcparts refresh, it
+performs a `stock_only` sync and clears the production response cache. The
+stock-only path updates changed values in `component_catalog` and `search_index`
+without rebuilding either table or the FTS index. Its compact stock snapshot
+also sets recently removed parts to zero instead of leaving stale quantities.
+API clients are instructed to revalidate within 24 hours so the nightly stock
+snapshot is not hidden by an older response. On relevant merges to `main`, the
+workflow
+downloads the current upstream source-db-v2 database, builds and verifies a
+compact `db.sqlite3` containing the requested derived tables, applies D1
+migrations, uploads those tables, and refreshes the affected production API
+cache. Transient Cloudflare failures during migrations or upload are retried
+per D1 command with incremental delays. Upload batches are
+idempotent, so a lost import-status response can be retried without duplicating
+rows or restarting completed work. Full-catalog uploads use 1,000-row batches
+for catalog tables, 5,000-row batches for FTS, up to six attempts per D1
+command, and a three-hour job timeout so the component catalog and search index
+can finish before the next upstream refresh. The workflow can also be run
+manually in `derived`, `stock_only`, or `full_catalog` mode. `derived` accepts a
+comma-separated `derived_tables` input. `stock_only` performs the same in-place
+stock refresh used by the nightly schedule. `full_catalog` rebuilds and uploads
+the component catalog, search index, and FTS index from the current source-db-v2
+snapshot. Catalog and stock syncs require a numeric `smoke_test_lcsc` whose
+remote stock must match the prepared source database. All modes accept an
+optional `cache_bust_url`. The workflow requires the
+`CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` repository secrets.
+
+The manually dispatched **Populate footprinter strings** workflow processes
+the highest-stock unindexed components first for up to four hours by default.
+It runs eight component conversions concurrently and probes the shared EasyEDA
+R2 cache before any upstream request. Cache misses are limited to two component
+fills per second, or about four EasyEDA requests per second. An EasyEDA 403
+pauses all fills for two minutes and lowers the rest of that run to one fill per
+second. Production D1 reads and writes are batched, and the final log reports R2
+hits and misses, fill, conversion, D1, and CPU timing metrics.
 
 ## How Does It work?
 As a developer new to this codebase, or a curious user, you may have some questions about the flow of data through the scripts and automations inside this repo.  It all starts with the [jlcparts](https://github.com/yaqwsx/jlcparts) project, which compiles a massive **11GB** sqlite3 database of *everything* [JLCPCB](https://jlcpcb.com) has to offer.  As you can imagine, this would be very resource-intensive and slow to search, so the next steps are scripts that optimize it heavily, although it's more accurate to say that they rebuild it entirely. 
@@ -96,3 +162,30 @@ To recap:
 
 None of this would be possible without [JLCPCB](https://jlcpcb.com) and the work
 [jlcparts](https://github.com/yaqwsx/jlcparts) project.
+
+### Microcontroller USB filtering and corrections
+
+Use `/microcontrollers/list.json?has_usb=true` to require an on-chip USB data
+interface, or `has_usb=false` to exclude it. The list page exposes the same
+**Has USB** filter with All, Yes, and No options. USB power delivery alone does
+not count as a USB data interface.
+
+The [top-100 USB audit](docs/microcontroller-usb-audit.md) and
+[next-200 audit](docs/microcontroller-usb-audit-next200.md) record manufacturer
+sources and exact part overrides used by the import pipeline and D1 migrations
+0011 and 0012. **Build and Sync D1** also supports `migrations_only` to apply
+pending migrations and clear cached responses without rebuilding any tables.
+
+### Refreshing OLED displays
+
+The upstream archive currently omits stocked OLED displays present in JLCPCB's
+website catalog. A `derived` sync including `oled_display` therefore refreshes
+that prepared table directly from JLCPCB's paginated OLED category, even on a
+prepared-database cache hit. It retains out-of-stock products and refuses empty,
+duplicate, changing-total, or incomplete responses before replacing local data.
+The workflow verifies stock in the public API and refreshes both HTML and JSON.
+
+Run **Build and Sync D1** with `sync_scope=derived`,
+`derived_tables=oled_display`, and
+`cache_bust_url=https://jlcsearch.tscircuit.com/oled_display/list.json`.
+For a local snapshot, run `SOURCE_DB_PATH=oled.sqlite3 bun scripts/refresh-oled-displays.ts`.

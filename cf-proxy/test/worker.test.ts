@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it } from "vitest"
 import { generateCacheKey } from "../src/cache-key"
-import { createSelf, createTestEnv } from "./test-env"
+import {
+  createFootprinterStringsD1,
+  createSelf,
+  createTestEnv,
+} from "./test-env"
 
 describe("Worker integration", () => {
   const env = createTestEnv()
@@ -8,11 +12,13 @@ describe("Worker integration", () => {
 
   beforeEach(async () => {
     env.USE_D1 = "false"
+    env.DB = createFootprinterStringsD1([])
 
     const keys = await env.CACHE_KV.list()
     for (const key of keys.keys) {
       await env.CACHE_KV.delete(key.name)
     }
+    await env.EASYEDA_COMPONENT_CACHE.clear()
   })
 
   it("serves /health directly from the worker", async () => {
@@ -70,6 +76,131 @@ describe("Worker integration", () => {
       error: {
         error_code: "not_found",
         message: "Not Found",
+      },
+    })
+  })
+
+  it("returns component footprinter details for a C-prefixed LCSC", async () => {
+    env.USE_D1 = "true"
+    env.DB = createFootprinterStringsD1([
+      {
+        lcsc: 2906861,
+        footprinter_string: "sod723_p0.865mm_pw0.54mm_pl0.57mm",
+        copper_iou: 0.9923751612092405,
+        updated_at: "2026-08-12 04:34:12",
+      },
+    ])
+
+    const response = await SELF.fetch(
+      "https://example.com/api/footprinter_strings/C2906861",
+    )
+
+    expect(response.status).toBe(200)
+    expect(response.headers.get("content-type")).toContain("application/json")
+    expect(response.headers.get("cache-control")).toBe("no-store")
+    expect(response.headers.get("x-cache")).toBe("D1")
+    expect(await response.json()).toEqual({
+      component_footprinter_details: {
+        lcsc: 2906861,
+        footprinter_string: "sod723_p0.865mm_pw0.54mm_pl0.57mm",
+        copper_iou: 0.9923751612092405,
+        updated_at: "2026-08-12 04:34:12",
+      },
+    })
+  })
+
+  it("serves EasyEDA component JSON from the shared R2 cache", async () => {
+    await env.EASYEDA_COMPONENT_CACHE.put(
+      "components/C123.json",
+      JSON.stringify({
+        schemaVersion: 1,
+        status: "found",
+        lcsc: 123,
+        fetchedAt: new Date().toISOString(),
+        easyedaJson: {
+          uuid: "easyeda-uuid",
+          lcsc: { number: "C123" },
+        },
+      }),
+    )
+
+    const response = await SELF.fetch(
+      "https://example.com/api/easyeda_components/C123?cache_only=true",
+    )
+
+    expect(response.status).toBe(200)
+    expect(response.headers.get("x-cache")).toBe("R2-HIT")
+    expect(response.headers.get("x-data-source")).toBe("r2")
+    expect(await response.json()).toEqual({
+      easyeda_component_details: {
+        lcsc: 123,
+        easyeda_uuid: "easyeda-uuid",
+        fetched_at: expect.any(String),
+        easyeda_json: {
+          uuid: "easyeda-uuid",
+          lcsc: { number: "C123" },
+        },
+      },
+    })
+  })
+
+  it("returns a processed nullable footprinter row for a numeric LCSC", async () => {
+    env.USE_D1 = "true"
+    env.DB = createFootprinterStringsD1([
+      {
+        lcsc: 123,
+        footprinter_string: null,
+        copper_iou: 0.94,
+        updated_at: "2026-08-12 05:00:00",
+      },
+    ])
+
+    const response = await SELF.fetch(
+      "https://example.com/api/footprinter_strings/123",
+    )
+
+    expect(response.status).toBe(200)
+    expect(await response.json()).toEqual({
+      component_footprinter_details: {
+        lcsc: 123,
+        footprinter_string: null,
+        copper_iou: 0.94,
+        updated_at: "2026-08-12 05:00:00",
+      },
+    })
+  })
+
+  it("returns 404 when an LCSC has not been processed", async () => {
+    env.USE_D1 = "true"
+
+    const response = await SELF.fetch(
+      "https://example.com/api/footprinter_strings/C404",
+    )
+
+    expect(response.status).toBe(404)
+    expect(response.headers.get("cache-control")).toBe("no-store")
+    expect(await response.json()).toEqual({
+      ok: false,
+      error: {
+        error_code: "not_found",
+        message: "Not Found",
+      },
+    })
+  })
+
+  it("returns 400 for an invalid footprinter LCSC", async () => {
+    env.USE_D1 = "true"
+
+    const response = await SELF.fetch(
+      "https://example.com/api/footprinter_strings/not-an-lcsc",
+    )
+
+    expect(response.status).toBe(400)
+    expect(response.headers.get("cache-control")).toBe("no-store")
+    expect(await response.json()).toEqual({
+      error: {
+        error_code: "invalid_lcsc",
+        message: "LCSC must be a positive integer with an optional C prefix",
       },
     })
   })
@@ -144,7 +275,7 @@ describe("Worker integration", () => {
   it("serves stale cached D1 derived-table HTML when refresh fails", async () => {
     env.USE_D1 = "true"
 
-    const staleAt = new Date(Date.now() - 20 * 24 * 60 * 60 * 1000)
+    const staleAt = new Date(Date.now() - 30 * 60 * 1000)
     const url = new URL(
       "https://example.com/microcontrollers/list?package=QFN48",
     )

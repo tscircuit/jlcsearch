@@ -10,14 +10,332 @@ describe("render helpers", () => {
     expect(html).toContain("/led_with_ic/list")
     expect(html).toContain("/lcd_drivers/list")
     expect(html).toContain("/tft_display_drivers/list")
+    expect(html).toContain("/stepper_motor_drivers/list")
+    expect(html).toContain("Stepper Motor Driver")
     expect(html).toContain("/resistors/list")
+    expect(html).toContain("/barrel_jacks/list")
+    expect(html).toContain("/ethernet_controllers/list")
+    expect(html).toContain("Ethernet Controllers")
+    expect(html).toContain("/drams/list")
+    expect(html).toContain("/psrams/list")
     expect(html).toContain("/spring_clamp_terminal_blocks/list")
+    expect(html).toContain(
+      'href="/spring_clamp_connectors/list">Spring-Clamp Connectors</a>',
+    )
     expect(html).toContain("/ble_modules/list")
     expect(html).toContain("/ble_chips/list")
     expect(html).toContain("/dimm_connectors/list")
     expect(html).toContain("/sodimm_connectors/list")
+    expect(html).toContain("/micro_usb_connectors/list")
     expect(html).toContain("/hdmi_ports/list")
     expect(html).toContain("/photo_diodes/list")
+    expect(html).toContain('href="/optical_sensors/list">Optical Sensors</a>')
+    expect(html).toContain("/npu_chips/list")
+    expect(html).toContain("/linux_capable_processors/list")
+    expect(html).toContain("Linux-capable Processors")
+  })
+
+  it("renders the Linux-capable Processors page, filters, and JSON API link", () => {
+    const pathname = "/linux_capable_processors/list"
+
+    expect(D1_ROUTES).toContain(pathname)
+    expect(getD1Handler(pathname)).toBeTypeOf("function")
+
+    const html = renderD1TablePage(
+      pathname,
+      {
+        linux_capable_processors: [
+          {
+            lcsc: 5_156_490,
+            mfr: "RK3588",
+            package: "FCBGA-1088",
+            manufacturer: "Rockchip",
+            chip_family: "Rockchip RK3588",
+            architecture: "ARM64",
+            cpu_core: "Cortex-A76 + Cortex-A55",
+            stock: 100,
+          },
+        ],
+      },
+      {
+        package: "FCBGA-1088",
+        manufacturer: "Rockchip",
+        chip_family: "Rockchip RK3588",
+        architecture: "ARM64",
+        cpu_core: "Cortex-A76 + Cortex-A55",
+        is_preferred: "true",
+      },
+      "https://jlcsearch.tscircuit.com/linux_capable_processors/list?manufacturer=Rockchip&architecture=ARM64",
+      { architecture: ["ARM32", "ARM64", "RISC-V64"] },
+    )
+
+    expect(html).toContain("<h2>Linux-capable Processors</h2>")
+    expect(html).toContain('name="package" value="FCBGA-1088"')
+    expect(html).toContain('name="manufacturer" value="Rockchip"')
+    expect(html).toContain('name="chip_family" value="Rockchip RK3588"')
+    expect(html).toContain('name="architecture" value="ARM64"')
+    expect(html).toContain('name="cpu_core" value="Cortex-A76 + Cortex-A55"')
+    expect(html).toContain('name="is_basic"')
+    expect(html).toContain('name="is_preferred"')
+    expect(html).toContain('<option value="true" selected>Yes</option>')
+    expect(html).toContain('<option value="ARM32">')
+    expect(html).toContain('<option value="RISC-V64">')
+    expect(html).toContain(">Architecture</th>")
+    expect(html).toContain("Cortex-A76 + Cortex-A55")
+    expect(html).toContain(
+      "Application processors with documented Linux support.",
+    )
+    expect(html).toContain(
+      "/linux_capable_processors/list.json?manufacturer=Rockchip&amp;architecture=ARM64",
+    )
+  })
+
+  it("renders the NPU chip page and JSON API link", () => {
+    const pathname = "/npu_chips/list"
+
+    expect(D1_ROUTES).toContain(pathname)
+    expect(getD1Handler(pathname)).toBeTypeOf("function")
+
+    const html = renderD1TablePage(
+      pathname,
+      {
+        npu_chips: [
+          {
+            lcsc: 5_156_490,
+            mfr: "RK3588",
+            package: "FCBGA-1088",
+            manufacturer: "Rockchip",
+            chip_family: "RK3588",
+            npu_name: "Rockchip NPU",
+            npu_performance_tops: 6,
+            stock: 100,
+          },
+        ],
+      },
+      {
+        package: "FCBGA-1088",
+        manufacturer: "Rockchip",
+        chip_family: "RK3588",
+        npu_name: "Rockchip NPU",
+        performance_min_tops: "1",
+      },
+      "https://jlcsearch.tscircuit.com/npu_chips/list?manufacturer=Rockchip",
+    )
+
+    expect(html).toContain("<h2>NPU Chips (Neural Processing Units)</h2>")
+    expect(html).toContain('name="package"')
+    expect(html).toContain('name="manufacturer"')
+    expect(html).toContain('name="chip_family"')
+    expect(html).toContain('name="npu_name"')
+    expect(html).toContain('name="performance_min_tops"')
+    expect(html).toContain('name="is_basic"')
+    expect(html).toContain('name="is_preferred"')
+    expect(html).toContain("6TOPS")
+    expect(html).toContain("/npu_chips/list.json")
+  })
+
+  it("renders the DRAM page and JSON API link", () => {
+    const pathname = "/drams/list"
+
+    expect(D1_ROUTES).toContain(pathname)
+    expect(getD1Handler(pathname)).toBeTypeOf("function")
+
+    const html = renderD1TablePage(
+      pathname,
+      {
+        drams: [
+          {
+            lcsc: 500275,
+            mfr: "K4B4G1646E-BYMA",
+            package: "FBGA-96(7.5x13.3)",
+            memory_type: "DDR3L",
+            memory_size_mbit: 4096,
+            clock_frequency_mhz: 933,
+            stock: 5739,
+          },
+        ],
+      },
+      {
+        package: "FBGA-96(7.5x13.3)",
+        memory_type: "DDR3L",
+        memory_size_mbit: "4096",
+        clock_frequency_min_mhz: "800",
+      },
+      "https://jlcsearch.tscircuit.com/drams/list?memory_type=DDR3L",
+    )
+
+    expect(html).toContain("<h2>DRAM</h2>")
+    expect(html).toContain('name="package"')
+    expect(html).toContain('name="memory_type"')
+    expect(html).toContain('name="memory_size_mbit"')
+    expect(html).toContain('name="clock_frequency_min_mhz"')
+    expect(html).toContain('name="is_basic"')
+    expect(html).toContain('name="is_preferred"')
+    expect(html).toContain("4096Mbit")
+    expect(html).toContain("933MHz")
+    expect(html).toContain("/drams/list.json")
+  })
+
+  it("renders the PSRAM page and JSON API link", () => {
+    const pathname = "/psrams/list"
+
+    expect(D1_ROUTES).toContain(pathname)
+    expect(getD1Handler(pathname)).toBeTypeOf("function")
+
+    const html = renderD1TablePage(
+      pathname,
+      {
+        psrams: [
+          {
+            lcsc: 500275,
+            mfr: "APS6404L-SQN-SN",
+            package: "SOP-8",
+            interface_type: "SPI, QPI",
+            memory_size_mbit: 64,
+            clock_frequency_mhz: 133,
+            stock: 5739,
+          },
+        ],
+      },
+      {
+        package: "SOP-8",
+        interface_type: "SPI, QPI",
+        memory_size_mbit: "64",
+        clock_frequency_min_mhz: "100",
+      },
+      "https://jlcsearch.tscircuit.com/psrams/list?interface_type=SPI, QPI",
+    )
+
+    expect(html).toContain("<h2>PSRAM</h2>")
+    expect(html).toContain('name="package"')
+    expect(html).toContain('name="interface_type"')
+    expect(html).toContain('name="memory_size_mbit"')
+    expect(html).toContain('name="clock_frequency_min_mhz"')
+    expect(html).toContain('name="is_basic"')
+    expect(html).toContain('name="is_preferred"')
+    expect(html).toContain("64Mbit")
+    expect(html).toContain("133MHz")
+    expect(html).toContain("/psrams/list.json")
+  })
+
+  it("renders the Barrel Jacks page and JSON API link", () => {
+    const pathname = "/barrel_jacks/list"
+
+    expect(D1_ROUTES).toContain(pathname)
+    expect(getD1Handler(pathname)).toBeTypeOf("function")
+
+    const html = renderD1TablePage(
+      pathname,
+      {
+        barrel_jacks: [
+          {
+            lcsc: 16214,
+            mfr: "DC-005 2.0",
+            package: "Plugin",
+            connector_type: "DC Power Receptacle",
+            mounting_style: "Through Hole",
+            orientation: "Right Angle",
+            inside_diameter_mm: 2,
+            outside_diameter_mm: 6.4,
+            current_rating_a: 1,
+            voltage_rating_v: 12,
+            num_pins: 3,
+            stock: 27_206,
+          },
+        ],
+      },
+      {
+        mounting_style: "Through Hole",
+        orientation: "Right Angle",
+        inside_diameter_mm: "2",
+        outside_diameter_mm: "6.4",
+        current_rating_min: "1",
+        voltage_rating_min: "12",
+        num_pins: "3",
+      },
+      "https://jlcsearch.tscircuit.com/barrel_jacks/list?inside_diameter_mm=2&outside_diameter_mm=6.4",
+    )
+
+    expect(html).toContain("<h2>Barrel Jacks</h2>")
+    expect(html).toContain('name="mounting_style"')
+    expect(html).toContain('name="orientation"')
+    expect(html).toContain('name="inside_diameter_mm"')
+    expect(html).toContain('name="outside_diameter_mm"')
+    expect(html).toContain('name="current_rating_min"')
+    expect(html).toContain('name="voltage_rating_min"')
+    expect(html).toContain('name="num_pins"')
+    expect(html).toContain('name="is_basic"')
+    expect(html).toContain('name="is_preferred"')
+    expect(html).toContain("2mm")
+    expect(html).toContain("6.4mm")
+    expect(html).toContain("/barrel_jacks/list.json")
+  })
+
+  it("renders the Micro USB connectors page and JSON API link", () => {
+    const pathname = "/micro_usb_connectors/list"
+
+    expect(D1_ROUTES).toContain(pathname)
+    expect(getD1Handler(pathname)).toBeTypeOf("function")
+
+    const html = renderD1TablePage(
+      pathname,
+      {
+        micro_usb_connectors: [
+          {
+            lcsc: 132563,
+            mfr: "10118194-0001LF",
+            package: "MICRO-USB-SMD_10118194-0001LF",
+            connector_type: "Micro USB Type-B",
+            usb_standard: "USB 2.0",
+            mounting_style: "Surface Mount, Right Angle",
+            number_of_contacts: 5,
+            gender: "Female",
+            stock: 23_802,
+          },
+        ],
+      },
+      {
+        connector_type: "Micro USB Type-B",
+        usb_standard: "USB 2.0",
+        mounting_style: "Surface Mount, Right Angle",
+        number_of_contacts: "5",
+        gender: "Female",
+      },
+      "https://jlcsearch.tscircuit.com/micro_usb_connectors/list?connector_type=Micro+USB+Type-B",
+    )
+
+    expect(html).toContain("<h2>Micro USB Connectors</h2>")
+    expect(html).toContain('name="connector_type"')
+    expect(html).toContain('name="usb_standard"')
+    expect(html).toContain('name="mounting_style"')
+    expect(html).toContain('name="number_of_contacts"')
+    expect(html).toContain('name="gender"')
+    expect(html).toContain('name="is_basic"')
+    expect(html).toContain('name="is_preferred"')
+    expect(html).toContain("10118194-0001LF")
+    expect(html).toContain("/micro_usb_connectors/list.json")
+  })
+
+  it("renders the first price tier on component search results", () => {
+    const html = renderD1TablePage(
+      "/components/list",
+      {
+        components: [
+          {
+            lcsc: 1848077,
+            mfr: "MSP430G2332IRSA16R",
+            package: "QFN-16-EP(4x4)",
+            stock: 33000,
+            price: "1-9:1.5228,10-29:1.2592,30-99:1.1145,100-499:0.9501",
+          },
+        ],
+      },
+      { search: "MSP430" },
+      "https://jlcsearch.tscircuit.com/components/list?search=MSP430",
+    )
+
+    expect(html).toContain("MSP430G2332IRSA16R")
+    expect(html).toContain("$1.52")
   })
 
   it("renders the Photo Diodes page and JSON API link", () => {
@@ -264,14 +582,15 @@ describe("render helpers", () => {
     },
   )
 
-  it("renders the spring clamp route with pitch and pin filters", () => {
-    expect(D1_ROUTES).toContain("/spring_clamp_terminal_blocks/list")
-    expect(getD1Handler("/spring_clamp_terminal_blocks/list")).toBeTypeOf(
-      "function",
-    )
+  it.each([
+    ["/spring_clamp_terminal_blocks/list", "Spring Clamp Terminal Blocks"],
+    ["/spring_clamp_connectors/list", "Spring-Clamp Connectors"],
+  ])("renders %s with pitch and pin filters", (pathname, heading) => {
+    expect(D1_ROUTES).toContain(pathname)
+    expect(getD1Handler(pathname)).toBeTypeOf("function")
 
     const html = renderD1TablePage(
-      "/spring_clamp_terminal_blocks/list",
+      pathname,
       {
         spring_clamp_terminal_blocks: [
           {
@@ -283,15 +602,15 @@ describe("render helpers", () => {
         ],
       },
       { pitch: "5.08", pins: "2" },
-      "https://jlcsearch.tscircuit.com/spring_clamp_terminal_blocks/list?pitch=5.08&pins=2",
+      `https://jlcsearch.tscircuit.com${pathname}?pitch=5.08&pins=2`,
       { pitch: ["5.08"], pins: ["2"] },
     )
 
-    expect(html).toContain("<h2>Spring Clamp Terminal Blocks</h2>")
+    expect(html).toContain(`<h2>${heading}</h2>`)
     expect(html).toContain('name="pitch"')
     expect(html).toContain('name="pins"')
     expect(html).toContain("WJ142R-5.08-2P")
-    expect(html).toContain("/spring_clamp_terminal_blocks/list.json")
+    expect(html).toContain(`${pathname}.json`)
   })
 
   it("renders the LCD driver catalog route with package and assembly filters", () => {
@@ -449,5 +768,21 @@ describe("render helpers", () => {
     expect(html).toContain(
       'name="is_extended_promotional" value="true" checked',
     )
+  })
+
+  it("labels unknown stock distinctly from verified zero stock", () => {
+    const html = renderD1TablePage(
+      "/switches/list",
+      {
+        switches: [
+          { lcsc: 221660, mfr: "JS102011SAQN", stock: null },
+          { lcsc: 2, mfr: "Verified zero", stock: 0 },
+        ],
+      },
+      {},
+      "https://example.com/switches/list",
+    )
+    expect(html).toContain(">Unknown</td>")
+    expect(html).toContain(">0</td>")
   })
 })

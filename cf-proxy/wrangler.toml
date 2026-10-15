@@ -23,6 +23,11 @@ binding = "DB"
 database_name = "jlcsearch"
 database_id = "dbd51802-2175-4e82-b1a9-8f129e46ec26"
 
+[[r2_buckets]]
+binding = "EASYEDA_COMPONENT_CACHE"
+bucket_name = "tscircuit-easyeda-component-cache"
+preview_bucket_name = "tscircuit-easyeda-component-cache-staging"
+
 [env.staging]
 name = "jlcsearch-proxy-staging"
 workers_dev = true
@@ -39,3 +44,7 @@ id = "4fe1b99f0b90468bb4684a5b6822b10a"
 binding = "DB"
 database_name = "jlcsearch"
 database_id = "dbd51802-2175-4e82-b1a9-8f129e46ec26"
+
+[[env.staging.r2_buckets]]
+binding = "EASYEDA_COMPONENT_CACHE"
+bucket_name = "tscircuit-easyeda-component-cache-staging"

@@ -22,14 +22,18 @@ const tableExists = (database: Database, schema: string, table: string) =>
 export const buildDerivedSyncDatabase = async ({
   sourcePath,
   outputPath,
+  recoveryPath,
   tableNames,
   includeComponentCatalog = false,
+  includeStockSnapshot = false,
   logger = console.log,
 }: {
   sourcePath: string
   outputPath: string
+  recoveryPath?: string
   tableNames?: string[]
   includeComponentCatalog?: boolean
+  includeStockSnapshot?: boolean
   logger?: (message: string) => void
 }) => {
   const resolvedSourcePath = path.resolve(sourcePath)
@@ -40,6 +44,17 @@ export const buildDerivedSyncDatabase = async ({
   }
   if (resolvedSourcePath === resolvedOutputPath) {
     throw new Error("Source and output database paths must be different")
+  }
+
+  const resolvedRecoveryPath = recoveryPath
+    ? path.resolve(recoveryPath)
+    : undefined
+  if (
+    resolvedRecoveryPath &&
+    (resolvedRecoveryPath === resolvedOutputPath ||
+      !existsSync(resolvedRecoveryPath))
+  ) {
+    throw new Error("Recovery database must exist and differ from the output")
   }
 
   await mkdir(path.dirname(resolvedOutputPath), { recursive: true })
@@ -58,6 +73,65 @@ export const buildDerivedSyncDatabase = async ({
     )
   }
 
+  if (resolvedRecoveryPath) {
+    database.run("ATTACH DATABASE ? AS recovery", [resolvedRecoveryPath])
+    for (const table of ["jlc_components", "lcsc_components"]) {
+      if (!tableExists(database, "recovery", table)) {
+        database.close()
+        throw new Error(`Recovery database is missing ${table}`)
+      }
+      const sourceColumns = database
+        .query<{ name: string }, []>(`PRAGMA source.table_info(${table})`)
+        .all()
+        .map((c) => c.name)
+      const recoveryColumns = new Set(
+        database
+          .query<{ name: string }, []>(`PRAGMA recovery.table_info(${table})`)
+          .all()
+          .map((c) => c.name),
+      )
+      if (sourceColumns.some((column) => !recoveryColumns.has(column))) {
+        database.close()
+        throw new Error(`Recovery schema does not match ${table}`)
+      }
+      const columns = sourceColumns
+        .map((column) => `"${column.replaceAll('"', '""')}"`)
+        .join(",")
+      if (table === "jlc_components")
+        database.exec(`CREATE TEMP VIEW input_${table} AS
+        SELECT ${columns}, 'upstream_snapshot' AS stock_source FROM source.${table}
+        UNION ALL
+        SELECT ${columns}, 'recovery_metadata' AS stock_source FROM recovery.${table} AS old
+        WHERE NOT EXISTS (SELECT 1 FROM source.${table} AS current WHERE current.lcsc = old.lcsc);`)
+    }
+    logger(
+      "Recovery enabled: current source records take precedence; recovered stock is unknown until verified live.",
+    )
+  } else {
+    for (const table of ["jlc_components"]) {
+      database.exec(
+        `CREATE TEMP VIEW input_${table} AS SELECT *, 'upstream_snapshot' AS stock_source FROM source.${table}`,
+      )
+    }
+  }
+
+  // Joining a UNION ALL metadata view materializes every LCSC row on each
+  // derived-table batch. Direct joins use both source primary-key indexes.
+  const lcscJoin = resolvedRecoveryPath
+    ? `LEFT JOIN source.lcsc_components AS l ON l.lcsc = j.lcsc
+       LEFT JOIN recovery.lcsc_components AS recovered_l
+         ON recovered_l.lcsc = j.lcsc AND l.lcsc IS NULL`
+    : "LEFT JOIN source.lcsc_components AS l ON l.lcsc = j.lcsc"
+  const lcscColumn = (name: "attributes" | "manufacturer" | "url_slug") =>
+    resolvedRecoveryPath
+      ? `(CASE WHEN l.lcsc IS NOT NULL THEN l.${name} ELSE recovered_l.${name} END)`
+      : `l.${name}`
+
+  // The pinned archive recovers catalog metadata, not current availability.
+  // An unknown quantity stays NULL and is excluded from in-stock searches.
+  const stockColumn =
+    "CASE WHEN j.stock_source = 'recovery_metadata' THEN NULL ELSE j.stock END"
+
   database.exec(`
     CREATE TABLE categories (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -68,7 +142,7 @@ export const buildDerivedSyncDatabase = async ({
 
     INSERT INTO categories(category, subcategory)
     SELECT DISTINCT category, subcategory
-    FROM source.jlc_components
+    FROM input_jlc_components
     WHERE present = 1
       AND last_on_stock >= unixepoch('now', '-1 year')
     ORDER BY category, subcategory;
@@ -85,12 +159,12 @@ export const buildDerivedSyncDatabase = async ({
       j.preferred,
       j.description,
       j.datasheet,
-      j.stock,
+      ${stockColumn} AS stock,
       j.price,
       j.last_on_stock,
       j.fetched_at AS last_update,
       j.sync_seen AS flag,
-      CASE WHEN j.stock > 0 THEN 1 ELSE 0 END AS in_stock,
+      CASE WHEN (${stockColumn}) > 0 THEN 1 ELSE 0 END AS in_stock,
       json_object(
         'attributes',
         json(
@@ -100,25 +174,28 @@ export const buildDerivedSyncDatabase = async ({
               ELSE '{}'
             END,
             CASE
-              WHEN json_valid(l.attributes) THEN l.attributes
+              WHEN json_valid(${lcscColumn("attributes")}) THEN ${lcscColumn("attributes")}
               ELSE '{}'
             END
           )
         ),
         'manufacturer',
-        NULLIF(l.manufacturer, ''),
+        coalesce(
+          NULLIF(${lcscColumn("manufacturer")}, ''),
+          NULLIF(j.manufacturer, '')
+        ),
         'url',
         CASE
-          WHEN l.url_slug IS NOT NULL AND l.url_slug != ''
-          THEN 'https://lcsc.com/product-detail/' || l.url_slug || '_C' || j.lcsc || '.html'
+          WHEN ${lcscColumn("url_slug")} IS NOT NULL AND ${lcscColumn("url_slug")} != ''
+          THEN 'https://lcsc.com/product-detail/' || ${lcscColumn("url_slug")} || '_C' || j.lcsc || '.html'
           ELSE NULL
         END
       ) AS extra
-    FROM source.jlc_components AS j
+    FROM input_jlc_components AS j
     INNER JOIN main.categories AS c
       ON c.category = j.category
       AND c.subcategory = j.subcategory
-    LEFT JOIN source.lcsc_components AS l ON l.lcsc = j.lcsc
+    ${lcscJoin}
     WHERE j.present = 1
       AND j.last_on_stock >= unixepoch('now', '-1 year');
   `)
@@ -135,19 +212,19 @@ export const buildDerivedSyncDatabase = async ({
         CASE WHEN j.library_type = 'base' THEN 1 ELSE 0 END AS basic,
         j.preferred,
         j.description,
-        j.stock,
+        ${stockColumn} AS stock,
         j.price,
         json_object(
           'number', 'C' || j.lcsc,
           'manufacturer', json_object(
             'name', coalesce(
-              NULLIF(l.manufacturer, ''),
+              NULLIF(${lcscColumn("manufacturer")}, ''),
               NULLIF(j.manufacturer, '')
             )
           ),
           'title', trim(
             coalesce(
-              NULLIF(l.manufacturer, ''),
+              NULLIF(${lcscColumn("manufacturer")}, ''),
               NULLIF(j.manufacturer, ''),
               ''
             ) || ' ' || j.mfr
@@ -161,25 +238,49 @@ export const buildDerivedSyncDatabase = async ({
                 ELSE '{}'
               END,
               CASE
-                WHEN json_valid(l.attributes) THEN l.attributes
+                WHEN json_valid(${lcscColumn("attributes")}) THEN ${lcscColumn("attributes")}
                 ELSE '{}'
               END
             )
           ),
           'description', j.description,
           'url', CASE
-            WHEN l.url_slug IS NOT NULL AND l.url_slug != ''
-            THEN 'https://lcsc.com/product-detail/' || l.url_slug || '_C' || j.lcsc || '.html'
+            WHEN ${lcscColumn("url_slug")} IS NOT NULL AND ${lcscColumn("url_slug")} != ''
+            THEN 'https://lcsc.com/product-detail/' || ${lcscColumn("url_slug")} || '_C' || j.lcsc || '.html'
             ELSE NULL
           END
         ) AS extra
-      FROM source.jlc_components AS j
-      LEFT JOIN source.lcsc_components AS l ON l.lcsc = j.lcsc
+      FROM input_jlc_components AS j
+      ${lcscJoin}
       WHERE j.present = 1
         AND j.last_on_stock >= unixepoch('now', '-1 year');
 
       CREATE INDEX idx_component_catalog_lcsc ON component_catalog(lcsc);
       CREATE INDEX idx_component_catalog_stock ON component_catalog(stock DESC);
+    `)
+  }
+
+  if (includeStockSnapshot) {
+    database.exec(`
+      CREATE TABLE component_stock (
+        lcsc INTEGER PRIMARY KEY,
+        stock INTEGER,
+        subcategory TEXT,
+        stock_source TEXT,
+        record_fetched_at INTEGER,
+        stock_checked_at INTEGER
+      );
+
+      INSERT INTO component_stock(lcsc, stock, subcategory, stock_source, record_fetched_at)
+      SELECT
+        lcsc,
+        CASE WHEN stock_source = 'recovery_metadata' THEN NULL
+             WHEN present = 1 THEN coalesce(stock, 0) ELSE 0 END,
+        subcategory,
+        stock_source,
+        fetched_at
+      FROM input_jlc_components
+      WHERE last_on_stock >= unixepoch('now', '-1 year');
     `)
   }
 
@@ -209,12 +310,16 @@ const main = async () => {
     .filter(Boolean)
   const includeComponentCatalog =
     process.env.INCLUDE_COMPONENT_CATALOG?.trim() === "1"
+  const includeStockSnapshot =
+    process.env.INCLUDE_STOCK_SNAPSHOT?.trim() === "1"
 
   await buildDerivedSyncDatabase({
     sourcePath,
     outputPath,
+    recoveryPath: process.env.RECOVERY_DB_PATH?.trim() || undefined,
     tableNames: configuredTables?.length ? configuredTables : undefined,
     includeComponentCatalog,
+    includeStockSnapshot,
   })
 }
 

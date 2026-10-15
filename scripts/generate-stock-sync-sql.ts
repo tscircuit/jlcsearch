@@ -1,0 +1,323 @@
+import { Database } from "bun:sqlite"
+import { existsSync } from "node:fs"
+import { mkdir, readFile, rm } from "node:fs/promises"
+import path from "node:path"
+import {
+  type LiveStockRow,
+  effectiveStockSql,
+  liveObservationUpsertSql,
+} from "./live-stock-policy"
+
+interface StockRow extends LiveStockRow {}
+
+interface CatalogStats {
+  row_count: number
+  unique_lcsc_count: number
+  null_lcsc_count: number
+}
+
+export interface StockSyncTarget {
+  name: string
+  has_in_stock: number
+}
+
+const DEFAULT_STOCK_TARGETS: StockSyncTarget[] = [
+  { name: "component_catalog", has_in_stock: 0 },
+  { name: "search_index", has_in_stock: 0 },
+]
+const STOCK_BATCH_TABLE = "_jlcsearch_stock_sync_batch"
+
+// D1 denies table-valued PRAGMA functions. Read ordinary CREATE TABLE schema
+// instead and inspect its columns in an isolated local SQLite database.
+export const STOCK_SYNC_TARGETS_QUERY = `SELECT name, sql
+FROM sqlite_master
+WHERE type = 'table'
+  AND sql IS NOT NULL
+  AND sql NOT LIKE 'CREATE VIRTUAL TABLE%'
+  AND name NOT LIKE 'sqlite_%'
+  AND name NOT LIKE '_cf_%'
+  AND name != '${STOCK_BATCH_TABLE}'
+ORDER BY name;`
+
+export const stockSyncTargetsFromSchema = (
+  schemas: Array<{ name: string; sql: string }>,
+): StockSyncTarget[] => {
+  const database = new Database(":memory:")
+  const targets: StockSyncTarget[] = []
+  const names = new Set<string>()
+  try {
+    for (const schema of schemas) {
+      if (
+        !schema ||
+        typeof schema.name !== "string" ||
+        !/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(schema.name) ||
+        typeof schema.sql !== "string" ||
+        !/^CREATE\s+TABLE\s/i.test(schema.sql) ||
+        names.has(schema.name)
+      ) {
+        throw new Error("Invalid stock sync target schema")
+      }
+      names.add(schema.name)
+      // Prepare a single CREATE statement; never execute a SQL script from
+      // the manifest. No rows or production data are copied locally.
+      database.query(schema.sql).run()
+      const columns = new Set(
+        database
+          .query<{ name: string }, []>(`PRAGMA table_info("${schema.name}")`)
+          .all()
+          .map((column) => column.name),
+      )
+      if (columns.has("lcsc") && columns.has("stock")) {
+        targets.push({
+          name: schema.name,
+          has_in_stock: columns.has("in_stock") ? 1 : 0,
+        })
+      }
+    }
+    validateTargets(targets)
+    return targets
+  } finally {
+    database.close()
+  }
+}
+
+const validateTargets = (targets: StockSyncTarget[]) => {
+  if (targets.length === 0) throw new Error("No stock sync targets found")
+  const names = new Set<string>()
+  for (const target of targets) {
+    if (
+      !/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(target.name) ||
+      target.name === STOCK_BATCH_TABLE ||
+      names.has(target.name) ||
+      (target.has_in_stock !== 0 && target.has_in_stock !== 1)
+    ) {
+      throw new Error("Invalid stock sync target")
+    }
+    names.add(target.name)
+  }
+}
+
+export const readStockSyncTargets = async (
+  filename: string,
+): Promise<StockSyncTarget[]> => {
+  const result = JSON.parse(await readFile(filename, "utf8"))
+  if (
+    !Array.isArray(result) ||
+    result.length !== 1 ||
+    result[0]?.success !== true ||
+    !Array.isArray(result[0]?.results)
+  ) {
+    throw new Error("Invalid D1 stock target discovery response")
+  }
+  const targets = stockSyncTargetsFromSchema(result[0].results)
+  for (const required of DEFAULT_STOCK_TARGETS) {
+    if (!targets.some((target) => target.name === required.name)) {
+      throw new Error(`Missing required stock table: ${required.name}`)
+    }
+  }
+  return targets
+}
+
+const integerLiteral = (value: number | null, label: string): string => {
+  if (value === null) return "NULL"
+  if (!Number.isSafeInteger(value)) {
+    throw new Error(`${label} must be a safe integer, received ${value}`)
+  }
+  return String(value)
+}
+
+const createStockUpdateStatement = (target: StockSyncTarget) => {
+  const inStock = "CASE WHEN stock_updates.stock > 0 THEN 1 ELSE 0 END"
+  const assignments = ["stock = stock_updates.stock"]
+  const changes = ["target.stock IS NOT stock_updates.stock"]
+  if (target.has_in_stock) {
+    assignments.push(`in_stock = ${inStock}`)
+    changes.push(`target.in_stock IS NOT (${inStock})`)
+  }
+
+  return `UPDATE "${target.name}" AS target
+SET ${assignments.join(", ")}
+FROM ${STOCK_BATCH_TABLE} AS stock_updates
+WHERE target.lcsc IN (SELECT lcsc FROM ${STOCK_BATCH_TABLE})
+  AND target.lcsc = stock_updates.lcsc
+  AND (${changes.join(" OR ")});`
+}
+
+export const createStockSyncBatchSql = (
+  rows: StockRow[],
+  targets: StockSyncTarget[] = DEFAULT_STOCK_TARGETS,
+  livePolicy = false,
+): string => {
+  if (rows.length === 0) {
+    throw new Error("Cannot create an empty stock sync batch")
+  }
+  validateTargets(targets)
+
+  const seen = new Set<number>()
+  for (const row of rows) {
+    if (
+      !Number.isSafeInteger(row.lcsc) ||
+      row.lcsc <= 0 ||
+      seen.has(row.lcsc) ||
+      (row.stock !== null &&
+        (!Number.isSafeInteger(row.stock) || row.stock < 0))
+    )
+      throw new Error("Invalid or duplicate stock row")
+    seen.add(row.lcsc)
+  }
+  const values = rows
+    .map(
+      ({ lcsc, stock }) =>
+        `(${integerLiteral(lcsc, "lcsc")},${integerLiteral(stock, "stock")})`,
+    )
+    .join(",")
+
+  // Share the values across all category updates to stay below D1 query and
+  // shell argument limits. D1 does not support temporary tables. Each command
+  // recreates/clears this staging table so retrying a partially applied batch
+  // is safe; production sync workflows are serialized.
+  return [
+    `CREATE TABLE IF NOT EXISTS ${STOCK_BATCH_TABLE} (lcsc INTEGER PRIMARY KEY, stock INTEGER);`,
+    `DELETE FROM ${STOCK_BATCH_TABLE};`,
+    `INSERT INTO ${STOCK_BATCH_TABLE}(lcsc, stock) VALUES ${values};`,
+    ...(livePolicy
+      ? [
+          liveObservationUpsertSql(rows),
+          `UPDATE ${STOCK_BATCH_TABLE} SET stock = ${effectiveStockSql(`${STOCK_BATCH_TABLE}.lcsc`, `${STOCK_BATCH_TABLE}.stock`)};`,
+        ]
+      : []),
+    ...targets.map(createStockUpdateStatement),
+    `DROP TABLE ${STOCK_BATCH_TABLE};`,
+  ].join("\n")
+}
+
+export const writeStockSyncBatches = async ({
+  sourcePath,
+  outputDirectory,
+  batchSize = 1000,
+  targets = DEFAULT_STOCK_TARGETS,
+  livePolicy = false,
+}: {
+  sourcePath: string
+  outputDirectory: string
+  batchSize?: number
+  targets?: StockSyncTarget[]
+  livePolicy?: boolean
+}) => {
+  if (!Number.isSafeInteger(batchSize) || batchSize <= 0) {
+    throw new Error("batchSize must be a positive integer")
+  }
+  validateTargets(targets)
+
+  const resolvedSourcePath = path.resolve(sourcePath)
+  const resolvedOutputDirectory = path.resolve(outputDirectory)
+  if (!existsSync(resolvedSourcePath)) {
+    throw new Error(`Source database does not exist: ${resolvedSourcePath}`)
+  }
+
+  await rm(resolvedOutputDirectory, { recursive: true, force: true })
+  await mkdir(resolvedOutputDirectory, { recursive: true })
+
+  const database = new Database(resolvedSourcePath, { readonly: true })
+  try {
+    const stats = database
+      .query<CatalogStats, []>(
+        `SELECT
+          COUNT(*) AS row_count,
+          COUNT(DISTINCT lcsc) AS unique_lcsc_count,
+          COUNT(*) FILTER (WHERE lcsc IS NULL) AS null_lcsc_count
+        FROM component_stock`,
+      )
+      .get()
+
+    if (!stats || stats.row_count === 0) {
+      throw new Error("component_stock is empty")
+    }
+    if (
+      stats.null_lcsc_count !== 0 ||
+      stats.unique_lcsc_count !== stats.row_count
+    ) {
+      throw new Error("component_stock.lcsc must be unique and non-null")
+    }
+
+    const columns = new Set(
+      database
+        .query<{ name: string }, []>("PRAGMA table_info(component_stock)")
+        .all()
+        .map((c) => c.name),
+    )
+    const observationColumns = ["stock_checked_at", "category", "subcategory"]
+      .map((column) => (columns.has(column) ? column : `NULL AS ${column}`))
+      .join(", ")
+    const rows = database
+      .query<StockRow, []>(
+        `SELECT lcsc, stock, ${observationColumns}
+         FROM component_stock
+         ORDER BY rowid`,
+      )
+      .iterate()
+
+    let batch: StockRow[] = []
+    let batchCount = 0
+    for (const row of rows) {
+      batch.push(row)
+      if (batch.length < batchSize) continue
+
+      batchCount += 1
+      const filename = `batch-${String(batchCount).padStart(6, "0")}.sql`
+      await Bun.write(
+        path.join(resolvedOutputDirectory, filename),
+        createStockSyncBatchSql(batch, targets, livePolicy),
+      )
+      batch = []
+    }
+
+    if (batch.length > 0) {
+      batchCount += 1
+      const filename = `batch-${String(batchCount).padStart(6, "0")}.sql`
+      await Bun.write(
+        path.join(resolvedOutputDirectory, filename),
+        createStockSyncBatchSql(batch, targets, livePolicy),
+      )
+    }
+
+    return { rowCount: stats.row_count, batchCount }
+  } finally {
+    database.close()
+  }
+}
+
+const main = async () => {
+  if (process.argv.includes("--print-targets-query")) {
+    console.log(STOCK_SYNC_TARGETS_QUERY)
+    return
+  }
+  const sourcePath =
+    process.env.SOURCE_DB_PATH?.trim() || path.resolve("db.sqlite3")
+  const outputDirectory =
+    process.env.STOCK_SYNC_OUTPUT_DIR?.trim() ||
+    path.resolve(".stock-sync-batches")
+  const batchSize = Number.parseInt(
+    process.env.STOCK_BATCH_ROWS?.trim() || "1000",
+    10,
+  )
+  const targetsPath = process.env.STOCK_SYNC_TARGETS_PATH?.trim()
+  const targets = targetsPath
+    ? await readStockSyncTargets(targetsPath)
+    : DEFAULT_STOCK_TARGETS
+
+  const result = await writeStockSyncBatches({
+    sourcePath,
+    outputDirectory,
+    batchSize,
+    targets,
+    livePolicy: true,
+  })
+  console.log(
+    `Generated ${result.batchCount} stock batches for ${result.rowCount} components across ${targets.length} tables.`,
+  )
+}
+
+if (import.meta.main) {
+  await main()
+}

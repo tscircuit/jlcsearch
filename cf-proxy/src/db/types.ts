@@ -78,6 +78,29 @@ export interface AnalogMultiplexer {
   supply_voltage_min: number | null
 }
 
+export interface BarrelJack {
+  attributes: string | null
+  connector_type: string | null
+  current_rating_a: number | null
+  description: string | null
+  in_stock: number | null
+  inside_diameter_mm: number | null
+  is_basic: number | null
+  is_preferred: number | null
+  lcsc: Generated<number | null>
+  mfr: string | null
+  mounting_style: string | null
+  num_pins: number | null
+  operating_temp_max: number | null
+  operating_temp_min: number | null
+  orientation: string | null
+  outside_diameter_mm: number | null
+  package: string | null
+  price1: number | null
+  stock: number | null
+  voltage_rating_v: number | null
+}
+
 export interface BatteryHolder {
   attributes: string | null
   battery_type: string | null
@@ -258,6 +281,46 @@ export interface Dac {
   price1: number | null
   resolution_bits: number | null
   settling_time_us: number | null
+  stock: number | null
+  supply_voltage_max: number | null
+  supply_voltage_min: number | null
+}
+
+export interface Dram {
+  attributes: string | null
+  clock_frequency_mhz: number | null
+  description: string | null
+  in_stock: number | null
+  is_basic: number | null
+  is_preferred: number | null
+  lcsc: Generated<number | null>
+  memory_size_mbit: number | null
+  memory_type: string | null
+  mfr: string | null
+  operating_temp_max: number | null
+  operating_temp_min: number | null
+  package: string | null
+  price1: number | null
+  stock: number | null
+  supply_voltage_max: number | null
+  supply_voltage_min: number | null
+}
+
+export interface Psram {
+  attributes: string | null
+  clock_frequency_mhz: number | null
+  description: string | null
+  in_stock: number | null
+  is_basic: number | null
+  is_preferred: number | null
+  lcsc: Generated<number | null>
+  memory_size_mbit: number | null
+  interface_type: string | null
+  mfr: string | null
+  operating_temp_max: number | null
+  operating_temp_min: number | null
+  package: string | null
+  price1: number | null
   stock: number | null
   supply_voltage_max: number | null
   supply_voltage_min: number | null
@@ -629,6 +692,28 @@ export interface LedWithIc {
   stock: number | null
 }
 
+export interface MicroUsbConnector {
+  attributes: string | null
+  connector_type: string | null
+  current_rating_a: number | null
+  description: string | null
+  gender: string | null
+  in_stock: number | null
+  is_basic: number | null
+  is_preferred: number | null
+  lcsc: Generated<number | null>
+  mfr: string | null
+  mounting_style: string | null
+  number_of_contacts: number | null
+  number_of_ports: number | null
+  operating_temp_max: number | null
+  operating_temp_min: number | null
+  package: string | null
+  price1: number | null
+  stock: number | null
+  usb_standard: string | null
+}
+
 export interface Microcontroller {
   adc_resolution_bits: number | null
   attributes: string | null
@@ -678,6 +763,40 @@ export interface Mosfet {
   operating_temp_min: number | null
   package: string | null
   power_dissipation: number | null
+  price1: number | null
+  stock: number | null
+}
+
+export interface LinuxCapableProcessor {
+  architecture: string | null
+  attributes: string | null
+  chip_family: string | null
+  cpu_core: string | null
+  description: string | null
+  in_stock: number | null
+  is_basic: number | null
+  is_preferred: number | null
+  lcsc: Generated<number | null>
+  manufacturer: string | null
+  mfr: string | null
+  package: string | null
+  price1: number | null
+  stock: number | null
+}
+
+export interface NpuChip {
+  attributes: string | null
+  chip_family: string | null
+  description: string | null
+  in_stock: number | null
+  is_basic: number | null
+  is_preferred: number | null
+  lcsc: Generated<number | null>
+  manufacturer: string | null
+  mfr: string | null
+  npu_name: string | null
+  npu_performance_tops: number | null
+  package: string | null
   price1: number | null
   stock: number | null
 }
@@ -743,6 +862,19 @@ export interface Potentiometer {
   pin_variant: string | null
   price1: number | null
   stock: number | null
+}
+
+export interface StepperMotorDriver {
+  lcsc: Generated<number | null>
+  mfr: string | null
+  description: string | null
+  package: string | null
+  stock: number | null
+  price1: number | null
+  in_stock: number | null
+  is_basic: number | null
+  is_preferred: number | null
+  attributes: string | null
 }
 
 export interface Relay {
@@ -988,10 +1120,45 @@ export interface WireToBoardConnector {
   stock: number | null
 }
 
+export interface FootprinterStrings {
+  copper_iou: number | null
+  footprinter_string: string | null
+  lcsc: number
+  updated_at: Generated<string>
+}
+
+export interface EthernetController {
+  attributes: string | null
+  description: string | null
+  in_stock: number | null
+  is_basic: number | null
+  is_preferred: number | null
+  lcsc: Generated<number | null>
+  mfr: string | null
+  package: string | null
+  price1: number | null
+  stock: number | null
+}
+
+export interface OpticalSensor {
+  attributes: string | null
+  description: string | null
+  in_stock: number | null
+  is_basic: number | null
+  is_preferred: number | null
+  lcsc: Generated<number | null>
+  mfr: string | null
+  package: string | null
+  sensor_type: string | null
+  price1: number | null
+  stock: number | null
+}
+
 export interface DB {
   accelerometer: Accelerometer
   adc: Adc
   analog_multiplexer: AnalogMultiplexer
+  barrel_jack: BarrelJack
   battery_holder: BatteryHolder
   ble_chip: BleChip
   ble_module: BleModule
@@ -1001,10 +1168,14 @@ export interface DB {
   capacitor: Capacitor
   component_catalog: ComponentCatalog
   dac: Dac
+  psram: Psram
+  dram: Dram
+  ethernet_controller: EthernetController
   diode: Diode
   dimm_connector: DimmConnector
   fpc_connector: FpcConnector
   fpga: Fpga
+  footprinter_strings: FootprinterStrings
   fuse: Fuse
   gas_sensor: GasSensor
   gyroscope: Gyroscope
@@ -1020,11 +1191,16 @@ export interface DB {
   led_segment_display: LedSegmentDisplay
   led_with_ic: LedWithIc
   microcontroller: Microcontroller
+  micro_usb_connector: MicroUsbConnector
   mosfet: Mosfet
+  npu_chip: NpuChip
+  linux_capable_processor: LinuxCapableProcessor
   oled_display: OledDisplay
   pcie_m2_connector: PcieM2Connector
   photo_diode: PhotoDiode
+  optical_sensor: OpticalSensor
   potentiometer: Potentiometer
+  stepper_motor_driver: StepperMotorDriver
   relay: Relay
   resistor: Resistor
   resistor_array: ResistorArray

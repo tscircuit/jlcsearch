@@ -1,0 +1,89 @@
+import { describe, expect, it } from "vitest"
+import { createSelf, createTestEnv } from "./test-env"
+
+describe("Ethernet Controllers route", () => {
+  const ethernetController = {
+    lcsc: 32843,
+    mfr: "W5500",
+    package: "LQFP-48",
+    stock: 100,
+    price1: 2.4,
+    in_stock: 1,
+    is_basic: 0,
+    is_preferred: 1,
+    attributes: "{}",
+  }
+  const optionFields = ["package"] as const
+  it("serves the filtered HTML page and JSON API through the worker", async () => {
+    const env = createTestEnv()
+    const self = createSelf(env)
+    const partsQueries: Array<{ sql: string; parameters: unknown[] }> = []
+    env.USE_D1 = "true"
+    env.DB = {
+      prepare: (sql: string) => ({
+        bind: (...parameters: unknown[]) => ({
+          all: async () => {
+            const optionField = optionFields.find((field) =>
+              sql.includes(`CAST("${field}" AS TEXT) AS value`),
+            )
+            if (sql.startsWith('SELECT * FROM "ethernet_controller"')) {
+              partsQueries.push({ sql, parameters })
+            }
+            return {
+              results: optionField
+                ? [{ value: String(ethernetController[optionField]) }]
+                : [ethernetController],
+              meta: { changes: 0 },
+            }
+          },
+        }),
+      }),
+    } as unknown as D1Database
+
+    try {
+      const response = await self.fetch(
+        "https://example.com/ethernet_controllers/list?package=LQFP-48&is_basic=false&is_preferred=true",
+      )
+
+      expect(response.status).toBe(200)
+      expect(response.headers.get("content-type")).toContain("text/html")
+      expect(response.headers.get("x-data-source")).toBe("d1")
+      const html = await response.text()
+      expect(html).toContain("<h2>Ethernet Controllers</h2>")
+      expect(html).toContain('name="package" value="LQFP-48"')
+      expect(html).toContain("W5500")
+      expect(html).toContain(
+        "/ethernet_controllers/list.json?package=LQFP-48&amp;is_basic=false&amp;is_preferred=true",
+      )
+
+      const jsonResponse = await self.fetch(
+        "https://example.com/ethernet_controllers/list.json?package=LQFP-48&is_basic=false&is_preferred=true",
+      )
+
+      expect(jsonResponse.status).toBe(200)
+      expect(jsonResponse.headers.get("content-type")).toContain(
+        "application/json",
+      )
+      expect(jsonResponse.headers.get("x-data-source")).toBe("d1")
+      expect(await jsonResponse.json()).toEqual({
+        ethernet_controllers: [
+          {
+            ...ethernetController,
+            in_stock: true,
+            is_basic: false,
+            is_preferred: true,
+          },
+        ],
+      })
+      expect(partsQueries).toHaveLength(2)
+      for (const query of partsQueries) {
+        expect(query.sql).toContain(
+          'WHERE "package" = ? AND "is_basic" = ? AND "is_preferred" = ?',
+        )
+        expect(query.parameters).toEqual(["LQFP-48", 0, 1])
+      }
+    } finally {
+      await self.flushWaitUntil()
+    }
+  })
+})

@@ -3,6 +3,7 @@ import { destroyDbClient, getDbClient } from "lib/db/get-db-client"
 import { accelerometerTableSpec } from "lib/db/derivedtables/accelerometer"
 import { adcTableSpec } from "lib/db/derivedtables/adc"
 import { analogMultiplexerTableSpec } from "lib/db/derivedtables/analog_multiplexer"
+import { barrelJackTableSpec } from "lib/db/derivedtables/barrel-jack"
 import { batteryHolderTableSpec } from "lib/db/derivedtables/battery_holder"
 import { bjtTransistorTableSpec } from "lib/db/derivedtables/bjt_transistor"
 import { bleChipTableSpec } from "lib/db/derivedtables/ble-chip"
@@ -12,6 +13,9 @@ import { buckBoostConverterTableSpec } from "lib/db/derivedtables/buck_boost_con
 import { capacitorTableSpec } from "lib/db/derivedtables/capacitor"
 import { dacTableSpec } from "lib/db/derivedtables/dac"
 import { diodeTableSpec } from "lib/db/derivedtables/diode"
+import { psramTableSpec } from "lib/db/derivedtables/psram"
+import { ethernetControllerTableSpec } from "lib/db/derivedtables/ethernet-controller"
+import { dramTableSpec } from "lib/db/derivedtables/dram"
 import {
   dimmConnectorTableSpec,
   sodimmConnectorTableSpec,
@@ -32,12 +36,17 @@ import { ledSegmentDisplayTableSpec } from "lib/db/derivedtables/led_segment_dis
 import { ledTableSpec } from "lib/db/derivedtables/led"
 import { ledWithICTableSpec } from "lib/db/derivedtables/led_with_ic"
 import { ldoTableSpec } from "lib/db/derivedtables/ldo"
+import { linuxCapableProcessorTableSpec } from "lib/db/derivedtables/linux-capable-processor"
 import { microcontrollerTableSpec } from "lib/db/derivedtables/microcontroller"
+import { microUsbConnectorTableSpec } from "lib/db/derivedtables/micro-usb-connector"
 import { mosfetTableSpec } from "lib/db/derivedtables/mosfet"
+import { npuChipTableSpec } from "lib/db/derivedtables/npu-chip"
 import { oledDisplayTableSpec } from "lib/db/derivedtables/oled_display"
 import { pcieM2ConnectorTableSpec } from "lib/db/derivedtables/pcie_m2_connector"
+import { opticalSensorTableSpec } from "lib/db/derivedtables/optical-sensor"
 import { photoDiodeTableSpec } from "lib/db/derivedtables/photo-diode"
 import { potentiometerTableSpec } from "lib/db/derivedtables/potentiometer"
+import { stepperMotorDriverTableSpec } from "lib/db/derivedtables/stepper-motor-driver"
 import { relayTableSpec } from "lib/db/derivedtables/relay"
 import { resistorArrayTableSpec } from "lib/db/derivedtables/resistor_array"
 import { resistorTableSpec } from "lib/db/derivedtables/resistor"
@@ -59,8 +68,12 @@ export const DERIVED_TABLES: DerivedTableSpec<any>[] = [
   hdmiPortTableSpec,
   adcTableSpec,
   analogMultiplexerTableSpec,
+  barrelJackTableSpec,
   ioExpanderTableSpec,
   diodeTableSpec,
+  dramTableSpec,
+  ethernetControllerTableSpec,
+  psramTableSpec,
   dacTableSpec,
   dimmConnectorTableSpec,
   sodimmConnectorTableSpec,
@@ -68,12 +81,15 @@ export const DERIVED_TABLES: DerivedTableSpec<any>[] = [
   bleModuleTableSpec,
   bleChipTableSpec,
   microcontrollerTableSpec,
+  linuxCapableProcessorTableSpec,
+  microUsbConnectorTableSpec,
   voltageRegulatorTableSpec,
   ldoTableSpec,
   ledDriverTableSpec,
   boostConverterTableSpec,
   buckBoostConverterTableSpec,
   mosfetTableSpec,
+  npuChipTableSpec,
   gyroscopeTableSpec,
   accelerometerTableSpec,
   gasSensorTableSpec,
@@ -87,10 +103,12 @@ export const DERIVED_TABLES: DerivedTableSpec<any>[] = [
   bjtTransistorTableSpec,
   switchTableSpec,
   relayTableSpec,
+  stepperMotorDriverTableSpec,
   fpcConnectorTableSpec,
   usbCConnectorTableSpec,
   pcieM2ConnectorTableSpec,
   photoDiodeTableSpec,
+  opticalSensorTableSpec,
   jstConnectorTableSpec,
   wireToBoardConnectorTableSpec,
   springClampTerminalBlockTableSpec,
@@ -204,6 +222,10 @@ const createTable = async (
         ? null
         : {
             ...c,
+            // Some category mappers coerce NULL stock to zero. Preserve an
+            // unknown source quantity rather than claiming it is out of stock.
+            stock: components[i].stock === null ? null : c.stock,
+            in_stock: components[i].stock === null ? false : c.in_stock,
             attributes: jsonParseOrNull(components[i].extra)?.attributes,
           },
     )

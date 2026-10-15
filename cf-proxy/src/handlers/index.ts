@@ -278,9 +278,22 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
   microcontroller: {
     filters: {
       package: { field: "package", type: "string" },
+      has_usb: { field: "has_usb", type: "boolean" },
       core: { field: "cpu_core", type: "string" },
       flash_min: { field: "flash_size_bytes", type: "number", operator: ">=" },
       ram_min: { field: "ram_size_bytes", type: "number", operator: ">=" },
+    },
+  },
+  micro_usb_connector: {
+    filters: {
+      package: { field: "package", type: "string" },
+      connector_type: { field: "connector_type", type: "string" },
+      usb_standard: { field: "usb_standard", type: "string" },
+      mounting_style: { field: "mounting_style", type: "string" },
+      number_of_contacts: { field: "number_of_contacts", type: "number" },
+      gender: { field: "gender", type: "string" },
+      is_basic: { field: "is_basic", type: "boolean" },
+      is_preferred: { field: "is_preferred", type: "boolean" },
     },
   },
   ldo: {
@@ -304,6 +317,17 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
     filters: {
       package: { field: "package", type: "string" },
       diode_type: { field: "diode_type", type: "string" },
+    },
+  },
+  optical_sensor: {
+    helpText:
+      "Optical sensing components, including motion/navigation sensors for mice and trackballs, image sensors, photodiodes, phototransistors, light, infrared, UV, proximity, and laser sensors. Select Optical Motion for navigation sensors. Out-of-stock catalog parts are included with stock 0.",
+    filters: {
+      package: { field: "package", type: "string" },
+      sensor_type: { field: "sensor_type", type: "string" },
+      in_stock: { field: "in_stock", type: "boolean" },
+      is_basic: { field: "is_basic", type: "boolean" },
+      is_preferred: { field: "is_preferred", type: "boolean" },
     },
   },
   photo_diode: {
@@ -445,6 +469,28 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
       num_channels: { field: "num_channels", type: "number" },
     },
   },
+  barrel_jack: {
+    filters: {
+      package: { field: "package", type: "string" },
+      mounting_style: { field: "mounting_style", type: "string" },
+      orientation: { field: "orientation", type: "string" },
+      inside_diameter_mm: { field: "inside_diameter_mm", type: "number" },
+      outside_diameter_mm: { field: "outside_diameter_mm", type: "number" },
+      current_rating_min: {
+        field: "current_rating_a",
+        type: "number",
+        operator: ">=",
+      },
+      voltage_rating_min: {
+        field: "voltage_rating_v",
+        type: "number",
+        operator: ">=",
+      },
+      num_pins: { field: "num_pins", type: "number" },
+      is_basic: { field: "is_basic", type: "boolean" },
+      is_preferred: { field: "is_preferred", type: "boolean" },
+    },
+  },
   battery_holder: {
     filters: {
       package: { field: "package", type: "string" },
@@ -506,6 +552,41 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
       num_channels: { field: "num_channels", type: "number" },
     },
   },
+  ethernet_controller: {
+    filters: {
+      package: { field: "package", type: "string" },
+      is_basic: { field: "is_basic", type: "boolean" },
+      is_preferred: { field: "is_preferred", type: "boolean" },
+    },
+  },
+  dram: {
+    filters: {
+      package: { field: "package", type: "string" },
+      memory_type: { field: "memory_type", type: "string" },
+      memory_size_mbit: { field: "memory_size_mbit", type: "number" },
+      clock_frequency_min_mhz: {
+        field: "clock_frequency_mhz",
+        type: "number",
+        operator: ">=",
+      },
+      is_basic: { field: "is_basic", type: "boolean" },
+      is_preferred: { field: "is_preferred", type: "boolean" },
+    },
+  },
+  psram: {
+    filters: {
+      package: { field: "package", type: "string" },
+      interface_type: { field: "interface_type", type: "string" },
+      memory_size_mbit: { field: "memory_size_mbit", type: "number" },
+      clock_frequency_min_mhz: {
+        field: "clock_frequency_mhz",
+        type: "number",
+        operator: ">=",
+      },
+      is_basic: { field: "is_basic", type: "boolean" },
+      is_preferred: { field: "is_preferred", type: "boolean" },
+    },
+  },
   fpc_connector: {
     filters: {
       pitch_mm: { field: "pitch_mm", type: "number" },
@@ -516,6 +597,33 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
     filters: {
       package: { field: "package", type: "string" },
       type: { field: "type", type: "string" },
+    },
+  },
+  npu_chip: {
+    filters: {
+      package: { field: "package", type: "string" },
+      manufacturer: { field: "manufacturer", type: "string" },
+      chip_family: { field: "chip_family", type: "string" },
+      npu_name: { field: "npu_name", type: "string" },
+      performance_min_tops: {
+        field: "npu_performance_tops",
+        type: "number",
+        operator: ">=",
+      },
+      is_basic: { field: "is_basic", type: "boolean" },
+      is_preferred: { field: "is_preferred", type: "boolean" },
+    },
+  },
+  linux_capable_processor: {
+    helpText: "Application processors with documented Linux support.",
+    filters: {
+      package: { field: "package", type: "string" },
+      manufacturer: { field: "manufacturer", type: "string" },
+      chip_family: { field: "chip_family", type: "string" },
+      architecture: { field: "architecture", type: "string" },
+      cpu_core: { field: "cpu_core", type: "string" },
+      is_basic: { field: "is_basic", type: "boolean" },
+      is_preferred: { field: "is_preferred", type: "boolean" },
     },
   },
   fuse: {
@@ -609,6 +717,13 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
       max_resistance: { field: "max_resistance", type: "number" },
     },
   },
+  stepper_motor_driver: {
+    filters: {
+      package: { field: "package", type: "string" },
+      is_basic: { field: "is_basic", type: "boolean" },
+      is_preferred: { field: "is_preferred", type: "boolean" },
+    },
+  },
   relay: {
     filters: {
       package: { field: "package", type: "string" },
@@ -694,16 +809,19 @@ export const ROUTE_TO_TABLE: Record<string, string> = {
   "/resistors/list": "resistor",
   "/capacitors/list": "capacitor",
   "/microcontrollers/list": "microcontroller",
+  "/micro_usb_connectors/list": "micro_usb_connector",
   "/ldos/list": "ldo",
   "/leds/list": "led",
   "/diodes/list": "diode",
   "/photo_diodes/list": "photo_diode",
+  "/optical_sensors/list": "optical_sensor",
   "/mosfets/list": "mosfet",
   "/switches/list": "switch",
   "/headers/list": "header",
   "/accelerometers/list": "accelerometer",
   "/adcs/list": "adc",
   "/analog_multiplexers/list": "analog_multiplexer",
+  "/barrel_jacks/list": "barrel_jack",
   "/battery_holders/list": "battery_holder",
   "/ble_chips/list": "ble_chip",
   "/ble_modules/list": "ble_module",
@@ -711,9 +829,14 @@ export const ROUTE_TO_TABLE: Record<string, string> = {
   "/boost_converters/list": "boost_converter",
   "/buck_boost_converters/list": "buck_boost_converter",
   "/dacs/list": "dac",
+  "/drams/list": "dram",
+  "/ethernet_controllers/list": "ethernet_controller",
+  "/psrams/list": "psram",
   "/dimm_connectors/list": "dimm_connector",
   "/fpc_connectors/list": "fpc_connector",
   "/fpgas/list": "fpga",
+  "/npu_chips/list": "npu_chip",
+  "/linux_capable_processors/list": "linux_capable_processor",
   "/fuses/list": "fuse",
   "/gas_sensors/list": "gas_sensor",
   "/hdmi_ports/list": "hdmi_port",
@@ -729,8 +852,10 @@ export const ROUTE_TO_TABLE: Record<string, string> = {
   "/pcie_m2_connectors/list": "pcie_m2_connector",
   "/potentiometers/list": "potentiometer",
   "/relays/list": "relay",
+  "/stepper_motor_drivers/list": "stepper_motor_driver",
   "/resistor_arrays/list": "resistor_array",
   "/sodimm_connectors/list": "sodimm_connector",
+  "/spring_clamp_connectors/list": "spring_clamp_terminal_block",
   "/spring_clamp_terminal_blocks/list": "spring_clamp_terminal_block",
   "/usb_c_connectors/list": "usb_c_connector",
   "/voltage_regulators/list": "voltage_regulator",
@@ -743,16 +868,19 @@ export const TABLE_RESPONSE_KEY: Record<string, string> = {
   resistor: "resistors",
   capacitor: "capacitors",
   microcontroller: "microcontrollers",
+  micro_usb_connector: "micro_usb_connectors",
   ldo: "ldos",
   led: "leds",
   diode: "diodes",
   photo_diode: "photo_diodes",
+  optical_sensor: "optical_sensors",
   mosfet: "mosfets",
   switch: "switches",
   header: "headers",
   accelerometer: "accelerometers",
   adc: "adcs",
   analog_multiplexer: "multiplexers",
+  barrel_jack: "barrel_jacks",
   battery_holder: "battery_holders",
   ble_chip: "ble_chips",
   ble_module: "ble_modules",
@@ -760,9 +888,14 @@ export const TABLE_RESPONSE_KEY: Record<string, string> = {
   boost_converter: "boost_converters",
   buck_boost_converter: "buck_boost_converters",
   dac: "dacs",
+  dram: "drams",
+  ethernet_controller: "ethernet_controllers",
+  psram: "psrams",
   dimm_connector: "dimm_connectors",
   fpc_connector: "fpc_connectors",
   fpga: "fpgas",
+  npu_chip: "npu_chips",
+  linux_capable_processor: "linux_capable_processors",
   fuse: "fuses",
   gas_sensor: "gas_sensors",
   hdmi_port: "hdmi_ports",
@@ -778,6 +911,7 @@ export const TABLE_RESPONSE_KEY: Record<string, string> = {
   pcie_m2_connector: "pcie_m2_connectors",
   potentiometer: "potentiometers",
   relay: "relays",
+  stepper_motor_driver: "stepper_motor_drivers",
   resistor_array: "resistor_arrays",
   sodimm_connector: "sodimm_connectors",
   spring_clamp_terminal_block: "spring_clamp_terminal_blocks",

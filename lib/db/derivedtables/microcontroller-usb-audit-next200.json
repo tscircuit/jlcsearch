@@ -1,0 +1,1802 @@
+[
+  {
+    "rank": 101,
+    "lcsc": 124713,
+    "mfr": "GD32F303VCT6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.gd32mcu.com/data/documents/userManual/GD32F30x_User_Manual_Rev2.9.pdf",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 102,
+    "lcsc": 132230,
+    "mfr": "ATMEGA328PB-AU",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://ww1.microchip.com/downloads/aemDocuments/documents/MCU08/ProductDocuments/DataSheets/40001906C.pdf",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 103,
+    "lcsc": 221386,
+    "mfr": "SC92F7251M16U",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.socmcu.com/en/product_show.php?id=83",
+    "evidence": "SinOne peripheral inventory includes UART, not USB."
+  },
+  {
+    "rank": 104,
+    "lcsc": 382509,
+    "mfr": "N76E003AT20-T",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.nuvoton.com/products/microcontrollers/8bit-8051-mcus/low-pin-count-8051-series/n76e003/",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 105,
+    "lcsc": 2901876,
+    "mfr": "STC8G1K08-38I-SOP16",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.stcmicro.com/stc/stc8g.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 106,
+    "lcsc": 124721,
+    "mfr": "STM32L151RCT6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32l151rc.html",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 107,
+    "lcsc": 521757,
+    "mfr": "STC8G1K08-38I-TSSOP20",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.stcmicro.com/stc/stc8g.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 108,
+    "lcsc": 3013779,
+    "mfr": "GD32F303CBT6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.gd32mcu.com/data/documents/userManual/GD32F30x_User_Manual_Rev2.9.pdf",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 109,
+    "lcsc": 60420,
+    "mfr": "STM32F411CEU6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32f411re.html",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 110,
+    "lcsc": 724044,
+    "mfr": "STM32G030K8T6TR",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32g030k6.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 111,
+    "lcsc": 3019113,
+    "mfr": "CW32F030C8T6",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://m.whxy.com/uploads/files/20251229/CW32F030_DataSheet_EN_V1.0.pdf",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 112,
+    "lcsc": 503083,
+    "mfr": "STM32L011F4P6TR",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32l011f4.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 113,
+    "lcsc": 2874943,
+    "mfr": "STC8H3K64S4-45I-LQFP48",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.stcmicro.com/datasheet/STC8H3K64S4_Features.pdf",
+    "evidence": "Software USB ISP download is supported; no hardware USB data controller."
+  },
+  {
+    "rank": 114,
+    "lcsc": 77789,
+    "mfr": "GD32F103VCT6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.gigadevice.com/product/mcu/main-stream-mcus/gd32f10x-series/gd32f103",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 115,
+    "lcsc": 94046,
+    "mfr": "STM32F302CBT6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32f302c8.html",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 116,
+    "lcsc": 529347,
+    "mfr": "STM32G071GBU6",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32g071cb.html",
+    "evidence": "USB Type-C Power Delivery only; no USB data controller."
+  },
+  {
+    "rank": 117,
+    "lcsc": 8345,
+    "mfr": "STM32F105RCT6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32f107vc.html",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 118,
+    "lcsc": 183214,
+    "mfr": "STM32F303RET6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32f303rb.html",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 119,
+    "lcsc": 3018714,
+    "mfr": "PY32F003F16U6TR",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.puyasemi.com/download_path/%E7%94%A8%E6%88%B7%E6%89%8B%E5%86%8C/MCU%20%E5%BE%AE%E5%A4%84%E7%90%86%E5%99%A8/PY32F003_Reference_Manual_V1.5.pdf",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 120,
+    "lcsc": 169262,
+    "mfr": "STM8S005C6T6TR",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm8s005k6.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 121,
+    "lcsc": 529344,
+    "mfr": "STM32G071EBY6TR",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32g071cb.html",
+    "evidence": "USB Type-C Power Delivery only; no USB data controller."
+  },
+  {
+    "rank": 122,
+    "lcsc": 784689,
+    "mfr": "HC32F190FCUA-QFN32TR",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.xhsc.com.cn/product/1275.html",
+    "evidence": "Communication inventory: four UART, two SPI, two I2C; no USB."
+  },
+  {
+    "rank": 123,
+    "lcsc": 781542,
+    "mfr": "APM32F030C8T6",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://global.geehy.com/product/fifth/APM32F030",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 124,
+    "lcsc": 8707,
+    "mfr": "STC89C52RC-40I-LQFP44",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.stcmicro.com/stc/stc89c51rc.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 125,
+    "lcsc": 1511928,
+    "mfr": "F1C100S",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.allwinnertech.com/uploads/pdf/20181218155101eb.pdf",
+    "evidence": "USB OTG controller in manufacturer datasheet."
+  },
+  {
+    "rank": 126,
+    "lcsc": 2901854,
+    "mfr": "STC8A8K64D4-45I-LQFP64",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.stcmicro.com/stc/stc8a8k64d4.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 127,
+    "lcsc": 95578,
+    "mfr": "STM32L151C8T6A",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32l151rc.html",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 128,
+    "lcsc": 915674,
+    "mfr": "STC8H1K08-36I-QFN20",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.stcmicro.com/cn/stc/stc8h.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 129,
+    "lcsc": 2761416,
+    "mfr": "APM32F051C8T6",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://global.geehy.com/product/fifth/APM32F051",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 130,
+    "lcsc": 3018717,
+    "mfr": "PY32F030F28U6TR",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.puyasemi.com/en/py32f030/2624.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 131,
+    "lcsc": 8294,
+    "mfr": "STM32F103VFT6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32f103ze.html",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 132,
+    "lcsc": 128572,
+    "mfr": "PIC10F202T-I/OT",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://ww1.microchip.com/downloads/aemDocuments/documents/OTH/ProductDocuments/DataSheets/40001239F.pdf",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 133,
+    "lcsc": 3446133,
+    "mfr": "APM32F051K8U6",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://global.geehy.com/product/fifth/APM32F051",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 134,
+    "lcsc": 724237,
+    "mfr": "STM32G071K8U6",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32g071cb.html",
+    "evidence": "USB Type-C Power Delivery only; no USB data controller."
+  },
+  {
+    "rank": 135,
+    "lcsc": 29985,
+    "mfr": "STC15F2K60S2-28I-LQFP44",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.stcmicro.com/cn/stc/stc15f2k60s2.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 136,
+    "lcsc": 493491,
+    "mfr": "HC32L110C4UA-SFN20TR",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.xhsc.com.cn/product/1244.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 137,
+    "lcsc": 724076,
+    "mfr": "STM32G071CBU3",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32g071cb.html",
+    "evidence": "USB Type-C Power Delivery only; no USB data controller."
+  },
+  {
+    "rank": 138,
+    "lcsc": 129291,
+    "mfr": "GD32F330C8T6",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.gigadevice.com.cn/product/mcu/entry-level-mcus/gd32f3x0-series/gd32f330",
+    "evidence": "Product selector USB column: 0."
+  },
+  {
+    "rank": 139,
+    "lcsc": 2056847,
+    "mfr": "LPC804M101JHI33Y",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.nxp.com/docs/en/nxp/data-sheets/LPC804_DS.pdf",
+    "evidence": "Serial peripherals: USART, SPI, I2C; no USB controller."
+  },
+  {
+    "rank": 140,
+    "lcsc": 2969777,
+    "mfr": "STM32F103C8T6TR",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32f103ze.html",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 141,
+    "lcsc": 2901855,
+    "mfr": "STC8A8K64D4-45I-LQFP48",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.stcmicro.com/stc/stc8a8k64d4.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 142,
+    "lcsc": 521758,
+    "mfr": "STC8G1K08-38I-QFN20",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.stcmicro.com/stc/stc8g.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 143,
+    "lcsc": 8313,
+    "mfr": "STM32F103VCT6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32f103ze.html",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 144,
+    "lcsc": 5128437,
+    "mfr": "PY32F003W16S6TU",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.puyasemi.com/download_path/%E7%94%A8%E6%88%B7%E6%89%8B%E5%86%8C/MCU%20%E5%BE%AE%E5%A4%84%E7%90%86%E5%99%A8/PY32F003_Reference_Manual_V1.5.pdf",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 145,
+    "lcsc": 20068,
+    "mfr": "STC15W204S-35I-SOP16",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.stcmicro.com/stc/stc15w204s.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 146,
+    "lcsc": 8350,
+    "mfr": "STM32F105VCT6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32f107vc.html",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 147,
+    "lcsc": 1121900,
+    "mfr": "STM32F103C8T7",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32f103ze.html",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 148,
+    "lcsc": 724039,
+    "mfr": "STM32G030C8T6TR",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32g030k6.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 149,
+    "lcsc": 122930,
+    "mfr": "S9KEAZ64AMLH",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.nxp.com/products/KEA",
+    "evidence": "KEA communication inventory: UART, SPI, I2C and optional CAN; no USB."
+  },
+  {
+    "rank": 150,
+    "lcsc": 8727,
+    "mfr": "ATMEGA88PA-AU",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://ww1.microchip.com/downloads/aemDocuments/documents/OTH/ProductDocuments/DataSheets/Atmel-9223-Automotive-Microcontrollers-ATmega48PA-ATmega88PA-ATmega168PA_Datasheet.pdf",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 151,
+    "lcsc": 2885643,
+    "mfr": "GD32C103CBT6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.gigadevice.com.cn/product/mcu/main-stream-mcus/gd32c1x3-series/gd32c103",
+    "evidence": "Product selector USB column: FS/OTG supported."
+  },
+  {
+    "rank": 152,
+    "lcsc": 130280,
+    "mfr": "STM8S105C6T6TR",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm8s105k4.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 153,
+    "lcsc": 48242,
+    "mfr": "PIC16F1827T-I/SS",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://ww1.microchip.com/downloads/en/devicedoc/41391d.pdf",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 154,
+    "lcsc": 5122782,
+    "mfr": "CW32F003F4U7",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.whxy.com/uploads/files/20240326/CW32F003_UserManual_EN_V1.0.pdf",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 155,
+    "lcsc": 3220543,
+    "mfr": "R5F10BBGKNA#G5",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.renesas.com/en/products/rl78f13/part-details/r5f10bbgkna-g5",
+    "evidence": "Manufacturer parameters: USB ports 0."
+  },
+  {
+    "rank": 156,
+    "lcsc": 917206,
+    "mfr": "LPC1765FBD100K",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.nxp.com/docs/en/data-sheet/LPC1769_68_67_66_65_64_63.pdf",
+    "evidence": "USB device/host/OTG listed for LPC1765 and LPC1768."
+  },
+  {
+    "rank": 157,
+    "lcsc": 90795,
+    "mfr": "STM32F302C8T6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32f302c8.html",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 158,
+    "lcsc": 6917294,
+    "mfr": "LKS32MC037EM6S8B",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.lksmcu.com/static/upload/file/20230113/LKS32MC03x_Datasheet_EN_v2.57.pdf",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 159,
+    "lcsc": 2687449,
+    "mfr": "V3s",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.allwinnertech.com/index.php?a=index&c=product&id=38",
+    "evidence": "USB OTG interface in Allwinner V3s specifications."
+  },
+  {
+    "rank": 160,
+    "lcsc": 8696,
+    "mfr": "STC12C5A60S2-35I-LQFP44",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.stcmicro.com/stc/stc12c5a32s2.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 161,
+    "lcsc": 81550,
+    "mfr": "GD32F103ZET6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.gigadevice.com/product/mcu/main-stream-mcus/gd32f10x-series/gd32f103",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 162,
+    "lcsc": 967938,
+    "mfr": "CH552E",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.wch-ic.com/downloads/CH552DS1_PDF.html",
+    "evidence": "CH552 E8051 MCU has low/full-speed USB device controller."
+  },
+  {
+    "rank": 163,
+    "lcsc": 124291,
+    "mfr": "STM8S001J3M3TR",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm8s001j3.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 164,
+    "lcsc": 77994,
+    "mfr": "GD32F103C8T6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.gigadevice.com/product/mcu/main-stream-mcus/gd32f10x-series/gd32f103",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 165,
+    "lcsc": 116978,
+    "mfr": "STM32F401RET6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32f401rc.html",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 166,
+    "lcsc": 2053303,
+    "mfr": "STM32F031G6U6TR",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32f031g6.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 167,
+    "lcsc": 784701,
+    "mfr": "HC32F170FAUA-QFN32TR",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://datasheet.lcsc.com/lcsc/2105241445_XHSC-HC32F170LATA-LQ52_C2833097.pdf",
+    "evidence": "Manufacturer datasheet covers FAUA-QFN32TR; four UART, two SPI, two I2C; no USB."
+  },
+  {
+    "rank": 168,
+    "lcsc": 194372,
+    "mfr": "GD32F350G8U6TR",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.gigadevice.com.cn/product/mcu/entry-level-mcus/gd32f3x0-series/gd32f350",
+    "evidence": "Product selector USB column: FS/OTG supported."
+  },
+  {
+    "rank": 169,
+    "lcsc": 75389,
+    "mfr": "STM32F429IIT6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32f429ii.html",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 170,
+    "lcsc": 843788,
+    "mfr": "LPC1768FBD100K",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.nxp.com/docs/en/data-sheet/LPC1769_68_67_66_65_64_63.pdf",
+    "evidence": "USB device/host/OTG listed for LPC1765 and LPC1768."
+  },
+  {
+    "rank": 171,
+    "lcsc": 380536,
+    "mfr": "GD32E230K8U6",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.gigadevice.com/product/mcu/entry-level-mcus/gd32e23x-series/gd32e230",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 172,
+    "lcsc": 65700,
+    "mfr": "STM8S005C6T6",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm8s005k6.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 173,
+    "lcsc": 2053986,
+    "mfr": "STM8S207C8T6TR",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm8s207c6.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 174,
+    "lcsc": 915660,
+    "mfr": "APM32F072CBT6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://global.geehy.com/product/fifth/APM32F072",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 175,
+    "lcsc": 18719,
+    "mfr": "STM8L151K4T6",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm8l151k6.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 176,
+    "lcsc": 86951,
+    "mfr": "STM32F070F6P6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32f070f6.html",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 177,
+    "lcsc": 92468,
+    "mfr": "STM32L431RCT6",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32l431cc.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 178,
+    "lcsc": 81451,
+    "mfr": "STM32F051K6U6",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32f051c8.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 179,
+    "lcsc": 2053278,
+    "mfr": "MSP430FR5720IRGER",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.ti.com/product/MSP430FR5720",
+    "evidence": "TI product parameters: USB No."
+  },
+  {
+    "rank": 180,
+    "lcsc": 2827736,
+    "mfr": "STM32F051C8T6TR",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32f051c8.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 181,
+    "lcsc": 2055860,
+    "mfr": "TMS320F28035PNTR",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.ti.com/product/TMS320F28035",
+    "evidence": "TI product parameters: USB No."
+  },
+  {
+    "rank": 182,
+    "lcsc": 521608,
+    "mfr": "STM32G474RET6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32g474re.html",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 183,
+    "lcsc": 3018720,
+    "mfr": "PY32F030K28T6",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.puyasemi.com/en/py32f030/2624.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 184,
+    "lcsc": 256869,
+    "mfr": "STM32L151RET6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32l151rc.html",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 185,
+    "lcsc": 51330,
+    "mfr": "STM8L151C6T6",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm8l151k6.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 186,
+    "lcsc": 61940,
+    "mfr": "STC15W408AS-35I-TSSOP20",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.stcmicro.com/stc/stc15w408as.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 187,
+    "lcsc": 2687447,
+    "mfr": "AT32F421C8T7",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.arterytek.com/cn/product/AT32F421.jsp",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 188,
+    "lcsc": 66572,
+    "mfr": "STM8S105K4U6A",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm8s105k4.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 189,
+    "lcsc": 9730,
+    "mfr": "PIC12F675-I/SN",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.microchip.com/en-us/product/PIC12F675",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 190,
+    "lcsc": 914618,
+    "mfr": "STC8H1K28-36I-LQFP32",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.stcmicro.com/cn/stc/stc8h.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 191,
+    "lcsc": 526180,
+    "mfr": "APM32F103RCT6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://global.geehy.com/product/fifth/APM32F103",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 192,
+    "lcsc": 724053,
+    "mfr": "STM32G031G6U6TR",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32g031f8.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 193,
+    "lcsc": 2922795,
+    "mfr": "GD32E230F6P6TR",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.gigadevice.com/product/mcu/entry-level-mcus/gd32e23x-series/gd32e230",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 194,
+    "lcsc": 5110325,
+    "mfr": "GD32F310K8U6",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.gigadevice.com.cn/product/mcu/entry-level-mcus/gd32f3x0-series/gd32f310",
+    "evidence": "Product selector USB column: 0."
+  },
+  {
+    "rank": 195,
+    "lcsc": 19671,
+    "mfr": "STM32F103T8U6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32f103ze.html",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 196,
+    "lcsc": 16121,
+    "mfr": "CY7C68013A-128AXC",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.infineon.com/dgdl/Infineon-CY7C68013A_CY7C68014A_CY7C68015A_CY7C68016A_EZ-USB_FX2LP_USB_Microcontroller_High-Speed_USB_Peripheral_Controller-DataSheet-v31_00-EN.pdf?fileId=8ac78c8c7d0d8da4017d0ec9f7974252",
+    "evidence": "EZ-USB FX2LP high-speed USB peripheral controller."
+  },
+  {
+    "rank": 197,
+    "lcsc": 79207,
+    "mfr": "STM32L053R8T6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32l053r8.html",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 198,
+    "lcsc": 8290,
+    "mfr": "STM32F101ZGT6",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32f101zg.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 199,
+    "lcsc": 915679,
+    "mfr": "STC8H1K24-36I-QFN32",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.stcmicro.com/cn/stc/stc8h.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 200,
+    "lcsc": 8308,
+    "mfr": "STM32F103VET6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32f103ze.html",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 201,
+    "lcsc": 5185726,
+    "mfr": "CKS32F030F4P6TR",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://atta.szlcsc.com/upload/public/pdf/source/20240222/F717710B84C887B83E967E0767721EC7.pdf",
+    "evidence": "CKS manufacturer datasheet: USART, SPI, I2C; no USB controller."
+  },
+  {
+    "rank": 202,
+    "lcsc": 8304,
+    "mfr": "STM32F103CBT6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32f103ze.html",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 203,
+    "lcsc": 660081,
+    "mfr": "ADUC7023BCP6Z62IRL",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.analog.com/media/en/technical-documentation/data-sheets/aduc7023.pdf",
+    "evidence": "SPI and I2C interfaces; USB-to-I2C programming adapter is external."
+  },
+  {
+    "rank": 204,
+    "lcsc": 507089,
+    "mfr": "PIC16F1829T-I/SS",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.microchip.com/en-us/product/pic16f1829",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 205,
+    "lcsc": 5209379,
+    "mfr": "LKS32MC033H6P8",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.lksmcu.com/static/upload/file/20230113/LKS32MC03x_Datasheet_EN_v2.57.pdf",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 206,
+    "lcsc": 915661,
+    "mfr": "APM32F030K6T6",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://global.geehy.com/product/fifth/APM32F030",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 207,
+    "lcsc": 363195,
+    "mfr": "SC92F8003X20U",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.socmcu.com/upfile/SC92F8003v0.1en.pdf",
+    "evidence": "SinOne datasheet lists UART and SSI (SPI/TWI); no USB."
+  },
+  {
+    "rank": 208,
+    "lcsc": 84216,
+    "mfr": "GD32F150G8U6TR",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.gigadevice.com.cn/product/mcu/entry-level-mcus/gd32f1x0-series/gd32f150",
+    "evidence": "Product selector USB column: FS/OTG supported."
+  },
+  {
+    "rank": 209,
+    "lcsc": 81002,
+    "mfr": "STM32F042F4P6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32f042f6.html",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 210,
+    "lcsc": 626881,
+    "mfr": "PIC16F676T-I/SL",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://ww1.microchip.com/downloads/en/devicedoc/40039f.pdf",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 211,
+    "lcsc": 36869,
+    "mfr": "STM32F407ZET6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32f407zg.html",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 212,
+    "lcsc": 83547,
+    "mfr": "HT66F004",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.holtek.com/webapi/116711/HT66F002_0025_003_004v230.pdf",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 213,
+    "lcsc": 2052951,
+    "mfr": "ATTINY202-SSNR",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://ww1.microchip.com/downloads/aemDocuments/documents/MCU08/ProductDocuments/DataSheets/ATtiny202-204-402-404-406-DataSheet-DS40002318A.pdf",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 214,
+    "lcsc": 5456188,
+    "mfr": "STM32C011F4U6TR",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32c011f4.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 215,
+    "lcsc": 2056713,
+    "mfr": "S9S08SG16E1MTGR",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.nxp.com/docs/en/data-sheet/MC9S08SG32.pdf",
+    "evidence": "MC9S08SG16 feature inventory: SCI, SPI, I2C; no USB."
+  },
+  {
+    "rank": 216,
+    "lcsc": 111292,
+    "mfr": "CH552G",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.wch-ic.com/downloads/CH552DS1_PDF.html",
+    "evidence": "CH552 E8051 MCU has low/full-speed USB device controller."
+  },
+  {
+    "rank": 217,
+    "lcsc": 528418,
+    "mfr": "AT32F413CBT7",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.arterytek.com/cn/product/AT32F413.jsp",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 218,
+    "lcsc": 80488,
+    "mfr": "STM32F072C8T6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32f072cb.html",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 219,
+    "lcsc": 880040,
+    "mfr": "GD32F303RGT6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.gd32mcu.com/data/documents/userManual/GD32F30x_User_Manual_Rev2.9.pdf",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 220,
+    "lcsc": 72339,
+    "mfr": "STM32F051K8U6",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32f051c8.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 221,
+    "lcsc": 2052908,
+    "mfr": "STM32L011E4Y6TR",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32l011f4.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 222,
+    "lcsc": 2688743,
+    "mfr": "GD32F330G8U6TR",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.gigadevice.com.cn/product/mcu/entry-level-mcus/gd32f3x0-series/gd32f330",
+    "evidence": "Product selector USB column: 0."
+  },
+  {
+    "rank": 223,
+    "lcsc": 2054095,
+    "mfr": "STM32F411CEU6TR",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32f411re.html",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 224,
+    "lcsc": 124719,
+    "mfr": "STM32L471RGT6",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32l471rg.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 225,
+    "lcsc": 94540,
+    "mfr": "GD32F130F6P6TR",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.gigadevice.com.cn/product/mcu/entry-level-mcus/gd32f1x0-series/gd32f130",
+    "evidence": "Product selector USB column: 0."
+  },
+  {
+    "rank": 226,
+    "lcsc": 629746,
+    "mfr": "PIC16F876AT-I/SO",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://ww1.microchip.com/downloads/en/devicedoc/39582b.pdf",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 227,
+    "lcsc": 89374,
+    "mfr": "STM32F412RET6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32f412re.html",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 228,
+    "lcsc": 148042,
+    "mfr": "PIC12F1572-I/SN",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://ww1.microchip.com/downloads/en/DeviceDoc/40001723D.pdf",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 229,
+    "lcsc": 86812,
+    "mfr": "LPC824M201JDH20J",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.nxp.com/docs/en/data-sheet/LPC82X.pdf",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 230,
+    "lcsc": 80491,
+    "mfr": "GD32F105RCT6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.gigadevice.com.cn/product/mcu/main-stream-mcus/gd32f10x-series/gd32f105",
+    "evidence": "Product selector USB column: FS/OTG supported."
+  },
+  {
+    "rank": 231,
+    "lcsc": 60039,
+    "mfr": "PIC12F1822-I/SN",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://ww1.microchip.com/downloads/en/DeviceDoc/41406B.pdf",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 232,
+    "lcsc": 54328,
+    "mfr": "STM32F429IGT6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32f429ii.html",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 233,
+    "lcsc": 2640145,
+    "mfr": "NUC029FAE",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.nuvoton.com/export/resource-files/DS_NUC029xAN_xAE_Series_EN_Rev1.11.pdf",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 234,
+    "lcsc": 783035,
+    "mfr": "S9KEAZN8AMTGR",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.nxp.com/products/KEA",
+    "evidence": "KEA communication inventory: UART, SPI, I2C and optional CAN; no USB."
+  },
+  {
+    "rank": 235,
+    "lcsc": 2054944,
+    "mfr": "STM32F051K8T6TR",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32f051c8.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 236,
+    "lcsc": 2688744,
+    "mfr": "GD32F350K8U6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.gigadevice.com.cn/product/mcu/entry-level-mcus/gd32f3x0-series/gd32f350",
+    "evidence": "Product selector USB column: FS/OTG supported."
+  },
+  {
+    "rank": 237,
+    "lcsc": 83181,
+    "mfr": "STM32L476VGT6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32l4x6.html",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 238,
+    "lcsc": 2904271,
+    "mfr": "HC32L110C6PA-TSSOP20TR",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.xhsc.com.cn/product/1244.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 239,
+    "lcsc": 724080,
+    "mfr": "STM32G071G8U6",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32g071cb.html",
+    "evidence": "USB Type-C Power Delivery only; no USB data controller."
+  },
+  {
+    "rank": 240,
+    "lcsc": 966903,
+    "mfr": "ATSAMD21G18A-MU",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.microchip.com/content/dam/mchp/documents/OTH/ProductDocuments/DataSheets/40001882A.pdf",
+    "evidence": "SAM D21G18A has full-speed USB device/host."
+  },
+  {
+    "rank": 241,
+    "lcsc": 99450,
+    "mfr": "STM32F334C8T6",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/resource/en/datasheet/stm32f334c8.pdf",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 242,
+    "lcsc": 627438,
+    "mfr": "MCP6042T-I/MS",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://ww1.microchip.com/downloads/en/DeviceDoc/20001669e.pdf",
+    "evidence": "Dual operational amplifier, not a microcontroller; no USB. Category anomaly retained."
+  },
+  {
+    "rank": 243,
+    "lcsc": 8254,
+    "mfr": "STM8S105K6T6C",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm8s105k4.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 244,
+    "lcsc": 2053369,
+    "mfr": "STM32F071CBT6TR",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32f071cb.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 245,
+    "lcsc": 2053338,
+    "mfr": "STM32F091CCT6TR",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32f091cc.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 246,
+    "lcsc": 915670,
+    "mfr": "STC8G2K32S4-36I-LQFP32",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.stcmicro.com/stc/stc8g.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 247,
+    "lcsc": 2052845,
+    "mfr": "MSP430FR2111IPW16R",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.ti.com/product/MSP430FR2111",
+    "evidence": "TI product parameters: USB No."
+  },
+  {
+    "rank": 248,
+    "lcsc": 2685746,
+    "mfr": "M031TD2AE",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.nuvoton.com/export/resource-files/DS_M031_M032_Series_EN_Rev2.01.pdf",
+    "evidence": "M031TD2AE selection/pin tables have no USB; USB is on M032 variants."
+  },
+  {
+    "rank": 249,
+    "lcsc": 94770,
+    "mfr": "STM32L051K8U6",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32l051c8.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 250,
+    "lcsc": 2054997,
+    "mfr": "STM32F302CBT6TR",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32f302c8.html",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 251,
+    "lcsc": 526181,
+    "mfr": "APM32F103RET6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://global.geehy.com/product/fifth/APM32F103",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 252,
+    "lcsc": 2759986,
+    "mfr": "GD32F307VCT6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.gigadevice.com.cn/product/mcu/main-stream-mcus/gd32f30x-series/gd32f307",
+    "evidence": "Product selector USB column: FS/OTG supported."
+  },
+  {
+    "rank": 253,
+    "lcsc": 8252,
+    "mfr": "STM8L152C6T6",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm8l152c6.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 254,
+    "lcsc": 78269,
+    "mfr": "GD32F107VCT6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.gigadevice.com.cn/product/mcu/main-stream-mcus/gd32f10x-series/gd32f107",
+    "evidence": "Product selector USB column: FS/OTG supported."
+  },
+  {
+    "rank": 255,
+    "lcsc": 2870559,
+    "mfr": "MSP430FR5964IPNR",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.ti.com/lit/ds/symlink/msp430fr5964.pdf",
+    "evidence": "Serial peripheral inventory is eUSCI (UART, SPI, I2C), without USB."
+  },
+  {
+    "rank": 256,
+    "lcsc": 2053235,
+    "mfr": "ATTINY402-SSFR",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://ww1.microchip.com/downloads/aemDocuments/documents/MCU08/ProductDocuments/DataSheets/ATtiny202-204-402-404-406-DataSheet-DS40002318A.pdf",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 257,
+    "lcsc": 5158918,
+    "mfr": "MSP430FR6872IPMR",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.ti.com/product/MSP430FR6872",
+    "evidence": "TI product parameters: USB No."
+  },
+  {
+    "rank": 258,
+    "lcsc": 49721,
+    "mfr": "STM8L151G6U6",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm8l151k6.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 259,
+    "lcsc": 88376,
+    "mfr": "PIC16F1933-I/SS",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://ww1.microchip.com/downloads/en/DeviceDoc/41355B.pdf",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 260,
+    "lcsc": 784679,
+    "mfr": "HC32L196KCTA-LQ64",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.huazhoucn.com/downloads/xshc/DS_HC32L19x%E7%B3%BB%E5%88%97%E6%95%B0%E6%8D%AE%E6%89%8B%E5%86%8C_Rev1.73.pdf",
+    "evidence": "HC32L190/196 manufacturer datasheet communication inventory has UART, LPUART, SPI, I2C; no USB."
+  },
+  {
+    "rank": 261,
+    "lcsc": 115942,
+    "mfr": "STM32L071RBT6",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32l071rb.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 262,
+    "lcsc": 2052778,
+    "mfr": "ATTINY816-MNR",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://onlinedocs.microchip.com/oxy/GUID-EE7956F6-534E-4B4F-AD10-214BF9914B5A-en-US-5/GUID-BED7C848-9A0F-453C-9C9B-CF77CB7E2B21.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 263,
+    "lcsc": 80735,
+    "mfr": "GD32F130C8T6",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.gigadevice.com.cn/product/mcu/entry-level-mcus/gd32f1x0-series/gd32f130",
+    "evidence": "Product selector USB column: 0."
+  },
+  {
+    "rank": 264,
+    "lcsc": 2835084,
+    "mfr": "GD32F303CGT6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.gd32mcu.com/data/documents/userManual/GD32F30x_User_Manual_Rev2.9.pdf",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 265,
+    "lcsc": 2870878,
+    "mfr": "MSP430FR2100IPW16R",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.ti.com/product/MSP430FR2100",
+    "evidence": "TI product parameters: USB No."
+  },
+  {
+    "rank": 266,
+    "lcsc": 2054482,
+    "mfr": "STM8S207R8T6TR",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm8s207c6.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 267,
+    "lcsc": 8713,
+    "mfr": "STC11F32XE-35I-LQFP44",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.stcmicro.com/stc/stc11f60xe.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 268,
+    "lcsc": 2054663,
+    "mfr": "STM32L431CCT6TR",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32l431cc.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 269,
+    "lcsc": 915966,
+    "mfr": "STM32L433VCT6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32l433vc.html",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 270,
+    "lcsc": 2835081,
+    "mfr": "GD32E230G6U6TR",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.gigadevice.com/product/mcu/entry-level-mcus/gd32e23x-series/gd32e230",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 271,
+    "lcsc": 279570,
+    "mfr": "STM8L052C6T6TR",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm8l052c6.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 272,
+    "lcsc": 2761417,
+    "mfr": "APM32F051K8T6",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://global.geehy.com/product/fifth/APM32F051",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 273,
+    "lcsc": 16930,
+    "mfr": "STM8L151C8T6",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm8l151k6.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 274,
+    "lcsc": 350645,
+    "mfr": "GD32E230K6U6",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.gigadevice.com/product/mcu/entry-level-mcus/gd32e23x-series/gd32e230",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 275,
+    "lcsc": 39704,
+    "mfr": "STM32F103RCT6TR",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32f103ze.html",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 276,
+    "lcsc": 730200,
+    "mfr": "STM32H750IBK6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.st.com/resource/en/reference_manual/rm0433-stm32h742-stm32h743-753-and-stm32h750-value-line-advanced-armbased-32bit-mcus-stmicroelectronics.pdf",
+    "evidence": "USB OTG controllers documented for STM32H750."
+  },
+  {
+    "rank": 277,
+    "lcsc": 97412,
+    "mfr": "STM32F031K6U6",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32f031g6.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 278,
+    "lcsc": 3018715,
+    "mfr": "PY32F030F18P6TU",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.puyasemi.com/en/py32f030/2624.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 279,
+    "lcsc": 374067,
+    "mfr": "MSP430F1121AIPWR",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.ti.com/product/MSP430F1121A",
+    "evidence": "TI product parameters: USB No."
+  },
+  {
+    "rank": 280,
+    "lcsc": 85282,
+    "mfr": "PIC10F322T-I/OT",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://ww1.microchip.com/downloads/aemDocuments/documents/MCU08/ProductDocuments/DataSheets/PIC10%28L%29F320-322-Data-Sheet-40001585E.pdf",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 281,
+    "lcsc": 529413,
+    "mfr": "STM32G474RBT6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32g474re.html",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 282,
+    "lcsc": 3029773,
+    "mfr": "GD32F470VGT6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.gigadevice.com.cn/product/mcu/high-performance-mcus/gd32f4xx-series/gd32f470",
+    "evidence": "Product selector USB column: FS/OTG supported."
+  },
+  {
+    "rank": 283,
+    "lcsc": 84571,
+    "mfr": "STM32F767IGT6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.st.com/resource/en/datasheet/stm32f765ig.pdf",
+    "evidence": "STM32F767 device summary and USB OTG interfaces."
+  },
+  {
+    "rank": 284,
+    "lcsc": 8243,
+    "mfr": "STM8S207CBT6",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm8s207c6.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 285,
+    "lcsc": 96514,
+    "mfr": "STM32L031G6U6",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32l031g6.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 286,
+    "lcsc": 432207,
+    "mfr": "STM32G031K8U6",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32g031f8.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 287,
+    "lcsc": 4154405,
+    "mfr": "CH334R",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://wch-ic.com/products/productsCenter/mcuInterface?categoryId=1&tName=USB+to+UART",
+    "evidence": "CH334R is a USB 2.0 four-port hub, not a general-purpose MCU; USB is present. Category anomaly retained."
+  },
+  {
+    "rank": 288,
+    "lcsc": 1340271,
+    "mfr": "STM8S103K3T6CTR",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm8s103f3.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 289,
+    "lcsc": 784682,
+    "mfr": "HC32L190FCUA-QFN32TR",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.huazhoucn.com/downloads/xshc/DS_HC32L19x%E7%B3%BB%E5%88%97%E6%95%B0%E6%8D%AE%E6%89%8B%E5%86%8C_Rev1.73.pdf",
+    "evidence": "HC32L190/196 manufacturer datasheet communication inventory has UART, LPUART, SPI, I2C; no USB."
+  },
+  {
+    "rank": 290,
+    "lcsc": 329282,
+    "mfr": "STM32F091VCT6",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32f091cc.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 291,
+    "lcsc": 65701,
+    "mfr": "STM8S007C8T6",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm8s007c8.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 292,
+    "lcsc": 5364174,
+    "mfr": "CW32L031C8U6",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.whxy.com/uploads/files/20240829/CW32L031_DataSheet_EN_V1.0.pdf",
+    "evidence": "UART, SPI and I2C only; CRC16_USB names a checksum, not a USB controller."
+  },
+  {
+    "rank": 293,
+    "lcsc": 624018,
+    "mfr": "PIC12F683T-I/SN",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://ww1.microchip.com/downloads/en/DeviceDoc/41211D.pdf",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 294,
+    "lcsc": 2972837,
+    "mfr": "FCM32F103CBT6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.micros.com.pl/mediaserver/UIFCM32F103CBT6_FLASHCHIP_0001.pdf",
+    "evidence": "Flashchip datasheet: USB 2.0 FS on revision C and later; earlier silicon is not covered by this capability."
+  },
+  {
+    "rank": 295,
+    "lcsc": 9862,
+    "mfr": "STM32F051R8T6",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32f051c8.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 296,
+    "lcsc": 74909,
+    "mfr": "STM32F070CBT6",
+    "previous_has_usb": false,
+    "has_usb": true,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm32f070f6.html",
+    "evidence": "On-chip USB data interface."
+  },
+  {
+    "rank": 297,
+    "lcsc": 712540,
+    "mfr": "GD32E230K8T6",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.gigadevice.com/product/mcu/entry-level-mcus/gd32e23x-series/gd32e230",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 298,
+    "lcsc": 91684,
+    "mfr": "STM8L152C8T6",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.st.com/en/microcontrollers-microprocessors/stm8l152c6.html",
+    "evidence": "Peripheral inventory has no USB data controller."
+  },
+  {
+    "rank": 299,
+    "lcsc": 3231326,
+    "mfr": "R5F100ADASP#10",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.renesas.com/en/products/rl78-g13/part-details/r5f100adasp-10",
+    "evidence": "Manufacturer parameters: USB ports 0."
+  },
+  {
+    "rank": 300,
+    "lcsc": 1850191,
+    "mfr": "LPC802M001JDH16J",
+    "previous_has_usb": false,
+    "has_usb": false,
+    "source_url": "https://www.nxp.com/docs/en/data-sheet/LPC802.pdf",
+    "evidence": "Peripheral inventory has no USB data controller."
+  }
+]
