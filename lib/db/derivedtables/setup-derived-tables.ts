@@ -182,9 +182,16 @@ const createTable = async (
 
   let tableCreator = db.schema.createTable(spec.tableName)
   const seenColumns = new Set<string>()
+  const leadingBaseColumns = BASE_COMPONENT_COLUMNS.filter(
+    (col) => col.name !== "is_basic" && col.name !== "is_preferred",
+  )
+  const trailingBaseColumns = BASE_COMPONENT_COLUMNS.filter(
+    (col) => col.name === "is_basic" || col.name === "is_preferred",
+  )
   const allColumns = [
-    ...BASE_COMPONENT_COLUMNS,
+    ...leadingBaseColumns,
     ...(spec.extraColumns as Array<{ name: string; type: string }>),
+    ...trailingBaseColumns,
     { name: "attributes", type: "text" },
   ]
   for (const col of allColumns) {
