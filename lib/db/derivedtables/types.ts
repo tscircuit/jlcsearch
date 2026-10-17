@@ -1,22 +1,13 @@
 import type { SelectQueryBuilder } from "kysely"
 import type { Component, Generated } from "../generated/kysely"
 import type { KyselyDatabaseInstance } from "../kysely-types"
+import type { BaseComponent } from "./component-base"
 
 type UnwrapGenerated<T> = {
   [K in keyof T]: T[K] extends Generated<infer U> ? U : T[K]
 }
 
-export interface DerivedTableSpec<
-  Resource extends {
-    lcsc: number
-    mfr: string
-    description: string
-    stock: number
-    price1: number | null
-    in_stock: boolean
-    is_basic: boolean
-  },
-> {
+export interface DerivedTableSpec<Resource extends BaseComponent> {
   tableName: string
   extraColumns: Array<{
     name: keyof Resource

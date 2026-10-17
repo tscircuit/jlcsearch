@@ -9,7 +9,19 @@ export type Generated<T> = T extends ColumnType<infer S, infer I, infer U>
   ? ColumnType<S, I | undefined, U>
   : ColumnType<T, T | undefined, T>;
 
-export interface Accelerometer {
+export interface CommonComponentTable {
+  attributes: string | null;
+  description: string | null;
+  in_stock: number | null;
+  is_basic: number | null;
+  is_preferred: number | null;
+  lcsc: Generated<number | null>;
+  mfr: string | null;
+  price1: number | null;
+  stock: number | null;
+}
+
+export interface Accelerometer extends CommonComponentTable {
   attributes: string | null;
   axes: string | null;
   description: string | null;
@@ -30,7 +42,7 @@ export interface Accelerometer {
   supply_voltage_min: number | null;
 }
 
-export interface Adc {
+export interface Adc extends CommonComponentTable {
   attributes: string | null;
   description: string | null;
   has_i2c: number | null;
@@ -39,7 +51,9 @@ export interface Adc {
   has_spi: number | null;
   has_uart: number | null;
   in_stock: number | null;
+  is_basic: number | null;
   is_differential: number | null;
+  is_preferred: number | null;
   lcsc: Generated<number | null>;
   mfr: string | null;
   num_channels: number | null;
@@ -54,7 +68,7 @@ export interface Adc {
   supply_voltage_min: number | null;
 }
 
-export interface AnalogMultiplexer {
+export interface AnalogMultiplexer extends CommonComponentTable {
   attributes: string | null;
   channel_type: string | null;
   description: string | null;
@@ -63,6 +77,8 @@ export interface AnalogMultiplexer {
   has_parallel_interface: number | null;
   has_spi: number | null;
   in_stock: number | null;
+  is_basic: number | null;
+  is_preferred: number | null;
   lcsc: Generated<number | null>;
   leakage_current_na: number | null;
   mfr: string | null;
@@ -78,7 +94,7 @@ export interface AnalogMultiplexer {
   supply_voltage_min: number | null;
 }
 
-export interface BarrelJack {
+export interface BarrelJack extends CommonComponentTable {
   attributes: string | null;
   connector_type: string | null;
   current_rating_a: number | null;
@@ -101,7 +117,7 @@ export interface BarrelJack {
   voltage_rating_v: number | null;
 }
 
-export interface BatteryHolder {
+export interface BatteryHolder extends CommonComponentTable {
   attributes: string | null;
   battery_type: string | null;
   connector_type: string | null;
@@ -118,7 +134,7 @@ export interface BatteryHolder {
   stock: number | null;
 }
 
-export interface BleChip {
+export interface BleChip extends CommonComponentTable {
   attributes: string | null;
   bluetooth_version: string | null;
   core_processor: string | null;
@@ -141,7 +157,7 @@ export interface BleChip {
   stock: number | null;
 }
 
-export interface BleModule {
+export interface BleModule extends CommonComponentTable {
   antenna_type: string | null;
   attributes: string | null;
   bluetooth_version: string | null;
@@ -165,13 +181,15 @@ export interface BleModule {
   stock: number | null;
 }
 
-export interface BjtTransistor {
+export interface BjtTransistor extends CommonComponentTable {
   attributes: string | null;
   collector_current: number | null;
   collector_emitter_voltage: number | null;
   current_gain: number | null;
   description: string | null;
   in_stock: number | null;
+  is_basic: number | null;
+  is_preferred: number | null;
   lcsc: Generated<number | null>;
   mfr: string | null;
   package: string | null;
@@ -182,7 +200,7 @@ export interface BjtTransistor {
   transition_frequency: number | null;
 }
 
-export interface BoostConverter {
+export interface BoostConverter extends CommonComponentTable {
   attributes: string | null;
   description: string | null;
   in_stock: number | null;
@@ -204,7 +222,7 @@ export interface BoostConverter {
   topology: string | null;
 }
 
-export interface BuckBoostConverter {
+export interface BuckBoostConverter extends CommonComponentTable {
   attributes: string | null;
   description: string | null;
   in_stock: number | null;
@@ -226,7 +244,7 @@ export interface BuckBoostConverter {
   topology: string | null;
 }
 
-export interface Capacitor {
+export interface Capacitor extends CommonComponentTable {
   attributes: string | null;
   capacitance_farads: number | null;
   capacitor_type: string | null;
@@ -310,13 +328,15 @@ export interface ComponentsFtsIdx {
   term: string;
 }
 
-export interface Dac {
+export interface Dac extends CommonComponentTable {
   attributes: string | null;
   description: string | null;
   has_i2c: number | null;
   has_parallel_interface: number | null;
   has_spi: number | null;
   in_stock: number | null;
+  is_basic: number | null;
+  is_preferred: number | null;
   lcsc: Generated<number | null>;
   mfr: string | null;
   nonlinearity_lsb: number | null;
@@ -333,7 +353,7 @@ export interface Dac {
   supply_voltage_min: number | null;
 }
 
-export interface Dram {
+export interface Dram extends CommonComponentTable {
   attributes: string | null;
   clock_frequency_mhz: number | null;
   description: string | null;
@@ -353,16 +373,16 @@ export interface Dram {
   supply_voltage_min: number | null;
 }
 
-export interface Psram {
+export interface Psram extends CommonComponentTable {
   attributes: string | null;
   clock_frequency_mhz: number | null;
   description: string | null;
   in_stock: number | null;
+  interface_type: string | null;
   is_basic: number | null;
   is_preferred: number | null;
   lcsc: Generated<number | null>;
   memory_size_mbit: number | null;
-  interface_type: string | null;
   mfr: string | null;
   operating_temp_max: number | null;
   operating_temp_min: number | null;
@@ -373,7 +393,7 @@ export interface Psram {
   supply_voltage_min: number | null;
 }
 
-export interface Diode {
+export interface Diode extends CommonComponentTable {
   attributes: string | null;
   configuration: string | null;
   description: string | null;
@@ -381,6 +401,8 @@ export interface Diode {
   forward_current: number | null;
   forward_voltage: number | null;
   in_stock: number | null;
+  is_basic: number | null;
+  is_preferred: number | null;
   is_schottky: number | null;
   is_tvs: number | null;
   is_zener: number | null;
@@ -397,7 +419,7 @@ export interface Diode {
   stock: number | null;
 }
 
-export interface DimmConnector {
+export interface DimmConnector extends CommonComponentTable {
   attributes: string | null;
   ddr_standard: string | null;
   description: string | null;
@@ -418,7 +440,7 @@ export interface DimmConnector {
   stock: number | null;
 }
 
-export interface FpcConnector {
+export interface FpcConnector extends CommonComponentTable {
   attributes: string | null;
   contact_type: string | null;
   description: string | null;
@@ -434,7 +456,7 @@ export interface FpcConnector {
   stock: number | null;
 }
 
-export interface Fpga {
+export interface Fpga extends CommonComponentTable {
   attributes: string | null;
   description: string | null;
   embedded_ram_bits: number | null;
@@ -457,7 +479,7 @@ export interface Fpga {
   type: string | null;
 }
 
-export interface SodimmConnector {
+export interface SodimmConnector extends CommonComponentTable {
   attributes: string | null;
   ddr_standard: string | null;
   description: string | null;
@@ -478,7 +500,7 @@ export interface SodimmConnector {
   stock: number | null;
 }
 
-export interface SpringClampTerminalBlock {
+export interface SpringClampTerminalBlock extends CommonComponentTable {
   attributes: string | null;
   current_rating: number | null;
   description: string | null;
@@ -498,12 +520,14 @@ export interface SpringClampTerminalBlock {
   wire_gauge_mm2: number | null;
 }
 
-export interface Fuse {
+export interface Fuse extends CommonComponentTable {
   attributes: string | null;
   current_rating: number | null;
   description: string | null;
   in_stock: number | null;
+  is_basic: number | null;
   is_glass_encased: number | null;
+  is_preferred: number | null;
   is_resettable: number | null;
   is_surface_mount: number | null;
   lcsc: Generated<number | null>;
@@ -515,7 +539,7 @@ export interface Fuse {
   voltage_rating: number | null;
 }
 
-export interface GasSensor {
+export interface GasSensor extends CommonComponentTable {
   attributes: string | null;
   description: string | null;
   in_stock: number | null;
@@ -540,7 +564,7 @@ export interface GasSensor {
   stock: number | null;
 }
 
-export interface Gyroscope {
+export interface Gyroscope extends CommonComponentTable {
   attributes: string | null;
   axes: string | null;
   description: string | null;
@@ -561,7 +585,7 @@ export interface Gyroscope {
   supply_voltage_min: number | null;
 }
 
-export interface Header {
+export interface Header extends CommonComponentTable {
   attributes: string | null;
   contact_material: string | null;
   contact_plating: string | null;
@@ -570,6 +594,8 @@ export interface Header {
   gender: string | null;
   in_stock: number | null;
   insulation_height_mm: number | null;
+  is_basic: number | null;
+  is_preferred: number | null;
   is_right_angle: number | null;
   is_shrouded: number | null;
   lcsc: Generated<number | null>;
@@ -589,7 +615,7 @@ export interface Header {
   voltage_rating_volt: number | null;
 }
 
-export interface HdmiPort {
+export interface HdmiPort extends CommonComponentTable {
   attributes: string | null;
   current_rating_a: number | null;
   description: string | null;
@@ -610,7 +636,7 @@ export interface HdmiPort {
   stock: number | null;
 }
 
-export interface IoExpander {
+export interface IoExpander extends CommonComponentTable {
   attributes: string | null;
   clock_frequency_hz: number | null;
   description: string | null;
@@ -619,6 +645,8 @@ export interface IoExpander {
   has_smbus: number | null;
   has_spi: number | null;
   in_stock: number | null;
+  is_basic: number | null;
+  is_preferred: number | null;
   lcsc: Generated<number | null>;
   mfr: string | null;
   num_gpios: number | null;
@@ -634,7 +662,7 @@ export interface IoExpander {
   supply_voltage_min: number | null;
 }
 
-export interface JstConnector {
+export interface JstConnector extends CommonComponentTable {
   attributes: string | null;
   description: string | null;
   in_stock: number | null;
@@ -651,12 +679,14 @@ export interface JstConnector {
   stock: number | null;
 }
 
-export interface LcdDisplay {
+export interface LcdDisplay extends CommonComponentTable {
   attributes: string | null;
   description: string | null;
   display_size: string | null;
   display_type: string | null;
   in_stock: number | null;
+  is_basic: number | null;
+  is_preferred: number | null;
   lcsc: Generated<number | null>;
   mfr: string | null;
   package: string | null;
@@ -665,7 +695,7 @@ export interface LcdDisplay {
   stock: number | null;
 }
 
-export interface Ldo {
+export interface Ldo extends CommonComponentTable {
   attributes: string | null;
   description: string | null;
   dropout_voltage: number | null;
@@ -692,13 +722,15 @@ export interface Ldo {
   topology: string | null;
 }
 
-export interface Led {
+export interface Led extends CommonComponentTable {
   attributes: string | null;
   color: string | null;
   description: string | null;
   forward_current: number | null;
   forward_voltage: number | null;
   in_stock: number | null;
+  is_basic: number | null;
+  is_preferred: number | null;
   is_rgb: number | null;
   lcsc: Generated<number | null>;
   lens_color: string | null;
@@ -715,11 +747,13 @@ export interface Led {
   wavelength_nm: number | null;
 }
 
-export interface LedDotMatrixDisplay {
+export interface LedDotMatrixDisplay extends CommonComponentTable {
   attributes: string | null;
   color: string | null;
   description: string | null;
   in_stock: number | null;
+  is_basic: number | null;
+  is_preferred: number | null;
   lcsc: Generated<number | null>;
   matrix_size: string | null;
   mfr: string | null;
@@ -728,13 +762,15 @@ export interface LedDotMatrixDisplay {
   stock: number | null;
 }
 
-export interface LedDriver {
+export interface LedDriver extends CommonComponentTable {
   attributes: string | null;
   channel_count: number | null;
   description: string | null;
   dimming_method: string | null;
   efficiency_percent: number | null;
   in_stock: number | null;
+  is_basic: number | null;
+  is_preferred: number | null;
   lcsc: Generated<number | null>;
   mfr: string | null;
   mounting_style: string | null;
@@ -749,11 +785,13 @@ export interface LedDriver {
   supply_voltage_min: number | null;
 }
 
-export interface LedSegmentDisplay {
+export interface LedSegmentDisplay extends CommonComponentTable {
   attributes: string | null;
   color: string | null;
   description: string | null;
   in_stock: number | null;
+  is_basic: number | null;
+  is_preferred: number | null;
   lcsc: Generated<number | null>;
   mfr: string | null;
   package: string | null;
@@ -764,13 +802,15 @@ export interface LedSegmentDisplay {
   type: string | null;
 }
 
-export interface LedWithIc {
+export interface LedWithIc extends CommonComponentTable {
   attributes: string | null;
   color: string | null;
   description: string | null;
   forward_current: number | null;
   forward_voltage: number | null;
   in_stock: number | null;
+  is_basic: number | null;
+  is_preferred: number | null;
   lcsc: Generated<number | null>;
   mfr: string | null;
   mounting_style: string | null;
@@ -785,7 +825,7 @@ export interface Manufacturer {
   name: string;
 }
 
-export interface MicroUsbConnector {
+export interface MicroUsbConnector extends CommonComponentTable {
   attributes: string | null;
   connector_type: string | null;
   current_rating_a: number | null;
@@ -807,7 +847,7 @@ export interface MicroUsbConnector {
   usb_standard: string | null;
 }
 
-export interface Microcontroller {
+export interface Microcontroller extends CommonComponentTable {
   adc_resolution_bits: number | null;
   attributes: string | null;
   cpu_core: string | null;
@@ -830,6 +870,8 @@ export interface Microcontroller {
   has_usb: number | null;
   has_watchdog: number | null;
   in_stock: number | null;
+  is_basic: number | null;
+  is_preferred: number | null;
   lcsc: Generated<number | null>;
   mfr: string | null;
   operating_temp_max: number | null;
@@ -842,13 +884,15 @@ export interface Microcontroller {
   supply_voltage_min: number | null;
 }
 
-export interface Mosfet {
+export interface Mosfet extends CommonComponentTable {
   attributes: string | null;
   continuous_drain_current: number | null;
   description: string | null;
   drain_source_voltage: number | null;
   gate_threshold_voltage: number | null;
   in_stock: number | null;
+  is_basic: number | null;
+  is_preferred: number | null;
   lcsc: Generated<number | null>;
   mfr: string | null;
   mounting_style: string | null;
@@ -860,7 +904,7 @@ export interface Mosfet {
   stock: number | null;
 }
 
-export interface LinuxCapableProcessor {
+export interface LinuxCapableProcessor extends CommonComponentTable {
   architecture: string | null;
   attributes: string | null;
   chip_family: string | null;
@@ -877,7 +921,7 @@ export interface LinuxCapableProcessor {
   stock: number | null;
 }
 
-export interface NpuChip {
+export interface NpuChip extends CommonComponentTable {
   attributes: string | null;
   chip_family: string | null;
   description: string | null;
@@ -894,11 +938,13 @@ export interface NpuChip {
   stock: number | null;
 }
 
-export interface OledDisplay {
+export interface OledDisplay extends CommonComponentTable {
   attributes: string | null;
   description: string | null;
   display_width: string | null;
   in_stock: number | null;
+  is_basic: number | null;
+  is_preferred: number | null;
   lcsc: Generated<number | null>;
   mfr: string | null;
   package: string | null;
@@ -908,7 +954,7 @@ export interface OledDisplay {
   stock: number | null;
 }
 
-export interface PcieM2Connector {
+export interface PcieM2Connector extends CommonComponentTable {
   attributes: string | null;
   description: string | null;
   in_stock: number | null;
@@ -922,7 +968,7 @@ export interface PcieM2Connector {
   stock: number | null;
 }
 
-export interface PhotoDiode {
+export interface PhotoDiode extends CommonComponentTable {
   attributes: string | null;
   dark_current_a: number | null;
   description: string | null;
@@ -943,10 +989,12 @@ export interface PhotoDiode {
   stock: number | null;
 }
 
-export interface Potentiometer {
+export interface Potentiometer extends CommonComponentTable {
   attributes: string | null;
   description: string | null;
   in_stock: number | null;
+  is_basic: number | null;
+  is_preferred: number | null;
   is_surface_mount: number | null;
   lcsc: Generated<number | null>;
   max_resistance: number | null;
@@ -957,20 +1005,20 @@ export interface Potentiometer {
   stock: number | null;
 }
 
-export interface StepperMotorDriver {
-  lcsc: Generated<number | null>
-  mfr: string | null
+export interface StepperMotorDriver extends CommonComponentTable {
+  attributes: string | null
   description: string | null
-  package: string | null
-  stock: number | null
-  price1: number | null
   in_stock: number | null
   is_basic: number | null
   is_preferred: number | null
-  attributes: string | null
+  lcsc: Generated<number | null>
+  mfr: string | null
+  package: string | null
+  price1: number | null
+  stock: number | null
 }
 
-export interface Relay {
+export interface Relay extends CommonComponentTable {
   attributes: string | null;
   coil_resistance: number | null;
   coil_voltage: number | null;
@@ -990,7 +1038,7 @@ export interface Relay {
   stock: number | null;
 }
 
-export interface Resistor {
+export interface Resistor extends CommonComponentTable {
   attributes: string | null;
   description: string | null;
   in_stock: number | null;
@@ -1012,7 +1060,7 @@ export interface Resistor {
   tolerance_fraction: number | null;
 }
 
-export interface ResistorArray {
+export interface ResistorArray extends CommonComponentTable {
   attributes: string | null;
   description: string | null;
   in_stock: number | null;
@@ -1033,7 +1081,7 @@ export interface ResistorArray {
   topology: string | null;
 }
 
-export interface Switch {
+export interface Switch extends CommonComponentTable {
   attributes: string | null;
   circuit: string | null;
   current_rating_a: number | null;
@@ -1058,7 +1106,7 @@ export interface Switch {
   width_mm: number | null;
 }
 
-export interface UsbCConnector {
+export interface UsbCConnector extends CommonComponentTable {
   attributes: string | null;
   current_rating_a: number | null;
   description: string | null;
@@ -1097,15 +1145,17 @@ export interface VComponent {
   subcategory: string | null;
 }
 
-export interface VoltageRegulator {
+export interface VoltageRegulator extends CommonComponentTable {
   attributes: string | null;
   description: string | null;
   dropout_voltage: number | null;
   in_stock: number | null;
   input_voltage_max: number | null;
   input_voltage_min: number | null;
+  is_basic: number | null;
   is_low_dropout: number | null;
   is_positive: number | null;
+  is_preferred: number | null;
   lcsc: Generated<number | null>;
   mfr: string | null;
   operating_temp_max: number | null;
@@ -1123,7 +1173,7 @@ export interface VoltageRegulator {
   topology: string | null;
 }
 
-export interface WifiModule {
+export interface WifiModule extends CommonComponentTable {
   antenna_type: string | null;
   attributes: string | null;
   core_processor: string | null;
@@ -1136,6 +1186,8 @@ export interface WifiModule {
   has_spi: number | null;
   has_uart: number | null;
   in_stock: number | null;
+  is_basic: number | null;
+  is_preferred: number | null;
   lcsc: Generated<number | null>;
   mfr: string | null;
   operating_temp_max: number | null;
@@ -1150,7 +1202,7 @@ export interface WifiModule {
   tx_current_ma: number | null;
 }
 
-export interface WireToBoardConnector {
+export interface WireToBoardConnector extends CommonComponentTable {
   attributes: string | null;
   description: string | null;
   gender: string | null;
@@ -1171,7 +1223,7 @@ export interface WireToBoardConnector {
   stock: number | null;
 }
 
-export interface EthernetController {
+export interface EthernetController extends CommonComponentTable {
   attributes: string | null;
   description: string | null;
   in_stock: number | null;
@@ -1184,7 +1236,7 @@ export interface EthernetController {
   stock: number | null;
 }
 
-export interface OpticalSensor {
+export interface OpticalSensor extends CommonComponentTable {
   attributes: string | null;
   description: string | null;
   in_stock: number | null;
@@ -1193,8 +1245,8 @@ export interface OpticalSensor {
   lcsc: Generated<number | null>;
   mfr: string | null;
   package: string | null;
-  sensor_type: string | null;
   price1: number | null;
+  sensor_type: string | null;
   stock: number | null;
 }
 

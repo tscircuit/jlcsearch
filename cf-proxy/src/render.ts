@@ -515,6 +515,12 @@ const renderCustomFilters = (
               .join("")}
           </select>
         </div>
+        <div>
+          <label>Basic Part:<input type="checkbox" name="is_basic" value="true"${params.is_basic === "true" ? " checked" : ""} /></label>
+        </div>
+        <div>
+          <label>Preferred Part:<input type="checkbox" name="is_preferred" value="true"${params.is_preferred === "true" ? " checked" : ""} /></label>
+        </div>
         <button type="submit">Filter</button>
       </form>`
     }
@@ -553,6 +559,12 @@ const renderCustomFilters = (
               .join("")}
           </select>
         </div>
+        <div>
+          <label>Basic Part:<input type="checkbox" name="is_basic" value="true"${params.is_basic === "true" ? " checked" : ""} /></label>
+        </div>
+        <div>
+          <label>Preferred Part:<input type="checkbox" name="is_preferred" value="true"${params.is_preferred === "true" ? " checked" : ""} /></label>
+        </div>
         <button type="submit">Filter</button>
       </form>`
     }
@@ -584,6 +596,12 @@ const renderCustomFilters = (
               })
               .join("")}
           </select>
+        </div>
+        <div>
+          <label>Basic Part:<input type="checkbox" name="is_basic" value="true"${params.is_basic === "true" ? " checked" : ""} /></label>
+        </div>
+        <div>
+          <label>Preferred Part:<input type="checkbox" name="is_preferred" value="true"${params.is_preferred === "true" ? " checked" : ""} /></label>
         </div>
         <button type="submit">Filter</button>
       </form>`
