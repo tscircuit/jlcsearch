@@ -52,6 +52,7 @@ import { resistorArrayTableSpec } from "lib/db/derivedtables/resistor_array"
 import { resistorTableSpec } from "lib/db/derivedtables/resistor"
 import { springClampTerminalBlockTableSpec } from "lib/db/derivedtables/spring-clamp-terminal-block"
 import { switchTableSpec } from "lib/db/derivedtables/switch"
+import { BASE_COMPONENT_COLUMNS } from "lib/db/derivedtables/component-base"
 import type { DerivedTableSpec } from "lib/db/derivedtables/types"
 import { usbCConnectorTableSpec } from "lib/db/derivedtables/usb_c_connector"
 import { voltageRegulatorTableSpec } from "lib/db/derivedtables/voltage_regulator"
@@ -180,22 +181,20 @@ const createTable = async (
   }
 
   let tableCreator = db.schema.createTable(spec.tableName)
-  for (const col of [
-    { name: "lcsc", type: "integer", primaryKey: true },
-    { name: "mfr", type: "text" },
-    { name: "description", type: "text" },
-    { name: "stock", type: "integer" },
-    { name: "price1", type: "real" },
-    { name: "in_stock", type: "boolean" },
-  ].concat(spec.extraColumns as any, [{ name: "attributes", type: "text" }])) {
-    tableCreator = tableCreator.addColumn(
-      col.name as string,
-      col.type as any,
-      (cb) => {
-        if ("primaryKey" in col && col.primaryKey) return cb.primaryKey()
-        return cb
-      },
-    )
+  const seenColumns = new Set<string>()
+  const allColumns = [
+    ...BASE_COMPONENT_COLUMNS,
+    ...(spec.extraColumns as Array<{ name: string; type: string }>),
+    { name: "attributes", type: "text" },
+  ]
+  for (const col of allColumns) {
+    const colName = String(col.name)
+    if (seenColumns.has(colName)) continue
+    seenColumns.add(colName)
+    tableCreator = tableCreator.addColumn(colName, col.type as any, (cb) => {
+      if ("primaryKey" in col && col.primaryKey) return cb.primaryKey()
+      return cb
+    })
   }
 
   await tableCreator.execute()

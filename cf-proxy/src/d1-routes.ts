@@ -127,6 +127,18 @@ const getMicrocontrollerListHandler = (
         break
     }
 
+    if (params.is_basic === "true" || params.is_basic === "1") {
+      query = query.where("is_basic", "=", 1)
+    } else if (params.is_basic === "false" || params.is_basic === "0") {
+      query = query.where("is_basic", "=", 0)
+    }
+
+    if (params.is_preferred === "true" || params.is_preferred === "1") {
+      query = query.where("is_preferred", "=", 1)
+    } else if (params.is_preferred === "false" || params.is_preferred === "0") {
+      query = query.where("is_preferred", "=", 0)
+    }
+
     let packageQuery = db
       .selectFrom("microcontroller")
       .select("package")
@@ -169,6 +181,8 @@ const getMicrocontrollerListHandler = (
           has_spi: Boolean(m.has_spi),
           has_can: Boolean(m.has_can),
           has_usb: Boolean(m.has_usb),
+          is_basic: Boolean(m.is_basic),
+          is_preferred: Boolean(m.is_preferred),
           stock: m.stock ?? 0,
           price1: m.price1 ?? 0,
         })),
@@ -193,6 +207,18 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
     const channels = parseFiniteNumber(params.channels)
     if (channels !== null) {
       query = query.where("num_channels", "=", channels)
+    }
+
+    if (params.is_basic === "true" || params.is_basic === "1") {
+      query = query.where("is_basic", "=", 1)
+    } else if (params.is_basic === "false" || params.is_basic === "0") {
+      query = query.where("is_basic", "=", 0)
+    }
+
+    if (params.is_preferred === "true" || params.is_preferred === "1") {
+      query = query.where("is_preferred", "=", 1)
+    } else if (params.is_preferred === "false" || params.is_preferred === "0") {
+      query = query.where("is_preferred", "=", 0)
     }
 
     const [packages, channelOptions, switches] = await Promise.all([
@@ -240,6 +266,8 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
           has_i2c: Boolean(m.has_i2c),
           has_parallel_interface: Boolean(m.has_parallel_interface),
           channel_type: m.channel_type ?? "",
+          is_basic: Boolean(m.is_basic),
+          is_preferred: Boolean(m.is_preferred),
           stock: m.stock ?? 0,
           price1: m.price1 ?? 0,
         })),
@@ -266,6 +294,8 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
         "description",
         "stock",
         "price",
+        "basic",
+        "preferred",
         "subcategory",
       ])
       .where("stock", ">", 0)
@@ -279,6 +309,18 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
 
     if (params.microphone_type && params.microphone_type !== "all") {
       query = query.where("subcategory", "=", params.microphone_type)
+    }
+
+    if (params.is_basic === "true" || params.is_basic === "1") {
+      query = query.where("basic", "=", 1)
+    } else if (params.is_basic === "false" || params.is_basic === "0") {
+      query = query.where("basic", "=", 0)
+    }
+
+    if (params.is_preferred === "true" || params.is_preferred === "1") {
+      query = query.where("preferred", "=", 1)
+    } else if (params.is_preferred === "false" || params.is_preferred === "0") {
+      query = query.where("preferred", "=", 0)
     }
 
     const [packages, microphones] = await Promise.all([
@@ -310,6 +352,8 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
             package: m.package ?? "",
             microphone_type: m.subcategory ?? "",
             description: m.description ?? "",
+            is_basic: Boolean(m.basic),
+            is_preferred: Boolean(m.preferred),
             stock: m.stock ?? 0,
             price1: extractSmallQuantityPrice(m.price),
           }))
