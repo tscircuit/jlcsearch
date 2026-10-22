@@ -3,6 +3,7 @@ import { componentBasicIndex } from "lib/db/optimizations/component-basic-index"
 import { componentCategoryIndex } from "lib/db/optimizations/component-category-index"
 import { componentInStockCategoryIndex } from "lib/db/optimizations/component-in-stock-category-index"
 import { componentInStockColumn } from "lib/db/optimizations/component-in-stock-column"
+import { componentIsExtendedPromotionalColumn } from "lib/db/optimizations/component-is-extended-promotional-column"
 import { componentPackageIndex } from "lib/db/optimizations/component-indexes"
 import { componentPreferredIndex } from "lib/db/optimizations/component-preferred-index"
 import { componentSearchFTS } from "lib/db/optimizations/component-search-fts"
@@ -18,6 +19,7 @@ const OPTIMIZATIONS: DbOptimizationSpec[] = [
   removeStaleComponents,
   componentStockIndex,
   componentInStockColumn,
+  componentIsExtendedPromotionalColumn,
   componentCategoryIndex,
   componentInStockCategoryIndex,
 ]
