@@ -83,7 +83,7 @@ afterEach(async () => {
   await Promise.all(
     tempDirectories
       .splice(0)
-      .map((directory) => rm(directory, { recursive: true, force: true })),
+      .map((directory) => rm(directory, { recursive: true, force: true }).catch(() => {})),
   )
 })
 
@@ -274,7 +274,7 @@ describe("buildDerivedSyncDatabase", () => {
     const row = output
       .query(
         `SELECT
-          lcsc, mfr, category, subcategory, basic, preferred, stock,
+          lcsc, mfr, category, subcategory, basic, preferred, is_extended_promotional, stock,
           json_extract(extra, '$.manufacturer.name') AS manufacturer,
           json_extract(extra, '$.mpn') AS mpn,
           json_extract(extra, '$.attributes.Gender') AS gender
@@ -289,11 +289,55 @@ describe("buildDerivedSyncDatabase", () => {
       subcategory: "HDMI Connectors",
       basic: 1,
       preferred: 1,
+      is_extended_promotional: 0,
       stock: 250,
       manufacturer: "Example Inc.",
       mpn: "HDMI-19P",
       gender: "Female",
     })
+    output.close()
+  })
+
+  test("materializes is_extended_promotional flag for promotional extended parts", async () => {
+    const { sourcePath, outputPath } = await createSourceDatabase()
+    const source = new Database(sourcePath)
+    source
+      .query(
+        `INSERT INTO jlc_components (
+          lcsc, fetched_at, present, sync_seen, category, subcategory, mfr,
+          package, joints, manufacturer, library_type, preferred, last_on_stock,
+          description, datasheet, stock, price, attributes
+        ) VALUES (
+          77777, unixepoch(), 1, 1, 'Connectors',
+          'HDMI Connectors', 'PROMO-EXTENDED-PART', 'SMD', 19, 'Example', 'expand', 1,
+          unixepoch(), 'Extended promotional component', '', 100, '1-:0.50', '{}'
+        )`,
+      )
+      .run()
+    source.close()
+
+    await buildDerivedSyncDatabase({
+      sourcePath,
+      outputPath,
+      tableNames: ["hdmi_port"],
+      includeComponentCatalog: true,
+      logger: () => {},
+    })
+
+    const output = new Database(outputPath, { readonly: true })
+    const promoRow = output
+      .query(
+        "SELECT lcsc, basic, preferred, is_extended_promotional FROM component_catalog WHERE lcsc = 77777",
+      )
+      .get() as any
+
+    expect(promoRow).toEqual({
+      lcsc: 77777,
+      basic: 0,
+      preferred: 1,
+      is_extended_promotional: 1,
+    })
+
     output.close()
   })
 
