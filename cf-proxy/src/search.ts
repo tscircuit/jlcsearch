@@ -91,7 +91,7 @@ export async function searchIndex(
 ): Promise<SearchRow[]> {
   const limit = Number.parseInt(params.limit ?? "100", 10) || 100
   const conditions: RawBuilder<unknown>[] = [sql`search_index.stock > 0`]
-  const fallbackSearchConditions: RawBuilder<unknown>[] = []
+  const catalogSearchConditions: RawBuilder<unknown>[] = []
   const ftsSearchConditions: RawBuilder<unknown>[] = []
 
   if (params.package) {
@@ -121,7 +121,7 @@ export async function searchIndex(
       }
     } else {
       const likeTokenGroups = getSearchTokenGroups(raw)
-      fallbackSearchConditions.push(
+      catalogSearchConditions.push(
         ...buildTokenGroupConditions(
           likeTokenGroups,
           sql`search_index.search_text`,
@@ -139,7 +139,7 @@ export async function searchIndex(
   const searchConditions =
     ftsSearchConditions.length > 0
       ? ftsSearchConditions
-      : fallbackSearchConditions
+      : catalogSearchConditions
   const selectSql = sql`
     SELECT
       search_index.lcsc,
@@ -161,10 +161,11 @@ export async function searchIndex(
   `
 
   if (ftsSearchConditions.length > 0 && (await isFtsSearchReady(db))) {
+    // Catalog rebuilds can leave FTS rowids pointing to different components.
     const ftsQuery = sql`
       ${selectSql}
       JOIN search_index_fts ON search_index_fts.rowid = search_index.rowid
-      WHERE ${buildWhereClause([...conditions, ...searchConditions])}
+      WHERE ${buildWhereClause([...conditions, ...searchConditions, ...catalogSearchConditions])}
       ${orderLimitSql}
     `
 
@@ -178,7 +179,7 @@ export async function searchIndex(
 
   const fallbackQuery = sql`
     ${selectSql}
-    WHERE ${buildWhereClause([...conditions, ...fallbackSearchConditions])}
+    WHERE ${buildWhereClause([...conditions, ...catalogSearchConditions])}
     ${orderLimitSql}
   `
 
