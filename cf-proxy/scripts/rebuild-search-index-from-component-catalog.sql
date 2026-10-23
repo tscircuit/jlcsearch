@@ -24,6 +24,7 @@ SELECT
     ELSE NULL
   END AS price1,
   basic,
+  is_extended_promotional,
   preferred,
   category,
   subcategory,

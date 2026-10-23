@@ -368,6 +368,7 @@ CREATE TABLE component_catalog (
   mfr TEXT,
   package TEXT,
   basic INTEGER,
+  is_extended_promotional INTEGER,
   preferred INTEGER,
   description TEXT,
   stock INTEGER,
@@ -467,6 +468,7 @@ CREATE TABLE search_index (
   price TEXT,
   price1 REAL,
   basic INTEGER,
+  is_extended_promotional INTEGER,
   preferred INTEGER,
   category TEXT,
   subcategory TEXT,
@@ -483,6 +485,7 @@ CREATE INDEX IF NOT EXISTS idx_search_index_package_stock ON search_index(packag
 CREATE INDEX IF NOT EXISTS idx_search_index_subcategory_stock ON search_index(subcategory, stock DESC);
 CREATE INDEX IF NOT EXISTS idx_search_index_basic ON search_index(basic);
 CREATE INDEX IF NOT EXISTS idx_search_index_basic_stock ON search_index(basic, stock DESC);
+CREATE INDEX IF NOT EXISTS idx_search_index_is_extended_promotional ON search_index(is_extended_promotional);
 CREATE INDEX IF NOT EXISTS idx_search_index_preferred ON search_index(preferred);
 CREATE INDEX IF NOT EXISTS idx_search_index_preferred_stock ON search_index(preferred, stock DESC);
 SEARCH_INDEX_SCHEMA_EXPORT
