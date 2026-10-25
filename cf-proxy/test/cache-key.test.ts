@@ -45,6 +45,42 @@ describe("normalizeUrl", () => {
 })
 
 describe("generateCacheKey", () => {
+  it.each(["/api/search", "/components/list", "/components/list.json"])(
+    "does not reuse legacy component-search entries for %s",
+    async (path) => {
+      const url = new URL(`https://example.com${path}?q=DA14531`)
+      const legacyHash = await crypto.subtle.digest(
+        "SHA-256",
+        new TextEncoder().encode(normalizeUrl(url)),
+      )
+      const legacyKey = Array.from(new Uint8Array(legacyHash))
+        .map((byte) => byte.toString(16).padStart(2, "0"))
+        .join("")
+
+      expect(await generateCacheKey(url)).not.toBe(legacyKey)
+      expect(
+        await generateCacheKey(new URL(`${url.origin}${path}/?q=DA14531`)),
+      ).toBe(await generateCacheKey(url))
+      url.searchParams.set("cachebust", "1")
+      expect(await generateCacheKey(url)).not.toBe(legacyKey)
+    },
+  )
+
+  it("preserves existing cache keys for unrelated catalog routes", async () => {
+    const url = new URL(
+      "https://example.com/resistors/list.json?resistance=1000",
+    )
+    const legacyHash = await crypto.subtle.digest(
+      "SHA-256",
+      new TextEncoder().encode(normalizeUrl(url)),
+    )
+    const legacyKey = Array.from(new Uint8Array(legacyHash))
+      .map((byte) => byte.toString(16).padStart(2, "0"))
+      .join("")
+
+    expect(await generateCacheKey(url)).toBe(legacyKey)
+  })
+
   it("generates a consistent hash for the same URL", async () => {
     const url = new URL("https://example.com/api/test?param=value")
     const key1 = await generateCacheKey(url)

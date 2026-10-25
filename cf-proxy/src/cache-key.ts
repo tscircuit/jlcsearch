@@ -1,4 +1,9 @@
 const CACHE_CONTROL_QUERY_PARAMS = new Set(["cachebust"])
+const COMPONENT_SEARCH_PATHS = new Set([
+  "/api/search",
+  "/components/list",
+  "/components/list.json",
+])
 
 /**
  * Generates a cache key from a URL by hashing the normalized path and sorted query params.
@@ -6,7 +11,12 @@ const CACHE_CONTROL_QUERY_PARAMS = new Set(["cachebust"])
 export async function generateCacheKey(url: URL): Promise<string> {
   const normalized = normalizeUrl(url)
   const encoder = new TextEncoder()
-  const data = encoder.encode(normalized)
+  // Discard search responses produced by the legacy rowid-based FTS join.
+  // Other catalog routes retain their existing cache entries.
+  const namespace = COMPONENT_SEARCH_PATHS.has(url.pathname.replace(/\/$/, ""))
+    ? "search-lcsc-v2:"
+    : ""
+  const data = encoder.encode(`${namespace}${normalized}`)
   const hashBuffer = await crypto.subtle.digest("SHA-256", data)
   const hashArray = Array.from(new Uint8Array(hashBuffer))
   return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("")
