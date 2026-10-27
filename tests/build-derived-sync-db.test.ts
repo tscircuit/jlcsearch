@@ -88,6 +88,59 @@ afterEach(async () => {
 })
 
 describe("buildDerivedSyncDatabase", () => {
+  test("imports current and legacy MCU categories before filtering for USB", async () => {
+    const { sourcePath, outputPath } = await createSourceDatabase()
+    const source = new Database(sourcePath)
+    source.exec("DELETE FROM lcsc_components; DELETE FROM jlc_components;")
+    const insert = source.prepare(`INSERT INTO jlc_components VALUES (
+      ?, unixepoch(), 1, 1, 'Embedded Processors & Controllers', ?, ?,
+      'LQFP-48', 48, 'Example', 'base', 0, unixepoch(), '', '', 100,
+      '1-:1.00', '{}'
+    )`)
+    const categories = [
+      "Microcontrollers (MCU/MPU/SOC)",
+      "Microcontroller Units (MCUs/MPUs/SOCs)",
+      "MICROCHIP",
+      "ST Microelectronics",
+      "NXP MCU",
+      "CYPRESS",
+    ]
+    for (const [index, category] of categories.entries()) {
+      insert.run(index + 1, category, "STM32F103C8T6")
+    }
+    insert.run(100, categories[0], "STM32G071CBT6")
+    insert.run(101, "USB ICs", "STM32F103C8T6")
+    source.close()
+
+    await buildDerivedSyncDatabase({
+      sourcePath,
+      outputPath,
+      tableNames: ["microcontroller"],
+      logger: () => {},
+    })
+
+    const output = new Database(outputPath, { readonly: true })
+    try {
+      expect(
+        output
+          .query(
+            "SELECT lcsc FROM microcontroller WHERE has_usb = 1 ORDER BY lcsc",
+          )
+          .all(),
+      ).toEqual(categories.map((_, index) => ({ lcsc: index + 1 })))
+      expect(
+        output
+          .query("SELECT lcsc FROM microcontroller WHERE has_usb = 0")
+          .all(),
+      ).toEqual([{ lcsc: 100 }])
+      expect(
+        output.query("SELECT COUNT(*) AS count FROM microcontroller").get(),
+      ).toEqual({ count: 7 })
+    } finally {
+      output.close()
+    }
+  })
+
   test("converts source-db-v2 rows into a populated HDMI derived table", async () => {
     const { sourcePath, outputPath } = await createSourceDatabase()
 

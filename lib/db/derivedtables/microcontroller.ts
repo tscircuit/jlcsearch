@@ -76,6 +76,7 @@ export const microcontrollerTableSpec: DerivedTableSpec<Microcontroller> = {
             "=",
             "Microcontroller Units (MCUs/MPUs/SOCs)",
           ),
+          eb("categories.subcategory", "=", "Microcontrollers (MCU/MPU/SOC)"),
           eb("categories.subcategory", "=", "MICROCHIP"),
           eb("categories.subcategory", "=", "ST Microelectronics"),
           eb("categories.subcategory", "=", "NXP MCU"),
