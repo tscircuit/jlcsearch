@@ -37,3 +37,26 @@ test("spring clamp terminal block table maps searchable attributes", () => {
     mounting_style: "Through Hole",
   })
 })
+
+test("uses total pins for multi-row spring-clamp connectors", () => {
+  const [block] = springClampTerminalBlockTableSpec.mapToTable([
+    {
+      lcsc: 3309863,
+      mfr: "250-712",
+      price: "[]",
+      extra: JSON.stringify({
+        attributes: {
+          "Number of Pins": "24P",
+          "Number of PINs Per Row": "12",
+          "Current Rating": "10A",
+          "Mounting Type": "Through Hole",
+        },
+      }),
+    } as any,
+  ])
+  expect(block).toMatchObject({
+    num_pins: 24,
+    current_rating: 10,
+    mounting_style: "Through Hole",
+  })
+})

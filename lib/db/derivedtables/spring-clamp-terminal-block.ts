@@ -70,12 +70,17 @@ export const springClampTerminalBlockTableSpec: DerivedTableSpec<SpringClampTerm
             is_preferred: Boolean(c.preferred),
             package: String(c.package || ""),
             pitch_mm: parseUnit(attrs["Pitch"]),
-            num_pins: parseInteger(attrs["Number of PINs Per Row"]),
+            num_pins: parseInteger(
+              attrs["Number of Pins"] || attrs["Number of PINs Per Row"],
+            ),
             voltage_rating: parseUnit(attrs["Voltage Rating (Max)"]),
-            current_rating: parseUnit(attrs["Current Rating (Max)"]),
+            current_rating: parseUnit(
+              attrs["Current Rating (Max)"] || attrs["Current Rating"],
+            ),
             wire_gauge_mm2: parseUnit(attrs["Wire Gauge - mm2"]),
             wire_gauge_awg: attrs["Wire Gauge - AWG"] || null,
-            mounting_style: attrs["Mounting Style"] || null,
+            mounting_style:
+              attrs["Mounting Style"] || attrs["Mounting Type"] || null,
             attributes: attrs,
           }
         } catch {
