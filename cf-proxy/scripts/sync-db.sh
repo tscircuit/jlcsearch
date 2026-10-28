@@ -445,6 +445,7 @@ WHERE lcsc IS NOT NULL;
 
 CREATE INDEX IF NOT EXISTS idx_search_index_stock ON search_index(stock DESC);
 CREATE INDEX IF NOT EXISTS idx_search_index_lcsc ON search_index(lcsc);
+CREATE INDEX IF NOT EXISTS idx_search_index_mfr_stock ON search_index(mfr COLLATE NOCASE, stock DESC);
 CREATE INDEX IF NOT EXISTS idx_search_index_package ON search_index(package);
 CREATE INDEX IF NOT EXISTS idx_search_index_package_stock ON search_index(package, stock DESC);
 CREATE INDEX IF NOT EXISTS idx_search_index_subcategory_stock ON search_index(subcategory, stock DESC);
@@ -478,6 +479,7 @@ CREATE TABLE search_index (
 );
 CREATE INDEX IF NOT EXISTS idx_search_index_stock ON search_index(stock DESC);
 CREATE INDEX IF NOT EXISTS idx_search_index_lcsc ON search_index(lcsc);
+CREATE INDEX IF NOT EXISTS idx_search_index_mfr_stock ON search_index(mfr COLLATE NOCASE, stock DESC);
 CREATE INDEX IF NOT EXISTS idx_search_index_package ON search_index(package);
 CREATE INDEX IF NOT EXISTS idx_search_index_package_stock ON search_index(package, stock DESC);
 CREATE INDEX IF NOT EXISTS idx_search_index_subcategory_stock ON search_index(subcategory, stock DESC);

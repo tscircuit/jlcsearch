@@ -165,12 +165,14 @@ run_wrangler d1 execute "$DB_NAME" --remote --command \
    ALTER TABLE search_index RENAME TO search_index_old;
    DROP INDEX IF EXISTS idx_search_index_stock;
    DROP INDEX IF EXISTS idx_search_index_lcsc;
+   DROP INDEX IF EXISTS idx_search_index_mfr_stock;
    DROP INDEX IF EXISTS idx_search_index_package;
    DROP INDEX IF EXISTS idx_search_index_basic;
    DROP INDEX IF EXISTS idx_search_index_preferred;
    ALTER TABLE search_index_next RENAME TO search_index;
    CREATE INDEX IF NOT EXISTS idx_search_index_stock ON search_index(stock DESC);
    CREATE INDEX IF NOT EXISTS idx_search_index_lcsc ON search_index(lcsc);
+   CREATE INDEX IF NOT EXISTS idx_search_index_mfr_stock ON search_index(mfr COLLATE NOCASE, stock DESC);
    CREATE INDEX IF NOT EXISTS idx_search_index_package ON search_index(package);
    CREATE INDEX IF NOT EXISTS idx_search_index_basic ON search_index(basic);
    CREATE INDEX IF NOT EXISTS idx_search_index_preferred ON search_index(preferred);"

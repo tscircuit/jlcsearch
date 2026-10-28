@@ -1,4 +1,4 @@
-import { sql, type Kysely, type RawBuilder } from "kysely"
+import { type Kysely, type RawBuilder, sql } from "kysely"
 import type { DB } from "./db/types"
 import { buildSearchTokenGroups } from "./search-query"
 
@@ -159,6 +159,24 @@ export async function searchIndex(
     ORDER BY search_index.stock DESC
     LIMIT ${limit}
   `
+
+  if (raw && ftsSearchConditions.length > 0) {
+    const exactPartCondition = sql`search_index.mfr = ${raw} COLLATE NOCASE`
+    const exactPart = await sql`
+      SELECT 1 FROM search_index WHERE ${exactPartCondition} LIMIT 1
+    `.execute(db)
+
+    // An exact part number should not resolve to a different catalog part,
+    // including when the requested part is out of stock or excluded by filters.
+    if (exactPart.rows.length > 0) {
+      const result = await sql`
+        ${selectSql}
+        WHERE ${buildWhereClause([...conditions, exactPartCondition])}
+        ${orderLimitSql}
+      `.execute(db)
+      return result.rows as SearchRow[]
+    }
+  }
 
   if (ftsSearchConditions.length > 0 && (await isFtsSearchReady(db))) {
     const ftsQuery = sql`
