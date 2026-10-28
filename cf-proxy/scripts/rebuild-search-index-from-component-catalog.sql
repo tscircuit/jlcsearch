@@ -1,3 +1,6 @@
+-- The existing FTS index belongs to the previous catalog generation.
+-- Use catalog text until rebuild-search-index-fts-batched.sh completes.
+DROP TABLE IF EXISTS search_index_fts_meta;
 DROP TABLE IF EXISTS search_index;
 
 CREATE TABLE search_index AS

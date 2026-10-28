@@ -113,8 +113,8 @@ rebuild_remote_search_fts_index() {
       DELETE FROM search_index_fts
       WHERE rowid BETWEEN ${start} AND ${end};
 
-      INSERT INTO search_index_fts(rowid, search_text)
-      SELECT rowid, search_text
+      INSERT INTO search_index_fts(rowid, lcsc, search_text)
+      SELECT rowid, lcsc, search_text
       FROM search_index
       WHERE rowid BETWEEN ${start} AND ${end}
         AND search_text IS NOT NULL
@@ -457,6 +457,8 @@ SEARCH_INDEX_SCHEMA
 
 write_search_index_schema() {
   cat > search_index_schema.sql <<'SEARCH_INDEX_SCHEMA_EXPORT'
+-- Disable the previous FTS generation before replacing its catalog.
+DROP TABLE IF EXISTS search_index_fts_meta;
 DROP TABLE IF EXISTS search_index;
 CREATE TABLE search_index (
   lcsc INTEGER NOT NULL UNIQUE,

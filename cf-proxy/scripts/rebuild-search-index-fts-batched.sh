@@ -41,8 +41,8 @@ for ((start=1; start<=MAX_ROWID; start+=FTS_BATCH_ROWS)); do
 
   echo "Importing FTS rowids ${start}-${end}..."
   run_wrangler d1 execute "${DB_NAME}" --remote --command "
-    INSERT INTO search_index_fts(rowid, search_text)
-    SELECT rowid, search_text
+    INSERT INTO search_index_fts(rowid, lcsc, search_text)
+    SELECT rowid, lcsc, search_text
     FROM search_index
     WHERE rowid BETWEEN ${start} AND ${end}
       AND search_text IS NOT NULL
