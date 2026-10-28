@@ -23,7 +23,6 @@ test("crystal search matches catalog category text", async () => {
       1000, '0.01', 0.01, 1, 0, 'Resistors', 'Resistors',
       'resistor 10k resistors'
     );
-    ALTER TABLE search_index ADD COLUMN mpn TEXT;
   `)
   const db = new Kysely<DB>({
     dialect: new BunSqliteDialect({ database: sqlite }),

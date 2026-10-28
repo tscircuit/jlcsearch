@@ -154,16 +154,8 @@ export async function searchIndex(
       search_index.subcategory
     FROM search_index
   `
-  const orderConditions: RawBuilder<unknown>[] = []
-  if (raw && ftsSearchConditions.length > 0) {
-    orderConditions.push(sql`CASE WHEN
-      search_index.mfr = ${raw} COLLATE NOCASE
-      OR search_index.mpn = ${raw} COLLATE NOCASE
-      THEN 0 ELSE 1 END`)
-  }
-  orderConditions.push(sql`search_index.stock DESC`)
   const orderLimitSql = sql`
-    ORDER BY ${sql.join(orderConditions)}
+    ORDER BY search_index.stock DESC
     LIMIT ${limit}
   `
 

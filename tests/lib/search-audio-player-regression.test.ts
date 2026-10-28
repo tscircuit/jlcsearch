@@ -16,7 +16,7 @@ const boardParts = [
 async function createSearchDatabase() {
   const sqlite = new Database(":memory:")
   sqlite.exec(`CREATE TABLE search_index (
-    lcsc INTEGER, mfr TEXT, mpn TEXT, package TEXT, description TEXT,
+    lcsc INTEGER, mfr TEXT, package TEXT, description TEXT,
     stock INTEGER, price TEXT, price1 REAL, basic INTEGER,
     preferred INTEGER, category TEXT, subcategory TEXT, search_text TEXT
   )`)
@@ -68,7 +68,7 @@ function rebuildCatalog(sqlite: Database) {
 }
 
 for (const useFts of [true, false]) {
-  test(`exact matches rank first without excluding alternatives (FTS ${useFts})`, async () => {
+  test(`matching alternatives retain stock ordering (FTS ${useFts})`, async () => {
     const { sqlite, db } = await createSearchDatabase()
     try {
       sqlite.exec(`
@@ -82,12 +82,12 @@ for (const useFts of [true, false]) {
         )
       expect(
         (await searchIndex(db, { q: "  pj-320d  " })).map((part) => part.lcsc),
-      ).toEqual([431535, 1])
+      ).toEqual([1, 431535])
       expect(
         (await searchIndex(db, { q: "PJ-320D", limit: "1" })).map(
           (part) => part.lcsc,
         ),
-      ).toEqual([431535])
+      ).toEqual([1])
       expect(
         (await searchIndex(db, { q: "pj-320" })).map((part) => part.lcsc),
       ).toEqual([1, 431535])
@@ -107,27 +107,6 @@ for (const useFts of [true, false]) {
           (part) => part.lcsc,
         ),
       ).toEqual([1])
-    } finally {
-      await db.destroy()
-    }
-  })
-
-  test(`both catalog mfr and metadata mpn receive exact-match ranking (FTS ${useFts})`, async () => {
-    const { sqlite, db } = await createSearchDatabase()
-    try {
-      sqlite.exec(`
-        INSERT INTO search_index (lcsc, mfr, mpn, stock, search_text) VALUES
-          (1, NULL, 'PJ-320D', 200, 'pj-320d'),
-          (2, 'PJ-320D-OTHER', NULL, 1000, 'pj-320d-other');
-      `)
-      populateSearchFts(sqlite)
-      if (!useFts)
-        sqlite.exec(
-          "UPDATE search_index_fts_meta SET value = '0' WHERE key = 'ready'",
-        )
-      expect(
-        (await searchIndex(db, { q: "pj-320d" })).map((part) => part.lcsc),
-      ).toEqual([1, 431535, 2])
     } finally {
       await db.destroy()
     }

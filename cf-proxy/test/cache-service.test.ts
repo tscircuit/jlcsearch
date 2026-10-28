@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest"
 import { type CacheMetadata, isFresh, isUsableStale } from "../src/cache-entry"
+import { normalizeUrl } from "../src/cache-key"
 import { CacheService } from "../src/cache-service"
 import { createTestEnv } from "./test-env"
 
@@ -60,6 +61,46 @@ describe("CacheService", () => {
       const url = new URL("https://example.com/uncached")
       const result = await cache.get(url)
       expect(result.type).toBe("miss")
+    })
+
+    it("bypasses old component results while retaining unrelated cached responses", async () => {
+      for (const path of [
+        "/api/search?q=PJ-320D",
+        "/api/search/?q=PJ-320D",
+        "/components/list?search=PJ-320D&json=true",
+        "/components/list.json?search=PJ-320D",
+        "/components/list.json/?search=PJ-320D",
+        "/resistors/list?json=true",
+      ]) {
+        const env = createTestEnv()
+        const cache = new CacheService(env.CACHE_KV)
+        const url = new URL(path, "https://example.com")
+        const hash = await crypto.subtle.digest(
+          "SHA-256",
+          new TextEncoder().encode(normalizeUrl(url)),
+        )
+        const oldKey = Array.from(new Uint8Array(hash))
+          .map((byte) => byte.toString(16).padStart(2, "0"))
+          .join("")
+        await env.CACHE_KV.put(oldKey, "old response", {
+          metadata: {
+            cachedAt: new Date().toISOString(),
+            status: 200,
+            headers: { "content-type": "application/json" },
+          },
+        })
+        expect((await cache.get(url)).type).toBe(
+          path.startsWith("/resistors/") ? "fresh" : "miss",
+        )
+        await cache.put(url, new Response("current response"))
+        const bypassUrl = new URL(url)
+        bypassUrl.searchParams.set("cachebust", "1")
+        const result = await cache.get(bypassUrl)
+        expect(result.type).toBe("fresh")
+        if (result.type === "fresh") {
+          expect(result.entry.body).toBe("current response")
+        }
+      }
     })
 
     it("stores and retrieves cached response", async () => {
