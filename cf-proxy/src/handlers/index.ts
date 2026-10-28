@@ -276,9 +276,16 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
     },
   },
   microcontroller: {
+    helpText:
+      "Combine interface filters to require all selected capabilities. USB Host means on-chip host/OTG support; unverified host capability is excluded from Yes and No.",
     filters: {
       package: { field: "package", type: "string" },
       has_usb: { field: "has_usb", type: "boolean" },
+      has_usb_host: { field: "has_usb_host", type: "boolean" },
+      has_can: { field: "has_can", type: "boolean" },
+      has_spi: { field: "has_spi", type: "boolean" },
+      has_i2c: { field: "has_i2c", type: "boolean" },
+      has_uart: { field: "has_uart", type: "boolean" },
       core: { field: "cpu_core", type: "string" },
       flash_min: { field: "flash_size_bytes", type: "number", operator: ">=" },
       ram_min: { field: "ram_size_bytes", type: "number", operator: ">=" },

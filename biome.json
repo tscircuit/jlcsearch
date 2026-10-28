@@ -8,6 +8,7 @@
     "indentStyle": "space"
   },
   "files": {
+    "maxSize": 8388608,
     "ignore": [
       "cosmos-export",
       "dist",

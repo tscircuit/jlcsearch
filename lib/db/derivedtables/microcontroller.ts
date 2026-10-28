@@ -3,6 +3,7 @@ import type { DerivedTableSpec } from "./types"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import { BaseComponent } from "./component-base"
 import { getMicrocontrollerUsbOverride } from "./microcontroller-usb"
+import { getMicrocontrollerInterfaces } from "./microcontroller-interfaces"
 
 export interface Microcontroller extends BaseComponent {
   // Extra columns
@@ -22,6 +23,7 @@ export interface Microcontroller extends BaseComponent {
   has_spi: boolean
   has_can: boolean
   has_usb: boolean
+  has_usb_host: boolean | null
   has_adc: boolean
   has_dac: boolean
   has_pwm: boolean
@@ -52,6 +54,7 @@ export const microcontrollerTableSpec: DerivedTableSpec<Microcontroller> = {
     { name: "has_spi", type: "boolean" },
     { name: "has_can", type: "boolean" },
     { name: "has_usb", type: "boolean" },
+    { name: "has_usb_host", type: "boolean" },
     { name: "has_adc", type: "boolean" },
     { name: "has_dac", type: "boolean" },
     { name: "has_pwm", type: "boolean" },
@@ -153,33 +156,19 @@ export const microcontrollerTableSpec: DerivedTableSpec<Microcontroller> = {
 
       // Parse peripheral features
       const peripheral = (attrs["Peripheral/Function"] || "").toLowerCase()
-      const hasUart = Boolean(
-        peripheral.includes("uart") ||
-          attrs["UART/USART"]?.includes("1") ||
-          desc.includes("uart"),
-      )
-      const hasI2c = Boolean(
-        peripheral.includes("i2c") ||
-          attrs["I2C"]?.includes("1") ||
-          desc.includes("i2c"),
-      )
-      const hasSpi = Boolean(
-        peripheral.includes("spi") ||
-          attrs["SPI"]?.includes("1") ||
-          desc.includes("spi"),
-      )
-      const hasCan = Boolean(
-        peripheral.includes("can") ||
-          attrs["CAN"]?.includes("1") ||
-          desc.includes("can"),
+      const interfaces = getMicrocontrollerInterfaces(
+        c.mfr,
+        attrs,
+        c.description,
       )
       const hasUsb =
-        getMicrocontrollerUsbOverride(c.mfr) ??
-        Boolean(
-          peripheral.includes("usb") ||
-            attrs["Universal Serial Bus"] === "Yes" ||
-            desc.includes("usb"),
-        )
+        interfaces.has_usb_host === true ||
+        (getMicrocontrollerUsbOverride(c.mfr) ??
+          Boolean(
+            peripheral.includes("usb") ||
+              attrs["Universal Serial Bus"] === "Yes" ||
+              desc.includes("usb"),
+          ))
       const hasAdc = Boolean(attrs["ADC (Bit)"] || desc.includes("adc"))
       const hasDac = Boolean(attrs["DAC (Bit)"] || desc.includes("dac"))
       const hasPwm = Boolean(
@@ -243,10 +232,7 @@ export const microcontrollerTableSpec: DerivedTableSpec<Microcontroller> = {
         supply_voltage_max: voltageMax,
         operating_temp_min: tempMin,
         operating_temp_max: tempMax,
-        has_uart: hasUart,
-        has_i2c: hasI2c,
-        has_spi: hasSpi,
-        has_can: hasCan,
+        ...interfaces,
         has_usb: hasUsb,
         has_adc: hasAdc,
         has_dac: hasDac,
