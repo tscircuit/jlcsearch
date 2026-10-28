@@ -1,4 +1,4 @@
-import { type Kysely, type RawBuilder, sql } from "kysely"
+import { sql, type Kysely, type RawBuilder } from "kysely"
 import type { DB } from "./db/types"
 import { buildSearchTokenGroups } from "./search-query"
 

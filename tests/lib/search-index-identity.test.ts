@@ -40,10 +40,9 @@ async function createSearchDatabase() {
       if (event.level === "query") statements.push(event.query.sql)
     },
   })
-  // Root and worker Kysely packages have distinct private type brands.
   return {
     sqlite,
-    db: db as typeof db & Parameters<typeof searchIndex>[0],
+    db,
     statements,
   }
 }
