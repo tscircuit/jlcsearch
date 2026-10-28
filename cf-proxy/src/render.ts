@@ -228,6 +228,11 @@ const COLUMN_LABELS: Record<string, string> = {
   connector_type: "Connector Type",
   usb_standard: "USB Standard",
   has_usb: "Has USB",
+  has_usb_host: "USB Host",
+  has_can: "CAN",
+  has_spi: "SPI",
+  has_i2c: "I²C",
+  has_uart: "UART",
   output_type: "Output Type",
   mounting_style: "Mounting",
   cpu_core: "Core",
@@ -720,7 +725,7 @@ const renderGenericFilters = (
   const helpText = config.helpText
     ? `<p class="mt-2 text-sm text-gray-600">${escapeHtml(config.helpText)}</p>`
     : ""
-  return `<form method="GET" class="flex flex-row gap-4">${inputs}<button type="submit">Filter</button></form>${helpText}`
+  return `<form method="GET" class="flex flex-row flex-wrap gap-4">${inputs}<button type="submit">Filter</button></form>${helpText}`
 }
 
 const renderComponentsFilters = (

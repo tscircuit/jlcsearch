@@ -1,0 +1,494 @@
+[
+  {
+    "mfr": "STM32H743VIT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32H743VITx.xml",
+    "evidence": "ST device IP inventory STM32H743VITx: USB_OTG_FS, USB_OTG_FS1, USB_OTG_HS, USB_OTG_HS1 present."
+  },
+  {
+    "mfr": "STM32F429VET6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F429V%28E-G%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F429V(E-G)Tx: USB_OTG_FS, USB_OTG_HS present."
+  },
+  {
+    "mfr": "STM32H750VBT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32H750VBTx.xml",
+    "evidence": "ST device IP inventory STM32H750VBTx: USB_OTG_FS, USB_OTG_FS1, USB_OTG_HS, USB_OTG_HS1 present."
+  },
+  {
+    "mfr": "STM32L476RGT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32L476R%28C-E-G%29Tx.xml",
+    "evidence": "ST device IP inventory STM32L476R(C-E-G)Tx: USB_OTG_FS present."
+  },
+  {
+    "mfr": "STM32F429ZGT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F429Z%28E-G%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F429Z(E-G)Tx: USB_OTG_FS, USB_OTG_HS present."
+  },
+  {
+    "mfr": "STM32F722RET6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F722R%28C-E%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F722R(C-E)Tx: USB_OTG_FS, USB_OTG_HS present."
+  },
+  {
+    "mfr": "STM32H7B0RBT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32H7B0RBTx.xml",
+    "evidence": "ST device IP inventory STM32H7B0RBTx: USB_OTG_HS, USB_OTG_HS1 present."
+  },
+  {
+    "mfr": "STM32F207VET6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F207V%28C-E-F-G%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F207V(C-E-F-G)Tx: USB_OTG_FS, USB_OTG_HS present."
+  },
+  {
+    "mfr": "STM32F412ZGT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F412Z%28E-G%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F412Z(E-G)Tx: USB_OTG_FS present."
+  },
+  {
+    "mfr": "STM32F105RBT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F105R%288-B-C%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F105R(8-B-C)Tx: USB_OTG_FS present."
+  },
+  {
+    "mfr": "STM32H753IIK6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32H753IIKx.xml",
+    "evidence": "ST device IP inventory STM32H753IIKx: USB_OTG_FS, USB_OTG_FS1, USB_OTG_HS, USB_OTG_HS1 present."
+  },
+  {
+    "mfr": "STM32F215RGT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F215R%28E-G%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F215R(E-G)Tx: USB_OTG_FS, USB_OTG_HS present."
+  },
+  {
+    "mfr": "STM32F746NGH6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F746NGHx.xml",
+    "evidence": "ST device IP inventory STM32F746NGHx: USB_OTG_FS, USB_OTG_HS present."
+  },
+  {
+    "mfr": "STM32F730R8T6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F730R8Tx.xml",
+    "evidence": "ST device IP inventory STM32F730R8Tx: USB_OTG_FS, USB_OTG_HS present."
+  },
+  {
+    "mfr": "STM32F415RGT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F415RGTx.xml",
+    "evidence": "ST device IP inventory STM32F415RGTx: USB_OTG_FS, USB_OTG_HS present."
+  },
+  {
+    "mfr": "STM32L476VET6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32L476V%28C-E-G%29Tx.xml",
+    "evidence": "ST device IP inventory STM32L476V(C-E-G)Tx: USB_OTG_FS present."
+  },
+  {
+    "mfr": "STM32F446RET6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F446R%28C-E%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F446R(C-E)Tx: USB_OTG_FS, USB_OTG_HS present."
+  },
+  {
+    "mfr": "STM32L476RCT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32L476R%28C-E-G%29Tx.xml",
+    "evidence": "ST device IP inventory STM32L476R(C-E-G)Tx: USB_OTG_FS present."
+  },
+  {
+    "mfr": "STM32H723VET6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32H723VETx.xml",
+    "evidence": "ST device IP inventory STM32H723VETx: USB_OTG_HS, USB_OTG_HS1 present."
+  },
+  {
+    "mfr": "STM32F411CCU6TR",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F411C%28C-E%29Ux.xml",
+    "evidence": "ST device IP inventory STM32F411C(C-E)Ux: USB_OTG_FS present."
+  },
+  {
+    "mfr": "STM32H7B0VBT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32H7B0VBTx.xml",
+    "evidence": "ST device IP inventory STM32H7B0VBTx: USB_OTG_HS, USB_OTG_HS1 present."
+  },
+  {
+    "mfr": "STM32F427ZGT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F427Z%28G-I%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F427Z(G-I)Tx: USB_OTG_FS, USB_OTG_HS present."
+  },
+  {
+    "mfr": "STM32F427VGT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F427V%28G-I%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F427V(G-I)Tx: USB_OTG_FS, USB_OTG_HS present."
+  },
+  {
+    "mfr": "STM32F401VCT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F401V%28B-C%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F401V(B-C)Tx: USB_OTG_FS present."
+  },
+  {
+    "mfr": "STM32F407IGT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F407I%28E-G%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F407I(E-G)Tx: USB_OTG_FS, USB_OTG_HS present."
+  },
+  {
+    "mfr": "STM32F427IGT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F427I%28G-I%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F427I(G-I)Tx: USB_OTG_FS, USB_OTG_HS present."
+  },
+  {
+    "mfr": "STM32H745XIH6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32H745XIHx.xml",
+    "evidence": "ST device IP inventory STM32H745XIHx: USB_OTG_FS, USB_OTG_FS1, USB_OTG_HS, USB_OTG_HS1 present."
+  },
+  {
+    "mfr": "STM32H743ZIT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32H743ZITx.xml",
+    "evidence": "ST device IP inventory STM32H743ZITx: USB_OTG_FS, USB_OTG_FS1, USB_OTG_HS, USB_OTG_HS1 present."
+  },
+  {
+    "mfr": "STM32F745VGT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F745V%28E-G%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F745V(E-G)Tx: USB_OTG_FS, USB_OTG_HS present."
+  },
+  {
+    "mfr": "STM32F207ZET6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F207Z%28C-E-F-G%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F207Z(C-E-F-G)Tx: USB_OTG_FS, USB_OTG_HS present."
+  },
+  {
+    "mfr": "STM32H743IIT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32H743IITx.xml",
+    "evidence": "ST device IP inventory STM32H743IITx: USB_OTG_FS, USB_OTG_FS1, USB_OTG_HS, USB_OTG_HS1 present."
+  },
+  {
+    "mfr": "STM32F205VGT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F205V%28B-C-E-F-G%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F205V(B-C-E-F-G)Tx: USB_OTG_FS, USB_OTG_HS present."
+  },
+  {
+    "mfr": "STM32F765VGT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F765V%28G-I%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F765V(G-I)Tx: USB_OTG_FS, USB_OTG_HS present."
+  },
+  {
+    "mfr": "STM32F722VET6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F722V%28C-E%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F722V(C-E)Tx: USB_OTG_FS, USB_OTG_HS present."
+  },
+  {
+    "mfr": "STM32F446ZET6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F446Z%28C-E%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F446Z(C-E)Tx: USB_OTG_FS, USB_OTG_HS present."
+  },
+  {
+    "mfr": "STM32F407ZGT6TR",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F407Z%28E-G%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F407Z(E-G)Tx: USB_OTG_FS, USB_OTG_HS present."
+  },
+  {
+    "mfr": "STM32F446VET6TR",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F446V%28C-E%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F446V(C-E)Tx: USB_OTG_FS, USB_OTG_HS present."
+  },
+  {
+    "mfr": "STM32F205VET6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F205V%28B-C-E-F-G%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F205V(B-C-E-F-G)Tx: USB_OTG_FS, USB_OTG_HS present."
+  },
+  {
+    "mfr": "STM32H743ZGT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32H743ZGTx.xml",
+    "evidence": "ST device IP inventory STM32H743ZGTx: USB_OTG_FS, USB_OTG_FS1, USB_OTG_HS, USB_OTG_HS1 present."
+  },
+  {
+    "mfr": "STM32F723ZET6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F723Z%28C-E%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F723Z(C-E)Tx: USB_OTG_FS, USB_OTG_HS present."
+  },
+  {
+    "mfr": "STM32H723VGH6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32H723VGHx.xml",
+    "evidence": "ST device IP inventory STM32H723VGHx: USB_OTG_HS, USB_OTG_HS1 present."
+  },
+  {
+    "mfr": "STM32L475VET6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32L475V%28C-E-G%29Tx.xml",
+    "evidence": "ST device IP inventory STM32L475V(C-E-G)Tx: USB_OTG_FS present."
+  },
+  {
+    "mfr": "STM32H743IIK6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32H743IIKx.xml",
+    "evidence": "ST device IP inventory STM32H743IIKx: USB_OTG_FS, USB_OTG_FS1, USB_OTG_HS, USB_OTG_HS1 present."
+  },
+  {
+    "mfr": "STM32F401CBU6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F401C%28B-C%29Ux.xml",
+    "evidence": "ST device IP inventory STM32F401C(B-C)Ux: USB_OTG_FS present."
+  },
+  {
+    "mfr": "STM32F446RCT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F446R%28C-E%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F446R(C-E)Tx: USB_OTG_FS, USB_OTG_HS present."
+  },
+  {
+    "mfr": "STM32F413VGT6TR",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F413V%28G-H%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F413V(G-H)Tx: USB_OTG_FS present."
+  },
+  {
+    "mfr": "STM32F205RET6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F205R%28B-C-E-F-G%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F205R(B-C-E-F-G)Tx: USB_OTG_FS, USB_OTG_HS present."
+  },
+  {
+    "mfr": "STM32F411VCT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F411V%28C-E%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F411V(C-E)Tx: USB_OTG_FS present."
+  },
+  {
+    "mfr": "STM32F205ZET6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F205Z%28C-E-F-G%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F205Z(C-E-F-G)Tx: USB_OTG_FS, USB_OTG_HS present."
+  },
+  {
+    "mfr": "STM32H750ZBT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32H750ZBTx.xml",
+    "evidence": "ST device IP inventory STM32H750ZBTx: USB_OTG_FS, USB_OTG_FS1, USB_OTG_HS, USB_OTG_HS1 present."
+  },
+  {
+    "mfr": "STM32F207VGT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F207V%28C-E-F-G%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F207V(C-E-F-G)Tx: USB_OTG_FS, USB_OTG_HS present."
+  },
+  {
+    "mfr": "STM32F469VET6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F469V%28E-G%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F469V(E-G)Tx: USB_OTG_FS, USB_OTG_HS present."
+  },
+  {
+    "mfr": "STM32H730ZBT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32H730ZBTx.xml",
+    "evidence": "ST device IP inventory STM32H730ZBTx: USB_OTG_HS, USB_OTG_HS1 present."
+  },
+  {
+    "mfr": "STM32F412RGT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F412R%28E-G%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F412R(E-G)Tx: USB_OTG_FS present."
+  },
+  {
+    "mfr": "STM32F446VET6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F446V%28C-E%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F446V(C-E)Tx: USB_OTG_FS, USB_OTG_HS present."
+  },
+  {
+    "mfr": "STM32F722VCT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F722V%28C-E%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F722V(C-E)Tx: USB_OTG_FS, USB_OTG_HS present."
+  },
+  {
+    "mfr": "STM32H750XBH6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32H750XBHx.xml",
+    "evidence": "ST device IP inventory STM32H750XBHx: USB_OTG_FS, USB_OTG_FS1, USB_OTG_HS, USB_OTG_HS1 present."
+  },
+  {
+    "mfr": "STM32H7A3VIT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32H7A3V%28G-I%29Tx.xml",
+    "evidence": "ST device IP inventory STM32H7A3V(G-I)Tx: USB_OTG_HS, USB_OTG_HS1 present."
+  },
+  {
+    "mfr": "STM32F411VET6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F411V%28C-E%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F411V(C-E)Tx: USB_OTG_FS present."
+  },
+  {
+    "mfr": "STM32F405VGT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F405VGTx.xml",
+    "evidence": "ST device IP inventory STM32F405VGTx: USB_OTG_FS, USB_OTG_HS present."
+  },
+  {
+    "mfr": "STM32L476RET6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32L476R%28C-E-G%29Tx.xml",
+    "evidence": "ST device IP inventory STM32L476R(C-E-G)Tx: USB_OTG_FS present."
+  },
+  {
+    "mfr": "STM32L496VGT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32L496V%28E-G%29Tx.xml",
+    "evidence": "ST device IP inventory STM32L496V(E-G)Tx: USB_OTG_FS present."
+  },
+  {
+    "mfr": "STM32F107RCT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F107R%28B-C%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F107R(B-C)Tx: USB_OTG_FS present."
+  },
+  {
+    "mfr": "STM32H730VBT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32H730VBTx.xml",
+    "evidence": "ST device IP inventory STM32H730VBTx: USB_OTG_HS, USB_OTG_HS1 present."
+  },
+  {
+    "mfr": "STM32F412CEU6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F412C%28E-G%29Ux.xml",
+    "evidence": "ST device IP inventory STM32F412C(E-G)Ux: USB_OTG_FS present."
+  },
+  {
+    "mfr": "STM32F105R8T6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F105R%288-B-C%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F105R(8-B-C)Tx: USB_OTG_FS present."
+  },
+  {
+    "mfr": "STM32F413VGT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F413V%28G-H%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F413V(G-H)Tx: USB_OTG_FS present."
+  },
+  {
+    "mfr": "STM32F437VIT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F437V%28G-I%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F437V(G-I)Tx: USB_OTG_FS, USB_OTG_HS present."
+  },
+  {
+    "mfr": "STM32MP151AAC3",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32MP151AACx.xml",
+    "evidence": "ST device IP inventory STM32MP151AACx: USB_OTG_HS present."
+  },
+  {
+    "mfr": "STM32F405RGT7",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F405RGTx.xml",
+    "evidence": "ST device IP inventory STM32F405RGTx: USB_OTG_FS, USB_OTG_HS present."
+  },
+  {
+    "mfr": "STM32F205RBT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F205R%28B-C-E-F-G%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F205R(B-C-E-F-G)Tx: USB_OTG_FS, USB_OTG_HS present."
+  },
+  {
+    "mfr": "STM32F107RBT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F107R%28B-C%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F107R(B-C)Tx: USB_OTG_FS present."
+  },
+  {
+    "mfr": "STM32F205RCT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F205R%28B-C-E-F-G%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F205R(B-C-E-F-G)Tx: USB_OTG_FS, USB_OTG_HS present."
+  },
+  {
+    "mfr": "STM32F767ZGT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F767ZGTx.xml",
+    "evidence": "ST device IP inventory STM32F767ZGTx: USB_OTG_FS, USB_OTG_HS present."
+  },
+  {
+    "mfr": "STM32F412ZET6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F412Z%28E-G%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F412Z(E-G)Tx: USB_OTG_FS present."
+  },
+  {
+    "mfr": "STM32F417VGT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F417V%28E-G%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F417V(E-G)Tx: USB_OTG_FS, USB_OTG_HS present."
+  },
+  {
+    "mfr": "STM32F767IIT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F767I%28G-I%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F767I(G-I)Tx: USB_OTG_FS, USB_OTG_HS present."
+  },
+  {
+    "mfr": "STM32F401RBT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F401R%28B-C%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F401R(B-C)Tx: USB_OTG_FS present."
+  },
+  {
+    "mfr": "STM32F413ZHT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F413Z%28G-H%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F413Z(G-H)Tx: USB_OTG_FS present."
+  },
+  {
+    "mfr": "STM32F429ZIT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F429ZITx.xml",
+    "evidence": "ST device IP inventory STM32F429ZITx: USB_OTG_FS, USB_OTG_HS present."
+  },
+  {
+    "mfr": "STM32F207ZGT6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F207Z%28C-E-F-G%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F207Z(C-E-F-G)Tx: USB_OTG_FS, USB_OTG_HS present."
+  },
+  {
+    "mfr": "STM32F429ZET6",
+    "has_usb_host": true,
+    "source_url": "https://github.com/STMicroelectronics/STM32_open_pin_data/blob/7d1f1514ed5583ec5007ad91236b4e1d377295b1/mcu/STM32F429Z%28E-G%29Tx.xml",
+    "evidence": "ST device IP inventory STM32F429Z(E-G)Tx: USB_OTG_FS, USB_OTG_HS present."
+  }
+]

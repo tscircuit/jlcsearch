@@ -735,6 +735,7 @@ export interface Microcontroller {
   has_spi: number | null
   has_uart: number | null
   has_usb: number | null
+  has_usb_host: number | null
   has_watchdog: number | null
   in_stock: number | null
   lcsc: Generated<number | null>
