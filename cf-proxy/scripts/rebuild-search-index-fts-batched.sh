@@ -13,7 +13,7 @@ else
 fi
 
 run_wrangler() {
-  "${WRANGLER_CMD[@]}" "$@"
+  bash "${SCRIPT_DIR}/retry-command.sh" "${WRANGLER_CMD[@]}" "$@"
 }
 
 if [[ -z "${MAX_ROWID}" ]]; then
@@ -41,8 +41,11 @@ for ((start=1; start<=MAX_ROWID; start+=FTS_BATCH_ROWS)); do
 
   echo "Importing FTS rowids ${start}-${end}..."
   run_wrangler d1 execute "${DB_NAME}" --remote --command "
-    INSERT INTO search_index_fts(rowid, search_text)
-    SELECT rowid, search_text
+    DELETE FROM search_index_fts
+    WHERE rowid BETWEEN ${start} AND ${end};
+
+    INSERT INTO search_index_fts(rowid, lcsc, search_text)
+    SELECT rowid, lcsc, search_text
     FROM search_index
     WHERE rowid BETWEEN ${start} AND ${end}
       AND search_text IS NOT NULL
@@ -52,7 +55,6 @@ done
 
 echo "Marking search_index_fts ready..."
 run_wrangler d1 execute "${DB_NAME}" --remote --command "
-  INSERT INTO search_index_fts(search_index_fts) VALUES('optimize');
   UPDATE search_index_fts_meta SET value = '1' WHERE key = 'ready';
 "
 
