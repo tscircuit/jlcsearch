@@ -32,6 +32,7 @@ export const buckBoostConverterTableSpec: DerivedTableSpec<BuckBoostConverter> =
       { name: "number_of_outputs", type: "integer" },
       { name: "is_basic", type: "boolean" },
       { name: "is_preferred", type: "boolean" },
+      { name: "is_extended_promotional", type: "boolean" },
     ],
     listCandidateComponents: (db) =>
       db
@@ -121,6 +122,7 @@ export const buckBoostConverterTableSpec: DerivedTableSpec<BuckBoostConverter> =
             in_stock: c.stock > 0,
             is_basic: Boolean(c.basic),
             is_preferred: Boolean(c.preferred),
+            is_extended_promotional: false, // TODO: Populate from JLCPCB promotional data
             package: c.package || "",
             input_voltage_min: inputMin,
             input_voltage_max: inputMax,
