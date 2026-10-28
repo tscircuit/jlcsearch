@@ -90,7 +90,7 @@ jobs:
       - name: Export microcontroller USB audit snapshot
         run: |
           bash scripts/retry-command.sh bunx wrangler d1 execute jlcsearch --remote --json \
-            --command "SELECT lcsc, mfr, stock, has_usb FROM microcontroller ORDER BY stock DESC, lcsc ASC LIMIT 1000;" \
+            --command "SELECT m.lcsc, m.mfr, m.stock, m.has_usb, m.description, m.package, m.attributes, json_extract(c.extra, '\$.manufacturer.name') AS manufacturer FROM microcontroller AS m LEFT JOIN component_catalog AS c ON c.lcsc = m.lcsc ORDER BY m.stock DESC, m.lcsc ASC;" \
             > "${RUNNER_TEMP}/microcontroller-usb-snapshot.json"
       - uses: actions/upload-artifact@v4
         with:
