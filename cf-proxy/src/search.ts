@@ -39,13 +39,16 @@ const isMissingFtsReadinessTable = (error: unknown): boolean =>
 async function isFtsSearchReady(db: Kysely<DB>): Promise<boolean> {
   try {
     const result = await sql`
-      SELECT value
+      SELECT key, value
       FROM search_index_fts_meta
-      WHERE key = 'ready'
-      LIMIT 1
+      WHERE key IN ('ready', 'schema')
     `.execute(db)
 
-    return (result.rows[0] as { value?: string } | undefined)?.value === "1"
+    const rows = result.rows as { key: string; value: string }[]
+    return (
+      rows.some((row) => row.key === "ready" && row.value === "1") &&
+      rows.some((row) => row.key === "schema" && row.value === "2")
+    )
   } catch (error) {
     if (isMissingFtsReadinessTable(error)) return false
     throw error
@@ -136,10 +139,6 @@ export async function searchIndex(
     }
   }
 
-  const searchConditions =
-    ftsSearchConditions.length > 0
-      ? ftsSearchConditions
-      : fallbackSearchConditions
   const selectSql = sql`
     SELECT
       search_index.lcsc,
@@ -155,34 +154,28 @@ export async function searchIndex(
       search_index.subcategory
     FROM search_index
   `
+  const orderConditions: RawBuilder<unknown>[] = []
+  if (raw && ftsSearchConditions.length > 0) {
+    orderConditions.push(sql`CASE WHEN
+      search_index.mfr = ${raw} COLLATE NOCASE
+      OR search_index.mpn = ${raw} COLLATE NOCASE
+      THEN 0 ELSE 1 END`)
+  }
+  orderConditions.push(sql`search_index.stock DESC`)
   const orderLimitSql = sql`
-    ORDER BY search_index.stock DESC
+    ORDER BY ${sql.join(orderConditions)}
     LIMIT ${limit}
   `
-
-  if (raw && ftsSearchConditions.length > 0) {
-    const exactPartCondition = sql`search_index.mfr = ${raw} COLLATE NOCASE`
-    const exactPart = await sql`
-      SELECT 1 FROM search_index WHERE ${exactPartCondition} LIMIT 1
-    `.execute(db)
-
-    // An exact part number should not resolve to a different catalog part,
-    // including when the requested part is out of stock or excluded by filters.
-    if (exactPart.rows.length > 0) {
-      const result = await sql`
-        ${selectSql}
-        WHERE ${buildWhereClause([...conditions, exactPartCondition])}
-        ${orderLimitSql}
-      `.execute(db)
-      return result.rows as SearchRow[]
-    }
-  }
 
   if (ftsSearchConditions.length > 0 && (await isFtsSearchReady(db))) {
     const ftsQuery = sql`
       ${selectSql}
-      JOIN search_index_fts ON search_index_fts.rowid = search_index.rowid
-      WHERE ${buildWhereClause([...conditions, ...searchConditions])}
+      JOIN search_index_fts ON search_index_fts.lcsc = search_index.lcsc
+      WHERE ${buildWhereClause([
+        ...conditions,
+        ...ftsSearchConditions,
+        ...fallbackSearchConditions,
+      ])}
       ${orderLimitSql}
     `
 

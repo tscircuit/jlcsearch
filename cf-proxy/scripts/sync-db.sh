@@ -113,8 +113,8 @@ rebuild_remote_search_fts_index() {
       DELETE FROM search_index_fts
       WHERE rowid BETWEEN ${start} AND ${end};
 
-      INSERT INTO search_index_fts(rowid, search_text)
-      SELECT rowid, search_text
+      INSERT INTO search_index_fts(rowid, lcsc, search_text)
+      SELECT rowid, lcsc, search_text
       FROM search_index
       WHERE rowid BETWEEN ${start} AND ${end}
         AND search_text IS NOT NULL
@@ -445,7 +445,6 @@ WHERE lcsc IS NOT NULL;
 
 CREATE INDEX IF NOT EXISTS idx_search_index_stock ON search_index(stock DESC);
 CREATE INDEX IF NOT EXISTS idx_search_index_lcsc ON search_index(lcsc);
-CREATE INDEX IF NOT EXISTS idx_search_index_mfr_stock ON search_index(mfr COLLATE NOCASE, stock DESC);
 CREATE INDEX IF NOT EXISTS idx_search_index_package ON search_index(package);
 CREATE INDEX IF NOT EXISTS idx_search_index_package_stock ON search_index(package, stock DESC);
 CREATE INDEX IF NOT EXISTS idx_search_index_subcategory_stock ON search_index(subcategory, stock DESC);
@@ -458,6 +457,8 @@ SEARCH_INDEX_SCHEMA
 
 write_search_index_schema() {
   cat > search_index_schema.sql <<'SEARCH_INDEX_SCHEMA_EXPORT'
+CREATE TABLE IF NOT EXISTS search_index_fts_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+UPDATE search_index_fts_meta SET value = '0' WHERE key = 'ready';
 DROP TABLE IF EXISTS search_index;
 CREATE TABLE search_index (
   lcsc INTEGER NOT NULL UNIQUE,
@@ -479,7 +480,6 @@ CREATE TABLE search_index (
 );
 CREATE INDEX IF NOT EXISTS idx_search_index_stock ON search_index(stock DESC);
 CREATE INDEX IF NOT EXISTS idx_search_index_lcsc ON search_index(lcsc);
-CREATE INDEX IF NOT EXISTS idx_search_index_mfr_stock ON search_index(mfr COLLATE NOCASE, stock DESC);
 CREATE INDEX IF NOT EXISTS idx_search_index_package ON search_index(package);
 CREATE INDEX IF NOT EXISTS idx_search_index_package_stock ON search_index(package, stock DESC);
 CREATE INDEX IF NOT EXISTS idx_search_index_subcategory_stock ON search_index(subcategory, stock DESC);

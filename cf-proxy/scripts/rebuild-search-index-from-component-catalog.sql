@@ -1,3 +1,5 @@
+CREATE TABLE IF NOT EXISTS search_index_fts_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+UPDATE search_index_fts_meta SET value = '0' WHERE key = 'ready';
 DROP TABLE IF EXISTS search_index;
 
 CREATE TABLE search_index AS
@@ -59,7 +61,6 @@ WHERE lcsc IS NOT NULL;
 
 CREATE INDEX IF NOT EXISTS idx_search_index_stock ON search_index(stock DESC);
 CREATE INDEX IF NOT EXISTS idx_search_index_lcsc ON search_index(lcsc);
-CREATE INDEX IF NOT EXISTS idx_search_index_mfr_stock ON search_index(mfr COLLATE NOCASE, stock DESC);
 CREATE INDEX IF NOT EXISTS idx_search_index_package ON search_index(package);
 CREATE INDEX IF NOT EXISTS idx_search_index_package_stock ON search_index(package, stock DESC);
 CREATE INDEX IF NOT EXISTS idx_search_index_subcategory_stock ON search_index(subcategory, stock DESC);

@@ -9,20 +9,17 @@ import { searchIndex } from "../../cf-proxy/src/search"
 // version 0.4.0-rc.9, output/fabrication/bom-jlcpcb.csv.
 // Only identifiers are copied; stock counts are fixed test inputs.
 const boardParts = [
-  { reference: "J3", mfr: "PJ-320D", lcsc: 431535 },
-  { reference: "U5", mfr: "XC6206P182MR", lcsc: 21659 },
+  { reference: "J3", mfr: "PJ-320D", partial: "PJ-320", lcsc: 431535 },
+  { reference: "U5", mfr: "XC6206P182MR", partial: "XC6206", lcsc: 21659 },
 ]
 
 async function createSearchDatabase() {
   const sqlite = new Database(":memory:")
-  sqlite.exec(
-    await Bun.file(
-      new URL(
-        "../../cf-proxy/migrations/0018_search_index_mfr.sql",
-        import.meta.url,
-      ),
-    ).text(),
-  )
+  sqlite.exec(`CREATE TABLE search_index (
+    lcsc INTEGER, mfr TEXT, mpn TEXT, package TEXT, description TEXT,
+    stock INTEGER, price TEXT, price1 REAL, basic INTEGER,
+    preferred INTEGER, category TEXT, subcategory TEXT, search_text TEXT
+  )`)
   for (const part of boardParts) {
     sqlite
       .query(
@@ -35,17 +32,29 @@ async function createSearchDatabase() {
       new URL("../../cf-proxy/scripts/setup-fts5.sql", import.meta.url),
     ).text(),
   )
-  // Populate rowids exactly as rebuild-search-index-fts-batched.sh does.
-  sqlite.exec(`
-    INSERT INTO search_index_fts(rowid, search_text)
-      SELECT rowid, search_text FROM search_index;
-    UPDATE search_index_fts_meta SET value = '1' WHERE key = 'ready';
-  `)
+  populateSearchFts(sqlite)
+  const statements: string[] = []
   const db = new Kysely<DB>({
     dialect: new BunSqliteDialect({ database: sqlite }),
+    log(event) {
+      if (event.level === "query") statements.push(event.query.sql)
+    },
   })
   // Root and worker Kysely packages have distinct private type brands.
-  return { sqlite, db: db as typeof db & Parameters<typeof searchIndex>[0] }
+  return {
+    sqlite,
+    db: db as typeof db & Parameters<typeof searchIndex>[0],
+    statements,
+  }
+}
+
+function populateSearchFts(sqlite: Database) {
+  sqlite.exec(`
+    DELETE FROM search_index_fts;
+    INSERT INTO search_index_fts(rowid, lcsc, search_text)
+      SELECT rowid, lcsc, search_text FROM search_index;
+    UPDATE search_index_fts_meta SET value = '1' WHERE key = 'ready';
+  `)
 }
 
 function rebuildCatalog(sqlite: Database) {
@@ -58,26 +67,72 @@ function rebuildCatalog(sqlite: Database) {
   `)
 }
 
-test("exact part numbers ignore case and take precedence over partial matches", async () => {
-  const { sqlite, db } = await createSearchDatabase()
-  try {
-    sqlite.exec(`
-      INSERT INTO search_index (lcsc, mfr, stock, search_text)
-        VALUES (1, 'PJ-320D-OTHER', 1000, 'pj-320d-other');
-      INSERT INTO search_index_fts(rowid, search_text)
-        SELECT rowid, search_text FROM search_index WHERE lcsc = 1;
-    `)
-    expect(
-      (await searchIndex(db, { q: "  pj-320d  " })).map((part) => part.lcsc),
-    ).toEqual([431535])
-    // A non-exact query still uses the existing token search and stock ordering.
-    expect(
-      (await searchIndex(db, { q: "pj-320" })).map((part) => part.lcsc),
-    ).toEqual([1, 431535])
-  } finally {
-    await db.destroy()
-  }
-})
+for (const useFts of [true, false]) {
+  test(`exact matches rank first without excluding alternatives (FTS ${useFts})`, async () => {
+    const { sqlite, db } = await createSearchDatabase()
+    try {
+      sqlite.exec(`
+        INSERT INTO search_index (lcsc, mfr, stock, search_text)
+          VALUES (1, 'PJ-320D-OTHER', 1000, 'pj-320d-other');
+      `)
+      populateSearchFts(sqlite)
+      if (!useFts)
+        sqlite.exec(
+          "UPDATE search_index_fts_meta SET value = '0' WHERE key = 'ready'",
+        )
+      expect(
+        (await searchIndex(db, { q: "  pj-320d  " })).map((part) => part.lcsc),
+      ).toEqual([431535, 1])
+      expect(
+        (await searchIndex(db, { q: "PJ-320D", limit: "1" })).map(
+          (part) => part.lcsc,
+        ),
+      ).toEqual([431535])
+      expect(
+        (await searchIndex(db, { q: "pj-320" })).map((part) => part.lcsc),
+      ).toEqual([1, 431535])
+      for (const stock of [0, null]) {
+        sqlite
+          .query("UPDATE search_index SET stock = ? WHERE lcsc = 431535")
+          .run(stock)
+        expect(
+          (await searchIndex(db, { q: "PJ-320D" })).map((part) => part.lcsc),
+        ).toEqual([1])
+      }
+      sqlite.exec(
+        "UPDATE search_index SET stock = 100, package = 'THT' WHERE lcsc = 431535; UPDATE search_index SET package = 'SMD' WHERE lcsc = 1",
+      )
+      expect(
+        (await searchIndex(db, { q: "PJ-320D", package: "SMD" })).map(
+          (part) => part.lcsc,
+        ),
+      ).toEqual([1])
+    } finally {
+      await db.destroy()
+    }
+  })
+
+  test(`both catalog mfr and metadata mpn receive exact-match ranking (FTS ${useFts})`, async () => {
+    const { sqlite, db } = await createSearchDatabase()
+    try {
+      sqlite.exec(`
+        INSERT INTO search_index (lcsc, mfr, mpn, stock, search_text) VALUES
+          (1, NULL, 'PJ-320D', 200, 'pj-320d'),
+          (2, 'PJ-320D-OTHER', NULL, 1000, 'pj-320d-other');
+      `)
+      populateSearchFts(sqlite)
+      if (!useFts)
+        sqlite.exec(
+          "UPDATE search_index_fts_meta SET value = '0' WHERE key = 'ready'",
+        )
+      expect(
+        (await searchIndex(db, { q: "pj-320d" })).map((part) => part.lcsc),
+      ).toEqual([1, 431535, 2])
+    } finally {
+      await db.destroy()
+    }
+  })
+}
 
 test("exact part numbers respect filters, stock ordering and limit", async () => {
   const { sqlite, db } = await createSearchDatabase()
@@ -86,11 +141,12 @@ test("exact part numbers respect filters, stock ordering and limit", async () =>
     sqlite.exec(`
       UPDATE search_index SET package = 'SMD', subcategory = 'Audio Connectors',
         basic = 1, preferred = 1 WHERE lcsc = 431535;
-      INSERT INTO search_index (lcsc, mfr, stock, package, subcategory, basic, preferred)
-        VALUES (1, 'PJ-320D', 200, 'SMD', 'Audio Connectors', 1, 1);
-      INSERT INTO search_index (lcsc, mfr, stock, package, subcategory, basic, preferred)
-        VALUES (2, 'PJ-320D', 300, 'THT', 'Audio Connectors', 1, 1);
+      INSERT INTO search_index (lcsc, mfr, stock, package, subcategory, basic, preferred, search_text)
+        VALUES (1, 'PJ-320D', 200, 'SMD', 'Audio Connectors', 1, 1, 'pj-320d');
+      INSERT INTO search_index (lcsc, mfr, stock, package, subcategory, basic, preferred, search_text)
+        VALUES (2, 'PJ-320D', 300, 'THT', 'Audio Connectors', 1, 1, 'pj-320d');
     `)
+    populateSearchFts(sqlite)
     const filters = {
       q: "PJ-320D",
       package: "SMD",
@@ -124,44 +180,53 @@ test("exact part numbers respect filters, stock ordering and limit", async () =>
   }
 })
 
-test("exact lookup uses the manufacturer index and migration preserves existing parts", async () => {
-  const { sqlite, db } = await createSearchDatabase()
+test("text searches use readiness plus one search query; LCSC lookups use one query", async () => {
+  const { db, statements } = await createSearchDatabase()
   try {
-    sqlite.exec(
-      await Bun.file(
-        new URL(
-          "../../cf-proxy/migrations/0018_search_index_mfr.sql",
-          import.meta.url,
-        ),
-      ).text(),
-    )
-    expect(
-      sqlite.query("SELECT COUNT(*) AS count FROM search_index").get(),
-    ).toEqual({ count: 2 })
-    const plan = sqlite
-      .query<{ detail: string }, [string]>(
-        "EXPLAIN QUERY PLAN SELECT lcsc FROM search_index WHERE mfr = ? COLLATE NOCASE AND stock > 0 ORDER BY stock DESC LIMIT 10",
-      )
-      .all("PJ-320D")
-    expect(
-      plan.some((step) =>
-        step.detail.includes("USING INDEX idx_search_index_mfr_stock"),
-      ),
-    ).toBe(true)
-    expect(plan.some((step) => step.detail.includes("SCAN search_index"))).toBe(
-      false,
-    )
+    await searchIndex(db, { q: "PJ-320D" })
+    expect(statements).toHaveLength(2)
+    expect(statements[1]).toContain("search_index_fts.lcsc = search_index.lcsc")
+    statements.length = 0
+    await searchIndex(db, { q: "C431535" })
+    expect(statements).toHaveLength(1)
   } finally {
     await db.destroy()
   }
 })
 
-for (const indexState of ["aligned", "stale", "disabled"] as const) {
+test("stale FTS text cannot return a catalog row that no longer matches", async () => {
+  const { sqlite, db } = await createSearchDatabase()
+  try {
+    sqlite.exec(
+      "UPDATE search_index SET mfr = 'UNRELATED', search_text = 'unrelated' WHERE lcsc = 431535",
+    )
+    expect(await searchIndex(db, { q: "PJ-320" })).toEqual([])
+  } finally {
+    await db.destroy()
+  }
+})
+
+for (const indexState of [
+  "aligned",
+  "stale",
+  "disabled",
+  "legacy",
+  "missing",
+] as const) {
   test.each(boardParts)(
     `$reference: name and LCSC searches agree with ${indexState} FTS index`,
     async (part) => {
       const { sqlite, db } = await createSearchDatabase()
       try {
+        if (indexState === "legacy") {
+          sqlite.exec(`
+            DROP TABLE search_index_fts;
+            CREATE VIRTUAL TABLE search_index_fts USING fts5(search_text, tokenize='trigram');
+            INSERT INTO search_index_fts(rowid, search_text) SELECT rowid, search_text FROM search_index;
+            DELETE FROM search_index_fts_meta WHERE key = 'schema';
+          `)
+        }
+        if (indexState === "missing") sqlite.exec("DROP TABLE search_index_fts")
         if (indexState !== "aligned") {
           rebuildCatalog(sqlite)
         }
@@ -176,6 +241,7 @@ for (const indexState of ["aligned", "stale", "disabled"] as const) {
         ])
         const byName = await searchIndex(db, { q: part.mfr })
         expect(byName).toEqual(byCode)
+        expect(await searchIndex(db, { q: part.partial })).toEqual(byCode)
       } finally {
         await db.destroy()
       }

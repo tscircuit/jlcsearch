@@ -7,6 +7,7 @@ DROP TABLE IF EXISTS search_index_fts_meta;
 
 CREATE VIRTUAL TABLE search_index_fts USING fts5(
   search_text,
+  lcsc UNINDEXED,
   tokenize='trigram'
 );
 
@@ -16,5 +17,6 @@ CREATE TABLE search_index_fts_meta (
 );
 
 INSERT INTO search_index_fts_meta(key, value) VALUES('ready', '0');
+INSERT INTO search_index_fts_meta(key, value) VALUES('schema', '2');
 
 SELECT 'search_index_fts initialized' AS status;
