@@ -83,6 +83,24 @@ test("host detection distinguishes device, PD, unknown and native host support",
   expect(detect("RP2040-UNVERIFIED", {}, "").has_usb_host).toBeNull()
 })
 
+test("manufacturer package tables and revised host specifications override older device-only wording", () => {
+  const cases = [
+    ["CY8C6244LQI-S4D92", true],
+    ["CY8C6244AZI-S4D92", false],
+    ["CY8C6347BZI-BLD54", true],
+    ["CY8C6347BZI-BLD53", false],
+    ["CY8C6347LQI-BLD52", false],
+    ["CY8C6245AZI-S3D42", true],
+    ["PIC32CM2532LE00048-I/Y8X", true],
+    ["PIC32CM2532LE00064-I/5LX", true],
+    ["M2354SJFAE", true],
+    ["nRF52833-QDAA-R", false],
+  ] as const
+  for (const [mfr, expected] of cases) {
+    expect(detect(mfr, {}, "").has_usb_host).toBe(expected)
+  }
+})
+
 test("native host support implies USB support during a rebuild", () => {
   const row = microcontrollerTableSpec.mapToTable([
     {
@@ -101,7 +119,42 @@ test("native host support implies USB support during a rebuild", () => {
   expect(row.has_usb_host).toBe(true)
 })
 
-test("migration seeds exact audited parts and leaves unknown host capability null", async () => {
+test("catalog audit accounts for every production row and every decision has evidence", () => {
+  expect(hostAudit.parts).toHaveLength(9763)
+  expect(new Set(hostAudit.parts.map((row) => row.lcsc)).size).toBe(9763)
+  expect(
+    new Set(hostAudit.parts.map((row) => row.mfr.trim().toUpperCase())).size,
+  ).toBe(9745)
+  expect(hostAudit.snapshot.sha256).toMatch(/^[a-f0-9]{64}$/)
+  expect(hostAudit.coverage).toEqual({
+    host: hostAudit.parts.filter((row) => row.has_usb_host === true).length,
+    no_host: hostAudit.parts.filter((row) => row.has_usb_host === false).length,
+    unknown: hostAudit.parts.filter((row) => row.has_usb_host === null).length,
+  })
+  for (const row of hostAudit.parts) {
+    if (row.has_usb_host === null) {
+      expect(row.reason?.length).toBeGreaterThan(10)
+      expect(row.reason).not.toBe(
+        "Manufacturer datasheet investigation pending.",
+      )
+      expect(row.source).toBeNull()
+      expect(
+        detect(row.mfr, { "USB Host": "Yes" }, "USB host").has_usb_host,
+      ).toBeNull()
+    } else {
+      const source = hostAudit.sources[row.source!]
+      expect(["http:", "https:"]).toContain(new URL(source.source_url).protocol)
+      expect(source.document.length).toBeGreaterThan(5)
+      expect(source.evidence.length).toBeGreaterThan(20)
+      expect(source.match_method.length).toBeGreaterThan(10)
+      if (source.source_sha256)
+        expect(source.source_sha256).toMatch(/^[a-f0-9]{64}$/)
+      expect(detect(row.mfr, {}, "").has_usb_host).toBe(row.has_usb_host)
+    }
+  }
+})
+
+test("migration backfills the audited catalog while preserving stock and unknowns", async () => {
   const migration = await Bun.file(
     "cf-proxy/migrations/0018_microcontroller_interfaces.sql",
   ).text()
@@ -109,51 +162,47 @@ test("migration seeds exact audited parts and leaves unknown host capability nul
   const db = new Database(":memory:")
   try {
     db.exec(
-      "CREATE TABLE microcontroller (mfr TEXT, has_can BOOLEAN, has_spi BOOLEAN, has_i2c BOOLEAN, has_uart BOOLEAN, stock INTEGER)",
+      "CREATE TABLE microcontroller (lcsc INTEGER PRIMARY KEY, mfr TEXT, has_can BOOLEAN, has_spi BOOLEAN, has_i2c BOOLEAN, has_uart BOOLEAN, has_usb BOOLEAN, stock INTEGER)",
     )
-    for (const row of microcontrollerInterfaceAudit)
-      db.run("INSERT INTO microcontroller VALUES (?, 0, 0, 0, 0, 123)", [
-        ` ${row.mfr.toLowerCase()} `,
-      ])
-    db.run(
-      "INSERT INTO microcontroller VALUES ('RP2040-UNVERIFIED', 1, 1, 1, 1, 456)",
+    const insert = db.prepare(
+      "INSERT INTO microcontroller VALUES (?, ?, 0, 0, 0, 0, 0, 123)",
     )
-    for (const row of hostAudit)
-      db.run("INSERT INTO microcontroller VALUES (?, 0, 0, 0, 0, 123)", [
-        row.mfr,
-      ])
+    for (const row of hostAudit.parts)
+      insert.run(row.lcsc, ` ${row.mfr.toLowerCase()} `)
+    insert.run(-1, "RP2040-UNVERIFIED")
     db.exec(migration)
-    for (const row of hostAudit) {
-      expect(detect(row.mfr, {}, "").has_usb_host).toBe(true)
-      expect(
-        db
-          .query("SELECT has_usb_host FROM microcontroller WHERE mfr = ?")
-          .get(row.mfr),
-      ).toEqual({ has_usb_host: 1 })
+    const query = db.prepare(
+      "SELECT has_usb_host, has_usb, stock FROM microcontroller WHERE lcsc = ?",
+    )
+    for (const row of hostAudit.parts) {
+      expect(query.get(row.lcsc)).toEqual({
+        has_usb_host:
+          row.has_usb_host === null ? null : Number(row.has_usb_host),
+        has_usb: row.has_usb_host === true ? 1 : 0,
+        stock: 123,
+      })
     }
-
     for (const { mfr, source, ...flags } of microcontrollerInterfaceAudit) {
       expect(detect(mfr, {}, "")).toEqual(flags)
       expect(
         db
           .query(
-            "SELECT has_can, has_spi, has_i2c, has_uart, has_usb_host, stock FROM microcontroller WHERE UPPER(TRIM(mfr)) = ?",
+            "SELECT has_can, has_spi, has_i2c, has_uart FROM microcontroller WHERE UPPER(TRIM(mfr)) = ?",
           )
           .get(mfr),
-      ).toEqual({
-        ...Object.fromEntries(
-          Object.entries(flags).map(([key, value]) => [key, Number(value)]),
+      ).toEqual(
+        Object.fromEntries(
+          Object.entries(flags)
+            .filter(([key]) => key !== "has_usb_host")
+            .map(([key, value]) => [key, Number(value)]),
         ),
-        stock: 123,
-      })
+      )
     }
-    expect(
-      db
-        .query(
-          "SELECT has_usb_host, stock FROM microcontroller WHERE mfr = 'RP2040-UNVERIFIED'",
-        )
-        .get(),
-    ).toEqual({ has_usb_host: null, stock: 456 })
+    expect(query.get(-1)).toEqual({
+      has_usb_host: null,
+      has_usb: 0,
+      stock: 123,
+    })
   } finally {
     db.close()
   }

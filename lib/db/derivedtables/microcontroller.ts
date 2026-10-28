@@ -162,8 +162,8 @@ export const microcontrollerTableSpec: DerivedTableSpec<Microcontroller> = {
         c.description,
       )
       const hasUsb =
-        getMicrocontrollerUsbOverride(c.mfr) ??
-        (interfaces.has_usb_host === true ||
+        interfaces.has_usb_host === true ||
+        (getMicrocontrollerUsbOverride(c.mfr) ??
           Boolean(
             peripheral.includes("usb") ||
               attrs["Universal Serial Bus"] === "Yes" ||

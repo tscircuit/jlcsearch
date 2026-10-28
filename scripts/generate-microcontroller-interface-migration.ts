@@ -12,10 +12,36 @@ export const generateMicrocontrollerInterfaceMigration = () =>
         .map(([key, value]) => `${key} = ${Number(value)}`)
         .join(", ")} WHERE UPPER(TRIM(mfr)) = '${mfr.replaceAll("'", "''")}';`,
     ]),
-    ...hostAudit.map(
-      (row) =>
-        `UPDATE microcontroller SET has_usb_host = 1 WHERE UPPER(TRIM(mfr)) = '${row.mfr.replaceAll("'", "''")}';`,
-    ),
+    ...[true, false].flatMap((host) => {
+      const mfrs = [
+        ...new Set(
+          hostAudit.parts
+            .filter((row) => row.has_usb_host === host)
+            .flatMap((row) => {
+              const mfr = row.mfr.trim()
+              // SQLite UPPER only folds ASCII; include Unicode lowercase
+              // variants explicitly for supplier order codes using fullwidth text.
+              return [
+                mfr.toUpperCase(),
+                mfr
+                  .toLowerCase()
+                  .replace(/[a-z]/g, (letter) => letter.toUpperCase()),
+              ]
+            }),
+        ),
+      ].sort()
+      const statements: string[] = []
+      for (let offset = 0; offset < mfrs.length; offset += 100) {
+        const values = mfrs
+          .slice(offset, offset + 100)
+          .map((mfr) => `'${mfr.replaceAll("'", "''")}'`)
+          .join(", ")
+        statements.push(
+          `UPDATE microcontroller SET has_usb_host = ${Number(host)}${host ? ", has_usb = 1" : ""} WHERE UPPER(TRIM(mfr)) IN (${values});`,
+        )
+      }
+      return statements
+    }),
     "",
   ].join("\n")
 

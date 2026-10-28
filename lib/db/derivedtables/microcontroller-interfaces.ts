@@ -1,5 +1,4 @@
-// Host audit entries retain the exact-part USB_OTG peripheral evidence from
-// the existing microcontroller USB audits; USB device-only entries are excluded.
+// Exact catalog decisions and their manufacturer datasheet evidence.
 import hostAudit from "./microcontroller-usb-host-audit.json"
 import { getMicrocontrollerUsbOverride } from "./microcontroller-usb"
 
@@ -46,6 +45,13 @@ export const microcontrollerInterfaceAudit = [
   },
 ]
 
+const hostOverrides = new Map(
+  hostAudit.parts.map((row) => [
+    row.mfr.trim().toUpperCase(),
+    row.has_usb_host,
+  ]),
+)
+
 // Missing supplier metadata is not evidence that a peripheral is absent.
 const availability = (value: unknown): boolean | null => {
   if (typeof value === "boolean") return value
@@ -80,12 +86,10 @@ export const getMicrocontrollerInterfaces = (
     if (values.includes(false)) return false
     return pattern.test(text)
   }
+  const reviewedHost = hostOverrides.get(mfr.trim().toUpperCase())
   let host: boolean | null =
-    audited?.has_usb_host ??
-    hostAudit.find((row) => row.mfr === mfr.trim().toUpperCase())
-      ?.has_usb_host ??
-    null
-  if (host === null) {
+    reviewedHost !== undefined ? reviewedHost : (audited?.has_usb_host ?? null)
+  if (host === null && reviewedHost === undefined) {
     if (getMicrocontrollerUsbOverride(mfr) === false) host = false
     else {
       const values = ["usb host", "usb otg"].map((key) =>
