@@ -16,5 +16,7 @@ CREATE TABLE search_index_fts_meta (
 );
 
 INSERT INTO search_index_fts_meta(key, value) VALUES('ready', '0');
+-- FTS rowids identify components by LCSC, independently of catalog row order.
+INSERT INTO search_index_fts_meta(key, value) VALUES('rowid_source', 'lcsc');
 
 SELECT 'search_index_fts initialized' AS status;

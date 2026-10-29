@@ -4,7 +4,7 @@
     "@biomejs/biome": "^1.9.4",
     "@types/bun": "^1.2.19",
     "better-sqlite3": "^11.7.0",
-    "kysely": "^0.28.3",
+    "kysely": "0.28.14",
     "kysely-codegen": "^0.17.0"
   },
   "peerDependencies": {

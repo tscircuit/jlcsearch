@@ -111,10 +111,10 @@ rebuild_remote_search_fts_index() {
     echo "  importing FTS rowids ${start}-${end}"
     run_wrangler d1 execute "${DB_NAME}" --remote --command "
       DELETE FROM search_index_fts
-      WHERE rowid BETWEEN ${start} AND ${end};
+      WHERE rowid IN (SELECT lcsc FROM search_index WHERE rowid BETWEEN ${start} AND ${end});
 
       INSERT INTO search_index_fts(rowid, search_text)
-      SELECT rowid, search_text
+      SELECT lcsc, search_text
       FROM search_index
       WHERE rowid BETWEEN ${start} AND ${end}
         AND search_text IS NOT NULL
@@ -457,6 +457,8 @@ SEARCH_INDEX_SCHEMA
 
 write_search_index_schema() {
   cat > search_index_schema.sql <<'SEARCH_INDEX_SCHEMA_EXPORT'
+CREATE TABLE IF NOT EXISTS search_index_fts_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+UPDATE search_index_fts_meta SET value = '0' WHERE key = 'ready';
 DROP TABLE IF EXISTS search_index;
 CREATE TABLE search_index (
   lcsc INTEGER NOT NULL UNIQUE,

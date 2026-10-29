@@ -38,14 +38,17 @@ const isMissingFtsReadinessTable = (error: unknown): boolean =>
 
 async function isFtsSearchReady(db: Kysely<DB>): Promise<boolean> {
   try {
-    const result = await sql`
-      SELECT value
+    const result = await sql<{ key: string; value: string }>`
+      SELECT key, value
       FROM search_index_fts_meta
-      WHERE key = 'ready'
-      LIMIT 1
+      WHERE key IN ('ready', 'rowid_source')
     `.execute(db)
 
-    return (result.rows[0] as { value?: string } | undefined)?.value === "1"
+    const rows = result.rows
+    return (
+      rows.some((row) => row.key === "ready" && row.value === "1") &&
+      rows.some((row) => row.key === "rowid_source" && row.value === "lcsc")
+    )
   } catch (error) {
     if (isMissingFtsReadinessTable(error)) return false
     throw error
@@ -136,10 +139,6 @@ export async function searchIndex(
     }
   }
 
-  const searchConditions =
-    ftsSearchConditions.length > 0
-      ? ftsSearchConditions
-      : fallbackSearchConditions
   const selectSql = sql`
     SELECT
       search_index.lcsc,
@@ -163,8 +162,12 @@ export async function searchIndex(
   if (ftsSearchConditions.length > 0 && (await isFtsSearchReady(db))) {
     const ftsQuery = sql`
       ${selectSql}
-      JOIN search_index_fts ON search_index_fts.rowid = search_index.rowid
-      WHERE ${buildWhereClause([...conditions, ...searchConditions])}
+      JOIN search_index_fts ON search_index_fts.rowid = search_index.lcsc
+      WHERE ${buildWhereClause([
+        ...conditions,
+        ...ftsSearchConditions,
+        ...fallbackSearchConditions,
+      ])}
       ${orderLimitSql}
     `
 

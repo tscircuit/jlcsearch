@@ -5,8 +5,14 @@ const CACHE_CONTROL_QUERY_PARAMS = new Set(["cachebust"])
  */
 export async function generateCacheKey(url: URL): Promise<string> {
   const normalized = normalizeUrl(url)
+  const path = url.pathname.replace(/\/$/, "").replace(/\.json$/, "")
+  // Bypass component responses cached by the old rowid-based FTS join.
+  const namespace =
+    path === "/api/search" || path === "/components/list"
+      ? "component-search-lcsc-rowid-v1:"
+      : ""
   const encoder = new TextEncoder()
-  const data = encoder.encode(normalized)
+  const data = encoder.encode(namespace + normalized)
   const hashBuffer = await crypto.subtle.digest("SHA-256", data)
   const hashArray = Array.from(new Uint8Array(hashBuffer))
   return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("")
