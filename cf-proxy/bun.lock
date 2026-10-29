@@ -6,12 +6,13 @@
       "name": "cf-proxy",
       "dependencies": {
         "easyeda": "^0.0.310",
-        "kysely": "0.28.14",
+        "kysely": "^0.28.3",
         "kysely-d1": "^0.4.0",
       },
       "devDependencies": {
         "@cloudflare/vitest-pool-workers": "^0.5.0",
         "@cloudflare/workers-types": "^4.20241022.0",
+        "kysely-bun-sqlite": "^0.3.2",
         "typescript": "^5.6.0",
         "vitest": "^2.1.0",
         "wrangler": "4.120.0",
@@ -251,6 +252,8 @@
 
     "blake3-wasm": ["blake3-wasm@2.1.5", "", {}, "sha512-F1+K8EbfOZE49dtoPtmxUQrpXaBIl3ICvasLh+nJta0xkz+9kF/7uet9fLnwKqhDrmj6g+6K3Tw9yQPUg2ka5g=="],
 
+    "bun-types": ["bun-types@1.4.4", "", { "dependencies": { "@types/node": "*", "undici-types": "*" } }, "sha512-yjrJh5oGX7mMPKGd19YXyIjmEuj4G4zNC30bs7PM9Az7NQ3ndF3j6hbeRdvJTRQEhJ/FYQwW0a2moweEi2hMxQ=="],
+
     "cac": ["cac@6.7.14", "", {}, "sha512-b6Ilus+c3RrdDk+JhLKUAQfzzgLEPy6wcXqS7f/xe1EETvsDP6GORG7SFuOs6cID5YkqchW/LXZbX5bc8j7ZcQ=="],
 
     "capnp-ts": ["capnp-ts@0.7.0", "", { "dependencies": { "debug": "^4.3.1", "tslib": "^2.2.0" } }, "sha512-XKxXAC3HVPv7r674zP0VC3RTXz+/JKhfyw94ljvF80yynK6VkTnqE3jMuN8b3dUVmmc43TjyxjW4KTsmB3c86g=="],
@@ -314,6 +317,8 @@
     "kleur": ["kleur@4.1.5", "", {}, "sha512-o+NO+8WrRiQEE4/7nwRJhN1HWpVmJm511pBHUxPLtp0BUISzlBplORYSmTclCnJvQq2tKu/sgl3xVpkc7ZWuQQ=="],
 
     "kysely": ["kysely@0.28.14", "", {}, "sha512-SU3lgh0rPvq7upc6vvdVrCsSMUG1h3ChvHVOY7wJ2fw4C9QEB7X3d5eyYEyULUX7UQtxZJtZXGuT6U2US72UYA=="],
+
+    "kysely-bun-sqlite": ["kysely-bun-sqlite@0.3.2", "", { "dependencies": { "bun-types": "^1.0.25" }, "peerDependencies": { "kysely": "^0.27.2" } }, "sha512-YucMcOGGxNCmlAnkvNfTKZX6Bk1sYsuVVXlQN/5ZUgerlq/J9/EuR3aMOOZ25ASLM7oMglSxfeQxkiw0+hrEOQ=="],
 
     "kysely-d1": ["kysely-d1@0.4.0", "", { "peerDependencies": { "kysely": "*" } }, "sha512-wUcVvQNtm30OTfuo7Ad5vYJ1qHqPXOCZc+zWchVKNyuvqY3u8OuGw4gmUx1Ypdx2wRVFLHVQC9I7v0pTmF7Nkw=="],
 

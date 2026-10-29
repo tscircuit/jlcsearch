@@ -1,15 +1,21 @@
 const CACHE_CONTROL_QUERY_PARAMS = new Set(["cachebust"])
+const COMPONENT_SEARCH_CACHE_VERSION = "component-search-lcsc-rowid-v1:"
+
+const normalizePathname = (pathname: string): string =>
+  pathname.length > 1 && pathname.endsWith("/")
+    ? pathname.slice(0, -1)
+    : pathname
 
 /**
  * Generates a cache key from a URL by hashing the normalized path and sorted query params.
  */
 export async function generateCacheKey(url: URL): Promise<string> {
   const normalized = normalizeUrl(url)
-  const path = url.pathname.replace(/\/$/, "").replace(/\.json$/, "")
+  const path = normalizePathname(url.pathname).replace(/\.json$/, "")
   // Bypass component responses cached by the old rowid-based FTS join.
   const namespace =
     path === "/api/search" || path === "/components/list"
-      ? "component-search-lcsc-rowid-v1:"
+      ? COMPONENT_SEARCH_CACHE_VERSION
       : ""
   const encoder = new TextEncoder()
   const data = encoder.encode(namespace + normalized)
@@ -25,11 +31,7 @@ export async function generateCacheKey(url: URL): Promise<string> {
  * - Removes trailing slashes from pathname (except root)
  */
 export function normalizeUrl(url: URL): string {
-  // Normalize pathname - remove trailing slash except for root
-  let pathname = url.pathname
-  if (pathname.length > 1 && pathname.endsWith("/")) {
-    pathname = pathname.slice(0, -1)
-  }
+  const pathname = normalizePathname(url.pathname)
 
   // Sort query parameters alphabetically
   const params = new URLSearchParams(url.searchParams)

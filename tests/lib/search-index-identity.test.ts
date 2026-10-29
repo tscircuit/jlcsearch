@@ -1,9 +1,7 @@
 import { Database } from "bun:sqlite"
 import { expect, test } from "bun:test"
-import { Kysely } from "kysely"
-import { BunSqliteDialect } from "kysely-bun-sqlite"
-import type { DB } from "../../cf-proxy/src/db/types"
 import { searchIndex } from "../../cf-proxy/src/search"
+import { createSearchTestDb } from "../../cf-proxy/test/bun-sqlite-test-db"
 
 // J3 and U5 from https://tscircuit.com/gokul/pocket-audio-player,
 // version 0.4.0-rc.9, output/fabrication/bom-jlcpcb.csv.
@@ -34,12 +32,7 @@ async function createSearchDatabase() {
   )
   populateSearchFts(sqlite)
   const statements: string[] = []
-  const db = new Kysely<DB>({
-    dialect: new BunSqliteDialect({ database: sqlite }),
-    log(event) {
-      if (event.level === "query") statements.push(event.query.sql)
-    },
-  })
+  const db = createSearchTestDb(sqlite, statements)
   return {
     sqlite,
     db,
