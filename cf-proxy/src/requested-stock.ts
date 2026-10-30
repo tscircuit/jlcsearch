@@ -17,6 +17,8 @@ export function exactLcsc(query: string | null | undefined): number | null {
   return Number.isSafeInteger(lcsc) ? lcsc : null
 }
 
+export class ExactPartNotFoundError extends Error {}
+
 export interface VerifiedComponent {
   lcsc: number
   mfr: string
@@ -55,12 +57,25 @@ export async function fetchExactStock(
   )
   if (!response.ok) throw new Error(`JLCPCB HTTP ${response.status}`)
   const body: any = await response.json()
-  const list = body.data?.componentPageInfo?.list
+  const info = body.data?.componentPageInfo
+  if (
+    body.code === 200 &&
+    info?.total === 0 &&
+    (info.list === null || (Array.isArray(info.list) && info.list.length === 0))
+  )
+    throw new ExactPartNotFoundError(
+      `Exact part C${lcsc} not returned by JLCPCB`,
+    )
+  const list = info?.list
   if (body.code !== 200 || !Array.isArray(list))
     throw new Error("Invalid JLCPCB inventory response")
   const matches = list.filter((row: any) => row.componentCode === `C${lcsc}`)
+  if (matches.length === 0)
+    throw new ExactPartNotFoundError(
+      `Exact part C${lcsc} not returned by JLCPCB`,
+    )
   if (matches.length !== 1)
-    throw new Error(`Exact part C${lcsc} not returned by JLCPCB`)
+    throw new Error(`Duplicate JLCPCB matches for C${lcsc}`)
   const row = matches[0]
   if (
     !Number.isSafeInteger(row.stockCount) ||

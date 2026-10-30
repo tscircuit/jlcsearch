@@ -10,9 +10,13 @@ import {
   liveObservationUpsertSql,
   type LiveStockRow,
 } from "./live-stock-policy"
-import { exactLcsc, fetchExactStock } from "../cf-proxy/src/requested-stock"
+import {
+  ExactPartNotFoundError,
+  exactLcsc,
+  fetchExactStock,
+} from "../cf-proxy/src/requested-stock"
 
-// Refresh demanded parts before spending the crawl budget on broad categories.
+// Refresh demanded parts independently of the broad category crawl.
 // Old requests age out; failed requests move to the back of the retry queue.
 export const REQUESTED_STOCK_QUERY = `SELECT lcsc FROM _jlcsearch_requested_parts
   WHERE requested_at >= unixepoch() - 30 * 86400
@@ -64,7 +68,12 @@ export async function refreshRequestedStock({
   pause?: () => Promise<unknown>
 }) {
   const requests: { lcsc: number }[] = await execute(REQUESTED_STOCK_QUERY)
-  const report: { lcsc: number; stock?: number; error?: string }[] = []
+  const report: {
+    lcsc: number
+    stock?: number
+    error?: string
+    unknown?: boolean
+  }[] = []
   const deadline = Date.now() + 10 * 60_000
   for (
     let offset = 0;
@@ -99,7 +108,11 @@ export async function refreshRequestedStock({
         updates.push(
           `UPDATE _jlcsearch_requested_parts SET last_error=${sqlString(message)} WHERE lcsc=${lcsc};`,
         )
-        report.push({ lcsc, error: message })
+        report.push({
+          lcsc,
+          error: message,
+          ...(error instanceof ExactPartNotFoundError ? { unknown: true } : {}),
+        })
       }
       await pause()
     }
@@ -142,7 +155,7 @@ if (import.meta.main) {
     JSON.stringify(report, null, 2),
   )
   console.log(JSON.stringify(report, null, 2))
-  if (report.some((row) => row.error))
+  if (report.some((row) => row.error && !row.unknown))
     throw new Error(
       "Requested inventory refresh incomplete; see coverage report",
     )
