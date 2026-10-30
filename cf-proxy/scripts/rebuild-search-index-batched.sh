@@ -176,3 +176,4 @@ run_wrangler d1 execute "$DB_NAME" --remote --command \
    CREATE INDEX IF NOT EXISTS idx_search_index_preferred ON search_index(preferred);"
 
 echo "Done. Old table kept as search_index_old for rollback."
+echo "Run scripts/rebuild-search-index-fts-batched.sh next so search_index_fts covers the new rows."
