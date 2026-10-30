@@ -154,3 +154,32 @@ test("expired observations stay unknown after a failed refresh; failed IDs canno
     db.close()
   }
 })
+
+test("JLCPCB's null-list empty result is unknown, not a pipeline failure or zero stock", async () => {
+  const { db, execute, targets, d1 } = await fixture()
+  try {
+    await requestStock(d1, 6998930)
+    const report = await refreshRequestedStock({
+      execute,
+      targets,
+      pause: async () => {},
+      fetcher: (async () =>
+        Response.json({
+          code: 200,
+          data: { componentPageInfo: { total: 0, list: null } },
+        })) as any,
+    })
+    expect(report).toMatchObject([{ lcsc: 6998930, unknown: true }])
+    expect(report[0].stock).toBeUndefined()
+    expect(await readRequestedStock(d1, 6998930)).toBeNull()
+    expect(
+      db
+        .query(
+          "SELECT verified_at FROM _jlcsearch_requested_parts WHERE lcsc=6998930",
+        )
+        .get(),
+    ).toEqual({ verified_at: null })
+  } finally {
+    db.close()
+  }
+})

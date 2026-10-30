@@ -10,7 +10,9 @@ The refresh processes the oldest attempts first (up to 300 IDs and about ten
 minutes per run). It batches D1 updates without a shared staging table and uses its own concurrency
 group so catalog imports and long category crawls cannot block it. Failed lookups retain their previous verification
 time, record an error, and fail the workflow after processing the other parts.
-The workflow uploads its per-part report for inspection. Monitor failures and
+A validated empty supplier search is recorded as unknown and does not fail the
+whole run; it never becomes zero stock. The workflow uploads its per-part report
+for inspection. Monitor failures and
 backlog as demand grows; the bounded queue is not a guarantee of hourly coverage
 under an unlimited request rate.
 
