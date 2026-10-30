@@ -1,5 +1,15 @@
 export const EXACT_STOCK_MAX_AGE = 6 * 3600
 
+// Structural subset shared by Worker D1 and local SQLite regression tests.
+interface StockDatabase {
+  prepare(sql: string): {
+    bind(...values: unknown[]): {
+      run(): Promise<unknown>
+      first<T>(): Promise<T | null>
+    }
+  }
+}
+
 export function exactLcsc(query: string | null | undefined): number | null {
   const text = query?.trim() ?? ""
   if (!/^C?[1-9]\d*$/i.test(text)) return null
@@ -79,7 +89,7 @@ export async function fetchExactStock(
   }
 }
 
-export async function requestStock(db: D1Database, lcsc: number) {
+export async function requestStock(db: StockDatabase, lcsc: number) {
   await db
     .prepare(`INSERT INTO _jlcsearch_requested_parts (lcsc, requested_at)
     VALUES (?, unixepoch()) ON CONFLICT(lcsc) DO UPDATE SET requested_at=excluded.requested_at
@@ -88,7 +98,7 @@ export async function requestStock(db: D1Database, lcsc: number) {
     .run()
 }
 
-export async function readRequestedStock(db: D1Database, lcsc: number) {
+export async function readRequestedStock(db: StockDatabase, lcsc: number) {
   const row = await db
     .prepare(`SELECT component_json, verified_at FROM _jlcsearch_requested_parts
     WHERE lcsc=? AND component_json IS NOT NULL`)
