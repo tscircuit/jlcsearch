@@ -45,6 +45,34 @@ describe("normalizeUrl", () => {
 })
 
 describe("generateCacheKey", () => {
+  it("invalidates old component results without clearing unrelated caches", async () => {
+    for (const path of [
+      "/api/search?q=TTP223-BA6",
+      "/components/list?search=TTP223-BA6&json=true",
+      "/components/list.json?search=TTP223-BA6",
+      "/resistors/list?json=true",
+    ]) {
+      const url = new URL(path, "https://example.com")
+      const hash = await crypto.subtle.digest(
+        "SHA-256",
+        new TextEncoder().encode(normalizeUrl(url)),
+      )
+      const oldKey = Array.from(new Uint8Array(hash))
+        .map((byte) => byte.toString(16).padStart(2, "0"))
+        .join("")
+      if (path.startsWith("/resistors/")) {
+        expect(await generateCacheKey(url)).toBe(oldKey)
+      } else {
+        expect(await generateCacheKey(url)).not.toBe(oldKey)
+        const bypassUrl = new URL(url)
+        bypassUrl.searchParams.set("cachebust", "1")
+        expect(await generateCacheKey(bypassUrl)).toBe(
+          await generateCacheKey(url),
+        )
+      }
+    }
+  })
+
   it("generates a consistent hash for the same URL", async () => {
     const url = new URL("https://example.com/api/test?param=value")
     const key1 = await generateCacheKey(url)

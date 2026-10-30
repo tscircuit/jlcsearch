@@ -39,14 +39,15 @@ const isMissingFtsReadinessTable = (error: unknown): boolean =>
 
 async function isFtsSearchReady(db: Kysely<DB>): Promise<boolean> {
   try {
-    const result = await sql`
-      SELECT value
+    const result = await sql<{ key: string; value: string }>`
+      SELECT key, value
       FROM search_index_fts_meta
-      WHERE key = 'ready'
-      LIMIT 1
+      WHERE key IN ('ready', 'schema')
     `.execute(db)
 
-    return (result.rows[0] as { value?: string } | undefined)?.value === "1"
+    const metadata = new Map(result.rows.map((row) => [row.key, row.value]))
+    // Legacy indexes only identify components by unstable SQLite rowids.
+    return metadata.get("ready") === "1" && metadata.get("schema") === "2"
   } catch (error) {
     if (isMissingFtsReadinessTable(error)) return false
     throw error
@@ -138,10 +139,6 @@ export async function searchIndex(
     }
   }
 
-  const searchConditions =
-    ftsSearchConditions.length > 0
-      ? ftsSearchConditions
-      : fallbackSearchConditions
   const selectSql = sql`
     SELECT
       search_index.lcsc,
@@ -165,8 +162,13 @@ export async function searchIndex(
   if (ftsSearchConditions.length > 0 && (await isFtsSearchReady(db))) {
     const ftsQuery = sql`
       ${selectSql}
-      JOIN search_index_fts ON search_index_fts.rowid = search_index.rowid
-      WHERE ${buildWhereClause([...conditions, ...searchConditions])}
+      JOIN search_index_fts ON search_index_fts.lcsc = search_index.lcsc
+      WHERE ${buildWhereClause([
+        ...conditions,
+        ...ftsSearchConditions,
+        // A stable identity can still have stale text after a catalog update.
+        ...fallbackSearchConditions,
+      ])}
       ${orderLimitSql}
     `
 
