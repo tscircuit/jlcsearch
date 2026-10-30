@@ -16,6 +16,8 @@ on:
   pull_request:
     paths:
       - "scripts/crawl-live-stock.ts"
+      - "scripts/refresh-requested-stock.ts"
+      - "cf-proxy/src/requested-stock.ts"
       - "cf-proxy/src/cache-entry.ts"
       - "cf-proxy/test/cache-service.test.ts"
       - ".github/workflows/live-stock.yml"
@@ -33,10 +35,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
       - run: bun scripts/crawl-live-stock.ts --probe
+      - run: bun test tests/requested-stock.test.ts
       - run: bun install --cwd cf-proxy --frozen-lockfile
       - name: Verify inventory cache expiration
         working-directory: cf-proxy
-        run: bunx vitest run test/cache-service.test.ts
+        run: bunx vitest run test/cache-service.test.ts test/requested-stock.test.ts
 
   refresh:
     name: Rotate through live stock categories
@@ -77,3 +80,31 @@ jobs:
             cat live-stock-report.json >> "${GITHUB_STEP_SUMMARY}"
             echo '```' >> "${GITHUB_STEP_SUMMARY}"
           fi
+
+  requested:
+    name: Refresh requested BOM inventory
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Exact refreshes use no shared staging table and must not wait behind a
+    # multi-hour catalog import or a stalled category crawl.
+    concurrency:
+      group: requested-live-stock
+      cancel-in-progress: false
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      REQUESTED_STOCK_REPORT_PATH: ${{ github.workspace }}/requested-stock-report.json
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --cwd cf-proxy --frozen-lockfile
+      - name: Refresh recently requested BOM parts
+        run: bun scripts/refresh-requested-stock.ts
+      - name: Save requested inventory report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: requested-stock-coverage
+          path: requested-stock-report.json
+          if-no-files-found: warn

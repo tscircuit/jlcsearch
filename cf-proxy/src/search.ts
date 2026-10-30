@@ -1,6 +1,7 @@
 import { sql, type Kysely, type RawBuilder } from "kysely"
 import type { DB } from "./db/types"
 import { buildSearchTokenGroups } from "./search-query"
+import { exactLcsc } from "./requested-stock"
 
 export interface SearchQueryParams {
   q?: string
@@ -90,7 +91,8 @@ export async function searchIndex(
   params: SearchQueryParams,
 ): Promise<SearchRow[]> {
   const limit = Number.parseInt(params.limit ?? "100", 10) || 100
-  const conditions: RawBuilder<unknown>[] = [sql`search_index.stock > 0`]
+  const conditions: RawBuilder<unknown>[] =
+    exactLcsc(params.q) !== null ? [] : [sql`search_index.stock > 0`]
   const fallbackSearchConditions: RawBuilder<unknown>[] = []
   const ftsSearchConditions: RawBuilder<unknown>[] = []
 

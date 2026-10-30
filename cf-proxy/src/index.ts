@@ -5,6 +5,7 @@ import { getD1Client } from "./db/get-d1-client"
 import { handleEasyEdaComponentCache } from "./easyeda-component-cache"
 import { renderD1TablePage, renderHomePage } from "./render"
 import { searchIndex } from "./search"
+import { exactLcsc, readRequestedStock, requestStock } from "./requested-stock"
 
 export interface Env {
   CACHE_KV: KVNamespace
@@ -345,6 +346,12 @@ async function tryD1Route(
   }
 
   if (pathname === "/api/search") {
+    const lcsc = exactLcsc(url.searchParams.get("q"))
+    if (lcsc !== null) {
+      // Demand must be recorded even when an older empty response was cached.
+      await requestStock(env.DB, lcsc)
+      return handleD1Search(url, env, origin)
+    }
     return handleCachedD1Response(
       url,
       origin,
@@ -449,22 +456,34 @@ async function handleD1Search(
   try {
     const db = getD1Client(env.DB)
     const params = Object.fromEntries(url.searchParams)
-    const rows = await searchIndex(db, params)
-    const components = rows.map((row) => ({
-      lcsc: row.lcsc ?? 0,
-      mfr: row.mfr ?? "",
-      package: row.package ?? "",
-      is_basic: Boolean(row.basic),
-      is_preferred: Boolean(row.preferred),
-      description: row.description ?? "",
-      stock: row.stock ?? 0,
-      price: row.price1 ?? extractSmallQuantityPrice(row.price),
-    }))
+    const lcsc = exactLcsc(params.q)
+    const verified =
+      lcsc === null ||
+      params.package ||
+      params.subcategory_name ||
+      params.is_basic ||
+      params.is_preferred
+        ? null
+        : await readRequestedStock(env.DB, lcsc)
+    const rows = verified ? [] : await searchIndex(db, params)
+    const components = verified
+      ? [verified]
+      : rows.map((row) => ({
+          lcsc: row.lcsc ?? 0,
+          mfr: row.mfr ?? "",
+          package: row.package ?? "",
+          is_basic: Boolean(row.basic),
+          is_preferred: Boolean(row.preferred),
+          description: row.description ?? "",
+          stock: row.stock,
+          price: row.price1 ?? extractSmallQuantityPrice(row.price),
+        }))
 
     const headers = new Headers({
       "content-type": "application/json",
       "x-data-source": "d1",
       "x-cache": "D1",
+      ...(lcsc !== null ? { "cache-control": "no-store" } : {}),
     })
     addCorsHeaders(headers, origin)
 
