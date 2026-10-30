@@ -381,7 +381,7 @@ export const STOCK_COVERAGE_QUERY = `SELECT
 FROM component_catalog AS c LEFT JOIN _jlcsearch_live_stock AS o ON o.lcsc=c.lcsc
 CROSS JOIN _jlcsearch_stock_policy AS p WHERE p.id=1;`
 
-async function remoteExecute(sql: string): Promise<any[]> {
+export async function remoteExecute(sql: string): Promise<any[]> {
   const cfDirectory = path.resolve(import.meta.dir, "../cf-proxy")
   if (/^\s*SELECT\b/i.test(sql)) {
     const child = Bun.spawn(
