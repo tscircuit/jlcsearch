@@ -39,7 +39,7 @@ jobs:
       - run: bun install --cwd cf-proxy --frozen-lockfile
       - name: Verify inventory cache expiration
         working-directory: cf-proxy
-        run: bunx vitest run test/cache-service.test.ts
+        run: bunx vitest run test/cache-service.test.ts test/requested-stock.test.ts
 
   refresh:
     name: Rotate through live stock categories

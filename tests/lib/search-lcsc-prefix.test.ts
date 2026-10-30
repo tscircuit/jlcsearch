@@ -5,7 +5,7 @@ import { BunSqliteDialect } from "kysely-bun-sqlite"
 import type { DB } from "../../cf-proxy/src/db/types"
 import { searchIndex } from "../../cf-proxy/src/search"
 
-test("numeric and C-prefixed LCSC lookups find stocked parts and exclude unavailable stock", async () => {
+test("numeric and C-prefixed LCSC lookups retain zero and unknown stock while broad search excludes them", async () => {
   const sqlite = new Database(":memory:")
   sqlite.exec(`CREATE TABLE search_index (
     lcsc INTEGER, mfr TEXT, package TEXT, description TEXT, stock INTEGER,
@@ -25,7 +25,9 @@ test("numeric and C-prefixed LCSC lookups find stocked parts and exclude unavail
       expect((await search(q)).map((row) => row.lcsc)).toEqual([9002])
     for (const stock of [0, null]) {
       sqlite.query("UPDATE search_index SET stock=?").run(stock)
-      for (const q of ["9002", "C9002"]) expect(await search(q)).toEqual([])
+      for (const q of ["9002", "C9002"])
+        expect(await search(q)).toMatchObject([{ lcsc: 9002, stock }])
+      expect(await search("crystal")).toEqual([])
     }
   } finally {
     await db.destroy()
