@@ -2,13 +2,13 @@
 
 Exact numeric or C-prefixed `/api/search?q=C7519` requests enroll that part in
 `_jlcsearch_requested_parts`. This includes empty searches. The hourly live
-inventory workflow refreshes recently requested parts **before** the category
-crawl, using JLCPCB's exact part-number website lookup. Requests remain active
+inventory workflow refreshes recently requested parts in a separate job from
+the category crawl, using JLCPCB's exact part-number website lookup. Requests remain active
 for 30 days. No per-project allowlist is needed.
 
 The refresh processes the oldest attempts first (up to 300 IDs and about ten
-minutes per run). It batches D1 updates and shares the production sync concurrency
-group with catalog imports. Failed lookups retain their previous verification
+minutes per run). It batches D1 updates without a shared staging table and uses its own concurrency
+group so catalog imports and long category crawls cannot block it. Failed lookups retain their previous verification
 time, record an error, and fail the workflow after processing the other parts.
 The workflow uploads its per-part report for inspection. Monitor failures and
 backlog as demand grows; the bounded queue is not a guarantee of hourly coverage
