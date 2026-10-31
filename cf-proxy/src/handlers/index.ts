@@ -1,4 +1,5 @@
 import { Kysely, sql, type RawBuilder } from "kysely"
+import { parseFrequencyHz } from "../../../lib/util/parse-frequency-hz"
 import type { DB } from "../db/types"
 
 export type QueryParams = Record<string, string>
@@ -8,6 +9,7 @@ interface FilterConfig {
   type:
     | "string"
     | "number"
+    | "frequency_hz"
     | "boolean"
     | "number_tolerance"
     | "number_range_contains"
@@ -94,7 +96,12 @@ export async function queryTable(
   // Apply filters based on config
   for (const [paramName, fieldConfig] of Object.entries(config.filters)) {
     const value = params[paramName]
-    if (value === undefined || value === "" || value === "All") continue
+    if (
+      value === undefined ||
+      value === "" ||
+      (value === "All" && fieldConfig.type !== "frequency_hz")
+    )
+      continue
 
     const {
       field,
@@ -121,6 +128,14 @@ export async function queryTable(
       } else if (operator === "<=") {
         conditions.push(sql`${column} <= ${value}`)
       }
+    } else if (type === "frequency_hz") {
+      const hz = parseFrequencyHz(value, true)
+      // Invalid nonempty thresholds fail closed rather than broadening results.
+      conditions.push(
+        hz === null
+          ? sql`0 = 1`
+          : sql`typeof(${column}) IN ('integer', 'real') AND ${column} >= ${hz} AND ${column} > 0 AND ${column} <= ${Number.MAX_SAFE_INTEGER}`,
+      )
     } else if (type === "number") {
       const numValue = parseFloat(value)
       if (!isNaN(numValue)) {
@@ -287,6 +302,14 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
       has_i2c: { field: "has_i2c", type: "boolean" },
       has_uart: { field: "has_uart", type: "boolean" },
       core: { field: "cpu_core", type: "string" },
+      cpu_speed_min_hz: {
+        field: "cpu_speed_hz",
+        type: "frequency_hz",
+        operator: ">=",
+        placeholder: "e.g. 72MHz",
+        helpText:
+          "Listed maximum CPU clock ≥ this minimum. Accepts Hz, kHz, MHz; bare numbers are Hz. Unknown ratings are excluded; invalid input returns no matches. Clear to remove.",
+      },
       flash_min: { field: "flash_size_bytes", type: "number", operator: ">=" },
       ram_min: { field: "ram_size_bytes", type: "number", operator: ">=" },
     },

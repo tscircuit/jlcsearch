@@ -236,7 +236,8 @@ const COLUMN_LABELS: Record<string, string> = {
   output_type: "Output Type",
   mounting_style: "Mounting",
   cpu_core: "Core",
-  cpu_speed_hz: "CPU Speed",
+  cpu_speed_hz: "Rated Max CPU Clock",
+  cpu_speed_min_hz: "Min Rated CPU Clock",
   flash_size_bytes: "Flash",
   ram_size_bytes: "RAM",
   gpio_count: "GPIO",
@@ -725,7 +726,11 @@ const renderGenericFilters = (
   const helpText = config.helpText
     ? `<p class="mt-2 text-sm text-gray-600">${escapeHtml(config.helpText)}</p>`
     : ""
-  return `<form method="GET" class="flex flex-row flex-wrap gap-4">${inputs}<button type="submit">Filter</button></form>${helpText}`
+  const clearLink =
+    pathname === "/microcontrollers/list"
+      ? `<a href="/microcontrollers/list">Clear filters</a>`
+      : ""
+  return `<form method="GET" class="flex flex-row flex-wrap gap-4">${inputs}<button type="submit">Filter</button>${clearLink}</form>${helpText}`
 }
 
 const renderComponentsFilters = (
