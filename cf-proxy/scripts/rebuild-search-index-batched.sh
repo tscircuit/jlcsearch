@@ -154,7 +154,9 @@ run_wrangler d1 execute "$DB_NAME" --remote --command \
 
 echo "Swapping search index tables..."
 run_wrangler d1 execute "$DB_NAME" --remote --command \
-  "DROP TRIGGER IF EXISTS components_ai;
+  "CREATE TABLE IF NOT EXISTS search_index_fts_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+   UPDATE search_index_fts_meta SET value = '0' WHERE key = 'ready';
+   DROP TRIGGER IF EXISTS components_ai;
    DROP TRIGGER IF EXISTS components_au;
    DROP TRIGGER IF EXISTS components_ad;
    DROP INDEX IF EXISTS components_category;
@@ -176,3 +178,4 @@ run_wrangler d1 execute "$DB_NAME" --remote --command \
    CREATE INDEX IF NOT EXISTS idx_search_index_preferred ON search_index(preferred);"
 
 echo "Done. Old table kept as search_index_old for rollback."
+echo "FTS is disabled until scripts/rebuild-search-index-fts-batched.sh completes."

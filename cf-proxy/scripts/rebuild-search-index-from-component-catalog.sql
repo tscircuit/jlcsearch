@@ -1,3 +1,5 @@
+CREATE TABLE IF NOT EXISTS search_index_fts_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+UPDATE search_index_fts_meta SET value = '0' WHERE key = 'ready';
 DROP TABLE IF EXISTS search_index;
 
 CREATE TABLE search_index AS
