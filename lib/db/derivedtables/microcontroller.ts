@@ -1,4 +1,5 @@
 import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
+import { parseFrequencyHz } from "lib/util/parse-frequency-hz"
 import type { DerivedTableSpec } from "./types"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
 import { BaseComponent } from "./component-base"
@@ -97,12 +98,8 @@ export const microcontrollerTableSpec: DerivedTableSpec<Microcontroller> = {
 
       // Parse CPU core and speed
       const cpuCore = attrs["CPU Core"] || null
-      let cpuSpeed = null
-      const rawSpeed = attrs["CPU Maximum Speed"]
-      if (rawSpeed) {
-        const match = rawSpeed.match(/(\d+)MHz/)
-        if (match) cpuSpeed = parseInt(match[1]) * 1e6 // Convert to Hz
-      }
+      // The catalog lists a maximum CPU rating, not the runtime clock.
+      const cpuSpeed = parseFrequencyHz(attrs["CPU Maximum Speed"])
 
       // Parse memory sizes
       let flashSize = null
