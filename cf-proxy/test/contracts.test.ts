@@ -370,37 +370,8 @@ describe("Cloudflare route contracts", () => {
     expect(data.ok).toBe(true)
   })
 
-  it("GET /api/search returns components with stable core fields", async () => {
-    const { response, data } = await fetchJson("/api/search?q=STM32F401RCT6")
-    expect(response.ok).toBe(true)
-    expect(Array.isArray(data.components)).toBe(true)
-    expect(data.components.length).toBeGreaterThan(0)
-    expectRowHasFields(data.components[0], [
-      "lcsc",
-      "mfr",
-      "package",
-      "description",
-      ["price", "price1"],
-      "stock",
-    ])
-  })
-
-  it("GET /api/search agrees for numeric and C-prefixed LCSC lookups", async () => {
-    const lcsc = 9002
-    const [prefixed, numeric] = await Promise.all([
-      fetchJson(`/api/search?q=C${lcsc}&cachebust=1`),
-      fetchJson(`/api/search?q=${lcsc}&cachebust=1`),
-    ])
-    expect(prefixed.response.ok).toBe(true)
-    expect(numeric.response.ok).toBe(true)
-    expect(Array.isArray(prefixed.data.components)).toBe(true)
-    expect(Array.isArray(numeric.data.components)).toBe(true)
-    // Availability can change; a real part may legitimately have no results.
-    expect(prefixed.data.components.map((row: any) => row.lcsc)).toEqual(
-      numeric.data.components.map((row: any) => row.lcsc),
-    )
-    for (const row of prefixed.data.components) expect(row.lcsc).toBe(lcsc)
-  })
+  // Search contracts run against seeded D1 in search-contract.test.ts so they
+  // exercise this branch's worker independently of production inventory/indexes.
 
   it("GET /components/list returns component data", async () => {
     const { response, data } = await fetchJson("/components/list?json=true")

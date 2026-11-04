@@ -2,6 +2,7 @@
 -- Populate it with scripts/rebuild-search-index-fts-batched.sh so large D1
 -- databases stay under Cloudflare's per-query CPU limit.
 
+-- FTS rowid is the stable LCSC number, never a catalog insertion-order rowid.
 DROP TABLE IF EXISTS search_index_fts;
 DROP TABLE IF EXISTS search_index_fts_meta;
 
@@ -15,6 +16,6 @@ CREATE TABLE search_index_fts_meta (
   value TEXT NOT NULL
 );
 
-INSERT INTO search_index_fts_meta(key, value) VALUES('ready', '0');
+INSERT INTO search_index_fts_meta(key, value) VALUES('ready_lcsc', '0');
 
 SELECT 'search_index_fts initialized' AS status;

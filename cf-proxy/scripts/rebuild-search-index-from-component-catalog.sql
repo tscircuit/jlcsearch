@@ -1,3 +1,7 @@
+-- Re-enable text search only after rebuilding FTS against this catalog.
+CREATE TABLE IF NOT EXISTS search_index_fts_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+UPDATE search_index_fts_meta SET value = '0' WHERE key IN ('ready', 'ready_lcsc');
+
 DROP TABLE IF EXISTS search_index;
 
 CREATE TABLE search_index AS

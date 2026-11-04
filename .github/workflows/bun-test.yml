@@ -39,3 +39,7 @@ jobs:
 
       - name: Run tests
         run: bun test
+
+      - name: Test search and exact inventory in the Cloudflare runtime
+        working-directory: cf-proxy
+        run: bun run test test/search-contract.test.ts test/requested-stock.test.ts
