@@ -370,25 +370,8 @@ describe("Cloudflare route contracts", () => {
     expect(data.ok).toBe(true)
   })
 
-  // Positive search results are tested against seeded D1 in search-contract.test.ts.
-  // The deployed catalog cannot guarantee stock for a fixed part number.
-
-  it("GET /api/search agrees for numeric and C-prefixed LCSC lookups", async () => {
-    const lcsc = 9002
-    const [prefixed, numeric] = await Promise.all([
-      fetchJson(`/api/search?q=C${lcsc}&cachebust=1`),
-      fetchJson(`/api/search?q=${lcsc}&cachebust=1`),
-    ])
-    expect(prefixed.response.ok).toBe(true)
-    expect(numeric.response.ok).toBe(true)
-    expect(Array.isArray(prefixed.data.components)).toBe(true)
-    expect(Array.isArray(numeric.data.components)).toBe(true)
-    // Availability can change; a real part may legitimately have no results.
-    expect(prefixed.data.components.map((row: any) => row.lcsc)).toEqual(
-      numeric.data.components.map((row: any) => row.lcsc),
-    )
-    for (const row of prefixed.data.components) expect(row.lcsc).toBe(lcsc)
-  })
+  // Search contracts run against seeded D1 in search-contract.test.ts so they
+  // exercise this branch's worker independently of production inventory/indexes.
 
   it("GET /components/list returns component data", async () => {
     const { response, data } = await fetchJson("/components/list?json=true")

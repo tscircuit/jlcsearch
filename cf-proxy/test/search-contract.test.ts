@@ -86,11 +86,20 @@ describe("search API contract against seeded D1", () => {
         "UPDATE search_index SET stock=0 WHERE lcsc=42388007",
       ).run()
       expect((await request("q=RK3576")).components).toEqual([])
-      for (const q of ["C42388007", "42388007"]) {
-        expect((await request(`q=${q}`)).components).toMatchObject([
-          { lcsc: 42388007, mfr: "RK3576", stock: 0 },
+      for (const stock of [0, null]) {
+        await env.DB.prepare(
+          "UPDATE search_index SET stock=? WHERE lcsc=42388007",
+        )
+          .bind(stock)
+          .run()
+        const prefixed = await request("q=C42388007")
+        const numeric = await request("q=42388007")
+        expect(numeric).toEqual(prefixed)
+        expect(prefixed.components).toMatchObject([
+          { lcsc: 42388007, mfr: "RK3576", stock },
         ])
       }
+      expect((await request("q=C99999999")).components).toEqual([])
     },
   )
 })
