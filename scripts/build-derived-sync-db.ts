@@ -1,3 +1,4 @@
+import { correctSourceMetadata } from "./correct-source-metadata"
 import { Database } from "bun:sqlite"
 import { existsSync } from "node:fs"
 import { mkdir, rm } from "node:fs/promises"
@@ -115,6 +116,8 @@ export const buildDerivedSyncDatabase = async ({
     }
   }
 
+  correctSourceMetadata(database)
+
   // Joining a UNION ALL metadata view materializes every LCSC row on each
   // derived-table batch. Direct joins use both source primary-key indexes.
   const lcscJoin = resolvedRecoveryPath
@@ -142,7 +145,7 @@ export const buildDerivedSyncDatabase = async ({
 
     INSERT INTO categories(category, subcategory)
     SELECT DISTINCT category, subcategory
-    FROM input_jlc_components
+    FROM corrected_jlc_components
     WHERE present = 1
       AND last_on_stock >= unixepoch('now', '-1 year')
     ORDER BY category, subcategory;
@@ -191,7 +194,7 @@ export const buildDerivedSyncDatabase = async ({
           ELSE NULL
         END
       ) AS extra
-    FROM input_jlc_components AS j
+    FROM corrected_jlc_components AS j
     INNER JOIN main.categories AS c
       ON c.category = j.category
       AND c.subcategory = j.subcategory
@@ -250,7 +253,7 @@ export const buildDerivedSyncDatabase = async ({
             ELSE NULL
           END
         ) AS extra
-      FROM input_jlc_components AS j
+      FROM corrected_jlc_components AS j
       ${lcscJoin}
       WHERE j.present = 1
         AND j.last_on_stock >= unixepoch('now', '-1 year');
@@ -279,7 +282,7 @@ export const buildDerivedSyncDatabase = async ({
         subcategory,
         stock_source,
         fetched_at
-      FROM input_jlc_components
+      FROM corrected_jlc_components
       WHERE last_on_stock >= unixepoch('now', '-1 year');
     `)
   }

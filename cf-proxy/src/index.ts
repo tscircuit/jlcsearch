@@ -363,6 +363,11 @@ async function tryD1Route(
   }
 
   if (pathname === "/components/list") {
+    const lcsc = exactLcsc(url.searchParams.get("search"))
+    if (lcsc !== null) {
+      await requestStock(env.DB, lcsc)
+      return handleD1ComponentsList(url, isJsonRequest, env, origin)
+    }
     return handleCachedD1Response(
       getD1RepresentationCacheUrl(url, isJsonRequest),
       origin,
@@ -458,15 +463,15 @@ async function handleD1Search(
     const params = Object.fromEntries(url.searchParams)
     const lcsc = exactLcsc(params.q)
     const verified =
-      lcsc === null ||
-      params.package ||
-      params.subcategory_name ||
-      params.is_basic ||
-      params.is_preferred
-        ? null
-        : await readRequestedStock(env.DB, lcsc)
-    const rows = verified ? [] : await searchIndex(db, params)
-    const components = verified
+      lcsc === null ? null : await readRequestedStock(env.DB, lcsc)
+    const useVerified =
+      verified &&
+      !params.package &&
+      !params.subcategory_name &&
+      !params.is_basic &&
+      !params.is_preferred
+    const rows = useVerified ? [] : await searchIndex(db, params)
+    const components = useVerified
       ? [verified]
       : rows.map((row) => ({
           lcsc: row.lcsc ?? 0,
@@ -475,8 +480,10 @@ async function handleD1Search(
           is_basic: Boolean(row.basic),
           is_preferred: Boolean(row.preferred),
           description: row.description ?? "",
-          stock: row.stock,
-          price: row.price1 ?? extractSmallQuantityPrice(row.price),
+          stock: verified ? verified.stock : row.stock,
+          price: verified
+            ? verified.price
+            : (row.price1 ?? extractSmallQuantityPrice(row.price)),
         }))
 
     const headers = new Headers({
@@ -588,13 +595,40 @@ async function handleD1ComponentsList(
   try {
     const db = getD1Client(env.DB)
     const rows = await queryComponentCatalog(db, params)
+    const lcsc = exactLcsc(params.search)
+    const verified =
+      lcsc === null ? null : await readRequestedStock(env.DB, lcsc)
+    // Match /api/search freshness without falling back to an older catalog quantity.
+    // Preserve catalog classification and the list endpoint's price-tier format.
+    if (verified) {
+      for (const row of rows) {
+        row.stock = verified.stock
+      }
+      if (
+        !rows.length &&
+        !params.package &&
+        !params.subcategory_name &&
+        !params.is_basic &&
+        !params.is_preferred
+      ) {
+        rows.push({
+          ...verified,
+          category: "",
+          subcategory: "",
+          extra: null,
+          basic: Number(verified.is_basic),
+          preferred: Number(verified.is_preferred),
+          price: verified.price === null ? "" : `1-:${verified.price}`,
+        })
+      }
+    }
     const data = {
       components: rows.map((row) => ({
         lcsc: row.lcsc ?? 0,
         mfr: row.mfr ?? "",
         package: row.package ?? "",
         description: row.description ?? "",
-        stock: row.stock ?? 0,
+        stock: row.stock,
         price: row.price ?? "",
         category: row.category ?? "",
         subcategory: row.subcategory ?? "",
@@ -606,6 +640,7 @@ async function handleD1ComponentsList(
     const headers = new Headers({
       "x-data-source": "d1",
       "x-cache": "D1",
+      ...(lcsc !== null ? { "cache-control": "no-store" } : {}),
     })
     addVaryHeader(headers, "Accept")
     addCorsHeaders(headers, origin)

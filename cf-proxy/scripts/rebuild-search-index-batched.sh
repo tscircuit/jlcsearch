@@ -162,6 +162,8 @@ run_wrangler d1 execute "$DB_NAME" --remote --command \
    DROP TABLE IF EXISTS components_fts;
    DROP TABLE IF EXISTS components;
    DROP TABLE IF EXISTS search_index_old;
+   CREATE TABLE IF NOT EXISTS search_index_fts_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+   UPDATE search_index_fts_meta SET value = '0' WHERE key IN ('ready', 'ready_lcsc');
    ALTER TABLE search_index RENAME TO search_index_old;
    DROP INDEX IF EXISTS idx_search_index_stock;
    DROP INDEX IF EXISTS idx_search_index_lcsc;

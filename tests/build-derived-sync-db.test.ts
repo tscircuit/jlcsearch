@@ -492,3 +492,59 @@ test("refuses to overwrite the recovery source before touching either database",
     source.close()
   }
 })
+
+test("repairs RK3576 source identity for catalog, MCU, Linux and NPU tables without changing stock", async () => {
+  const { sourcePath, outputPath } = await createSourceDatabase()
+  const source = new Database(sourcePath)
+  source.exec(`DELETE FROM lcsc_components;
+    UPDATE jlc_components SET lcsc=42388007, mfr='RK3576',
+      category='Others', subcategory='Others', manufacturer='',
+      package='FCCSP-698L(16.1x17.2)',
+      description='FCCSP-698L(16.1x17.2) Microcontrollers (MCU/MPU/SOC) ROHS',
+      attributes='{"CPU Maximum Speed":"2.2GHz"}', stock=0;`)
+  source.close()
+  await buildDerivedSyncDatabase({
+    sourcePath,
+    outputPath,
+    tableNames: ["microcontroller", "linux_capable_processor", "npu_chip"],
+    includeComponentCatalog: true,
+    includeStockSnapshot: true,
+    logger: () => {},
+  })
+  const output = new Database(outputPath)
+  try {
+    for (const table of [
+      "component_catalog",
+      "microcontroller",
+      "linux_capable_processor",
+      "npu_chip",
+    ]) {
+      expect(output.query(`SELECT lcsc, stock FROM ${table}`).all()).toEqual([
+        { lcsc: 42388007, stock: 0 },
+      ])
+    }
+    expect(
+      output
+        .query(
+          `SELECT category, subcategory, json_extract(extra,'$.manufacturer.name') AS manufacturer FROM component_catalog`,
+        )
+        .get(),
+    ).toEqual({
+      category: "Embedded Processors & Controllers",
+      subcategory: "Microcontrollers (MCU/MPU/SOC)",
+      manufacturer: "Rockchip",
+    })
+    expect(
+      output
+        .query("SELECT manufacturer, chip_family FROM linux_capable_processor")
+        .get(),
+    ).toEqual({ manufacturer: "Rockchip", chip_family: "Rockchip RK3576" })
+  } finally {
+    output.close()
+  }
+  const original = new Database(sourcePath, { readonly: true })
+  expect(
+    original.query("SELECT category, manufacturer FROM jlc_components").get(),
+  ).toEqual({ category: "Others", manufacturer: "" })
+  original.close()
+})

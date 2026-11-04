@@ -42,7 +42,7 @@ async function isFtsSearchReady(db: Kysely<DB>): Promise<boolean> {
     const result = await sql`
       SELECT value
       FROM search_index_fts_meta
-      WHERE key = 'ready'
+      WHERE key = 'ready_lcsc'
       LIMIT 1
     `.execute(db)
 
@@ -165,8 +165,8 @@ export async function searchIndex(
   if (ftsSearchConditions.length > 0 && (await isFtsSearchReady(db))) {
     const ftsQuery = sql`
       ${selectSql}
-      JOIN search_index_fts ON search_index_fts.rowid = search_index.rowid
-      WHERE ${buildWhereClause([...conditions, ...searchConditions])}
+      JOIN search_index_fts ON search_index_fts.rowid = search_index.lcsc
+      WHERE ${buildWhereClause([...conditions, ...searchConditions, ...fallbackSearchConditions])}
       ${orderLimitSql}
     `
 

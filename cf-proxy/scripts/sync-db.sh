@@ -111,10 +111,10 @@ rebuild_remote_search_fts_index() {
     echo "  importing FTS rowids ${start}-${end}"
     run_wrangler d1 execute "${DB_NAME}" --remote --command "
       DELETE FROM search_index_fts
-      WHERE rowid BETWEEN ${start} AND ${end};
+      WHERE rowid IN (SELECT lcsc FROM search_index WHERE rowid BETWEEN ${start} AND ${end});
 
       INSERT INTO search_index_fts(rowid, search_text)
-      SELECT rowid, search_text
+      SELECT lcsc, search_text
       FROM search_index
       WHERE rowid BETWEEN ${start} AND ${end}
         AND search_text IS NOT NULL
@@ -126,7 +126,7 @@ rebuild_remote_search_fts_index() {
   # limit on the full catalog. The incrementally built index is ready to query
   # as soon as every range has been inserted.
   run_wrangler d1 execute "${DB_NAME}" --remote --command "
-    UPDATE search_index_fts_meta SET value = '1' WHERE key = 'ready';
+    UPDATE search_index_fts_meta SET value = '1' WHERE key = 'ready_lcsc';
   "
 }
 
@@ -546,6 +546,10 @@ main() {
     fi
     require_unique_lcsc search_index
     write_search_index_schema
+    echo "Disabling FTS while replacing the search catalog..."
+    run_wrangler d1 execute "${DB_NAME}" --remote --command "
+      CREATE TABLE IF NOT EXISTS search_index_fts_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+      UPDATE search_index_fts_meta SET value = '0' WHERE key IN ('ready', 'ready_lcsc');"
     echo "Importing search index schema to D1..."
     run_wrangler d1 execute "${DB_NAME}" --remote --file=search_index_schema.sql
     import_table_in_batches search_index "${SEARCH_INDEX_BATCH_ROWS}"

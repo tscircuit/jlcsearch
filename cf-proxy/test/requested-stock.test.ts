@@ -56,6 +56,39 @@ describe("exact BOM availability", () => {
         "UPDATE _jlcsearch_requested_parts SET verified_at=unixepoch()-86400 WHERE lcsc=5981428",
       ).run()
       expect((await request("C5981428")).components[0].stock).toBeNull()
+      const list = async (suffix = "") => {
+        const response = await worker.fetch(
+          new Request(
+            `https://example.com/components/list.json?search=C5981428${suffix}`,
+          ),
+          { ...env, USE_D1: "true" },
+          { waitUntil() {} } as any,
+        )
+        expect(response.status).toBe(200)
+        expect(response.headers.get("cache-control")).toBe("no-store")
+        return (await response.json()) as any
+      }
+      // A part absent from the imported catalog is still available by exact ID.
+      expect((await list()).components[0]).toMatchObject({
+        lcsc: 5981428,
+        stock: null,
+      })
+      expect((await list("&package=wrong")).components).toEqual([])
+      await env.DB.prepare(
+        "INSERT INTO search_index (lcsc,mfr,stock,package) VALUES (5981428,'new part',487,'BGA')",
+      ).run()
+      // An expired observation must not resurrect the catalog's older 487 units.
+      expect((await list()).components[0].stock).toBeNull()
+      expect(
+        (await request("C5981428&package=BGA")).components[0].stock,
+      ).toBeNull()
+      await env.DB.prepare(
+        "UPDATE _jlcsearch_requested_parts SET verified_at=unixepoch() WHERE lcsc=5981428",
+      ).run()
+      expect((await list()).components[0]).toMatchObject({
+        stock: 547,
+      })
+      expect((await list("&package=BGA")).components[0].stock).toBe(547)
     },
   )
 })
