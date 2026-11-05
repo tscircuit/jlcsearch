@@ -237,6 +237,7 @@ const COLUMN_LABELS: Record<string, string> = {
   mounting_style: "Mounting",
   cpu_core: "Core",
   cpu_speed_hz: "CPU Speed",
+  cpu_core_count: "CPU Cores",
   flash_size_bytes: "Flash",
   ram_size_bytes: "RAM",
   gpio_count: "GPIO",
@@ -442,6 +443,19 @@ const renderTable = (rows: unknown[]): string => {
   if (rows.length === 0) return ""
   const firstRow = rows[0] as Record<string, unknown>
   const columns = Object.keys(firstRow)
+  // ALTER TABLE appends fields after attributes; keep CPU specs together.
+  if (columns.includes("cpu_core_count") && columns.includes("cpu_core")) {
+    for (const field of ["cpu_core_count", "cpu_speed_hz"]) {
+      const index = columns.indexOf(field)
+      if (index !== -1) columns.splice(index, 1)
+    }
+    columns.splice(
+      columns.indexOf("cpu_core") + 1,
+      0,
+      "cpu_speed_hz",
+      "cpu_core_count",
+    )
+  }
   const headerHtml = columns
     .map(
       (column) =>

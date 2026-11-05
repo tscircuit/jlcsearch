@@ -127,6 +127,8 @@ test("preserves catalog fields and accepts nested manufacturer metadata", () => 
     is_basic: false,
     is_preferred: true,
     cpu_core: "Cortex-A7",
+    cpu_core_count: 2,
+    cpu_speed_hz: null,
     attributes: { "Core Processor": "Cortex-A7 + Cortex-M4", GPIO: "98" },
   })
 })
@@ -281,7 +283,7 @@ test("candidate selection includes every fixture across categories but does not 
   }
 })
 
-test("SQLite setup and D1 migration create matching columns and indexes idempotently", async () => {
+test("SQLite setup is idempotent and matches the migrated D1 schema", async () => {
   const database = new Database(":memory:")
   const migrationDatabase = new Database(":memory:")
   const db = new Kysely<any>({ dialect: new BunSqliteDialect({ database }) })
@@ -320,6 +322,14 @@ test("SQLite setup and D1 migration create matching columns and indexes idempote
     ).text()
     migrationDatabase.exec(migration)
     migrationDatabase.exec(migration)
+    migrationDatabase.exec(
+      await Bun.file(
+        new URL(
+          "../../cf-proxy/migrations/0021_linux_processor_specs.sql",
+          import.meta.url,
+        ),
+      ).text(),
+    )
     expect(schema(database)).toEqual(schema(migrationDatabase))
     expect(schema(database).indexes).toHaveLength(8)
   } finally {

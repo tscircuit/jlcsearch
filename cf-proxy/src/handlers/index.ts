@@ -622,7 +622,8 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
     },
   },
   linux_capable_processor: {
-    helpText: "Application processors with documented Linux support.",
+    helpText:
+      "Application processors with documented Linux support. CPU speed is the maximum application CPU clock; CPU cores excludes auxiliary real-time cores. Unknown specifications are left blank.",
     filters: {
       package: { field: "package", type: "string" },
       manufacturer: { field: "manufacturer", type: "string" },
