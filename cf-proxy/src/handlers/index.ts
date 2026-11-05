@@ -623,7 +623,7 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
   },
   linux_capable_processor: {
     helpText:
-      "Application processors with documented Linux support. CPU speed is the maximum application CPU clock; CPU cores excludes auxiliary real-time cores. Unknown specifications are left blank.",
+      "Application processors with documented Linux support. CPU speed is the maximum application CPU clock; CPU cores excludes auxiliary real-time cores. SRAM and in-package DRAM are shown separately; External means DRAM must be added. SRAM may include reserved banks and does not represent Linux-usable RAM. Unknown specifications are left blank.",
     filters: {
       package: { field: "package", type: "string" },
       manufacturer: { field: "manufacturer", type: "string" },

@@ -1,4 +1,5 @@
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
+import { getLinuxProcessorMemory } from "./linux-processor-memory"
 import { getLinuxProcessorSpecs } from "./linux-processor-specs"
 import type { BaseComponent } from "./component-base"
 import type { DerivedTableSpec } from "./types"
@@ -11,6 +12,8 @@ export interface LinuxCapableProcessor extends BaseComponent {
   cpu_core: string
   cpu_core_count: number | null
   cpu_speed_hz: number | null
+  sram_size_bytes: number | null
+  integrated_dram_size_bytes: number | null
 }
 
 interface LinuxProcessorFamilyRule {
@@ -287,6 +290,8 @@ export const linuxCapableProcessorTableSpec: DerivedTableSpec<LinuxCapableProces
       { name: "cpu_core", type: "text" },
       { name: "cpu_speed_hz", type: "real" },
       { name: "cpu_core_count", type: "integer" },
+      { name: "sram_size_bytes", type: "integer" },
+      { name: "integrated_dram_size_bytes", type: "integer" },
       { name: "is_basic", type: "boolean" },
       { name: "is_preferred", type: "boolean" },
     ],
@@ -400,6 +405,7 @@ export const linuxCapableProcessorTableSpec: DerivedTableSpec<LinuxCapableProces
             mfr,
             readObject(extra.attributes),
           ),
+          ...getLinuxProcessorMemory(rule.chipFamily, mfr),
           attributes: Object.fromEntries(
             Object.entries(readObject(extra.attributes)).map(([key, value]) => [
               key,

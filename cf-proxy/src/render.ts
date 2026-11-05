@@ -238,6 +238,8 @@ const COLUMN_LABELS: Record<string, string> = {
   cpu_core: "Core",
   cpu_speed_hz: "CPU Speed",
   cpu_core_count: "CPU Cores",
+  sram_size_bytes: "On-chip SRAM",
+  integrated_dram_size_bytes: "In-package DRAM",
   flash_size_bytes: "Flash",
   ram_size_bytes: "RAM",
   gpio_count: "GPIO",
@@ -281,6 +283,9 @@ const withUnit = (value: unknown, unit: string): string => {
 const formatByteSize = (value: unknown): string => {
   const num = typeof value === "number" ? value : Number(value)
   if (!Number.isFinite(num)) return ""
+  if (num >= 1024 ** 3) {
+    return `${(num / 1024 ** 3).toFixed(1).replace(/\.0$/, "")}GB`
+  }
   if (num >= 1024 * 1024) {
     return `${(num / (1024 * 1024)).toFixed(1).replace(/\.0$/, "")}MB`
   }
@@ -342,6 +347,9 @@ const formatDisplayValue = (column: string, value: unknown): string | null => {
       return withUnit(value, "nm")
     case "luminous_intensity_mcd":
       return withUnit(value, "mcd")
+    case "integrated_dram_size_bytes":
+      return Number(value) === 0 ? "External" : formatByteSize(value)
+    case "sram_size_bytes":
     case "flash_size_bytes":
     case "ram_size_bytes":
     case "eeprom_size_bytes":
@@ -445,16 +453,17 @@ const renderTable = (rows: unknown[]): string => {
   const columns = Object.keys(firstRow)
   // ALTER TABLE appends fields after attributes; keep CPU specs together.
   if (columns.includes("cpu_core_count") && columns.includes("cpu_core")) {
-    for (const field of ["cpu_core_count", "cpu_speed_hz"]) {
+    const specificationColumns = [
+      "cpu_speed_hz",
+      "cpu_core_count",
+      "sram_size_bytes",
+      "integrated_dram_size_bytes",
+    ].filter((field) => columns.includes(field))
+    for (const field of specificationColumns) {
       const index = columns.indexOf(field)
       if (index !== -1) columns.splice(index, 1)
     }
-    columns.splice(
-      columns.indexOf("cpu_core") + 1,
-      0,
-      "cpu_speed_hz",
-      "cpu_core_count",
-    )
+    columns.splice(columns.indexOf("cpu_core") + 1, 0, ...specificationColumns)
   }
   const headerHtml = columns
     .map(

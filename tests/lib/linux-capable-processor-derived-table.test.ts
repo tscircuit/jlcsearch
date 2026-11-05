@@ -330,6 +330,14 @@ test("SQLite setup is idempotent and matches the migrated D1 schema", async () =
         ),
       ).text(),
     )
+    migrationDatabase.exec(
+      await Bun.file(
+        new URL(
+          "../../cf-proxy/migrations/0022_linux_processor_memory.sql",
+          import.meta.url,
+        ),
+      ).text(),
+    )
     expect(schema(database)).toEqual(schema(migrationDatabase))
     expect(schema(database).indexes).toHaveLength(8)
   } finally {
