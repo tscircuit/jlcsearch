@@ -48,3 +48,56 @@ mainline kernel support. Family-specific peripherals may require a vendor BSP.
 The classifier and its regression fixtures live in
 `lib/db/derivedtables/linux-capable-processor.ts` and
 `tests/lib/linux-capable-processor-derived-table.test.ts`.
+
+## Clock speed and core count
+
+`cpu_speed_hz` is the maximum catalog application CPU frequency in Hz, displayed
+with MHz/GHz units. Unit-bearing values in `CPU Maximum Speed` are parsed; when
+the catalog lists multiple clocks (for example `209MHz;650MHz` on STM32MP157),
+the highest valid frequency is used. Bare numbers, placeholders, malformed JSON
+and invalid frequencies remain unknown. The RK3506 catalog's 24 MHz oscillator
+value is explicitly rejected. This is a rated clock, not a measured runtime clock.
+
+`cpu_core_count` counts application-class CPU cores, including both clusters of
+heterogeneous CPUs, excluding auxiliary Cortex-M/Cortex-R/MCU cores. RK3588 has
+8 application cores; RK3506 has 3, and STM32MP157 has 2. Both K230 C908 CPUs are
+counted, regardless of which OS an SDK assigns to each CPU. Core count is derived
+from the matched family and, where necessary, the orderable part number, never
+from a CPU architecture's theoretical maximum. Unverified variants stay null.
+
+The shared rules in `lib/db/derivedtables/linux-processor-specs.ts` are used on
+future imports and by `scripts/generate-linux-processor-specs-migration.ts` to
+produce migration `0021_linux_processor_specs.sql`. The migration adds nullable
+columns and backfills existing rows without changing stock, pricing or source
+attributes. It does not require a full catalog rebuild. Local SQLite users can
+rebuild with `bun run setup:derived-tables --reset linux_capable_processor`.
+
+Additional specification evidence:
+
+- [NXP i.MX 8M Mini datasheet, orderable part numbers](https://www.nxp.com/docs/en/data-sheet/IMX8MMCEC.pdf)
+  and [i.MX 8M Nano datasheet, orderable part numbers](https://www.nxp.com/docs/en/data-sheet/IMX8MNCEC.pdf):
+  suffixes 1/2, 3/4 and 5/6 identify one, two and four A53 cores respectively.
+- [ST MP15 configuration table](https://wiki.st.com/stm32mpu/wiki/STM32MP15_microprocessor),
+  [MP25 configuration table](https://wiki.st.com/stm32mpu/wiki/STM32MP25_microprocessor),
+  [MP23 configuration table](https://wiki.st.com/stm32mpu/wiki/STM32MP23_microprocessor)
+  and [MP21 architecture](https://www.st.com/en/microcontrollers-microprocessors/stm32mp213.html).
+- [TI AM64x device comparison](https://www.ti.com/lit/ds/symlink/am6412.pdf):
+  the final device digit distinguishes one or two A53 cores, independently of R5F count.
+- [Rockchip RK3506 specifications](https://www.rock-chips.com/a/en/products/RK35_Series/2025/1208/2126.html):
+  three Cortex-A7 cores; 24 MHz is not an application CPU clock.
+- [Rockchip RV1106 brief](https://www.rock-chips.com/uploads/pdf/2022.8.26/192/RV1106%20Brief%20Datasheet.pdf):
+  1.2 GHz Cortex-A7, separate 300 MHz MCU.
+- [Luckfox RV1103 board specifications](https://wiki.luckfox.com/Luckfox-Pico/Luckfox-Pico-RV1103/):
+  one Cortex-A7 at 1.2 GHz.
+- [Rockchip RK3568 specifications](https://www.rock-chips.com/a/en/products/RK35_Series/2021/0113/1276.html):
+  four Cortex-A55 cores up to 2 GHz. This fallback is limited to RK3568/RK3568B2;
+  industrial J variants retain their own catalog clock or remain unknown.
+- [Allwinner V3s specifications](https://www.allwinnertech.com/index.php?a=index&c=product&id=38):
+  one Cortex-A7 up to 1.2 GHz.
+- [Canaan K230 product brief](https://www.kendryte.com/k230/en/main/K230_brief_datasheet.html):
+  two C908 CPUs at 800 MHz and 1.6 GHz.
+
+Clock fallbacks are deliberately limited to documented parts. In particular,
+F1C100S/200S and T113 entries with no catalog speed remain blank rather than
+assuming a board's configured or overclocked frequency. See the family sources
+above for the remaining core-count evidence.

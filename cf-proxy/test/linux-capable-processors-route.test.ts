@@ -10,6 +10,7 @@ import {
 import { describe, expect, it } from "vitest"
 import { getD1Handler } from "../src/d1-routes"
 import type { DB } from "../src/db/types"
+import { renderD1TablePage } from "../src/render"
 import { createSelf, createTestEnv } from "./test-env"
 
 describe("Linux-capable Processors route", () => {
@@ -28,6 +29,8 @@ describe("Linux-capable Processors route", () => {
     is_basic: 0,
     is_preferred: 1,
     attributes: "{}",
+    cpu_speed_hz: 2.4e9,
+    cpu_core_count: 8,
   }
   const optionFields = [
     "package",
@@ -36,6 +39,25 @@ describe("Linux-capable Processors route", () => {
     "architecture",
     "cpu_core",
   ] as const
+
+  it("renders unknown CPU specifications as blank cells", () => {
+    const html = renderD1TablePage(
+      "/linux_capable_processors/list",
+      {
+        linux_capable_processors: [
+          { ...processor, cpu_speed_hz: null, cpu_core_count: null },
+        ],
+      },
+      {},
+    )
+    expect(html).toContain("CPU Speed</th>")
+    expect(html).toContain("CPU Cores</th>")
+    expect(html).toMatch(
+      /Cortex-A76 \+ Cortex-A55<\/td><td[^>]*><\/td><td[^>]*><\/td>/,
+    )
+    expect(html).not.toContain("NaNHz")
+    expect(html).not.toContain("nullHz")
+  })
 
   it("queries the category with processor and assembly filters and returns filter options", async () => {
     const compiledQueries: CompiledQuery[] = []
@@ -170,6 +192,13 @@ describe("Linux-capable Processors route", () => {
       expect(html).toContain('name="manufacturer" value="Rockchip"')
       expect(html).toContain('name="architecture" value="ARM64"')
       expect(html).toContain("Cortex-A76 + Cortex-A55")
+      expect(html).toContain("CPU Speed</th>")
+      expect(html).toContain("CPU Cores</th>")
+      expect(html).toContain("2.4GHz</td>")
+      expect(html).toContain(">8</td>")
+      expect(html.indexOf("CPU Cores</th>")).toBeLessThan(
+        html.indexOf("Attributes</th>"),
+      )
       expect(html).toContain(
         "/linux_capable_processors/list.json?manufacturer=Rockchip&amp;architecture=ARM64",
       )
