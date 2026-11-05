@@ -101,3 +101,13 @@ Clock fallbacks are deliberately limited to documented parts. In particular,
 F1C100S/200S and T113 entries with no catalog speed remain blank rather than
 assuming a board's configured or overclocked frequency. See the family sources
 above for the remaining core-count evidence.
+
+## RAM
+
+The list separates **On-chip SRAM** from **In-package DRAM**. **External** means
+DRAM must be added to the board; a blank means the capacity is unverified. SRAM
+may include reserved or auxiliary banks and is not the amount of RAM available
+to Linux. The catalog's raw `RAM Size` is not used, because it mixes SRAM,
+packaged DRAM and external address-space limits. See the
+[RAM audit and sources](../linux-processor-memory.md) for exact part coverage,
+capacity definitions and migration instructions.

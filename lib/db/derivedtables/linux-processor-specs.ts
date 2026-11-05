@@ -99,7 +99,7 @@ export const LINUX_PROCESSOR_SPEC_RULES: readonly ProcessorSpecRule[] = [
 ]
 
 export const matchesProcessorSpec = (
-  rule: ProcessorSpecRule,
+  rule: Pick<ProcessorSpecRule, "family" | "parts">,
   family: string,
   mfr: string,
 ) =>

@@ -31,6 +31,8 @@ describe("Linux-capable Processors route", () => {
     attributes: "{}",
     cpu_speed_hz: 2.4e9,
     cpu_core_count: 8,
+    sram_size_bytes: null,
+    integrated_dram_size_bytes: null,
   }
   const optionFields = [
     "package",
@@ -57,6 +59,43 @@ describe("Linux-capable Processors route", () => {
     )
     expect(html).not.toContain("NaNHz")
     expect(html).not.toContain("nullHz")
+  })
+
+  it("renders packaged DRAM, SRAM, external-only and unknown memory distinctly", () => {
+    const html = renderD1TablePage(
+      "/linux_capable_processors/list",
+      {
+        linux_capable_processors: [
+          {
+            ...processor,
+            mfr: "RV1106G3",
+            integrated_dram_size_bytes: 256 * 1024 ** 2,
+          },
+          {
+            ...processor,
+            mfr: "STM32MP153CAA3",
+            sram_size_bytes: 708 * 1024,
+            integrated_dram_size_bytes: 0,
+          },
+          { ...processor, mfr: "UNKNOWN-RAM" },
+        ],
+      },
+      {},
+    )
+    expect(html).toContain("On-chip SRAM</th>")
+    expect(html).toContain("In-package DRAM</th>")
+    expect(html).toContain("256MB</td>")
+    expect(html).toContain("708KB</td>")
+    expect(html).toContain("External</td>")
+    expect(html).not.toContain("0B</td>")
+    expect(html).not.toContain("nullB")
+    expect(html.indexOf("In-package DRAM</th>")).toBeLessThan(
+      html.indexOf("Attributes</th>"),
+    )
+    const unknownRow = html
+      .split("<tr>")
+      .find((row) => row.includes("UNKNOWN-RAM"))!
+    expect(unknownRow).not.toContain("External</td>")
   })
 
   it("queries the category with processor and assembly filters and returns filter options", async () => {

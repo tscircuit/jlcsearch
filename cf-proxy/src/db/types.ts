@@ -775,6 +775,8 @@ export interface LinuxCapableProcessor {
   cpu_core: string | null
   cpu_speed_hz: number | null
   cpu_core_count: number | null
+  sram_size_bytes: number | null
+  integrated_dram_size_bytes: number | null
   description: string | null
   in_stock: number | null
   is_basic: number | null
