@@ -284,6 +284,7 @@ export const linuxCapableProcessorTableSpec: DerivedTableSpec<LinuxCapableProces
       { name: "cpu_core", type: "text" },
       { name: "is_basic", type: "boolean" },
       { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
     ],
     indexes: [
       { name: "idx_linux_capable_processor_stock", columns: ["stock"] },
