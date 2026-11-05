@@ -38,7 +38,7 @@ catalog attribute; display formatting does not change numeric API values.
 ## Schema and data refresh
 
 MCUs already have `microcontroller.cpu_speed_hz`. Migration
-`0020_linux_processor_clock.sql` adds nullable REAL
+`0021_linux_processor_clock.sql` adds nullable REAL
 `linux_capable_processor.cpu_speed_hz`, preserving existing rows. Fresh derived
 table creation includes this field; both database type definitions are updated.
 Deployments must apply the migration before syncing the new Linux column. The

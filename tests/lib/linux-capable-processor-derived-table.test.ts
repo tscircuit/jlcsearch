@@ -326,7 +326,7 @@ test("SQLite setup and D1 migration create matching columns and indexes idempote
     )
     const clockMigration = await Bun.file(
       new URL(
-        "../../cf-proxy/migrations/0020_linux_processor_clock.sql",
+        "../../cf-proxy/migrations/0021_linux_processor_clock.sql",
         import.meta.url,
       ),
     ).text()
