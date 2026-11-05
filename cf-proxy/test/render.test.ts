@@ -761,3 +761,70 @@ describe("render helpers", () => {
     expect(html).toContain(">0</td>")
   })
 })
+
+describe.each(["microcontrollers", "linux_capable_processors"])(
+  "%s CPU clocks on every component record",
+  (category) => {
+    it("shows every catalog clock, handles units, missing data and escaping", () => {
+      const html = renderD1TablePage(
+        `/${category}/list`,
+        {
+          [category]: [
+            // The first row deliberately has no numeric field: the clock column
+            // must still appear for every record, including older catalog rows.
+            { mfr: "single", attributes: { "CPU Maximum Speed": "1.2GHz" } },
+            {
+              mfr: "multiple",
+              cpu_speed_hz: null,
+              attributes: JSON.stringify({
+                "CPU Maximum Speed": "750MHz;1.4GHz",
+              }),
+            },
+            {
+              mfr: "comma",
+              attributes: { "CPU Maximum Speed": "400MHz, 800MHz, 1GHz" },
+            },
+            { mfr: "stored", cpu_speed_hz: 72e6, attributes: "{bad" },
+            { mfr: "khz", cpu_speed_hz: 32768 },
+            { mfr: "missing", cpu_speed_hz: null },
+            {
+              mfr: "dash",
+              cpu_speed_hz: 0,
+              attributes: { "CPU Maximum Speed": "-" },
+            },
+            { mfr: "unsafe", cpu_speed_hz: Infinity },
+            { mfr: "text", cpu_speed_hz: "unknown" },
+            {
+              mfr: "escaped",
+              attributes: { "CPU Maximum Speed": '<script>"1GHz"</script>' },
+            },
+          ],
+        },
+        {},
+      )
+      const table = html.match(/<table[^>]*>.*?<\/table>/s)![0]
+      expect(table).toContain("Rated Max CPU Clock")
+      const rows = table.match(/<tr>.*?<\/tr>/gs)!.slice(1)
+      const expected = [
+        "1.2GHz",
+        "750MHz;1.4GHz",
+        "400MHz, 800MHz, 1GHz",
+        "72MHz",
+        "32.768kHz",
+        "Unknown",
+        "Unknown",
+        "Unknown",
+        "Unknown",
+        "&lt;script&gt;&quot;1GHz&quot;&lt;/script&gt;",
+      ]
+      expect(rows).toHaveLength(expected.length)
+      rows.forEach((row, index) => {
+        const cells = row.match(/<td[^>]*>.*?<\/td>/gs)!
+        expect(cells.at(-1)).toContain(`>${expected[index]}</td>`)
+      })
+      expect(table).not.toContain('<script>"1GHz"</script>')
+      expect(html).toContain('name="cpu_speed_min_hz"')
+      expect(html).toContain(`href="/${category}/list">Clear filters</a>`)
+    })
+  },
+)

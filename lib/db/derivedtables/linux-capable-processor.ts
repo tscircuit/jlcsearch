@@ -1,4 +1,5 @@
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
+import { parseFrequencyHz } from "lib/util/parse-frequency-hz"
 import type { BaseComponent } from "./component-base"
 import type { DerivedTableSpec } from "./types"
 
@@ -8,6 +9,7 @@ export interface LinuxCapableProcessor extends BaseComponent {
   chip_family: string
   architecture: string
   cpu_core: string
+  cpu_speed_hz: number | null
 }
 
 interface LinuxProcessorFamilyRule {
@@ -282,6 +284,7 @@ export const linuxCapableProcessorTableSpec: DerivedTableSpec<LinuxCapableProces
       { name: "chip_family", type: "text" },
       { name: "architecture", type: "text" },
       { name: "cpu_core", type: "text" },
+      { name: "cpu_speed_hz", type: "real" },
       { name: "is_basic", type: "boolean" },
       { name: "is_preferred", type: "boolean" },
     ],
@@ -390,6 +393,9 @@ export const linuxCapableProcessorTableSpec: DerivedTableSpec<LinuxCapableProces
           chip_family: rule.chipFamily,
           architecture: rule.architecture,
           cpu_core: rule.cpuCore,
+          cpu_speed_hz: parseFrequencyHz(
+            readObject(extra.attributes)["CPU Maximum Speed"],
+          ),
           attributes: Object.fromEntries(
             Object.entries(readObject(extra.attributes)).map(([key, value]) => [
               key,

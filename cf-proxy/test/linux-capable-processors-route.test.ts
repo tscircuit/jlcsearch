@@ -98,6 +98,7 @@ describe("Linux-capable Processors route", () => {
           chip_family: ["Rockchip RK3588"],
           architecture: ["ARM64"],
           cpu_core: ["Cortex-A76 + Cortex-A55"],
+          cpu_speed_min_hz: [],
         },
       })
 

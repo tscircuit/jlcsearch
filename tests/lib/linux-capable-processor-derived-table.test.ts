@@ -320,10 +320,56 @@ test("SQLite setup and D1 migration create matching columns and indexes idempote
     ).text()
     migrationDatabase.exec(migration)
     migrationDatabase.exec(migration)
+    migrationDatabase.run(
+      "INSERT INTO linux_capable_processor (lcsc, mfr, attributes) VALUES (?, ?, ?)",
+      [1, "RK3562J", JSON.stringify({ "CPU Maximum Speed": "1.2GHz" })],
+    )
+    const clockMigration = await Bun.file(
+      new URL(
+        "../../cf-proxy/migrations/0020_linux_processor_clock.sql",
+        import.meta.url,
+      ),
+    ).text()
+    migrationDatabase.exec(clockMigration)
+    expect(
+      migrationDatabase
+        .query("SELECT mfr, cpu_speed_hz FROM linux_capable_processor")
+        .get(),
+    ).toEqual({ mfr: "RK3562J", cpu_speed_hz: null })
     expect(schema(database)).toEqual(schema(migrationDatabase))
     expect(schema(database).indexes).toHaveLength(8)
   } finally {
     await db.destroy()
     migrationDatabase.close()
   }
+})
+
+test.each([
+  ["536MHz", 536e6],
+  ["1.2GHz", 1.2e9],
+  [" 2.2 ghz ", 2.2e9],
+  ["800000 kHz", 800e6],
+  ["750MHz;1.4GHz", null],
+  ["400MHz, 800MHz, 1GHz", null],
+  ["209MHz;650MHz", null],
+  ["up to 1.2GHz", null],
+  ["1200000000", null],
+  ["-", null],
+  [null, null],
+  [0, null],
+])("extracts only unambiguous Linux CPU rating %s", (raw, expected) => {
+  const [processor] = linuxCapableProcessorTableSpec.mapToTable([
+    makeComponent({
+      extra: makeExtra("STMicroelectronics", { "CPU Maximum Speed": raw }),
+    }),
+  ])
+  expect(processor?.cpu_speed_hz).toBe(expected)
+  expect(processor?.attributes?.["CPU Maximum Speed"]).toBe(String(raw))
+})
+
+test("does not infer Linux clock ratings from the part number or description", () => {
+  const [processor] = linuxCapableProcessorTableSpec.mapToTable([
+    makeComponent({ description: "Application processor 1.2GHz" }),
+  ])
+  expect(processor?.cpu_speed_hz).toBeNull()
 })

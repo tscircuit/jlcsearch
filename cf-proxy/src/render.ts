@@ -6,6 +6,7 @@ import {
   type QueryParams,
   type FilterOptions,
 } from "./handlers"
+import { parseFrequencyHz } from "../../lib/util/parse-frequency-hz"
 import { TFT_DISPLAY_DRIVER_FAMILIES } from "./tft-display-drivers"
 
 const escapeHtml = (value: unknown): string =>
@@ -410,11 +411,46 @@ const formatDisplayValue = (column: string, value: unknown): string | null => {
   }
 }
 
+const formatCpuClockHz = (hz: number): string => {
+  if (hz >= 1e9) return `${hz / 1e9}GHz`
+  if (hz >= 1e6) return `${hz / 1e6}MHz`
+  if (hz >= 1e3) return `${hz / 1e3}kHz`
+  return `${hz}Hz`
+}
+
+// Preserve every catalog rating (including multi-core lists) in the clock cell.
+// Only a single unambiguous rating is usable by the numeric minimum filter.
+const renderCpuClock = (
+  row: Record<string, unknown>,
+  value: unknown,
+): string => {
+  try {
+    const attributes =
+      typeof row.attributes === "string"
+        ? JSON.parse(row.attributes)
+        : row.attributes
+    const raw = attributes?.["CPU Maximum Speed"]
+    if (typeof raw === "string" && raw.trim() && raw.trim() !== "-") {
+      const hz = parseFrequencyHz(raw)
+      return escapeHtml(hz === null ? raw.trim() : formatCpuClockHz(hz))
+    }
+  } catch {
+    // Older rows may contain malformed attributes; use a valid stored rating.
+  }
+  return typeof value === "number" &&
+    Number.isFinite(value) &&
+    value > 0 &&
+    value <= Number.MAX_SAFE_INTEGER
+    ? escapeHtml(formatCpuClockHz(value))
+    : "Unknown"
+}
+
 const renderCell = (
   row: Record<string, unknown>,
   column: string,
   value: unknown,
 ): string => {
+  if (column === "cpu_speed_hz") return renderCpuClock(row, value)
   if (column === "stock" && (value === null || value === undefined))
     return "Unknown"
   if (value === null || value === undefined || value === "") return ""
@@ -439,10 +475,10 @@ const renderCell = (
   return escapeHtml(value)
 }
 
-const renderTable = (rows: unknown[]): string => {
+const renderTable = (rows: unknown[], extraColumns: string[] = []): string => {
   if (rows.length === 0) return ""
   const firstRow = rows[0] as Record<string, unknown>
-  const columns = Object.keys(firstRow)
+  const columns = [...new Set([...Object.keys(firstRow), ...extraColumns])]
   const headerHtml = columns
     .map(
       (column) =>
@@ -727,8 +763,9 @@ const renderGenericFilters = (
     ? `<p class="mt-2 text-sm text-gray-600">${escapeHtml(config.helpText)}</p>`
     : ""
   const clearLink =
-    pathname === "/microcontrollers/list"
-      ? `<a href="/microcontrollers/list">Clear filters</a>`
+    pathname === "/microcontrollers/list" ||
+    pathname === "/linux_capable_processors/list"
+      ? `<a href="${pathname}">Clear filters</a>`
       : ""
   return `<form method="GET" class="flex flex-row flex-wrap gap-4">${inputs}<button type="submit">Filter</button>${clearLink}</form>${helpText}`
 }
@@ -870,7 +907,13 @@ export const renderD1TablePage = (
   }
 
   if (rows.length > 0) {
-    pageBody += renderTable(rows)
+    pageBody += renderTable(
+      rows,
+      pathname === "/microcontrollers/list" ||
+        pathname === "/linux_capable_processors/list"
+        ? ["cpu_speed_hz"]
+        : [],
+    )
   }
   pageBody += "</div>"
 

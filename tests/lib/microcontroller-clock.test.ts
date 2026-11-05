@@ -33,6 +33,8 @@ describe("catalog maximum CPU clock normalization", () => {
     ["72MHz", 72e6], // STM32F103C8T6
     ["16MHz", 16e6], // STM8S003F3P6TR
     ["32.768 kHz", 32768],
+    ["1.2GHz", 1.2e9],
+    [" 2.4 ghz ", 2.4e9],
     ["0.5MHz", 500000],
     [".5 MHz", 500000],
     [" 72000000 Hz ", 72e6],
@@ -63,6 +65,8 @@ describe("catalog maximum CPU clock normalization", () => {
     "12.3.4MHz",
     "16MHz~72MHz",
     "72MHz;48MHz",
+    "750MHz;1.4GHz",
+    "400MHz, 800MHz, 1GHz",
     "up to 72MHz",
     "72MHz junk",
   ])("keeps unavailable or ambiguous catalog rating %j unknown", (raw) => {

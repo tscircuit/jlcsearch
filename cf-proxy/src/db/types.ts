@@ -773,6 +773,7 @@ export interface LinuxCapableProcessor {
   attributes: string | null
   chip_family: string | null
   cpu_core: string | null
+  cpu_speed_hz: number | null
   description: string | null
   in_stock: number | null
   is_basic: number | null

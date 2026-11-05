@@ -308,7 +308,7 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
         operator: ">=",
         placeholder: "e.g. 72MHz",
         helpText:
-          "Listed maximum CPU clock ≥ this minimum. Accepts Hz, kHz, MHz; bare numbers are Hz. Unknown ratings are excluded; invalid input returns no matches. Clear to remove.",
+          "Listed maximum CPU clock ≥ this minimum. Accepts Hz, kHz, MHz, GHz; bare numbers are Hz. Unknown or multiple ratings are excluded; invalid input returns no matches. Clear to remove.",
       },
       flash_min: { field: "flash_size_bytes", type: "number", operator: ">=" },
       ram_min: { field: "ram_size_bytes", type: "number", operator: ">=" },
@@ -652,6 +652,14 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
       chip_family: { field: "chip_family", type: "string" },
       architecture: { field: "architecture", type: "string" },
       cpu_core: { field: "cpu_core", type: "string" },
+      cpu_speed_min_hz: {
+        field: "cpu_speed_hz",
+        type: "frequency_hz",
+        operator: ">=",
+        placeholder: "e.g. 1.2GHz",
+        helpText:
+          "Listed maximum CPU clock ≥ this minimum. Accepts Hz, kHz, MHz, GHz; bare numbers are Hz. Unknown or multiple ratings are excluded; invalid input returns no matches. Clear to remove.",
+      },
       is_basic: { field: "is_basic", type: "boolean" },
       is_preferred: { field: "is_preferred", type: "boolean" },
     },
