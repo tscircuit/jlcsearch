@@ -98,6 +98,30 @@ describe("Linux-capable Processors route", () => {
     expect(unknownRow).not.toContain("External</td>")
   })
 
+  it.each([
+    [128 * 1024 ** 2, "128MB"],
+    [256 * 1024 ** 2, "256MB"],
+    [1024 ** 3, "1GB"],
+    [1.5 * 1024 ** 3, "1.5GB"],
+    [4 * 1024 ** 3, "4GB"],
+  ])("renders %s bytes of packaged DRAM as %s", (bytes, label) => {
+    const html = renderD1TablePage(
+      "/linux_capable_processors/list",
+      {
+        linux_capable_processors: [
+          {
+            ...processor,
+            mfr: "MEMORY-FORMATTING-FIXTURE",
+            integrated_dram_size_bytes: bytes,
+          },
+        ],
+      },
+      {},
+    )
+    expect(html).toContain(`${label}</td>`)
+    expect(html).not.toContain(`${bytes}</td>`)
+  })
+
   it("queries the category with processor and assembly filters and returns filter options", async () => {
     const compiledQueries: CompiledQuery[] = []
     const driver = new DummyDriver()

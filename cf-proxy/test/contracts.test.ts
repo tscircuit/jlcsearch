@@ -1,5 +1,5 @@
 import { describe, expect, it as vitestIt } from "vitest"
-import { fetchJson } from "./cloudflare-http"
+import { BASE_URL, fetchJson } from "./cloudflare-http"
 
 type FieldAlias = string | string[]
 
@@ -363,7 +363,9 @@ const routeCases: RouteCase[] = [
   },
 ]
 
-describe("Cloudflare route contracts", () => {
+const describeRemote = BASE_URL ? describe : describe.skip
+
+describeRemote("Cloudflare route contracts", () => {
   it("GET /health returns ok", async () => {
     const { response, data } = await fetchJson("/health")
     expect(response.ok).toBe(true)

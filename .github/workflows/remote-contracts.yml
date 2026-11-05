@@ -1,0 +1,26 @@
+name: Deployed route contracts
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: Deployment URL to test
+        required: true
+        default: https://jlcsearch.tscircuit.com
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  remote-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --cwd cf-proxy --frozen-lockfile
+      - name: Check deployed routes and filters
+        env:
+          CF_TEST_BASE_URL: ${{ inputs.base_url }}
+        run: bun test cf-proxy/test/contracts.test.ts

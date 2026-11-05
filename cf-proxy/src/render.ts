@@ -283,6 +283,9 @@ const withUnit = (value: unknown, unit: string): string => {
 const formatByteSize = (value: unknown): string => {
   const num = typeof value === "number" ? value : Number(value)
   if (!Number.isFinite(num)) return ""
+  if (num >= 1024 ** 3) {
+    return `${(num / 1024 ** 3).toFixed(1).replace(/\.0$/, "")}GB`
+  }
   if (num >= 1024 * 1024) {
     return `${(num / (1024 * 1024)).toFixed(1).replace(/\.0$/, "")}MB`
   }
