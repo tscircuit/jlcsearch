@@ -1,9 +1,19 @@
 import { describe, expect, it } from "vitest"
+import type { Kysely } from "kysely"
+import type { DB } from "../src/db/types"
 import { getD1Client } from "../src/db/get-d1-client"
 import { TABLE_CONFIGS, queryTable, type QueryParams } from "../src/handlers"
 import { createSelf, createTestEnv } from "./test-env"
 
 const workerTest = "Bun" in globalThis ? it.skip : it
+
+const query = (db: Kysely<DB>, params: QueryParams) =>
+  queryTable(
+    db,
+    "linux_capable_processor",
+    params,
+    TABLE_CONFIGS.linux_capable_processor,
+  )
 
 const seed = async (database: D1Database) => {
   await database
@@ -35,13 +45,6 @@ describe("Linux processor minimum rated clock", () => {
       const { env } = await import("cloudflare:test")
       await seed(env.DB)
       const db = getD1Client(env.DB)
-      const query = (params: QueryParams) =>
-        queryTable(
-          db,
-          "linux_capable_processor",
-          params,
-          TABLE_CONFIGS.linux_capable_processor,
-        )
       try {
         for (const value of [
           "1.2GHz",
@@ -50,14 +53,14 @@ describe("Linux processor minimum rated clock", () => {
           "1200000000Hz",
           "1200000000",
         ]) {
-          expect(await query({ cpu_speed_min_hz: value })).toMatchObject([
+          expect(await query(db, { cpu_speed_min_hz: value })).toMatchObject([
             { lcsc: 2 },
             { lcsc: 3 },
             { lcsc: 9 },
           ])
         }
         expect(
-          await query({
+          await query(db, {
             cpu_speed_min_hz: "1.2GHz",
             manufacturer: "Rockchip",
             architecture: "ARM64",
@@ -75,11 +78,11 @@ describe("Linux processor minimum rated clock", () => {
           "1e99",
           "1GHz;2GHz",
         ]) {
-          expect(await query({ cpu_speed_min_hz: value })).toEqual([])
+          expect(await query(db, { cpu_speed_min_hz: value })).toEqual([])
         }
-        expect(await query({ cpu_speed_min_hz: "2.3GHz" })).toEqual([])
-        expect(await query({})).toHaveLength(11)
-        expect(await query({ cpu_speed_min_hz: "" })).toHaveLength(11)
+        expect(await query(db, { cpu_speed_min_hz: "2.3GHz" })).toEqual([])
+        expect(await query(db, {})).toHaveLength(11)
+        expect(await query(db, { cpu_speed_min_hz: "" })).toHaveLength(11)
       } finally {
         await db.destroy()
       }

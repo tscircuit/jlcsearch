@@ -422,7 +422,7 @@ const formatCpuClockHz = (hz: number): string => {
 // Only a single unambiguous rating is usable by the numeric minimum filter.
 const renderCpuClock = (
   row: Record<string, unknown>,
-  value: unknown,
+  storedClockHz: unknown,
 ): string => {
   try {
     const attributes =
@@ -437,11 +437,11 @@ const renderCpuClock = (
   } catch {
     // Older rows may contain malformed attributes; use a valid stored rating.
   }
-  return typeof value === "number" &&
-    Number.isFinite(value) &&
-    value > 0 &&
-    value <= Number.MAX_SAFE_INTEGER
-    ? escapeHtml(formatCpuClockHz(value))
+  return typeof storedClockHz === "number" &&
+    Number.isFinite(storedClockHz) &&
+    storedClockHz > 0 &&
+    storedClockHz <= Number.MAX_SAFE_INTEGER
+    ? escapeHtml(formatCpuClockHz(storedClockHz))
     : "Unknown"
 }
 
