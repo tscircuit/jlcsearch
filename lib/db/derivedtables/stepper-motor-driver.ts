@@ -13,6 +13,7 @@ export const stepperMotorDriverTableSpec: DerivedTableSpec<StepperMotorDriver> =
       { name: "package", type: "text" },
       { name: "is_basic", type: "boolean" },
       { name: "is_preferred", type: "boolean" },
+      { name: "is_extended_promotional", type: "boolean" },
     ],
     indexes: [
       { name: "idx_stepper_motor_driver_stock", columns: ["stock"] },
@@ -47,6 +48,7 @@ export const stepperMotorDriverTableSpec: DerivedTableSpec<StepperMotorDriver> =
           in_stock: Number(component.stock || 0) > 0,
           is_basic: Boolean(component.basic),
           is_preferred: Boolean(component.preferred),
+          is_extended_promotional: Boolean(component.extended_promotional),
           attributes,
         }
       }),
