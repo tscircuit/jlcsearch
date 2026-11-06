@@ -13,7 +13,7 @@ export interface StandaloneComponent {
   subcategory?: string
 }
 
-/** Versioned interchange format consumed by the CLI's baked asset server. */
+/** Versioned interchange format consumed by the standalone fake API service. */
 export function encodeCatalog(
   components: StandaloneComponent[],
   generatedAt = new Date().toISOString(),
