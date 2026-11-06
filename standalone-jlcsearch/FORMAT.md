@@ -29,3 +29,36 @@ Run the fake HTTP service directly with `bun standalone-jlcsearch/server.ts`
 at the printed `TSCIRCUIT_JLCSEARCH_BASE_URL`. It implements GET/HEAD and form
 POST `/api/search` with JLC IDs, keywords, limits and package/basic/preferred
 filters. The CLI only uses the base URL and the normal API response contract.
+
+## Manual jscdn publishing
+
+After the workflow is merged into the default branch, open Actions →
+**Publish jlcsearch-standalone to jscdn** → **Run workflow**. Supply a new version
+such as `0.1.0`. Catalog refresh is enabled by default; disable it to publish the
+checked-in capture. There are no push, pull-request, release or scheduled publish
+triggers, and no automatic version bumps.
+
+The workflow builds a dependency-free Bun package named
+`@tscircuit/jlcsearch-standalone`, packs and runs it from the actual tarball,
+and publishes that tarball to GitHub Packages using `GITHUB_TOKEN` with
+`packages: write`. jscdn proxies that registry; there is no direct CDN upload.
+The workflow verifies the versioned CDN tarball against the local archive:
+
+```text
+https://jscdn.tscircuit.com/@tscircuit/jlcsearch-standalone/0.1.0.tgz
+```
+
+The jscdn Worker's existing `GITHUB_PACKAGES_TOKEN` must have read access to this
+package. If CDN verification fails after publication, the registry version has
+already been published; check access and CDN availability rather than trying to
+publish that same version again. The exact tarball is retained as an Actions
+artifact. Consumers run the package with Bun or import its exported request
+handler; the compressed catalog ships beside the built server.
+
+Local package-only check (uses the checked-in capture unless
+`REFRESH_CATALOG=true`):
+
+```sh
+bun standalone-jlcsearch/package.ts 0.1.0
+bun standalone-jlcsearch/smoke-package.ts standalone-jlcsearch/dist
+```

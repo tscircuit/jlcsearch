@@ -188,3 +188,7 @@ db.backup.sqlite3
 /MANUAL
 cf-proxy/.db-sync-temp/
 cf-proxy/.wrangler
+
+# Standalone release packaging
+standalone-jlcsearch/dist/
+standalone-jlcsearch/.standalone-package-*/
