@@ -1,5 +1,9 @@
 export const EXACT_STOCK_MAX_AGE = 6 * 3600
 
+// JLCPCB's componentProductType: 0 for parts either PCBA service can place,
+// 2 for "Standard only" parts.
+const STANDARD_ONLY_PRODUCT_TYPE = 2
+
 // Structural subset shared by Worker D1 and local SQLite regression tests.
 interface StockDatabase {
   prepare(sql: string): {
@@ -26,6 +30,10 @@ export interface VerifiedComponent {
   description: string
   is_basic: boolean
   is_preferred: boolean
+  // JLCPCB marks parts its Economic PCBA line cannot place as "Standard only";
+  // one such part makes the whole board Standard PCBA. Null when JLCPCB's
+  // record does not say.
+  is_standard_only: boolean | null
   stock: number
   price: number | null
 }
@@ -94,6 +102,10 @@ export async function fetchExactStock(
     description: typeof row.describe === "string" ? row.describe : "",
     is_basic: row.componentLibraryType === "base",
     is_preferred: row.preferredComponentFlag === true,
+    is_standard_only:
+      typeof row.componentProductType === "number"
+        ? row.componentProductType === STANDARD_ONLY_PRODUCT_TYPE
+        : null,
     stock: row.stockCount,
     price:
       typeof row.initialPrice === "number" &&

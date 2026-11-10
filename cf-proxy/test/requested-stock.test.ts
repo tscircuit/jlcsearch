@@ -44,6 +44,7 @@ describe("exact BOM availability", () => {
         description: "",
         is_basic: false,
         is_preferred: false,
+        is_standard_only: true,
         price: 0.3,
       }
       await env.DB.prepare(
