@@ -79,6 +79,34 @@ test("only exact numeric IDs are enrolled; supplier substitutes and malformed qu
   ).toBe(0)
 })
 
+test("the Standard-only mark is read from JLCPCB's componentProductType", async () => {
+  const replyWithProductType = (componentProductType?: number) =>
+    Response.json({
+      code: 200,
+      data: {
+        componentPageInfo: {
+          list: [
+            {
+              componentCode: "C7519",
+              stockCount: 10,
+              componentModelEn: "USBLC6-2SC6",
+              componentProductType,
+            },
+          ],
+        },
+      },
+    })
+  const readMark = async (componentProductType?: number) =>
+    (
+      await fetchExactStock(7519, (async () =>
+        replyWithProductType(componentProductType)) as any)
+    ).is_standard_only
+  expect(await readMark(2)).toBe(true)
+  expect(await readMark(0)).toBe(false)
+  // An absent field is unknown, not "economic-capable".
+  expect(await readMark()).toBeNull()
+})
+
 test("BOM demand restores stock in all tables, preserves true zero, and survives catalog replacement", async () => {
   const { db, execute, targets, d1 } = await fixture()
   try {
