@@ -1,15 +1,16 @@
-import hostAudit from "lib/db/derivedtables/microcontroller-usb-host-audit.json"
-import { Kysely } from "kysely"
-import { BunSqliteDialect } from "kysely-bun-sqlite"
-import { queryTable, TABLE_CONFIGS } from "../../cf-proxy/src/handlers"
 import { Database } from "bun:sqlite"
 import { expect, test } from "bun:test"
+import { Kysely } from "kysely"
+import { BunSqliteDialect } from "kysely-bun-sqlite"
+import { microcontrollerTableSpec } from "lib/db/derivedtables/microcontroller"
 import {
   getMicrocontrollerInterfaces as detect,
   microcontrollerInterfaceAudit,
 } from "lib/db/derivedtables/microcontroller-interfaces"
-import { microcontrollerTableSpec } from "lib/db/derivedtables/microcontroller"
+import hostAudit from "lib/db/derivedtables/microcontroller-usb-host-audit.json"
+import { TABLE_CONFIGS, queryTable } from "../../cf-proxy/src/handlers"
 import { generateMicrocontrollerInterfaceMigration } from "../../scripts/generate-microcontroller-interface-migration"
+import { createLiveStockTables } from "../fixtures/live-stock-tables"
 
 test("interface counts greater than one and common aliases are detected", () => {
   expect(
@@ -219,6 +220,7 @@ test("combined interface filters intersect results and exclude unknown host from
     (2, 90, 1, 1, 0, 1, 1, 1),
     (3, 80, 1, 0, 1, 1, 1, 1),
     (4, 70, 1, NULL, 1, 1, 1, 1);`)
+  await createLiveStockTables(database)
   const db = new Kysely<any>({ dialect: new BunSqliteDialect({ database }) })
   try {
     const query = (params: Record<string, string>) =>
