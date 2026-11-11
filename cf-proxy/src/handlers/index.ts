@@ -74,6 +74,52 @@ const normalizeJsonRow = (
   )
 
 /**
+ * Parts JLCPCB marks "Standard only" (or not), as recorded by the live stock
+ * crawler. The mark lives with the live stock observations so it survives
+ * catalog replacements, and applies to every category table.
+ */
+const standardOnlyCondition = (value: string): RawBuilder<unknown> | null => {
+  if (value !== "true" && value !== "false") return null
+  return sql`${sql.id("lcsc")} IN (SELECT lcsc FROM _jlcsearch_live_stock WHERE is_standard_only = ${value === "true" ? 1 : 0})`
+}
+
+/**
+ * Add `is_standard_only` (true, false, or null when not observed yet) to
+ * each row, right after `is_preferred` where the table has it.
+ */
+const attachStandardOnlyMarks = async (
+  db: Kysely<DB>,
+  rows: Array<Record<string, unknown>>,
+): Promise<Array<Record<string, unknown>>> => {
+  const lcscs = rows
+    .map((row) => row.lcsc)
+    .filter((lcsc): lcsc is number => Number.isSafeInteger(lcsc))
+  if (lcscs.length === 0) return rows
+  const result =
+    await sql`SELECT lcsc, is_standard_only FROM _jlcsearch_live_stock
+    WHERE lcsc IN (${sql.join(lcscs)})`.execute(db)
+  const marks = new Map<number, boolean>()
+  for (const mark of result.rows as Array<{
+    lcsc: number
+    is_standard_only: number | null
+  }>) {
+    if (mark.is_standard_only === 0 || mark.is_standard_only === 1)
+      marks.set(mark.lcsc, mark.is_standard_only === 1)
+  }
+  return rows.map((row) => {
+    const mark =
+      typeof row.lcsc === "number" ? (marks.get(row.lcsc) ?? null) : null
+    const entries = Object.entries(row)
+    const index = entries.findIndex(([key]) => key === "is_preferred")
+    entries.splice(index === -1 ? entries.length : index + 1, 0, [
+      "is_standard_only",
+      mark,
+    ])
+    return Object.fromEntries(entries)
+  })
+}
+
+/**
  * Generic query handler that builds a query based on table name and params.
  * Uses parameterized queries to prevent SQL injection.
  */
@@ -193,6 +239,9 @@ export async function queryTable(
     }
   }
 
+  const standardOnly = standardOnlyCondition(params.is_standard_only ?? "")
+  if (standardOnly) conditions.push(standardOnly)
+
   // Build the final query
   const table = sql.id(tableName)
   const targetSortValue = config.targetSort
@@ -213,7 +262,10 @@ export async function queryTable(
   }
 
   const result = await query.execute(db)
-  return (result.rows as Array<Record<string, unknown>>).map(normalizeJsonRow)
+  return attachStandardOnlyMarks(
+    db,
+    (result.rows as Array<Record<string, unknown>>).map(normalizeJsonRow),
+  )
 }
 
 export async function queryFilterOptions(

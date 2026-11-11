@@ -8,6 +8,14 @@ export async function stockDatabase() {
       new URL("../../cf-proxy/migrations/0017_live_stock.sql", import.meta.url),
     ).text(),
   )
+  db.exec(
+    await Bun.file(
+      new URL(
+        "../../cf-proxy/migrations/0023_standard_only.sql",
+        import.meta.url,
+      ),
+    ).text(),
+  )
   for (const table of ["component_catalog", "search_index", "switch"]) {
     db.exec(`CREATE TABLE "${table}" (lcsc INTEGER PRIMARY KEY, stock INTEGER,
       in_stock INTEGER, category TEXT, subcategory TEXT, mfr TEXT)`)

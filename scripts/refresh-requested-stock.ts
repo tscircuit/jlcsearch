@@ -83,11 +83,7 @@ export async function refreshRequestedStock({
     const batch = requests.slice(offset, offset + 10)
     await execute(`UPDATE _jlcsearch_requested_parts SET attempted_at=${now()}
       WHERE lcsc IN (${batch.map((r) => r.lcsc).join(",")});`)
-    const observations: {
-      lcsc: number
-      stock: number
-      stock_checked_at: number
-    }[] = []
+    const observations: LiveStockRow[] = []
     const updates: string[] = []
     for (const { lcsc } of batch) {
       try {
@@ -97,6 +93,7 @@ export async function refreshRequestedStock({
           lcsc,
           stock: component.stock,
           stock_checked_at: checkedAt,
+          is_standard_only: component.is_standard_only,
         })
         // Separate metadata survives nightly catalog replacement and works
         // even for parts absent from the upstream catalog.

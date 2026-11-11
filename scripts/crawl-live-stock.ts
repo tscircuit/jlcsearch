@@ -10,6 +10,18 @@ import {
 } from "./generate-stock-sync-sql"
 import { type LiveStockRow, sqlString } from "./live-stock-policy"
 
+// JLCPCB's componentProductType: 0 for parts either PCBA service can place,
+// 2 for "Standard only" parts. Other values are recorded as unknown.
+const STANDARD_ONLY_PRODUCT_TYPE = 2
+const EITHER_SERVICE_PRODUCT_TYPE = 0
+
+export const readStandardOnlyMark = (componentProductType: unknown) =>
+  componentProductType === STANDARD_ONLY_PRODUCT_TYPE
+    ? true
+    : componentProductType === EITHER_SERVICE_PRODUCT_TYPE
+      ? false
+      : null
+
 const ENDPOINT =
   "https://jlcpcb.com/api/overseas-pcb-order/v1/shoppingCart/smtGood/selectSmtComponentList/v2"
 export interface StockCategory {
@@ -149,7 +161,11 @@ export async function fetchStockPage(
     }
     if (distinct.has(lcsc)) duplicateRows++
     // Keep the last validated quantity, as with duplicates across pages.
-    distinct.set(lcsc, { lcsc, stock: product.stockCount })
+    distinct.set(lcsc, {
+      lcsc,
+      stock: product.stockCount,
+      is_standard_only: readStandardOnlyMark(product.componentProductType),
+    })
   }
   if (info.list.length && !distinct.size)
     throw new Error(
@@ -381,27 +397,51 @@ export const STOCK_COVERAGE_QUERY = `SELECT
 FROM component_catalog AS c LEFT JOIN _jlcsearch_live_stock AS o ON o.lcsc=c.lcsc
 CROSS JOIN _jlcsearch_stock_policy AS p WHERE p.id=1;`
 
-export async function remoteExecute(sql: string): Promise<any[]> {
+const WRANGLER_ATTEMPTS = Number(process.env.RETRY_MAX_ATTEMPTS || 3)
+const WRANGLER_RETRY_DELAY_MS =
+  Number(process.env.RETRY_BASE_DELAY_SECONDS || 30) * 1000
+
+/**
+ * Run a wrangler D1 command, retrying failures such as "D1 DB is
+ * overloaded". Returns the standard output of the attempt that succeeded
+ * only, so it can be parsed.
+ */
+export async function runWranglerWithRetry(
+  args: string[],
+  options: { delayMs?: number; command?: string[] } = {},
+): Promise<string> {
+  const delayMs = options.delayMs ?? WRANGLER_RETRY_DELAY_MS
+  const command = options.command ?? ["bunx", "wrangler"]
   const cfDirectory = path.resolve(import.meta.dir, "../cf-proxy")
-  if (/^\s*SELECT\b/i.test(sql)) {
-    const child = Bun.spawn(
-      [
-        "bash",
-        "scripts/retry-command.sh",
-        "bunx",
-        "wrangler",
-        "d1",
-        "execute",
-        process.env.DB_NAME || "jlcsearch",
-        "--remote",
-        "--json",
-        "--command",
-        sql,
-      ],
-      { cwd: cfDirectory, stdout: "pipe", stderr: "inherit" },
-    )
+  for (let attempt = 1; ; attempt++) {
+    const child = Bun.spawn([...command, ...args], {
+      cwd: cfDirectory,
+      stdout: "pipe",
+      stderr: "inherit",
+    })
     const output = await new Response(child.stdout).text()
-    if ((await child.exited) !== 0) throw new Error("D1 stock query failed")
+    if ((await child.exited) === 0) return output
+    if (attempt >= WRANGLER_ATTEMPTS)
+      throw new Error(`wrangler failed after ${attempt} attempts`)
+    console.warn(
+      `::warning::wrangler failed on attempt ${attempt}/${WRANGLER_ATTEMPTS}; retrying in ${(delayMs * attempt) / 1000}s.`,
+    )
+    await Bun.sleep(delayMs * attempt)
+  }
+}
+
+export async function remoteExecute(sql: string): Promise<any[]> {
+  const database = process.env.DB_NAME || "jlcsearch"
+  if (/^\s*SELECT\b/i.test(sql)) {
+    const output = await runWranglerWithRetry([
+      "d1",
+      "execute",
+      database,
+      "--remote",
+      "--json",
+      "--command",
+      sql,
+    ])
     const results = JSON.parse(output)
     if (
       !Array.isArray(results) ||
@@ -416,24 +456,15 @@ export async function remoteExecute(sql: string): Promise<any[]> {
   const filename = path.join(directory, "command.sql")
   try {
     await Bun.write(filename, sql)
-    const child = Bun.spawn(
-      [
-        "bash",
-        "scripts/retry-command.sh",
-        "bunx",
-        "wrangler",
-        "d1",
-        "execute",
-        process.env.DB_NAME || "jlcsearch",
-        "--remote",
-        "--json",
-        "--file",
-        filename,
-      ],
-      { cwd: cfDirectory, stdout: "pipe", stderr: "inherit" },
-    )
-    const output = await new Response(child.stdout).text()
-    if ((await child.exited) !== 0) throw new Error("D1 stock command failed")
+    await runWranglerWithRetry([
+      "d1",
+      "execute",
+      database,
+      "--remote",
+      "--json",
+      "--file",
+      filename,
+    ])
     return []
   } finally {
     await rm(directory, { recursive: true, force: true })

@@ -5,7 +5,12 @@ export interface LiveStockRow {
   category?: string | null
   subcategory?: string | null
   seen_cycle?: string | null
+  /** JLCPCB's "Standard only" mark; null or absent when not observed */
+  is_standard_only?: boolean | null
 }
+
+const sqlBoolean = (value: boolean | null | undefined) =>
+  value == null ? "NULL" : value ? "1" : "0"
 
 export const sqlString = (value: string | null | undefined) =>
   value == null ? "NULL" : `'${value.replaceAll("'", "''")}'`
@@ -36,11 +41,11 @@ export const liveObservationUpsertSql = (rows: LiveStockRow[]) => {
       .slice(offset, offset + 200)
       .map(
         (row) =>
-          `(${row.lcsc},${row.stock === null ? "NULL" : row.stock},${row.stock_checked_at},${sqlString(row.category)},${sqlString(row.subcategory)},${sqlString(row.seen_cycle)})`,
+          `(${row.lcsc},${row.stock === null ? "NULL" : row.stock},${row.stock_checked_at},${sqlString(row.category)},${sqlString(row.subcategory)},${sqlString(row.seen_cycle)},${sqlBoolean(row.is_standard_only)})`,
       )
       .join(",")
     const statement = `INSERT INTO _jlcsearch_live_stock
-    (lcsc, observed_stock, checked_at, category, subcategory, seen_cycle)
+    (lcsc, observed_stock, checked_at, category, subcategory, seen_cycle, is_standard_only)
     VALUES ${values}
     ON CONFLICT(lcsc) DO UPDATE SET
       observed_stock = excluded.observed_stock,
@@ -48,6 +53,7 @@ export const liveObservationUpsertSql = (rows: LiveStockRow[]) => {
       category = COALESCE(excluded.category, _jlcsearch_live_stock.category),
       subcategory = COALESCE(excluded.subcategory, _jlcsearch_live_stock.subcategory),
       seen_cycle = COALESCE(excluded.seen_cycle, _jlcsearch_live_stock.seen_cycle),
+      is_standard_only = COALESCE(excluded.is_standard_only, _jlcsearch_live_stock.is_standard_only),
       expired = 0
     WHERE excluded.checked_at >= _jlcsearch_live_stock.checked_at;`
     if (Buffer.byteLength(statement) > 90_000)

@@ -23,6 +23,19 @@ summary with counts checked within 24 hours, 48 hours, and the freshness limit.
 Use these measurements to adjust the workflow's `max_pages` and
 `pages_per_category` inputs rather than inferring coverage from job success.
 
+## Standard-only mark
+
+The same website pages say which parts JLCPCB marks "Standard only": parts its
+Economic PCBA line cannot place, so one of them moves a whole board to
+Standard PCBA. The crawler stores `componentProductType` as
+`_jlcsearch_live_stock.is_standard_only` (1 for type 2, 0 for type 0, NULL
+otherwise). Exact-part refreshes store it too. An observation without the mark,
+such as a catalog import, keeps the recorded one.
+
+Every category list page shows it as a "Standard Only" column after
+"Preferred" (`?` until the crawler reaches the part) and can filter on it with
+`is_standard_only=true` or `false`. Parts not observed yet match neither.
+
 ## Stock precedence and expiration
 
 `_jlcsearch_live_stock` records the quantity and its actual verification time.
