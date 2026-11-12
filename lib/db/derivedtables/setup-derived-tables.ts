@@ -1,4 +1,5 @@
 import { sql } from "kysely"
+import { buzzerTableSpec } from "lib/db/derivedtables/buzzer"
 import { destroyDbClient, getDbClient } from "lib/db/get-db-client"
 import { accelerometerTableSpec } from "lib/db/derivedtables/accelerometer"
 import { adcTableSpec } from "lib/db/derivedtables/adc"
@@ -114,6 +115,7 @@ export const DERIVED_TABLES: DerivedTableSpec<any>[] = [
   springClampTerminalBlockTableSpec,
   fpgaTableSpec,
   batteryHolderTableSpec,
+  buzzerTableSpec,
 ]
 
 type Logger = (message: string) => void

@@ -33,6 +33,7 @@ DERIVED_TABLES=(
   ble_module
   boost_converter
   buck_boost_converter
+  buzzer
   capacitor
   dac
   diode
