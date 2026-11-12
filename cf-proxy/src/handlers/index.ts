@@ -725,6 +725,13 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
       max_resistance: { field: "max_resistance", type: "number" },
     },
   },
+  buzzer: {
+    filters: {
+      package: { field: "package", type: "string" },
+      is_basic: { field: "is_basic", type: "boolean" },
+      is_preferred: { field: "is_preferred", type: "boolean" },
+    },
+  },
   stepper_motor_driver: {
     filters: {
       package: { field: "package", type: "string" },
@@ -859,6 +866,7 @@ export const ROUTE_TO_TABLE: Record<string, string> = {
   "/oled_display/list": "oled_display",
   "/pcie_m2_connectors/list": "pcie_m2_connector",
   "/potentiometers/list": "potentiometer",
+  "/buzzers/list": "buzzer",
   "/relays/list": "relay",
   "/stepper_motor_drivers/list": "stepper_motor_driver",
   "/resistor_arrays/list": "resistor_array",
@@ -918,6 +926,7 @@ export const TABLE_RESPONSE_KEY: Record<string, string> = {
   oled_display: "oled_displays",
   pcie_m2_connector: "pcie_m2_connectors",
   potentiometer: "potentiometers",
+  buzzer: "buzzers",
   relay: "relays",
   stepper_motor_driver: "stepper_motor_drivers",
   resistor_array: "resistor_arrays",

@@ -958,6 +958,19 @@ export interface Potentiometer {
   stock: number | null;
 }
 
+export interface Buzzer {
+  lcsc: Generated<number | null>
+  mfr: string | null
+  description: string | null
+  package: string | null
+  stock: number | null
+  price1: number | null
+  in_stock: number | null
+  is_basic: number | null
+  is_preferred: number | null
+  attributes: string | null
+}
+
 export interface StepperMotorDriver {
   lcsc: Generated<number | null>
   mfr: string | null
@@ -1252,6 +1265,7 @@ export interface DB {
   photo_diode: PhotoDiode;
   optical_sensor: OpticalSensor;
   potentiometer: Potentiometer;
+  buzzer: Buzzer
   stepper_motor_driver: StepperMotorDriver
   relay: Relay;
   resistor: Resistor;

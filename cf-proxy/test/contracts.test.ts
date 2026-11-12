@@ -108,6 +108,14 @@ const routeCases: RouteCase[] = [
     filters: [stringEquals("package")],
   },
   {
+    name: "buzzers",
+    path: "/buzzers/list?json=true",
+    responseKey: "buzzers",
+    requiredFields: ["lcsc", "mfr", "package", "stock", "price1"],
+    booleanFields: ["in_stock", "is_basic", "is_preferred"],
+    filters: [stringEquals("package")],
+  },
+  {
     name: "battery_holders",
     path: "/battery_holders/list?json=true",
     responseKey: "battery_holders",

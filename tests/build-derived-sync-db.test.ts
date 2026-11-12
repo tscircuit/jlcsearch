@@ -141,6 +141,81 @@ describe("buildDerivedSyncDatabase", () => {
     }
   })
 
+  test("builds the buzzer table with stock, assembly flags, attributes, and indexes", async () => {
+    const { sourcePath, outputPath } = await createSourceDatabase()
+    const source = new Database(sourcePath)
+    source.exec(`
+      UPDATE jlc_components SET category = 'Audio Products/Micromotors',
+        subcategory = 'Buzzers', mfr = 'MLT-8530', package = 'SMD',
+        description = '', attributes = '{"Type":"Passive"}';
+      UPDATE lcsc_components SET attributes = '{"Rated Voltage":"3V"}';
+    `)
+    source.close()
+
+    await buildDerivedSyncDatabase({
+      sourcePath,
+      outputPath,
+      tableNames: ["buzzer"],
+      logger: () => {},
+    })
+
+    const output = new Database(outputPath, { readonly: true })
+    try {
+      const row = output.query("SELECT * FROM buzzer").get() as Record<
+        string,
+        unknown
+      >
+      expect(row).toMatchObject({
+        lcsc: 12345,
+        mfr: "MLT-8530",
+        package: "SMD",
+        description: "",
+        stock: 250,
+        price1: 1.25,
+        in_stock: 1,
+        is_basic: 1,
+        is_preferred: 1,
+      })
+      expect(JSON.parse(row.attributes as string)).toEqual({
+        Type: "Passive",
+        "Rated Voltage": "3V",
+      })
+      const expectedIndexes = output
+        .query(
+          "SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = 'buzzer' ORDER BY name",
+        )
+        .all()
+      expect(expectedIndexes).toEqual([
+        { name: "idx_buzzer_package_stock" },
+        { name: "idx_buzzer_stock" },
+      ])
+
+      // The D1 migration must create the same columns and indexes as the importer.
+      const migrated = new Database(":memory:")
+      try {
+        migrated.exec(
+          await Bun.file("cf-proxy/migrations/0023_buzzer.sql").text(),
+        )
+        const schemaQuery =
+          "SELECT name, upper(type) AS type, pk FROM pragma_table_info('buzzer') ORDER BY cid"
+        expect(migrated.query(schemaQuery).all()).toEqual(
+          output.query(schemaQuery).all(),
+        )
+        expect(
+          migrated
+            .query(
+              "SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = 'buzzer' ORDER BY name",
+            )
+            .all(),
+        ).toEqual(expectedIndexes)
+      } finally {
+        migrated.close()
+      }
+    } finally {
+      output.close()
+    }
+  })
+
   test("converts source-db-v2 rows into a populated HDMI derived table", async () => {
     const { sourcePath, outputPath } = await createSourceDatabase()
 
