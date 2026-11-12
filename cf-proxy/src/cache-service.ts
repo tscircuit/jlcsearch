@@ -1,3 +1,4 @@
+import type { KVNamespace } from "@cloudflare/workers-types"
 import {
   CACHE_CONTROL_HEADER_VALUE,
   type CacheEntry,

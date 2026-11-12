@@ -394,7 +394,16 @@ async function tryD1Route(
     origin,
     ctx,
     cache,
-    async () => handleD1TableRoute(pathname, url, isJsonRequest, env, origin),
+    async () =>
+      handleD1TableRoute(
+        pathname,
+        url,
+        isJsonRequest,
+        env,
+        origin,
+        cache,
+        cacheBust,
+      ),
     { cacheBust },
   )
 }
@@ -531,11 +540,17 @@ async function handleD1TableRoute(
   isJsonRequest: boolean,
   env: Env,
   origin: string | null,
+  cache: CacheService,
+  cacheBust: boolean,
 ): Promise<Response> {
   try {
     const db = getD1Client(env.DB)
     const params = Object.fromEntries(url.searchParams)
-    const handler = getD1Handler(pathname)
+    const handler = getD1Handler(pathname, {
+      includeFilterOptions: !isJsonRequest,
+      cache,
+      cacheBust,
+    })
     if (!handler) {
       return buildD1NotFoundResponse(
         origin,

@@ -1,4 +1,5 @@
 import type { Kysely } from "kysely"
+import type { CacheService } from "./cache-service"
 import type { DB } from "./db/types"
 import {
   createDisplayDriverMaxResolutionResolver,
@@ -567,7 +568,14 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
 /**
  * Gets a D1 handler for the given pathname if one exists
  */
-export function getD1Handler(pathname: string): D1Handler | null {
+export function getD1Handler(
+  pathname: string,
+  options: {
+    includeFilterOptions?: boolean
+    cache?: CacheService
+    cacheBust?: boolean
+  } = {},
+): D1Handler | null {
   if (SPECIAL_D1_HANDLERS[pathname]) {
     return SPECIAL_D1_HANDLERS[pathname]
   }
@@ -592,7 +600,31 @@ export function getD1Handler(pathname: string): D1Handler | null {
   return async (db, params) => {
     const normalizedParams = normalizeTableQueryParams(tableName, params)
     const results = await queryTable(db, tableName, normalizedParams, config)
-    const filterOptions = await queryFilterOptions(db, tableName, config)
+    // Dropdowns depend on the table, so all search URLs can share these values.
+    // The existing catalog-sync cache purge also clears these entries.
+    const filterCacheUrl = new URL(
+      `https://jlcsearch.tscircuit.com/_filter-options/v1/${tableName}`,
+    )
+    if (options.cacheBust) await options.cache?.delete(filterCacheUrl)
+
+    let filterOptions: FilterOptions | undefined
+    if (options.includeFilterOptions !== false) {
+      const cached = await options.cache?.get(filterCacheUrl)
+      if (cached?.type === "fresh") {
+        filterOptions = JSON.parse(cached.entry.body) as FilterOptions
+      } else {
+        filterOptions = await queryFilterOptions(db, tableName, config)
+        await options.cache
+          ?.put(filterCacheUrl, Response.json(filterOptions))
+          .catch((error) => {
+            // Concurrent cache misses may exceed KV's per-key write limit.
+            console.warn(
+              `Filter options cache write failed for ${tableName}:`,
+              error,
+            )
+          })
+      }
+    }
     const responseKey = TABLE_RESPONSE_KEY[tableName] || tableName + "s"
     return {
       data: { [responseKey]: results },
