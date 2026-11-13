@@ -180,7 +180,7 @@ const formatSiUnit = (value: unknown): string => {
 
 const COLUMN_LABELS: Record<string, string> = {
   lcsc: "LCSC",
-  mfr: "MFR",
+  mfr: "MPN",
   price1: "Price",
   in_stock: "In Stock",
   is_basic: "Basic",
