@@ -14,7 +14,8 @@ if (!args.includes("--local") || args.includes("--remote")) {
 const sqlFile = args.find((arg) => arg.startsWith("--file="))?.slice(7)
 const sql = sqlFile
   ? readFileSync(sqlFile, "utf8")
-  : args[args.indexOf("--command") + 1]
+  : (args.find((arg) => arg.startsWith("--command="))?.slice(10) ??
+    args[args.indexOf("--command") + 1])
 appendFileSync(process.env.TEST_SQL_LOG!, `${sql}\n`)
 const db = new Database(process.env.TEST_DB!)
 const fault = process.env.TEST_FAULT
@@ -48,7 +49,10 @@ if (sql.includes("AS expected_count") && !existsSync(marker)) {
 }
 
 try {
-  const results = sqlFile ? (db.exec(sql), []) : db.query(sql).all()
+  const results =
+    sqlFile || sql.includes("CREATE VIRTUAL TABLE")
+      ? (db.exec(sql), [])
+      : db.query(sql).all()
   if (isImport && fault === "lost_reply" && !existsSync(marker)) {
     writeFileSync(marker, "committed")
     console.log(JSON.stringify({ error: "injected lost reply after commit" }))

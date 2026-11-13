@@ -72,7 +72,9 @@ fi
 
 echo "Rebuilding FTS for ${DB_NAME} (${LOCATION}); keep catalog imports paused until this finishes."
 echo "Initializing search_index_fts with readiness disabled..."
-run_sql --file="${SCRIPT_DIR}/setup-fts5.sql" > /dev/null
+# --file uses D1's blocking import service remotely. This small setup belongs
+# on the normal query API, just like the bounded batches below.
+run_sql --command="$(cat "${SCRIPT_DIR}/setup-fts5.sql")" > /dev/null
 
 for ((start=min_rowid; start<=max_rowid; start+=FTS_BATCH_ROWS)); do
   end=$((start + FTS_BATCH_ROWS - 1))
