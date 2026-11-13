@@ -6,8 +6,14 @@ import worker from "../src/index"
 const workerTest = "Bun" in globalThis ? it.skip : it
 
 describe("search API contract against seeded D1", () => {
-  workerTest.each(["legacy", "stable"] as const)(
-    "returns the requested part and stable fields with a %s FTS index",
+  workerTest.each([
+    "legacy",
+    "disabled",
+    "missing-metadata",
+    "missing-index",
+    "stable",
+  ] as const)(
+    "protects text search and preserves exact lookups with a %s FTS index",
     async (indexVersion) => {
       const { env } = await import("cloudflare:test")
       await env.DB.prepare(`CREATE TABLE search_index (
@@ -50,7 +56,17 @@ describe("search API contract against seeded D1", () => {
         ).run()
       }
 
-      const request = async (query: string) => {
+      if (indexVersion === "disabled") {
+        await env.DB.prepare(
+          "UPDATE search_index_fts_meta SET value='0' WHERE key='ready_lcsc'",
+        ).run()
+      } else if (indexVersion === "missing-metadata") {
+        await env.DB.prepare("DROP TABLE search_index_fts_meta").run()
+      } else if (indexVersion === "missing-index") {
+        await env.DB.prepare("DROP TABLE search_index_fts").run()
+      }
+
+      const fetchSearch = async (query: string) => {
         const pending: Promise<unknown>[] = []
         const response = await worker.fetch(
           new Request(`https://example.com/api/search?${query}&cachebust=1`),
@@ -58,6 +74,10 @@ describe("search API contract against seeded D1", () => {
           { waitUntil: (p: Promise<unknown>) => pending.push(p) } as any,
         )
         await Promise.all(pending)
+        return response
+      }
+      const request = async (query: string) => {
+        const response = await fetchSearch(query)
         expect(response.status).toBe(200)
         expect(response.headers.get("content-type")).toContain(
           "application/json",
@@ -66,6 +86,39 @@ describe("search API contract against seeded D1", () => {
           components: Record<string, unknown>[]
         }
       }
+
+      if (indexVersion !== "stable") {
+        const unavailable = await fetchSearch("q=RK3576")
+        expect(unavailable.status).toBe(503)
+        expect(unavailable.headers.get("retry-after")).toBe("60")
+        expect(unavailable.headers.get("cache-control")).toBe("no-store")
+        expect(await unavailable.json()).toMatchObject({
+          error_code: "search_unavailable",
+        })
+        expect((await request("q=C42388007")).components).toMatchObject([
+          { lcsc: 42388007, mfr: "RK3576", stock: 487 },
+        ])
+
+        // Simulate a completed, validated rebuild in the local D1 binding.
+        if (indexVersion === "missing-index") {
+          await env.DB.prepare(
+            "CREATE VIRTUAL TABLE search_index_fts USING fts5(search_text, tokenize='trigram')",
+          ).run()
+        }
+        if (indexVersion === "missing-metadata") {
+          await env.DB.prepare(
+            "CREATE TABLE search_index_fts_meta(key TEXT PRIMARY KEY, value TEXT NOT NULL)",
+          ).run()
+        }
+        await env.DB.prepare("DELETE FROM search_index_fts").run()
+        await env.DB.prepare(`INSERT INTO search_index_fts(rowid,search_text)
+          SELECT lcsc,search_text FROM search_index`).run()
+        await env.DB.prepare(
+          "INSERT OR REPLACE INTO search_index_fts_meta VALUES ('ready_lcsc','1')",
+        ).run()
+      }
+
+      // The same requests resume automatically once the rebuilt index is ready.
       expect((await request("q=STM32F401RCT6")).components).toEqual([
         {
           lcsc: 12345,

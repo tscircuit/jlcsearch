@@ -11,7 +11,11 @@ test("numeric and C-prefixed LCSC lookups retain zero and unknown stock while br
     lcsc INTEGER, mfr TEXT, package TEXT, description TEXT, stock INTEGER,
     price TEXT, price1 REAL, basic INTEGER, preferred INTEGER, category TEXT,
     subcategory TEXT, search_text TEXT);
-    INSERT INTO search_index VALUES (9002,'crystal','SMD3225','12MHz',100,'0.10',0.10,1,0,'Crystals','Crystals','crystal 12mhz');`)
+    INSERT INTO search_index VALUES (9002,'crystal','SMD3225','12MHz',100,'0.10',0.10,1,0,'Crystals','Crystals','crystal 12mhz');
+    CREATE VIRTUAL TABLE search_index_fts USING fts5(search_text, tokenize='trigram');
+    INSERT INTO search_index_fts(rowid,search_text) SELECT lcsc,search_text FROM search_index;
+    CREATE TABLE search_index_fts_meta(key TEXT PRIMARY KEY,value TEXT);
+    INSERT INTO search_index_fts_meta VALUES ('ready_lcsc','1');`)
   const db = new Kysely<DB>({
     dialect: new BunSqliteDialect({ database: sqlite }),
   })

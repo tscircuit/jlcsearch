@@ -23,6 +23,10 @@ test("crystal search matches catalog category text", async () => {
       1000, '0.01', 0.01, 1, 0, 'Resistors', 'Resistors',
       'resistor 10k resistors'
     );
+    CREATE VIRTUAL TABLE search_index_fts USING fts5(search_text, tokenize='trigram');
+    INSERT INTO search_index_fts(rowid,search_text) SELECT lcsc,search_text FROM search_index;
+    CREATE TABLE search_index_fts_meta(key TEXT PRIMARY KEY,value TEXT);
+    INSERT INTO search_index_fts_meta VALUES ('ready_lcsc','1');
   `)
   const db = new Kysely<DB>({
     dialect: new BunSqliteDialect({ database: sqlite }),
