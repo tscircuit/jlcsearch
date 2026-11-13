@@ -80,6 +80,7 @@ describe("Optical Sensors route", () => {
             in_stock: false,
             is_basic: false,
             is_preferred: true,
+            is_standard_only: null,
           },
         ],
       })
