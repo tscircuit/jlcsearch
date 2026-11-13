@@ -4,7 +4,7 @@ import { getD1Handler } from "./d1-routes"
 import { getD1Client } from "./db/get-d1-client"
 import { handleEasyEdaComponentCache } from "./easyeda-component-cache"
 import { renderD1TablePage, renderHomePage } from "./render"
-import { searchIndex } from "./search"
+import { searchIndex, SearchUnavailableError } from "./search"
 import { exactLcsc, readRequestedStock, requestStock } from "./requested-stock"
 
 export interface Env {
@@ -87,6 +87,35 @@ const buildD1NotFoundResponse = (
     status: 404,
     headers,
   })
+}
+
+const buildSearchUnavailableResponse = (
+  error: SearchUnavailableError,
+  origin: string | null,
+  contentType:
+    | "application/json"
+    | "text/html; charset=utf-8" = "application/json",
+): Response => {
+  const headers = new Headers({
+    "content-type": contentType,
+    "cache-control": "no-store",
+    "retry-after": "60",
+    "x-data-source": "d1",
+    "x-cache": "SEARCH-UNAVAILABLE",
+  })
+  addVaryHeader(headers, "Accept")
+  addCorsHeaders(headers, origin)
+
+  const body =
+    contentType === "application/json"
+      ? JSON.stringify({
+          error: "Search temporarily unavailable",
+          error_code: "search_unavailable",
+          message: error.message,
+        })
+      : `<h1>Search temporarily unavailable</h1><p>${error.message}</p>`
+
+  return new Response(body, { status: 503, headers })
 }
 
 const buildD1InvalidLcscResponse = (origin: string | null): Response => {
@@ -275,13 +304,29 @@ async function handleCachedD1Response(
   producer: () => Promise<Response>,
   options: {
     cacheBust?: boolean
+    preserveCacheOnSearchUnavailable?: boolean
   } = {},
 ): Promise<Response> {
   if (options.cacheBust) {
-    await cache.delete(cacheUrl)
+    if (!options.preserveCacheOnSearchUnavailable) await cache.delete(cacheUrl)
 
     const response = await producer()
     if (!response.ok) {
+      // A forced refresh must not discard usable search results during recovery.
+      if (
+        options.preserveCacheOnSearchUnavailable &&
+        response.headers.get("x-cache") === "SEARCH-UNAVAILABLE"
+      ) {
+        const cached = await cache.get(cacheUrl)
+        if (cached.type !== "miss") {
+          return cache.buildResponse(
+            cached.entry,
+            cached.type === "fresh" ? "HIT" : "STALE",
+            origin,
+            { noStore: true, cacheBust: true },
+          )
+        }
+      }
       return withCacheBustHeaders(response, origin)
     }
 
@@ -358,7 +403,7 @@ async function tryD1Route(
       ctx,
       cache,
       async () => handleD1Search(url, env, origin),
-      { cacheBust },
+      { cacheBust, preserveCacheOnSearchUnavailable: true },
     )
   }
 
@@ -374,7 +419,7 @@ async function tryD1Route(
       ctx,
       cache,
       async () => handleD1ComponentsList(url, isJsonRequest, env, origin),
-      { cacheBust },
+      { cacheBust, preserveCacheOnSearchUnavailable: true },
     )
   }
 
@@ -508,6 +553,9 @@ async function handleD1Search(
       headers,
     })
   } catch (error) {
+    if (error instanceof SearchUnavailableError) {
+      return buildSearchUnavailableResponse(error, origin)
+    }
     console.error("D1 search failed:", error)
     return buildD1ErrorResponse(
       origin,
@@ -677,6 +725,13 @@ async function handleD1ComponentsList(
       },
     )
   } catch (error) {
+    if (error instanceof SearchUnavailableError) {
+      return buildSearchUnavailableResponse(
+        error,
+        origin,
+        isJsonRequest ? "application/json" : "text/html; charset=utf-8",
+      )
+    }
     console.error("D1 components list failed:", error)
     return buildD1ErrorResponse(
       origin,
