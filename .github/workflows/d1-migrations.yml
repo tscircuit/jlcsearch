@@ -66,12 +66,13 @@ jobs:
     name: Rebuild search index only
     if: github.event_name == 'workflow_dispatch' && inputs.sync_scope == 'search_index_only'
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 360
     env:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       DB_NAME: jlcsearch
-      FTS_BATCH_ROWS: "5000"
+      FTS_BATCH_ROWS: "1000"
+      FTS_PAUSE_SECONDS: "1"
       RETRY_MAX_ATTEMPTS: "6"
       RETRY_BASE_DELAY_SECONDS: "20"
     defaults:
@@ -335,7 +336,8 @@ jobs:
           BATCH_ROWS: "1000"
           COMPONENT_CATALOG_BATCH_ROWS: ${{ env.SYNC_SCOPE == 'full_catalog' && '1000' || '250' }}
           SEARCH_INDEX_BATCH_ROWS: ${{ env.SYNC_SCOPE == 'full_catalog' && '1000' || '250' }}
-          FTS_BATCH_ROWS: ${{ env.SYNC_SCOPE == 'full_catalog' && '5000' || '25000' }}
+          FTS_BATCH_ROWS: "1000"
+          FTS_PAUSE_SECONDS: "1"
           RETRY_MAX_ATTEMPTS: ${{ env.SYNC_SCOPE == 'full_catalog' && '6' || '3' }}
           RETRY_BASE_DELAY_SECONDS: ${{ env.SYNC_SCOPE == 'full_catalog' && '20' || '30' }}
         run: bash ./cf-proxy/scripts/sync-db.sh

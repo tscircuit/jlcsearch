@@ -19,7 +19,7 @@ const sql = sqlFile
 appendFileSync(process.env.TEST_SQL_LOG!, `${sql}\n`)
 const db = new Database(process.env.TEST_DB!)
 const fault = process.env.TEST_FAULT
-const isImport = sql.includes("INSERT OR REPLACE INTO search_index_fts")
+const isImport = /INSERT OR REPLACE INTO search_index_fts\s*\(/.test(sql)
 const marker = `${process.env.TEST_DB}.fault`
 
 if (isImport && fault === "failed_batch" && sql.includes("BETWEEN 3 AND 4")) {
@@ -38,6 +38,10 @@ if (sql.includes("AS expected_count") && !existsSync(marker)) {
     db.exec(
       "INSERT INTO search_index_fts(rowid,search_text) VALUES(9999,'extra part')",
     )
+  if (fault === "extra_negative" || fault === "extra_zero")
+    db.query(
+      "INSERT INTO search_index_fts(rowid,search_text) VALUES(?, 'invalid extra part')",
+    ).run(fault === "extra_negative" ? -1 : 0)
   if (fault === "catalog_changed")
     db.exec(
       "INSERT INTO search_index(rowid,lcsc,search_text) VALUES(100,9000,'new part')",
@@ -50,9 +54,16 @@ if (sql.includes("AS expected_count") && !existsSync(marker)) {
 
 try {
   const results =
-    sqlFile || sql.includes("CREATE VIRTUAL TABLE")
+    sqlFile || /^\s*(?:--[^\n]*\n\s*)*CREATE\b/i.test(sql)
       ? (db.exec(sql), [])
       : db.query(sql).all()
+  const changes = (
+    db.query("SELECT changes() AS changes").get() as { changes: number }
+  ).changes
+  appendFileSync(
+    process.env.TEST_EVENT_LOG!,
+    `${JSON.stringify({ sql, changes, isImport })}\n`,
+  )
   if (isImport && fault === "lost_reply" && !existsSync(marker)) {
     writeFileSync(marker, "committed")
     console.log(JSON.stringify({ error: "injected lost reply after commit" }))

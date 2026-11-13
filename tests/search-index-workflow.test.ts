@@ -1,10 +1,19 @@
 import { expect, test } from "bun:test"
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
 
 type Job = {
   if: string
+  "timeout-minutes"?: number
   env?: Record<string, string>
   defaults?: { run: { "working-directory": string } }
-  steps: { name?: string; run?: string; uses?: string }[]
+  steps: {
+    name?: string
+    run?: string
+    uses?: string
+    env?: Record<string, string>
+  }[]
 }
 const workflow = Bun.YAML.parse(
   await Bun.file(
@@ -67,8 +76,9 @@ test("index repair uses only the standalone rebuild, with explicit target and bo
   const job = workflow.jobs.search_index
   expect(job.defaults?.run["working-directory"]).toBe("cf-proxy")
   expect(job.env?.DB_NAME).toBe("jlcsearch")
-  expect(Number(job.env?.FTS_BATCH_ROWS)).toBeGreaterThan(0)
-  expect(Number(job.env?.FTS_BATCH_ROWS)).toBeLessThanOrEqual(5000)
+  expect(job.env?.FTS_BATCH_ROWS).toBe("1000")
+  expect(job.env?.FTS_PAUSE_SECONDS).toBe("1")
+  expect(job["timeout-minutes"]).toBe(360)
   expect(Number(job.env?.RETRY_MAX_ATTEMPTS)).toBeGreaterThan(1)
   const commands = job.steps.flatMap((step) => (step.run ? [step.run] : []))
   expect(
@@ -77,4 +87,49 @@ test("index repair uses only the standalone rebuild, with explicit target and bo
   expect(commands.join("\n")).not.toMatch(
     /sync-db|sync-stock|migrations apply|kv bulk delete|setup:derived/,
   )
+})
+
+test("catalog sync uses the same paced rebuild settings", () => {
+  const upload = workflow.jobs.sync.steps.find(
+    (step) => step.name === "Upload selected data to D1",
+  )
+  expect(upload?.env?.FTS_BATCH_ROWS).toBe("1000")
+  expect(upload?.env?.FTS_PAUSE_SECONDS).toBe("1")
+})
+
+test("catalog sync forwards its database and pacing to the shared rebuild", async () => {
+  const source = await Bun.file(
+    new URL("../cf-proxy/scripts/sync-db.sh", import.meta.url),
+  ).text()
+  const rebuildFunction = source.match(
+    /rebuild_remote_search_fts_index\(\) \{[\s\S]*?\n\}/,
+  )?.[0]
+  expect(rebuildFunction).toBeDefined()
+  const directory = mkdtempSync(join(tmpdir(), "jlcsearch-fts-delegation-"))
+  try {
+    // Execute only the wrapper with a local stub, never the production sync.
+    writeFileSync(
+      join(directory, "rebuild-search-index-fts-batched.sh"),
+      '#!/bin/bash\nprintf "%s\\n" "$DB_NAME" "$FTS_BATCH_ROWS" "$FTS_PAUSE_SECONDS" "$@"\n',
+    )
+    const result = Bun.spawnSync(
+      [
+        "bash",
+        "-c",
+        `SCRIPT_DIR="$1"\nDB_NAME=fixture-db\nFTS_BATCH_ROWS=123\nFTS_PAUSE_SECONDS=2\n${rebuildFunction}\nrebuild_remote_search_fts_index`,
+        "bash",
+        directory,
+      ],
+      { stdout: "pipe", stderr: "pipe" },
+    )
+    expect(result.exitCode).toBe(0)
+    expect(result.stdout.toString().trim().split("\n")).toEqual([
+      "fixture-db",
+      "123",
+      "2",
+      "--remote",
+    ])
+  } finally {
+    rmSync(directory, { recursive: true, force: true })
+  }
 })
