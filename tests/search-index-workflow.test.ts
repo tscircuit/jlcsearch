@@ -16,7 +16,7 @@ const workflow = Bun.YAML.parse(
       inputs: { sync_scope: { default: string; options: string[] } }
     }
   }
-  concurrency: { group: string; "cancel-in-progress": boolean }
+  concurrency: { group: string; "cancel-in-progress": boolean; queue: string }
   jobs: Record<string, Job>
 }
 
@@ -53,6 +53,7 @@ test("index repair is an explicit choice and shares the production sync lock", (
   expect(workflow.concurrency).toEqual({
     group: "production-d1-sync",
     "cancel-in-progress": false,
+    queue: "max",
   })
   expect(selectedJobs("push", "search_index_only")).not.toContain(
     "search_index",

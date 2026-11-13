@@ -20,6 +20,8 @@ permissions:
 concurrency:
   group: production-d1-sync
   cancel-in-progress: false
+  # Preserve waiting rebuilds when another production job joins the queue.
+  queue: max
 
 jobs:
   populate:
