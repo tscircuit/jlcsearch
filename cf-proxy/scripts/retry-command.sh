@@ -19,12 +19,39 @@ if [[ ! "${base_delay_seconds}" =~ ^[0-9]+$ ]]; then
   exit 2
 fi
 
+# Wrangler can print errors to stdout in JSON mode. Keep each attempt separate
+# so a later success produces a single JSON document for the caller.
+attempt_stdout=""
+for arg in "$@"; do
+  if [[ "${arg}" == "--json" ]]; then
+    attempt_stdout="$(mktemp "${TMPDIR:-/tmp}/jlcsearch-retry.XXXXXX")" || exit 1
+    trap 'rm -f -- "${attempt_stdout}"' EXIT
+    break
+  fi
+done
+
+run_attempt() {
+  if [[ -n "${attempt_stdout}" ]]; then
+    "$@" > "${attempt_stdout}"
+  else
+    "$@"
+  fi
+}
+
 attempt=1
 while true; do
-  if "$@"; then
+  if run_attempt "$@"; then
+    if [[ -n "${attempt_stdout}" ]]; then
+      cat -- "${attempt_stdout}"
+      exit "$?"
+    fi
     exit 0
   else
     exit_code=$?
+  fi
+
+  if [[ -n "${attempt_stdout}" ]]; then
+    cat -- "${attempt_stdout}" >&2
   fi
 
   if (( attempt >= max_attempts )); then
