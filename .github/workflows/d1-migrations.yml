@@ -30,6 +30,7 @@ on:
           - derived
           - stock_only
           - full_catalog
+          - search_index_only
       derived_tables:
         description: Comma-separated derived tables to rebuild and upload
         required: true
@@ -59,6 +60,38 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  search_index:
+    name: Rebuild search index only
+    if: github.event_name == 'workflow_dispatch' && inputs.sync_scope == 'search_index_only'
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      DB_NAME: jlcsearch
+      FTS_BATCH_ROWS: "5000"
+      RETRY_MAX_ATTEMPTS: "6"
+      RETRY_BASE_DELAY_SECONDS: "20"
+    defaults:
+      run:
+        working-directory: cf-proxy
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - name: Verify Cloudflare credentials
+        run: |
+          if [[ -z "${CLOUDFLARE_ACCOUNT_ID}" || -z "${CLOUDFLARE_API_TOKEN}" ]]; then
+            echo "::error::Missing CLOUDFLARE_ACCOUNT_ID or CLOUDFLARE_API_TOKEN repository secret."
+            exit 1
+          fi
+      - name: Install Cloudflare worker dependencies
+        run: bun install --frozen-lockfile
+      - name: Rebuild and validate the search index
+        run: bash scripts/rebuild-search-index-fts-batched.sh --remote
+      - name: Report successful rebuild
+        run: |
+          echo "Search index rebuilt and validated against the existing catalogue. Text search can now use the index." >> "${GITHUB_STEP_SUMMARY}"
+
   migrations:
     name: Audit or migrate without rebuilding data
     if: github.event_name == 'workflow_dispatch' && (inputs.sync_scope == 'migrations_only' || inputs.sync_scope == 'audit_microcontrollers')
@@ -99,7 +132,7 @@ jobs:
 
   sync:
     name: Build database and sync production
-    if: inputs.sync_scope != 'migrations_only' && inputs.sync_scope != 'audit_microcontrollers'
+    if: inputs.sync_scope != 'migrations_only' && inputs.sync_scope != 'audit_microcontrollers' && inputs.sync_scope != 'search_index_only'
     runs-on: ubuntu-latest
     timeout-minutes: 180
     env:
