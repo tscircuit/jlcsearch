@@ -49,6 +49,8 @@ jobs:
     concurrency:
       group: production-d1-sync
       cancel-in-progress: false
+      # Preserve waiting rebuilds when another production job joins the queue.
+      queue: max
     env:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
