@@ -1,8 +1,16 @@
 import { Database } from "bun:sqlite"
 import { expect, test } from "bun:test"
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import {
+  copyFileSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs"
 import { tmpdir } from "node:os"
-import { join } from "node:path"
+import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { Kysely } from "kysely"
 import { BunSqliteDialect } from "kysely-bun-sqlite"
@@ -134,6 +142,110 @@ test("a failed batch leaves FTS disabled and a clean rerun recovers", () => {
     f.close()
   }
 })
+
+test("real Wrangler rebuilds through queries when the import API is unavailable", async () => {
+  const f = fixture()
+  const directory = mkdtempSync(join(tmpdir(), "jlcsearch-fts-api-test-"))
+  const scripts = join(directory, "scripts")
+  mkdirSync(scripts)
+  for (const name of [
+    "rebuild-search-index-fts-batched.sh",
+    "retry-command.sh",
+    "setup-fts5.sql",
+  ]) {
+    copyFileSync(join(dirname(rebuildScript), name), join(scripts, name))
+  }
+  symlinkSync(
+    fileURLToPath(new URL("../cf-proxy/node_modules", import.meta.url)),
+    join(directory, "node_modules"),
+    "dir",
+  )
+  // Use a disposable config, fake credentials and a loopback API. This never
+  // contacts Cloudflare or reads the production Wrangler configuration.
+  writeFileSync(
+    join(directory, "wrangler.toml"),
+    `name = "fts-api-test"
+compatibility_date = "2024-10-22"
+[[d1_databases]]
+binding = "DB"
+database_name = "local-fixture"
+database_id = "00000000-0000-0000-0000-000000000001"
+`,
+  )
+  const requests: string[] = []
+  const server = Bun.serve({
+    hostname: "127.0.0.1",
+    port: 0,
+    async fetch(request) {
+      const path = new URL(request.url).pathname
+      requests.push(path)
+      if (path.endsWith("/query") && request.method === "POST") {
+        const { sql } = (await request.json()) as { sql: string }
+        const results = sql.includes("CREATE VIRTUAL TABLE")
+          ? (f.db.exec(sql), [])
+          : f.db.query(sql).all()
+        return Response.json({
+          success: true,
+          errors: [],
+          messages: [],
+          result: [{ success: true, results, meta: {} }],
+        })
+      }
+      return Response.json(
+        {
+          success: false,
+          errors: [{ code: 7009, message: "Upstream service unavailable" }],
+          messages: [],
+          result: null,
+        },
+        { status: 503 },
+      )
+    },
+  })
+  const child = Bun.spawn(
+    ["bash", join(scripts, "rebuild-search-index-fts-batched.sh"), "--remote"],
+    {
+      cwd: directory,
+      env: {
+        PATH: process.env.PATH,
+        CI: "true",
+        DB_NAME: "local-fixture",
+        FTS_BATCH_ROWS: "2",
+        RETRY_MAX_ATTEMPTS: "1",
+        RETRY_BASE_DELAY_SECONDS: "0",
+        CLOUDFLARE_API_BASE_URL: `${server.url}client/v4`,
+        CLOUDFLARE_ACCOUNT_ID: "00000000000000000000000000000000",
+        CLOUDFLARE_API_TOKEN: "local-test-token",
+        WRANGLER_SEND_METRICS: "false",
+        WRANGLER_LOG_PATH: join(directory, "wrangler.log"),
+      },
+      stdout: "pipe",
+      stderr: "pipe",
+    },
+  )
+  try {
+    const [exitCode, stdout, stderr] = await Promise.all([
+      child.exited,
+      new Response(child.stdout).text(),
+      new Response(child.stderr).text(),
+    ])
+    expect({ exitCode, error: exitCode ? stderr : "" }).toEqual({
+      exitCode: 0,
+      error: "",
+    })
+    expect(stdout).toContain("2 validated entries")
+    expect(requests.length).toBeGreaterThan(5)
+    expect(requests.every((path) => path.endsWith("/query"))).toBe(true)
+    expect(f.readiness()).toEqual({ value: "1" })
+    expect(f.source()).toEqual(f.before)
+  } finally {
+    child.kill()
+    await child.exited
+    server.stop(true)
+    f.close()
+    rmSync(directory, { recursive: true, force: true })
+  }
+}, 60_000)
 
 test.each(["missing", "wrong_text", "extra", "catalog_changed", "bad_json"])(
   "refuses to enable FTS after %s",
