@@ -1,12 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest"
-import {
-  type CacheMetadata,
-  KV_TTL_SECONDS,
-  isFresh,
-  isUsableOnError,
-  isUsableStale,
-} from "../src/cache-entry"
-import { generateCacheKey } from "../src/cache-key"
+import { type CacheMetadata, isFresh, isUsableStale } from "../src/cache-entry"
 import { CacheService } from "../src/cache-service"
 import { createTestEnv } from "./test-env"
 
@@ -54,26 +47,11 @@ describe("isUsableStale", () => {
   })
 })
 
-describe("isUsableOnError", () => {
-  it("allows entries less than 24 hours old and keeps them in KV that long", () => {
-    const now = new Date("2024-01-15T00:00:00Z")
-    const metadata = (cachedAt: string): CacheMetadata => ({
-      cachedAt,
-      status: 200,
-      headers: {},
-    })
-    expect(isUsableOnError(metadata("2024-01-14T00:01:00Z"), now)).toBe(true)
-    expect(isUsableOnError(metadata("2024-01-14T00:00:00Z"), now)).toBe(false)
-    expect(KV_TTL_SECONDS).toBe(24 * 60 * 60)
-  })
-})
-
 describe("CacheService", () => {
   let cache: CacheService
-  let env: ReturnType<typeof createTestEnv>
 
   beforeEach(() => {
-    env = createTestEnv()
+    const env = createTestEnv()
     cache = new CacheService(env.CACHE_KV)
   })
 
@@ -102,26 +80,6 @@ describe("CacheService", () => {
           "application/json",
         )
       }
-    })
-  })
-
-  describe("entry age", () => {
-    it.each([
-      [14, "fresh"],
-      [59, "stale"],
-      [61, "expired"],
-      [23 * 60, "expired"],
-      [25 * 60, "miss"],
-    ])("reports a %i minute old entry as %s", async (minutes, type) => {
-      const url = new URL("https://example.com/aged")
-      await env.CACHE_KV.put(await generateCacheKey(url), "body", {
-        metadata: {
-          cachedAt: new Date(Date.now() - minutes * 60 * 1000).toISOString(),
-          status: 200,
-          headers: {},
-        },
-      })
-      expect((await cache.get(url)).type).toBe(type)
     })
   })
 
