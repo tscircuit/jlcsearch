@@ -1,6 +1,12 @@
-import { CacheService, addCorsHeaders, addVaryHeader } from "./cache-service"
+import type { CacheEntry } from "./cache-entry"
+import {
+  type CacheResult,
+  CacheService,
+  addCorsHeaders,
+  addVaryHeader,
+} from "./cache-service"
 import { queryComponentCatalog } from "./components"
-import { getD1Handler } from "./d1-routes"
+import { getD1Handler, getD1RouteParams } from "./d1-routes"
 import { getD1Client } from "./db/get-d1-client"
 import { handleEasyEdaComponentCache } from "./easyeda-component-cache"
 import { renderD1TablePage, renderHomePage } from "./render"
@@ -191,6 +197,22 @@ const buildHealthResponse = (origin: string | null): Response => {
   })
 }
 
+// Recording demand is best effort: a failed write must not fail the lookup.
+const recordStockRequest = (env: Env, lcsc: number): Promise<void> =>
+  requestStock(env.DB, lcsc).catch((error) => {
+    console.warn(`Recording stock demand failed for C${lcsc}:`, error)
+  })
+
+// Only parameters a route reads may vary its cache entry or reach its handler,
+// so unrelated query strings cannot force a new D1 query.
+const keepRouteParams = (url: URL, names: string[]): URL => {
+  const routeUrl = new URL(url.pathname, url.origin)
+  for (const [name, value] of url.searchParams) {
+    if (names.includes(name)) routeUrl.searchParams.set(name, value)
+  }
+  return routeUrl
+}
+
 const isCacheBustRequest = (url: URL): boolean => {
   const value = url.searchParams.get(CACHE_BUST_QUERY_PARAM)?.toLowerCase()
   return value === "1" || value === "true"
@@ -296,6 +318,27 @@ async function refreshStaleD1Entry(
   }
 }
 
+// A failed D1 query may fall back to a copy up to a day old, which beats an
+// error page. A deliberate search-index outage keeps the normal one-hour limit.
+const getFallbackEntry = (
+  cacheResult: CacheResult,
+  failure: Response,
+): { entry: CacheEntry; status: "HIT" | "STALE" | "STALE-ERROR" } | null => {
+  if (cacheResult.type === "miss") return null
+
+  const failureType = failure.headers.get("x-cache")
+  if (failureType === "D1-ERROR") {
+    return { entry: cacheResult.entry, status: "STALE-ERROR" }
+  }
+  if (failureType === "SEARCH-UNAVAILABLE" && cacheResult.type !== "expired") {
+    return {
+      entry: cacheResult.entry,
+      status: cacheResult.type === "fresh" ? "HIT" : "STALE",
+    }
+  }
+  return null
+}
+
 async function handleCachedD1Response(
   cacheUrl: URL,
   origin: string | null,
@@ -304,58 +347,42 @@ async function handleCachedD1Response(
   producer: () => Promise<Response>,
   options: {
     cacheBust?: boolean
-    preserveCacheOnSearchUnavailable?: boolean
   } = {},
 ): Promise<Response> {
-  if (options.cacheBust) {
-    if (!options.preserveCacheOnSearchUnavailable) await cache.delete(cacheUrl)
-
-    const response = await producer()
-    if (!response.ok) {
-      // A forced refresh must not discard usable search results during recovery.
-      if (
-        options.preserveCacheOnSearchUnavailable &&
-        response.headers.get("x-cache") === "SEARCH-UNAVAILABLE"
-      ) {
-        const cached = await cache.get(cacheUrl)
-        if (cached.type !== "miss") {
-          return cache.buildResponse(
-            cached.entry,
-            cached.type === "fresh" ? "HIT" : "STALE",
-            origin,
-            { noStore: true, cacheBust: true },
-          )
-        }
-      }
-      return withCacheBustHeaders(response, origin)
-    }
-
-    const entry = await cache.put(cacheUrl, response)
-    return cache.buildResponse(entry, "BUST", origin, {
-      noStore: true,
-      cacheBust: true,
-    })
-  }
-
   const cacheResult = await cache.get(cacheUrl)
 
-  if (cacheResult.type === "fresh") {
-    return cache.buildResponse(cacheResult.entry, "HIT", origin)
+  if (!options.cacheBust) {
+    if (cacheResult.type === "fresh") {
+      return cache.buildResponse(cacheResult.entry, "HIT", origin)
+    }
+
+    if (cacheResult.type === "stale") {
+      ctx.waitUntil(refreshStaleD1Entry(cacheUrl, producer, cache))
+      return cache.buildResponse(cacheResult.entry, "STALE", origin)
+    }
   }
 
-  const staleEntry = cacheResult.type === "stale" ? cacheResult.entry : null
-  if (staleEntry) {
-    ctx.waitUntil(refreshStaleD1Entry(cacheUrl, producer, cache))
-    return cache.buildResponse(staleEntry, "STALE", origin)
-  }
-
+  // The cached copy is only replaced by a successful response, so a forced
+  // refresh during an outage cannot discard the last good result.
   const response = await producer()
   if (!response.ok) {
-    return response
+    const fallback = getFallbackEntry(cacheResult, response)
+    if (fallback) {
+      return cache.buildResponse(fallback.entry, fallback.status, origin, {
+        noStore: true,
+        cacheBust: options.cacheBust,
+      })
+    }
+    return options.cacheBust ? withCacheBustHeaders(response, origin) : response
   }
 
   const entry = await cache.put(cacheUrl, response)
-  return cache.buildResponse(entry, "MISS", origin)
+  return options.cacheBust
+    ? cache.buildResponse(entry, "BUST", origin, {
+        noStore: true,
+        cacheBust: true,
+      })
+    : cache.buildResponse(entry, "MISS", origin)
 }
 
 /**
@@ -385,6 +412,7 @@ async function tryD1Route(
   )
 
   const pathname = url.pathname.replace(/\.json$/, "")
+  const routeParams = getD1RouteParams(pathname)
 
   if (pathname.startsWith(FOOTPRINTER_STRINGS_API_PREFIX)) {
     return handleD1FootprinterString(pathname, env, origin)
@@ -394,32 +422,34 @@ async function tryD1Route(
     const lcsc = exactLcsc(url.searchParams.get("q"))
     if (lcsc !== null) {
       // Demand must be recorded even when an older empty response was cached.
-      await requestStock(env.DB, lcsc)
+      await recordStockRequest(env, lcsc)
       return handleD1Search(url, env, origin)
     }
+    const routeUrl = keepRouteParams(url, routeParams ?? [])
     return handleCachedD1Response(
-      url,
+      routeUrl,
       origin,
       ctx,
       cache,
-      async () => handleD1Search(url, env, origin),
-      { cacheBust, preserveCacheOnSearchUnavailable: true },
+      async () => handleD1Search(routeUrl, env, origin),
+      { cacheBust },
     )
   }
 
   if (pathname === "/components/list") {
     const lcsc = exactLcsc(url.searchParams.get("search"))
     if (lcsc !== null) {
-      await requestStock(env.DB, lcsc)
+      await recordStockRequest(env, lcsc)
       return handleD1ComponentsList(url, isJsonRequest, env, origin)
     }
+    const routeUrl = keepRouteParams(url, routeParams ?? [])
     return handleCachedD1Response(
-      getD1RepresentationCacheUrl(url, isJsonRequest),
+      getD1RepresentationCacheUrl(routeUrl, isJsonRequest),
       origin,
       ctx,
       cache,
-      async () => handleD1ComponentsList(url, isJsonRequest, env, origin),
-      { cacheBust, preserveCacheOnSearchUnavailable: true },
+      async () => handleD1ComponentsList(routeUrl, isJsonRequest, env, origin),
+      { cacheBust },
     )
   }
 
@@ -434,15 +464,16 @@ async function tryD1Route(
     return null
   }
 
+  const routeUrl = keepRouteParams(url, routeParams ?? [])
   return handleCachedD1Response(
-    getD1RepresentationCacheUrl(url, isJsonRequest),
+    getD1RepresentationCacheUrl(routeUrl, isJsonRequest),
     origin,
     ctx,
     cache,
     async () =>
       handleD1TableRoute(
         pathname,
-        url,
+        routeUrl,
         isJsonRequest,
         env,
         origin,

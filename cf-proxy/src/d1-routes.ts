@@ -542,10 +542,11 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
     const rows = await db
       .selectFrom("component_catalog")
       .select("package")
-      .select((eb) => eb.fn.count<number>("lcsc").as("num_components"))
+      // lcsc is never null; counting rows keeps this on the package index.
+      .select((eb) => eb.fn.countAll<number>().as("num_components"))
       .where("package", "is not", null)
       .groupBy("package")
-      .having((eb) => eb.fn.count("lcsc"), ">", 10)
+      .having((eb) => eb.fn.countAll(), ">", 10)
       .orderBy("num_components", "desc")
       .execute()
 
@@ -563,6 +564,59 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
       },
     }
   },
+}
+
+// Query parameters each route reads. Anything else is dropped before caching.
+const SPECIAL_D1_ROUTE_PARAMS: Record<string, string[]> = {
+  "/api/search": [
+    "q",
+    "package",
+    "subcategory_name",
+    "limit",
+    "is_basic",
+    "is_preferred",
+  ],
+  "/components/list": [
+    "search",
+    "package",
+    "subcategory_name",
+    "is_basic",
+    "is_preferred",
+  ],
+  "/analog_switches/list": ["package", "channels"],
+  "/arm_processors/list": ["package", "flash_min", "ram_min", "interface"],
+  "/risc_v_processors/list": ["package", "flash_min", "ram_min", "interface"],
+  "/microphones/list": ["package", "microphone_type"],
+  "/lcd_drivers/list": [
+    "package",
+    "is_basic",
+    "is_preferred",
+    "max_resolution",
+  ],
+  "/tft_display_drivers/list": [
+    "driver_type",
+    "package",
+    "is_basic",
+    "is_preferred",
+    "max_resolution",
+  ],
+  "/categories/list": ["category_name"],
+  "/footprint_index/list": [],
+}
+
+export function getD1RouteParams(pathname: string): string[] | null {
+  if (SPECIAL_D1_ROUTE_PARAMS[pathname]) {
+    return SPECIAL_D1_ROUTE_PARAMS[pathname]
+  }
+
+  const tableName = ROUTE_TO_TABLE[pathname]
+  if (!tableName) return null
+
+  const config = TABLE_CONFIGS[tableName]
+  return [
+    ...Object.keys(config?.filters ?? {}),
+    ...Object.keys(config?.paramAliases ?? {}),
+  ]
 }
 
 /**

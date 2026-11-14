@@ -70,6 +70,7 @@ export const resistorArrayTableSpec: DerivedTableSpec<ResistorArray> = {
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
   ],
+  indexes: [{ name: "idx_resistor_array_resistance", columns: ["resistance"] }],
   listCandidateComponents: (db) =>
     db
       .selectFrom("components")

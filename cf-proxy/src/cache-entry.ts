@@ -18,10 +18,12 @@ export interface CacheEntry {
 // Inventory changes hourly; cache freshness must not hide live corrections.
 const FRESH_MS = 15 * 60 * 1000
 const USABLE_STALE_MS = 60 * 60 * 1000
+// Older copies are only returned when D1 cannot produce a replacement.
+const ERROR_FALLBACK_MS = 24 * 60 * 60 * 1000
 export const CLIENT_CACHE_MAX_AGE_SECONDS = 5 * 60
 export const CLIENT_CACHE_STALE_WHILE_REVALIDATE_SECONDS = 60
 export const CLIENT_CACHE_STALE_IF_ERROR_SECONDS = 5 * 60
-export const KV_TTL_SECONDS = 60 * 60
+export const KV_TTL_SECONDS = ERROR_FALLBACK_MS / 1000
 
 export const CACHE_CONTROL_HEADER_VALUE = [
   "public",
@@ -53,6 +55,18 @@ export function isUsableStale(
   const cachedAt = new Date(metadata.cachedAt)
   const age = now.getTime() - cachedAt.getTime()
   return age >= 0 && age < USABLE_STALE_MS
+}
+
+/**
+ * Checks if a cached entry may stand in for a failed D1 query (less than 24 hours old).
+ */
+export function isUsableOnError(
+  metadata: CacheMetadata,
+  now: Date = new Date(),
+): boolean {
+  const cachedAt = new Date(metadata.cachedAt)
+  const age = now.getTime() - cachedAt.getTime()
+  return age >= 0 && age < ERROR_FALLBACK_MS
 }
 
 /**
