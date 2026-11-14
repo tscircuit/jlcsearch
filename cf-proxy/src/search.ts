@@ -29,7 +29,16 @@ interface SearchRow {
 const buildWhereClause = (conditions: RawBuilder<unknown>[]) =>
   conditions.length > 0 ? sql.join(conditions, sql` AND `) : sql`1 = 1`
 
-const canFallbackToLikeSearch = (error: unknown): boolean =>
+export class SearchUnavailableError extends Error {
+  constructor() {
+    super(
+      "Text search is temporarily unavailable. Please try again shortly or search by an exact LCSC part number.",
+    )
+    this.name = "SearchUnavailableError"
+  }
+}
+
+const isMissingFtsSearchTable = (error: unknown): boolean =>
   error instanceof Error &&
   /no such table: search_index_fts/i.test(error.message)
 
@@ -93,7 +102,7 @@ export async function searchIndex(
   const limit = Number.parseInt(params.limit ?? "100", 10) || 100
   const conditions: RawBuilder<unknown>[] =
     exactLcsc(params.q) !== null ? [] : [sql`search_index.stock > 0`]
-  const fallbackSearchConditions: RawBuilder<unknown>[] = []
+  const textSearchConditions: RawBuilder<unknown>[] = []
   const ftsSearchConditions: RawBuilder<unknown>[] = []
 
   if (params.package) {
@@ -123,7 +132,7 @@ export async function searchIndex(
       }
     } else {
       const likeTokenGroups = getSearchTokenGroups(raw)
-      fallbackSearchConditions.push(
+      textSearchConditions.push(
         ...buildTokenGroupConditions(
           likeTokenGroups,
           sql`search_index.search_text`,
@@ -138,10 +147,6 @@ export async function searchIndex(
     }
   }
 
-  const searchConditions =
-    ftsSearchConditions.length > 0
-      ? ftsSearchConditions
-      : fallbackSearchConditions
   const selectSql = sql`
     SELECT
       search_index.lcsc,
@@ -162,11 +167,15 @@ export async function searchIndex(
     LIMIT ${limit}
   `
 
-  if (ftsSearchConditions.length > 0 && (await isFtsSearchReady(db))) {
+  if (ftsSearchConditions.length > 0) {
+    // Scanning the catalog while FTS is unavailable competes with its rebuild.
+    // Cache hits are served before this function; exact LCSC lookups skip FTS.
+    if (!(await isFtsSearchReady(db))) throw new SearchUnavailableError()
+
     const ftsQuery = sql`
       ${selectSql}
       JOIN search_index_fts ON search_index_fts.rowid = search_index.lcsc
-      WHERE ${buildWhereClause([...conditions, ...searchConditions, ...fallbackSearchConditions])}
+      WHERE ${buildWhereClause([...conditions, ...ftsSearchConditions, ...textSearchConditions])}
       ${orderLimitSql}
     `
 
@@ -174,16 +183,17 @@ export async function searchIndex(
       const result = await ftsQuery.execute(db)
       return result.rows as SearchRow[]
     } catch (error) {
-      if (!canFallbackToLikeSearch(error)) throw error
+      if (isMissingFtsSearchTable(error)) throw new SearchUnavailableError()
+      throw error
     }
   }
 
-  const fallbackQuery = sql`
+  const query = sql`
     ${selectSql}
-    WHERE ${buildWhereClause([...conditions, ...fallbackSearchConditions])}
+    WHERE ${buildWhereClause(conditions)}
     ${orderLimitSql}
   `
 
-  const result = await fallbackQuery.execute(db)
+  const result = await query.execute(db)
   return result.rows as SearchRow[]
 }

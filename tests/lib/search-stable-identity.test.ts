@@ -3,9 +3,9 @@ import { expect, test } from "bun:test"
 import { Kysely } from "kysely"
 import { BunSqliteDialect } from "kysely-bun-sqlite"
 import type { DB } from "../../cf-proxy/src/db/types"
-import { searchIndex } from "../../cf-proxy/src/search"
+import { searchIndex, SearchUnavailableError } from "../../cf-proxy/src/search"
 
-test("legacy FTS falls back; stable-ID FTS survives catalog row reordering", async () => {
+test("legacy FTS pauses text search; stable-ID FTS survives catalog row reordering", async () => {
   const sqlite = new Database(":memory:")
   sqlite.exec(`CREATE TABLE search_index (
     lcsc INTEGER UNIQUE, mfr TEXT, package TEXT, description TEXT, stock INTEGER,
@@ -24,7 +24,10 @@ test("legacy FTS falls back; stable-ID FTS survives catalog row reordering", asy
   const search = () => searchIndex(client, { q: "RK3576" })
   try {
     // An old ready marker must never enable the misaligned legacy index.
-    expect((await search()).map((r) => r.lcsc)).toEqual([42388007])
+    await expect(search()).rejects.toBeInstanceOf(SearchUnavailableError)
+    expect(
+      (await searchIndex(client, { q: "C42388007" })).map((r) => r.lcsc),
+    ).toEqual([42388007])
     sqlite.exec(`DELETE FROM search_index_fts;
       INSERT INTO search_index_fts(rowid,search_text) SELECT lcsc,search_text FROM search_index;
       INSERT INTO search_index_fts_meta VALUES ('ready_lcsc','1');
