@@ -1,0 +1,84 @@
+import { expect, test } from "bun:test"
+import { getD1Handler } from "../../cf-proxy/src/d1-routes"
+import { setupDerivedTables } from "../../lib/db/derivedtables/setup-derived-tables"
+import {
+  VALUE_TABLES,
+  catalogSchemaFromSyncScript,
+  openDatabase,
+} from "../fixtures/value-lookup-indexes"
+
+test("value lookups and footprint counts are answered from indexes", async () => {
+  const { sqlite, db, queries } = openDatabase()
+  try {
+    sqlite.exec(await catalogSchemaFromSyncScript())
+    await setupDerivedTables({ db, populate: false, tableNames: VALUE_TABLES })
+    sqlite.exec(`
+      WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n WHERE i < 12)
+      INSERT INTO component_catalog (lcsc, package, stock)
+      SELECT i, '0805', 1 FROM n UNION ALL SELECT 100, '0402', 1;
+      INSERT INTO resistor (lcsc, stock, resistance, package)
+      VALUES (1, 10, 4700, '0402'), (2, 5, 4700, '0603'), (3, 9, 10000, '0402');
+      INSERT INTO capacitor (lcsc, stock, capacitance_farads, package)
+      VALUES (4, 7, 1e-7, '0402'), (6, 3, 1e-6, '0402');
+      INSERT INTO resistor_array (lcsc, stock, resistance, package)
+      VALUES (7, 2, 4700, '0603');`)
+    const run = async (path: string, params: Record<string, string>) => {
+      queries.length = 0
+      const handler = getD1Handler(path, { includeFilterOptions: false })!
+      const result = await handler(db as never, params)
+      const plans = queries.map(({ sql, parameters }) =>
+        sqlite
+          .query<{ detail: string }, any[]>(`EXPLAIN QUERY PLAN ${sql}`)
+          .all(...(parameters as any[]))
+          .map((step) => step.detail)
+          .join(" / "),
+      )
+      return { data: result.data, plans }
+    }
+
+    const footprints = await run("/footprint_index/list", {})
+    expect(footprints.data).toEqual({
+      footprints: [
+        {
+          package: "0805",
+          num_components: 12,
+          footprinter_string: null,
+          tscircuit_accepts: false,
+        },
+      ],
+    })
+    expect(footprints.plans).toHaveLength(1)
+    expect(footprints.plans[0]).toContain(
+      "USING COVERING INDEX idx_component_catalog_package",
+    )
+
+    for (const [path, params, index, lcsc] of [
+      [
+        "/resistors/list",
+        { resistance: "4700", package: "0402" },
+        "idx_resistor_resistance",
+        1,
+      ],
+      [
+        "/capacitors/list",
+        { capacitance: "1e-7", package: "0402" },
+        "idx_capacitor_capacitance_farads",
+        4,
+      ],
+      [
+        "/resistor_arrays/list",
+        { resistance: "4700" },
+        "idx_resistor_array_resistance",
+        7,
+      ],
+    ] as const) {
+      const lookup = await run(path, params)
+      expect(Object.values(lookup.data)[0]).toMatchObject([{ lcsc }])
+      expect(lookup.plans).toHaveLength(1)
+      expect(lookup.plans[0]).toStartWith("SEARCH ")
+      expect(lookup.plans[0]).toContain(`USING INDEX ${index}`)
+    }
+  } finally {
+    await db.destroy()
+  }
+})
