@@ -35,6 +35,12 @@ export const capacitorTableSpec: DerivedTableSpec<Capacitor> = {
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
   ],
+  indexes: [
+    {
+      name: "idx_capacitor_capacitance_farads",
+      columns: ["capacitance_farads"],
+    },
+  ],
   listCandidateComponents: (db) =>
     db
       .selectFrom("components")

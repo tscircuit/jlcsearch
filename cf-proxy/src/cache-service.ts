@@ -6,6 +6,7 @@ import {
   KV_TTL_SECONDS,
   createMetadata,
   isFresh,
+  isUsableOnError,
   isUsableStale,
 } from "./cache-entry"
 import { generateCacheKey } from "./cache-key"
@@ -13,6 +14,8 @@ import { generateCacheKey } from "./cache-key"
 export type CacheResult =
   | { type: "fresh"; entry: CacheEntry }
   | { type: "stale"; entry: CacheEntry }
+  // Too old to serve normally; kept so a failed D1 query has something to return.
+  | { type: "expired"; entry: CacheEntry }
   | { type: "miss" }
 
 /**
@@ -22,7 +25,7 @@ export class CacheService {
   constructor(private kv: KVNamespace) {}
 
   /**
-   * Gets a cached response, indicating whether it's fresh, stale, or a miss.
+   * Gets a cached response, indicating whether it's fresh, stale, expired, or a miss.
    */
   async get(url: URL): Promise<CacheResult> {
     const key = await generateCacheKey(url)
@@ -43,6 +46,10 @@ export class CacheService {
 
     if (isUsableStale(entry.metadata)) {
       return { type: "stale", entry }
+    }
+
+    if (isUsableOnError(entry.metadata)) {
+      return { type: "expired", entry }
     }
 
     return { type: "miss" }
@@ -77,7 +84,7 @@ export class CacheService {
    */
   buildResponse(
     entry: CacheEntry,
-    cacheStatus: "HIT" | "MISS" | "STALE" | "BUST",
+    cacheStatus: "HIT" | "MISS" | "STALE" | "STALE-ERROR" | "BUST",
     origin: string | null,
     options: {
       noStore?: boolean

@@ -32,6 +32,7 @@ export const resistorTableSpec: DerivedTableSpec<Resistor> = {
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
   ],
+  indexes: [{ name: "idx_resistor_resistance", columns: ["resistance"] }],
   listCandidateComponents: (db) =>
     db
       .selectFrom("components")
