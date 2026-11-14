@@ -13,7 +13,8 @@ DB_NAME="${DB_NAME:-jlcsearch}"
 BATCH_ROWS="${BATCH_ROWS:-250}"
 COMPONENT_CATALOG_BATCH_ROWS="${COMPONENT_CATALOG_BATCH_ROWS:-${BATCH_ROWS}}"
 SEARCH_INDEX_BATCH_ROWS="${SEARCH_INDEX_BATCH_ROWS:-${BATCH_ROWS}}"
-FTS_BATCH_ROWS="${FTS_BATCH_ROWS:-5000}"
+FTS_BATCH_ROWS="${FTS_BATCH_ROWS:-1000}"
+FTS_PAUSE_SECONDS="${FTS_PAUSE_SECONDS:-1}"
 SYNC_DERIVED_TABLES="${SYNC_DERIVED_TABLES:-1}"
 SYNC_COMPONENT_CATALOG="${SYNC_COMPONENT_CATALOG:-0}"
 SYNC_SEARCH_INDEX="${SYNC_SEARCH_INDEX:-0}"
@@ -92,43 +93,11 @@ run_wrangler() {
 }
 
 rebuild_remote_search_fts_index() {
-  local row_count start end
-
-  row_count="$(sqlite3 db.sqlite3 "SELECT MAX(rowid) FROM search_index;")"
-  if [[ -z "${row_count}" || "${row_count}" == "0" ]]; then
-    echo "Skipping FTS5 setup: search_index is empty."
-    return
-  fi
-
-  echo "Initializing search_index_fts..."
-  run_wrangler d1 execute "${DB_NAME}" --remote --file="${SCRIPT_DIR}/setup-fts5.sql"
-
-  for ((start=1; start<=row_count; start+=FTS_BATCH_ROWS)); do
-    end=$((start + FTS_BATCH_ROWS - 1))
-    if (( end > row_count )); then
-      end=${row_count}
-    fi
-
-    echo "  importing FTS rowids ${start}-${end}"
-    run_wrangler d1 execute "${DB_NAME}" --remote --command "
-      DELETE FROM search_index_fts
-      WHERE rowid IN (SELECT lcsc FROM search_index WHERE rowid BETWEEN ${start} AND ${end});
-
-      INSERT INTO search_index_fts(rowid, search_text)
-      SELECT lcsc, search_text
-      FROM search_index
-      WHERE rowid BETWEEN ${start} AND ${end}
-        AND search_text IS NOT NULL
-        AND search_text != '';
-    "
-  done
-
-  # FTS5 optimize is optional maintenance and can exceed D1's per-query work
-  # limit on the full catalog. The incrementally built index is ready to query
-  # as soon as every range has been inserted.
-  run_wrangler d1 execute "${DB_NAME}" --remote --command "
-    UPDATE search_index_fts_meta SET value = '1' WHERE key = 'ready_lcsc';
-  "
+  # Use the same resumable, paced rebuild and validation as index-only repair.
+  DB_NAME="${DB_NAME}" \
+    FTS_BATCH_ROWS="${FTS_BATCH_ROWS}" \
+    FTS_PAUSE_SECONDS="${FTS_PAUSE_SECONDS}" \
+    bash "${SCRIPT_DIR}/rebuild-search-index-fts-batched.sh" --remote
 }
 
 cleanup() {

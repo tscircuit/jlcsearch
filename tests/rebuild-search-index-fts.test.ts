@@ -30,10 +30,17 @@ const fixture = () => {
   const directory = mkdtempSync(join(tmpdir(), "jlcsearch-fts-test-"))
   const dbPath = join(directory, "test.sqlite")
   const logPath = join(directory, "sql.log")
+  const eventPath = join(directory, "events.jsonl")
   writeFileSync(logPath, "")
+  writeFileSync(eventPath, "")
   writeFileSync(
     join(directory, "bunx"),
     '#!/bin/sh\nexec "$TEST_BUN" "$TEST_WRANGLER" "$@"\n',
+    { mode: 0o755 },
+  )
+  writeFileSync(
+    join(directory, "sleep"),
+    '#!/bin/sh\nprintf \'{"pause":"%s"}\\n\' "$1" >> "$TEST_EVENT_LOG"\n',
     { mode: 0o755 },
   )
   const db = new Database(dbPath)
@@ -69,6 +76,7 @@ const fixture = () => {
         PATH: `${directory}:${process.env.PATH}`,
         DB_NAME: "local-fixture",
         FTS_BATCH_ROWS: "2",
+        FTS_PAUSE_SECONDS: "0",
         FTS_PERSIST_TO: "",
         RETRY_MAX_ATTEMPTS: "2",
         RETRY_BASE_DELAY_SECONDS: "0",
@@ -78,6 +86,7 @@ const fixture = () => {
         TEST_WRANGLER: fixtureScript,
         TEST_DB: dbPath,
         TEST_SQL_LOG: logPath,
+        TEST_EVENT_LOG: eventPath,
         TEST_FAULT: fault,
         ...env,
       },
@@ -90,6 +99,24 @@ const fixture = () => {
     before,
     source,
     log: () => readFileSync(logPath, "utf8"),
+    events: () =>
+      readFileSync(eventPath, "utf8")
+        .trim()
+        .split("\n")
+        .filter(Boolean)
+        .map(
+          (line) =>
+            JSON.parse(line) as {
+              sql?: string
+              changes?: number
+              isImport?: boolean
+              pause?: string
+            },
+        ),
+    resetLogs: () => {
+      writeFileSync(logPath, "")
+      writeFileSync(eventPath, "")
+    },
     readiness: () =>
       db
         .query("SELECT value FROM search_index_fts_meta WHERE key='ready_lcsc'")
@@ -119,6 +146,13 @@ test("rebuild retries committed batches, validates stable IDs, and preserves cat
       { rowid: 42388007, search_text: "rockchip rk3576" },
     ])
     expect(f.log()).not.toContain("VALUES('optimize')")
+    expect(f.log()).not.toContain("DROP TABLE")
+    expect(
+      f
+        .events()
+        .filter((event) => event.isImport)
+        .map((event) => event.changes),
+    ).toEqual([1, 0, 1, 0, 0])
     const db = new Kysely({ dialect: new BunSqliteDialect({ database: f.db }) })
     const parts = await searchIndex(
       db as unknown as Parameters<typeof searchIndex>[0],
@@ -130,14 +164,181 @@ test("rebuild retries committed batches, validates stable IDs, and preserves cat
   }
 })
 
-test("a failed batch leaves FTS disabled and a clean rerun recovers", () => {
+test("a failed batch leaves FTS disabled and resumes without rewriting completed entries", () => {
   const f = fixture()
   try {
     expect(f.run("failed_batch").exitCode).not.toBe(0)
     expect(f.readiness()).toEqual({ value: "0" })
     expect(f.source()).toEqual(f.before)
+    expect(
+      f.db
+        .query("SELECT search_text FROM search_index_fts WHERE rowid=42388007")
+        .get(),
+    ).toEqual({ search_text: "rockchip rk3576" })
+    f.resetLogs()
     expect(f.run().exitCode).toBe(0)
     expect(f.readiness()).toEqual({ value: "1" })
+    expect(
+      f
+        .events()
+        .filter((event) => event.isImport)
+        .map((event) => event.changes),
+    ).toEqual([0, 1, 0, 0])
+    expect(f.log()).not.toContain("DROP TABLE")
+  } finally {
+    f.close()
+  }
+})
+
+test("adopts an existing partial stable index without checkpoint metadata", () => {
+  const f = fixture()
+  try {
+    f.db.exec(`INSERT INTO search_index_fts(rowid,search_text)
+      VALUES(42388007,'rockchip rk3576'),(0,'invalid zero'),(-4,'invalid negative');
+      UPDATE search_index_fts_meta SET value='0' WHERE key='ready_lcsc';`)
+    const result = f.run()
+    expect({
+      exitCode: result.exitCode,
+      stderr: result.stderr.toString(),
+    }).toEqual({ exitCode: 0, stderr: "" })
+    expect(
+      f
+        .events()
+        .filter((event) => event.isImport)
+        .map((event) => event.changes),
+    ).toEqual([0, 1, 0, 0])
+    expect(
+      f.db
+        .query("SELECT rowid,search_text FROM search_index_fts ORDER BY rowid")
+        .all(),
+    ).toEqual([
+      { rowid: 1001, search_text: "tvs diode" },
+      { rowid: 42388007, search_text: "rockchip rk3576" },
+    ])
+    expect(f.readiness()).toEqual({ value: "1" })
+    expect(f.source()).toEqual(f.before)
+    expect(f.log()).not.toContain("DROP TABLE")
+  } finally {
+    f.close()
+  }
+})
+
+test("rerunning a complete index validates it without rewriting any indexed parts", () => {
+  const f = fixture()
+  try {
+    expect(f.run().exitCode).toBe(0)
+    f.resetLogs()
+    expect(f.run().exitCode).toBe(0)
+    const imports = f.events().filter((event) => event.isImport)
+    expect(imports.length).toBeGreaterThan(0)
+    expect(imports.every((event) => event.changes === 0)).toBe(true)
+    expect(f.log()).toContain("AS expected_count")
+    expect(f.log()).not.toContain("DROP TABLE")
+    expect(f.readiness()).toEqual({ value: "1" })
+  } finally {
+    f.close()
+  }
+})
+
+test.each([
+  "DELETE FROM search_index WHERE lcsc=1001",
+  "UPDATE search_index SET search_text='' WHERE lcsc=1001",
+])("reconciles catalog changes between runs: %s", (change) => {
+  const f = fixture()
+  try {
+    expect(f.run().exitCode).toBe(0)
+    f.db.exec(`${change};
+      UPDATE search_index SET search_text='updated rockchip processor' WHERE lcsc=42388007;
+      INSERT INTO search_index(rowid,lcsc,search_text) VALUES(2,5000,'new connector');`)
+    const source = f.source()
+    f.resetLogs()
+    const result = f.run()
+    expect({
+      exitCode: result.exitCode,
+      stderr: result.stderr.toString(),
+    }).toEqual({ exitCode: 0, stderr: "" })
+    expect(
+      f.db
+        .query("SELECT rowid,search_text FROM search_index_fts ORDER BY rowid")
+        .all(),
+    ).toEqual([
+      { rowid: 5000, search_text: "new connector" },
+      { rowid: 42388007, search_text: "updated rockchip processor" },
+    ])
+    expect(f.source()).toEqual(source)
+    expect(f.readiness()).toEqual({ value: "1" })
+    expect(f.log()).not.toContain("DROP TABLE")
+  } finally {
+    f.close()
+  }
+})
+
+test("pauses after successful setup, import, cleanup and validation calls", () => {
+  const f = fixture()
+  try {
+    expect(f.run("", { FTS_PAUSE_SECONDS: "2" }).exitCode).toBe(0)
+    const events = f.events()
+    expect(events.length).toBeGreaterThan(10)
+    for (let index = 0; index < events.length; index += 2) {
+      expect(events[index].sql).toBeString()
+      expect(events[index + 1]).toEqual({ pause: "2" })
+    }
+  } finally {
+    f.close()
+  }
+})
+
+test.each([
+  "CREATE TABLE search_index_fts(search_text TEXT)",
+  "CREATE VIRTUAL TABLE search_index_fts USING fts5(search_text, tokenize='unicode61')",
+])(
+  "refuses an incompatible existing index without replacing it: %s",
+  (schema) => {
+    const f = fixture()
+    try {
+      f.db.exec(
+        `DROP TABLE search_index_fts; ${schema}; INSERT INTO search_index_fts(search_text) VALUES('preserve this');`,
+      )
+      expect(f.run().exitCode).not.toBe(0)
+      expect(
+        f.db.query("SELECT search_text FROM search_index_fts").all(),
+      ).toEqual([{ search_text: "preserve this" }])
+      expect(f.log()).not.toContain("DROP TABLE")
+      expect(f.events().some((event) => event.isImport)).toBe(false)
+    } finally {
+      f.close()
+    }
+  },
+)
+
+test("creates a missing index and metadata table without changing the source", () => {
+  const f = fixture()
+  try {
+    f.db.exec("DROP TABLE search_index_fts; DROP TABLE search_index_fts_meta;")
+    const result = f.run()
+    expect({
+      exitCode: result.exitCode,
+      stderr: result.stderr.toString(),
+    }).toEqual({ exitCode: 0, stderr: "" })
+    expect(f.readiness()).toEqual({ value: "1" })
+    expect(f.source()).toEqual(f.before)
+    expect(f.log()).not.toContain("DROP TABLE")
+  } finally {
+    f.close()
+  }
+})
+
+test("refuses to reconcile without an indexed source LCSC lookup", () => {
+  const f = fixture()
+  try {
+    f.db.exec("DROP INDEX idx_search_index_lcsc")
+    expect(f.run().exitCode).not.toBe(0)
+    expect(f.events().some((event) => event.isImport)).toBe(false)
+    expect(
+      f.db.query("SELECT search_text FROM search_index_fts").all(),
+    ).toEqual([{ search_text: "legacy text" }])
+    expect(f.source()).toEqual(f.before)
+    expect(f.log()).not.toContain("DROP TABLE")
   } finally {
     f.close()
   }
@@ -181,7 +382,7 @@ database_id = "00000000-0000-0000-0000-000000000001"
       requests.push(path)
       if (path.endsWith("/query") && request.method === "POST") {
         const { sql } = (await request.json()) as { sql: string }
-        const results = sql.includes("CREATE VIRTUAL TABLE")
+        const results = /^\s*(?:--[^\n]*\n\s*)*CREATE\b/i.test(sql)
           ? (f.db.exec(sql), [])
           : f.db.query(sql).all()
         return Response.json({
@@ -211,6 +412,7 @@ database_id = "00000000-0000-0000-0000-000000000001"
         CI: "true",
         DB_NAME: "local-fixture",
         FTS_BATCH_ROWS: "2",
+        FTS_PAUSE_SECONDS: "0",
         RETRY_MAX_ATTEMPTS: "1",
         RETRY_BASE_DELAY_SECONDS: "0",
         CLOUDFLARE_API_BASE_URL: `${server.url}client/v4`,
@@ -247,19 +449,24 @@ database_id = "00000000-0000-0000-0000-000000000001"
   }
 }, 60_000)
 
-test.each(["missing", "wrong_text", "extra", "catalog_changed", "bad_json"])(
-  "refuses to enable FTS after %s",
-  (fault) => {
-    const f = fixture()
-    try {
-      expect(f.run(fault).exitCode).not.toBe(0)
-      expect(f.readiness()).toEqual({ value: "0" })
-      expect(f.log()).not.toContain("RETURNING CAST(value AS INTEGER)")
-    } finally {
-      f.close()
-    }
-  },
-)
+test.each([
+  "missing",
+  "wrong_text",
+  "extra",
+  "extra_negative",
+  "extra_zero",
+  "catalog_changed",
+  "bad_json",
+])("refuses to enable FTS after %s", (fault) => {
+  const f = fixture()
+  try {
+    expect(f.run(fault).exitCode).not.toBe(0)
+    expect(f.readiness()).toEqual({ value: "0" })
+    expect(f.log()).not.toContain("RETURNING CAST(value AS INTEGER)")
+  } finally {
+    f.close()
+  }
+})
 
 test("duplicate source IDs fail validation even when their search text matches", () => {
   const f = fixture()
@@ -310,6 +517,10 @@ test.each([
   { env: { FTS_BATCH_ROWS: "0" }, args: ["--local"] },
   { env: { FTS_BATCH_ROWS: "5001" }, args: ["--local"] },
   { env: { FTS_BATCH_ROWS: "2; SELECT 1" }, args: ["--local"] },
+  { env: { FTS_PAUSE_SECONDS: "-1" }, args: ["--local"] },
+  { env: { FTS_PAUSE_SECONDS: "61" }, args: ["--local"] },
+  { env: { FTS_PAUSE_SECONDS: "0.5" }, args: ["--local"] },
+  { env: { FTS_PAUSE_SECONDS: "1; SELECT 1" }, args: ["--local"] },
 ])("rejects unsafe arguments before any database call: %j", ({ env, args }) => {
   const f = fixture()
   try {
