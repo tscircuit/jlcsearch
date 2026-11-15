@@ -70,7 +70,7 @@ test("resolves exact-part website taxonomy without mistaking another search resu
           fetcher,
         )
       ).rows,
-    ).toEqual([{ lcsc: 1, stock: 0 }])
+    ).toEqual([{ lcsc: 1, stock: 0, is_standard_only: null }])
   } finally {
     db.close()
   }

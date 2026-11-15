@@ -185,6 +185,7 @@ const COLUMN_LABELS: Record<string, string> = {
   in_stock: "In Stock",
   is_basic: "Basic",
   is_preferred: "Preferred",
+  is_standard_only: "Standard Only",
   capacitance_farads: "Capacitance",
   tolerance_fraction: "Tolerance",
   voltage_rating: "Voltage",
@@ -426,6 +427,8 @@ const renderCell = (
 ): string => {
   if (column === "stock" && (value === null || value === undefined))
     return "Unknown"
+  if (column === "is_standard_only" && value === null)
+    return '<span title="Not checked yet">?</span>'
   if (value === null || value === undefined || value === "") return ""
   if (column === "attributes") {
     const rawValue = String(value)
@@ -510,6 +513,13 @@ const getSuggestionListId = (
   options.length > 0
     ? `${pathname.replaceAll("/", "-")}-${paramName}-options`
     : ""
+
+/**
+ * Every category table can be filtered on JLCPCB's "Standard only" mark.
+ * Parts the crawler has not observed yet match neither Yes nor No.
+ */
+const renderStandardOnlyFilter = (params: QueryParams): string =>
+  `<div><label title="Parts JLCPCB can only place with Standard PCBA">Standard Only:</label><select name="is_standard_only"><option value="">All</option><option value="true"${params.is_standard_only === "true" ? " selected" : ""}>Yes</option><option value="false"${params.is_standard_only === "false" ? " selected" : ""}>No</option></select></div>`
 
 const renderCustomFilters = (
   pathname: string,
@@ -749,7 +759,7 @@ const renderGenericFilters = (
   const helpText = config.helpText
     ? `<p class="mt-2 text-sm text-gray-600">${escapeHtml(config.helpText)}</p>`
     : ""
-  return `<form method="GET" class="flex flex-row flex-wrap gap-4">${inputs}<button type="submit">Filter</button></form>${helpText}`
+  return `<form method="GET" class="flex flex-row flex-wrap gap-4">${inputs}${renderStandardOnlyFilter(normalizedParams)}<button type="submit">Filter</button></form>${helpText}`
 }
 
 const renderComponentsFilters = (

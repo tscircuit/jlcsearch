@@ -3,6 +3,7 @@ import { expect, test } from "bun:test"
 import { Kysely } from "kysely"
 import { BunSqliteDialect } from "kysely-bun-sqlite"
 import { getD1Handler } from "../../cf-proxy/src/d1-routes"
+import { createLiveStockTables } from "../fixtures/live-stock-tables"
 
 test("photo diode wavelength filter matches detection ranges", async () => {
   const database = new Database(":memory:")
@@ -33,6 +34,7 @@ test("photo diode wavelength filter matches detection ranges", async () => {
       (5, 'UV_PEAK', 50, 'SMD', 360, 300, 400, 20, 1e-9, 0, 0),
       (6, 'BLUE_PEAK', 40, 'SMD', 420, 300, 950, 20, 1e-9, 0, 0);
   `)
+  await createLiveStockTables(database)
 
   const db = new Kysely<any>({
     dialect: new BunSqliteDialect({ database }),
