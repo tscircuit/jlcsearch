@@ -8,6 +8,7 @@ import {
 import { queryComponentCatalog } from "./components"
 import { getD1Handler, getD1RouteParams } from "./d1-routes"
 import { getD1Client } from "./db/get-d1-client"
+import { logD1OperationError } from "./d1-observability"
 import { handleEasyEdaComponentCache } from "./easyeda-component-cache"
 import { renderD1TablePage, renderHomePage } from "./render"
 import { searchIndex, SearchUnavailableError } from "./search"
@@ -200,7 +201,7 @@ const buildHealthResponse = (origin: string | null): Response => {
 // Recording demand is best effort: a failed write must not fail the lookup.
 const recordStockRequest = (env: Env, lcsc: number): Promise<void> =>
   requestStock(env.DB, lcsc).catch((error) => {
-    console.warn(`Recording stock demand failed for C${lcsc}:`, error)
+    logD1OperationError("stock_demand", error)
   })
 
 // Only parameters a route reads may vary its cache entry or reach its handler,
@@ -239,7 +240,7 @@ const withCacheBustHeaders = (
   })
 }
 
-export default {
+const worker = {
   async fetch(
     request: Request,
     env: Env,
@@ -303,6 +304,43 @@ export default {
   },
 }
 
+const diagnosticRoute = (pathname: string): string => {
+  const path = pathname.replace(/\.json$/, "")
+  if (path.startsWith(FOOTPRINTER_STRINGS_API_PREFIX))
+    return "/api/footprinter_strings/:lcsc"
+  if (["/", "/health", "/_d1/health"].includes(path) || getD1RouteParams(path))
+    return path
+  return "other"
+}
+
+export default {
+  async fetch(
+    request: Request,
+    env: Env,
+    ctx: ExecutionContext,
+  ): Promise<Response> {
+    const started = performance.now()
+    let status = 500
+    let cache: string | null = null
+    try {
+      const response = await worker.fetch(request, env, ctx)
+      status = response.status
+      cache = response.headers.get("x-cache")
+      return response
+    } finally {
+      // Invocation logs are disabled; this summary omits URLs, search terms,
+      // part numbers, headers and client identifiers. Cloudflare samples it.
+      console.log({
+        event: "request_completed",
+        route: diagnosticRoute(new URL(request.url).pathname),
+        status,
+        cache,
+        duration_ms: Math.round((performance.now() - started) * 10) / 10,
+      })
+    }
+  },
+}
+
 async function refreshStaleD1Entry(
   cacheUrl: URL,
   producer: () => Promise<Response>,
@@ -314,7 +352,7 @@ async function refreshStaleD1Entry(
       await cache.put(cacheUrl, response)
     }
   } catch (error) {
-    console.warn("Background D1 cache refresh failed:", error)
+    logD1OperationError(diagnosticRoute(cacheUrl.pathname), error)
   }
 }
 
@@ -502,7 +540,7 @@ async function handleD1FootprinterString(
   if (lcsc === null) return buildD1InvalidLcscResponse(origin)
 
   try {
-    const db = getD1Client(env.DB)
+    const db = getD1Client(env.DB, "/api/footprinter_strings/:lcsc")
     const row = await db
       .selectFrom("footprinter_strings")
       .select(["lcsc", "footprinter_string", "copper_iou", "updated_at"])
@@ -528,7 +566,7 @@ async function handleD1FootprinterString(
       { status: 200, headers },
     )
   } catch (error) {
-    console.error(`D1 footprinter string lookup failed for C${lcsc}:`, error)
+    logD1OperationError("/api/footprinter_strings/:lcsc", error)
     return buildD1ErrorResponse(
       origin,
       error instanceof Error
@@ -544,7 +582,7 @@ async function handleD1Search(
   origin: string | null,
 ): Promise<Response> {
   try {
-    const db = getD1Client(env.DB)
+    const db = getD1Client(env.DB, "/api/search")
     const params = Object.fromEntries(url.searchParams)
     const lcsc = exactLcsc(params.q)
     const verified =
@@ -587,7 +625,7 @@ async function handleD1Search(
     if (error instanceof SearchUnavailableError) {
       return buildSearchUnavailableResponse(error, origin)
     }
-    console.error("D1 search failed:", error)
+    logD1OperationError("/api/search", error)
     return buildD1ErrorResponse(
       origin,
       error instanceof Error ? error.message : "Unknown D1 search error",
@@ -623,7 +661,7 @@ async function handleD1TableRoute(
   cacheBust: boolean,
 ): Promise<Response> {
   try {
-    const db = getD1Client(env.DB)
+    const db = getD1Client(env.DB, pathname)
     const params = Object.fromEntries(url.searchParams)
     const handler = getD1Handler(pathname, {
       includeFilterOptions: !isJsonRequest,
@@ -669,7 +707,7 @@ async function handleD1TableRoute(
       },
     )
   } catch (error) {
-    console.error(`D1 route failed for ${pathname}:`, error)
+    logD1OperationError(pathname, error)
     return buildD1ErrorResponse(
       origin,
       error instanceof Error ? error.message : "Unknown D1 route error",
@@ -687,7 +725,7 @@ async function handleD1ComponentsList(
   const params = Object.fromEntries(url.searchParams)
 
   try {
-    const db = getD1Client(env.DB)
+    const db = getD1Client(env.DB, "/components/list")
     const rows = await queryComponentCatalog(db, params)
     const lcsc = exactLcsc(params.search)
     const verified =
@@ -763,7 +801,7 @@ async function handleD1ComponentsList(
         isJsonRequest ? "application/json" : "text/html; charset=utf-8",
       )
     }
-    console.error("D1 components list failed:", error)
+    logD1OperationError("/components/list", error)
     return buildD1ErrorResponse(
       origin,
       error instanceof Error ? error.message : "Unknown D1 components error",
@@ -785,7 +823,7 @@ async function handleD1Health(
   addCorsHeaders(headers, origin)
 
   try {
-    const db = getD1Client(env.DB)
+    const db = getD1Client(env.DB, "/_d1/health")
     const result = await db
       .selectFrom("resistor")
       .select("lcsc")
@@ -802,6 +840,7 @@ async function handleD1Health(
       { status: 200, headers },
     )
   } catch (error) {
+    logD1OperationError("/_d1/health", error)
     return new Response(
       JSON.stringify({
         ok: false,

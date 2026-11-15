@@ -7,6 +7,16 @@ routes = [
   { pattern = "jlcsearch.tscircuit.com/*", zone_name = "tscircuit.com" }
 ]
 
+# Keep a sample of diagnostic events after the normal Worker deployment.
+[observability]
+enabled = true
+head_sampling_rate = 0.1
+
+[observability.logs]
+enabled = true
+invocation_logs = false # Custom summaries omit raw URLs and search terms.
+persist = true
+
 [vars]
 USE_D1 = "true"  # Feature flag for gradual D1 rollout
 
