@@ -140,6 +140,22 @@ describe("search API contract against seeded D1", () => {
       ])
       expect((await fetchSearch("q=op")).status).toBe(400)
       expect((await fetchSearch("q=RK3576&limit=-1")).status).toBe(400)
+      expect((await fetchSearch("q=RK3576&limit=100&limit=1001")).status).toBe(
+        400,
+      )
+      expect(
+        (await request("q=RK3576&limit=1001&limit=1")).components,
+      ).toMatchObject([{ lcsc: 42388007 }])
+      expect((await request("q=dc&q=RK3576")).components).toMatchObject([
+        { lcsc: 42388007 },
+      ])
+      const nulResponse = await fetchSearch(
+        `q=${encodeURIComponent("电源\0连接")}`,
+      )
+      expect(nulResponse.status).toBe(400)
+      expect(await nulResponse.json()).toMatchObject({
+        error_code: "invalid_search",
+      })
       expect((await request("q=RK3576")).components[0].lcsc).toBe(42388007)
       expect((await request("q=RK3576&package=LQFP-64")).components).toEqual([])
       expect((await request("q=missing-part")).components).toEqual([])

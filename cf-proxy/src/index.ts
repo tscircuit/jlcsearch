@@ -275,6 +275,15 @@ export default {
     ctx: ExecutionContext,
   ): Promise<Response> {
     const requestUrl = new URL(request.url)
+    const pathname = requestUrl.pathname.replace(/\.json$/, "")
+    if (pathname === "/api/search" || pathname === "/components/list") {
+      // Handlers already use the last value via Object.fromEntries. Resolve
+      // duplicates once so validation, cache keys, representation and exact-part
+      // routing all use that same value, including cachebust and json controls.
+      requestUrl.search = new URLSearchParams(
+        Object.fromEntries(requestUrl.searchParams),
+      ).toString()
+    }
     const url = stripInternalQueryParams(requestUrl)
     const cacheBust = isCacheBustRequest(requestUrl)
     const origin = request.headers.get("origin")
@@ -628,6 +637,9 @@ async function handleD1Search(
       headers,
     })
   } catch (error) {
+    if (error instanceof InvalidSearchQueryError) {
+      return buildInvalidSearchResponse(error, origin, true)
+    }
     if (error instanceof SearchUnavailableError) {
       return buildSearchUnavailableResponse(error, origin)
     }
@@ -800,6 +812,9 @@ async function handleD1ComponentsList(
       },
     )
   } catch (error) {
+    if (error instanceof InvalidSearchQueryError) {
+      return buildInvalidSearchResponse(error, origin, isJsonRequest)
+    }
     if (error instanceof SearchUnavailableError) {
       return buildSearchUnavailableResponse(
         error,

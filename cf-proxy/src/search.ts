@@ -93,6 +93,12 @@ const tokenAlternatives = (group: string[]) =>
 
 export const validateSearchQuery = (params: SearchQueryParams) => {
   const raw = params.q?.trim() ?? ""
+  // SQLite's FTS parser treats NUL as a terminator, even inside a quoted phrase.
+  if (raw.includes("\0")) {
+    throw new InvalidSearchQueryError(
+      "Search text must not contain NUL characters.",
+    )
+  }
   const limit = params.limit === undefined ? 100 : Number(params.limit)
   if (
     (params.limit !== undefined && !/^\d+$/.test(params.limit)) ||
@@ -122,7 +128,7 @@ export const validateSearchQuery = (params: SearchQueryParams) => {
     )
   if (tokenGroups.length && !indexedGroups.length) {
     throw new InvalidSearchQueryError(
-      "Add a search term with at least 3 characters, or use an exact LCSC part number.",
+      'Add another search term, such as "dc connector", "IC amplifier", or "8MHz crystal", or use an exact LCSC part number.',
     )
   }
   const match = indexedGroups

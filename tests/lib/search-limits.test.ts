@@ -121,3 +121,15 @@ test("invalid or unindexable searches are rejected before any database query", a
     await db.destroy()
   }
 })
+
+test("NUL-containing Unicode search is rejected before SQLite parses the MATCH expression", async () => {
+  const { db, search, queries } = fixture()
+  try {
+    await expect(search("电源\0连接")).rejects.toBeInstanceOf(
+      InvalidSearchQueryError,
+    )
+    expect(queries).toEqual([])
+  } finally {
+    await db.destroy()
+  }
+})
