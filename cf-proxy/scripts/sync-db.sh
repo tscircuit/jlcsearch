@@ -321,6 +321,7 @@ SELECT
 FROM v_components;
 
 CREATE INDEX IF NOT EXISTS idx_component_catalog_subcategory ON component_catalog(subcategory);
+CREATE INDEX IF NOT EXISTS idx_component_catalog_category_subcategory ON component_catalog(category, subcategory);
 CREATE INDEX IF NOT EXISTS idx_component_catalog_package ON component_catalog(package);
 CREATE INDEX IF NOT EXISTS idx_component_catalog_basic ON component_catalog(basic);
 CREATE INDEX IF NOT EXISTS idx_component_catalog_preferred ON component_catalog(preferred);
@@ -345,6 +346,7 @@ CREATE TABLE component_catalog (
   extra TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_component_catalog_subcategory ON component_catalog(subcategory);
+CREATE INDEX IF NOT EXISTS idx_component_catalog_category_subcategory ON component_catalog(category, subcategory);
 CREATE INDEX IF NOT EXISTS idx_component_catalog_package ON component_catalog(package);
 CREATE INDEX IF NOT EXISTS idx_component_catalog_basic ON component_catalog(basic);
 CREATE INDEX IF NOT EXISTS idx_component_catalog_preferred ON component_catalog(preferred);
