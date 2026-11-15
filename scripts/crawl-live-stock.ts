@@ -10,6 +10,7 @@ import {
 } from "./generate-stock-sync-sql"
 import { type LiveStockRow, sqlString } from "./live-stock-policy"
 import { expireUnverifiedStock } from "./expire-unverified-stock"
+import { stockCleanupQueryFromEnv } from "./stock-cleanup-query"
 export { expireUnverifiedStock } from "./expire-unverified-stock"
 
 const ENDPOINT =
@@ -490,6 +491,7 @@ async function main() {
     )
   )
     throw new Error("Invalid live stock crawl budget")
+  const cleanupExecute = await stockCleanupQueryFromEnv()
   const targets = stockSyncTargetsFromSchema(
     await remoteExecute(STOCK_SYNC_TARGETS_QUERY),
   )
@@ -499,7 +501,7 @@ async function main() {
   )
     throw new Error("Missing required production stock tables")
   const expired = await expireLiveStock(remoteExecute, targets)
-  const unverifiedExpired = await expireUnverifiedStock(remoteExecute, targets)
+  const unverifiedExpired = await expireUnverifiedStock(cleanupExecute, targets)
   const categories: StockCategory[] = await remoteExecute(CATEGORY_CRAWL_QUERY)
   let pages = 0
   let checked = 0

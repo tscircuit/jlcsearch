@@ -4,6 +4,7 @@ import { mkdir, readFile, rm } from "node:fs/promises"
 import path from "node:path"
 import {
   type LiveStockRow,
+  type StockSyncTarget,
   effectiveStockSql,
   liveObservationUpsertSql,
 } from "./live-stock-policy"
@@ -16,10 +17,7 @@ interface CatalogStats {
   null_lcsc_count: number
 }
 
-export interface StockSyncTarget {
-  name: string
-  has_in_stock: number
-}
+export type { StockSyncTarget } from "./live-stock-policy"
 
 const DEFAULT_STOCK_TARGETS: StockSyncTarget[] = [
   { name: "component_catalog", has_in_stock: 0 },

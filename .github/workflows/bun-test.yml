@@ -42,4 +42,4 @@ jobs:
 
       - name: Test search, exact inventory and processor rendering in the Cloudflare runtime
         working-directory: cf-proxy
-        run: bun run test test/search-contract.test.ts test/requested-stock.test.ts test/linux-capable-processors-route.test.ts test/render.test.ts
+        run: bun run test test/search-contract.test.ts test/requested-stock.test.ts test/linux-capable-processors-route.test.ts test/render.test.ts test/stock-cleanup-query-plan.test.ts

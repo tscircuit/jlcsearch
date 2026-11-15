@@ -1,3 +1,8 @@
+export interface StockSyncTarget {
+  name: string
+  has_in_stock: number
+}
+
 export interface LiveStockRow {
   lcsc: number
   stock: number | null

@@ -17,6 +17,8 @@ on:
     paths:
       - "scripts/crawl-live-stock.ts"
       - "scripts/expire-unverified-stock.ts"
+      - "scripts/stock-cleanup-query.ts"
+      - "scripts/stock-cleanup-targets.ts"
       - "scripts/refresh-requested-stock.ts"
       - "cf-proxy/src/requested-stock.ts"
       - "cf-proxy/src/cache-entry.ts"
@@ -37,6 +39,7 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - run: bun scripts/crawl-live-stock.ts --probe
       - run: bun test tests/requested-stock.test.ts
+      - run: bun test tests/stock-cleanup.test.ts tests/stock-cleanup-query.test.ts tests/stock-cleanup-targets.test.ts
       - run: bun install --cwd cf-proxy --frozen-lockfile
       - name: Verify inventory cache expiration
         working-directory: cf-proxy

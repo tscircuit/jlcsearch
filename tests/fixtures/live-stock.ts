@@ -21,7 +21,7 @@ export async function stockDatabase() {
       in_stock INTEGER, category TEXT, subcategory TEXT, mfr TEXT)`)
   }
   const execute: Execute = async (sql) => {
-    if (/^\s*SELECT\b/i.test(sql)) return db.query(sql).all()
+    if (/^\s*(?:SELECT|EXPLAIN)\b/i.test(sql)) return db.query(sql).all()
     db.exec(sql)
     return []
   }
