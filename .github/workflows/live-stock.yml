@@ -16,6 +16,7 @@ on:
   pull_request:
     paths:
       - "scripts/crawl-live-stock.ts"
+      - "scripts/expire-unverified-stock.ts"
       - "scripts/refresh-requested-stock.ts"
       - "cf-proxy/src/requested-stock.ts"
       - "cf-proxy/src/cache-entry.ts"

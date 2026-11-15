@@ -9,6 +9,8 @@ import {
   stockSyncTargetsFromSchema,
 } from "./generate-stock-sync-sql"
 import { type LiveStockRow, sqlString } from "./live-stock-policy"
+import { expireUnverifiedStock } from "./expire-unverified-stock"
+export { expireUnverifiedStock } from "./expire-unverified-stock"
 
 const ENDPOINT =
   "https://jlcpcb.com/api/overseas-pcb-order/v1/shoppingCart/smtGood/selectSmtComponentList/v2"
@@ -332,41 +334,6 @@ export async function expireLiveStock(
     )}
       UPDATE _jlcsearch_live_stock SET expired=1 WHERE lcsc IN (${rows.map((row) => row.lcsc).join(",")});`)
     expired += rows.length
-  }
-  return expired
-}
-
-export async function expireUnverifiedStock(
-  execute: Execute,
-  targets: StockSyncTarget[],
-  maxBatches = 100,
-) {
-  const [{ enforce }] = await execute(
-    "SELECT unixepoch() >= grace_until AS enforce FROM _jlcsearch_stock_policy WHERE id=1;",
-  )
-  if (!enforce) return 0
-  let batches = 0
-  let expired = 0
-  // Include rows retained in derived tables or omitted from a new snapshot.
-  // Clearing one LCSC number corrects every table, so it cannot be selected
-  // repeatedly. The normal nightly import handles most of this work in bulk.
-  for (const target of targets) {
-    while (batches < maxBatches) {
-      const rows: Array<{ lcsc: number }> =
-        await execute(`SELECT lcsc FROM "${target.name}" AS t
-        WHERE stock IS NOT NULL AND NOT EXISTS (SELECT 1 FROM _jlcsearch_live_stock AS o WHERE o.lcsc=t.lcsc) LIMIT 1000;`)
-      if (!rows.length) break
-      await execute(
-        createStockSyncBatchSql(
-          rows.map((row) => ({ ...row, stock: null })),
-          targets,
-          true,
-        ),
-      )
-      expired += rows.length
-      batches++
-    }
-    if (batches >= maxBatches) break
   }
   return expired
 }
