@@ -13,13 +13,18 @@ export const liveBody = {
 export const createFixture = () => {
   const env = createTestEnv()
   const queries: string[] = []
-  const state = { failReads: false, failWrites: false }
+  const state = {
+    failReads: false,
+    failWrites: false,
+    waitForRead: undefined as Promise<void> | undefined,
+  }
   env.USE_D1 = "true"
   env.DB = {
     prepare: (query: string) => ({
       bind: () => ({
         all: async () => {
           queries.push(query)
+          await state.waitForRead
           if (state.failReads) throw new Error(OVERLOADED)
           return { results: liveBody.resistors, meta: {} }
         },
