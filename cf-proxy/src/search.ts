@@ -38,6 +38,13 @@ export class SearchUnavailableError extends Error {
   }
 }
 
+export class InvalidSearchQueryError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = "InvalidSearchQueryError"
+  }
+}
+
 const isMissingFtsSearchTable = (error: unknown): boolean =>
   error instanceof Error &&
   /no such table: search_index_fts/i.test(error.message)
@@ -75,18 +82,70 @@ const getSearchTokenGroups = (raw: string): string[][] => {
     : searchTokenGroups
 }
 
+const tokenAlternatives = (group: string[]) =>
+  Array.from(
+    new Set(
+      group.flatMap((token) =>
+        token.endsWith("mhz") ? [token, token.replace(/mhz$/, "m")] : [token],
+      ),
+    ),
+  )
+
+export const validateSearchQuery = (params: SearchQueryParams) => {
+  const raw = params.q?.trim() ?? ""
+  // SQLite's FTS parser treats NUL as a terminator, even inside a quoted phrase.
+  if (raw.includes("\0")) {
+    throw new InvalidSearchQueryError(
+      "Search text must not contain NUL characters.",
+    )
+  }
+  const limit = params.limit === undefined ? 100 : Number(params.limit)
+  if (
+    (params.limit !== undefined && !/^\d+$/.test(params.limit)) ||
+    !Number.isSafeInteger(limit) ||
+    limit < 1 ||
+    limit > 1000
+  ) {
+    throw new InvalidSearchQueryError(
+      "Limit must be a whole number from 1 to 1000.",
+    )
+  }
+  if (raw.length > 256) {
+    throw new InvalidSearchQueryError(
+      "Search text must be 256 characters or fewer.",
+    )
+  }
+  const tokenGroups =
+    raw && !/^c?\d+$/i.test(raw) ? getSearchTokenGroups(raw) : []
+  // An OR group is safe to use for candidates only if every alternative is
+  // indexable. Short terms (e.g. DC or 8M) are still checked against the source.
+  const indexedGroups = tokenGroups
+    .map(tokenAlternatives)
+    .filter((group) =>
+      group.every(
+        (token) => Array.from(token).length >= 3 && !/[%_]/.test(token),
+      ),
+    )
+  if (tokenGroups.length && !indexedGroups.length) {
+    throw new InvalidSearchQueryError(
+      'Add another search term, such as "dc connector", "IC amplifier", or "8MHz crystal", or use an exact LCSC part number.',
+    )
+  }
+  const match = indexedGroups
+    .map(
+      (group) =>
+        `(${group.map((token) => `"${token.replaceAll('"', '""')}"`).join(" OR ")})`,
+    )
+    .join(" AND ")
+  return { raw, limit, tokenGroups, match }
+}
+
 const buildTokenGroupConditions = (
   tokenGroups: string[][],
   column: RawBuilder<unknown>,
 ): RawBuilder<unknown>[] =>
   tokenGroups.map((group) => {
-    const alternatives = Array.from(
-      new Set(
-        group.flatMap((token) =>
-          token.endsWith("mhz") ? [token, token.replace(/mhz$/, "m")] : [token],
-        ),
-      ),
-    )
+    const alternatives = tokenAlternatives(group)
 
     const tokenConditions = alternatives.map(
       (alt) => sql`${column} LIKE ${`%${alt}%`}`,
@@ -99,11 +158,10 @@ export async function searchIndex(
   db: Kysely<DB>,
   params: SearchQueryParams,
 ): Promise<SearchRow[]> {
-  const limit = Number.parseInt(params.limit ?? "100", 10) || 100
+  const { raw, limit, tokenGroups, match } = validateSearchQuery(params)
   const conditions: RawBuilder<unknown>[] =
     exactLcsc(params.q) !== null ? [] : [sql`search_index.stock > 0`]
   const textSearchConditions: RawBuilder<unknown>[] = []
-  const ftsSearchConditions: RawBuilder<unknown>[] = []
 
   if (params.package) {
     conditions.push(sql`search_index.package = ${params.package}`)
@@ -121,8 +179,6 @@ export async function searchIndex(
     conditions.push(sql`search_index.preferred = 1`)
   }
 
-  const raw = params.q?.trim()
-
   if (raw) {
     if (/^c?\d+$/i.test(raw)) {
       const normalized = raw.toLowerCase().startsWith("c") ? raw.slice(1) : raw
@@ -131,17 +187,10 @@ export async function searchIndex(
         conditions.push(sql`search_index.lcsc = ${lcsc}`)
       }
     } else {
-      const likeTokenGroups = getSearchTokenGroups(raw)
       textSearchConditions.push(
         ...buildTokenGroupConditions(
-          likeTokenGroups,
+          tokenGroups,
           sql`search_index.search_text`,
-        ),
-      )
-      ftsSearchConditions.push(
-        ...buildTokenGroupConditions(
-          likeTokenGroups,
-          sql`search_index_fts.search_text`,
         ),
       )
     }
@@ -167,7 +216,7 @@ export async function searchIndex(
     LIMIT ${limit}
   `
 
-  if (ftsSearchConditions.length > 0) {
+  if (match) {
     // Scanning the catalog while FTS is unavailable competes with its rebuild.
     // Cache hits are served before this function; exact LCSC lookups skip FTS.
     if (!(await isFtsSearchReady(db))) throw new SearchUnavailableError()
@@ -175,7 +224,8 @@ export async function searchIndex(
     const ftsQuery = sql`
       ${selectSql}
       JOIN search_index_fts ON search_index_fts.rowid = search_index.lcsc
-      WHERE ${buildWhereClause([...conditions, ...ftsSearchConditions, ...textSearchConditions])}
+      WHERE search_index_fts MATCH ${match}
+        AND ${buildWhereClause([...conditions, ...textSearchConditions])}
       ${orderLimitSql}
     `
 

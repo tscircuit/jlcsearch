@@ -11,7 +11,12 @@ import { getD1Client } from "./db/get-d1-client"
 import { logD1OperationError } from "./d1-observability"
 import { handleEasyEdaComponentCache } from "./easyeda-component-cache"
 import { renderD1TablePage, renderHomePage } from "./render"
-import { searchIndex, SearchUnavailableError } from "./search"
+import {
+  searchIndex,
+  SearchUnavailableError,
+  InvalidSearchQueryError,
+  validateSearchQuery,
+} from "./search"
 import { exactLcsc, readRequestedStock, requestStock } from "./requested-stock"
 
 export interface Env {
@@ -123,6 +128,30 @@ const buildSearchUnavailableResponse = (
       : `<h1>Search temporarily unavailable</h1><p>${error.message}</p>`
 
   return new Response(body, { status: 503, headers })
+}
+
+const buildInvalidSearchResponse = (
+  error: InvalidSearchQueryError,
+  origin: string | null,
+  isJson: boolean,
+): Response => {
+  const headers = new Headers({
+    "content-type": isJson ? "application/json" : "text/html; charset=utf-8",
+    "cache-control": "no-store",
+    "x-cache": "INVALID-SEARCH",
+  })
+  addVaryHeader(headers, "Accept")
+  addCorsHeaders(headers, origin)
+  return new Response(
+    isJson
+      ? JSON.stringify({
+          error: "Invalid search",
+          error_code: "invalid_search",
+          message: error.message,
+        })
+      : `<h1>Invalid search</h1><p>${error.message}</p>`,
+    { status: 400, headers },
+  )
 }
 
 const buildD1InvalidLcscResponse = (origin: string | null): Response => {
@@ -247,6 +276,15 @@ const worker = {
     ctx: ExecutionContext,
   ): Promise<Response> {
     const requestUrl = new URL(request.url)
+    const pathname = requestUrl.pathname.replace(/\.json$/, "")
+    if (pathname === "/api/search" || pathname === "/components/list") {
+      // Handlers already use the last value via Object.fromEntries. Resolve
+      // duplicates once so validation, cache keys, representation and exact-part
+      // routing all use that same value, including cachebust and json controls.
+      requestUrl.search = new URLSearchParams(
+        Object.fromEntries(requestUrl.searchParams),
+      ).toString()
+    }
     const url = stripInternalQueryParams(requestUrl)
     const cacheBust = isCacheBustRequest(requestUrl)
     const origin = request.headers.get("origin")
@@ -452,6 +490,21 @@ async function tryD1Route(
   const pathname = url.pathname.replace(/\.json$/, "")
   const routeParams = getD1RouteParams(pathname)
 
+  if (pathname === "/api/search" || pathname === "/components/list") {
+    const isApi = pathname === "/api/search"
+    try {
+      // Validate before cache lookup and exact-part demand recording as well.
+      validateSearchQuery({
+        q: url.searchParams.get(isApi ? "q" : "search") ?? undefined,
+        limit: isApi ? (url.searchParams.get("limit") ?? undefined) : undefined,
+      })
+    } catch (error) {
+      if (error instanceof InvalidSearchQueryError)
+        return buildInvalidSearchResponse(error, origin, isApi || isJsonRequest)
+      throw error
+    }
+  }
+
   if (pathname.startsWith(FOOTPRINTER_STRINGS_API_PREFIX)) {
     return handleD1FootprinterString(pathname, env, origin)
   }
@@ -622,6 +675,9 @@ async function handleD1Search(
       headers,
     })
   } catch (error) {
+    if (error instanceof InvalidSearchQueryError) {
+      return buildInvalidSearchResponse(error, origin, true)
+    }
     if (error instanceof SearchUnavailableError) {
       return buildSearchUnavailableResponse(error, origin)
     }
@@ -794,6 +850,9 @@ async function handleD1ComponentsList(
       },
     )
   } catch (error) {
+    if (error instanceof InvalidSearchQueryError) {
+      return buildInvalidSearchResponse(error, origin, isJsonRequest)
+    }
     if (error instanceof SearchUnavailableError) {
       return buildSearchUnavailableResponse(
         error,
