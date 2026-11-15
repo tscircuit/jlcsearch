@@ -10,7 +10,12 @@ import { getD1Handler, getD1RouteParams } from "./d1-routes"
 import { getD1Client } from "./db/get-d1-client"
 import { handleEasyEdaComponentCache } from "./easyeda-component-cache"
 import { renderD1TablePage, renderHomePage } from "./render"
-import { searchIndex, SearchUnavailableError } from "./search"
+import {
+  searchIndex,
+  SearchUnavailableError,
+  InvalidSearchQueryError,
+  validateSearchQuery,
+} from "./search"
 import { exactLcsc, readRequestedStock, requestStock } from "./requested-stock"
 
 export interface Env {
@@ -122,6 +127,30 @@ const buildSearchUnavailableResponse = (
       : `<h1>Search temporarily unavailable</h1><p>${error.message}</p>`
 
   return new Response(body, { status: 503, headers })
+}
+
+const buildInvalidSearchResponse = (
+  error: InvalidSearchQueryError,
+  origin: string | null,
+  isJson: boolean,
+): Response => {
+  const headers = new Headers({
+    "content-type": isJson ? "application/json" : "text/html; charset=utf-8",
+    "cache-control": "no-store",
+    "x-cache": "INVALID-SEARCH",
+  })
+  addVaryHeader(headers, "Accept")
+  addCorsHeaders(headers, origin)
+  return new Response(
+    isJson
+      ? JSON.stringify({
+          error: "Invalid search",
+          error_code: "invalid_search",
+          message: error.message,
+        })
+      : `<h1>Invalid search</h1><p>${error.message}</p>`,
+    { status: 400, headers },
+  )
 }
 
 const buildD1InvalidLcscResponse = (origin: string | null): Response => {
@@ -413,6 +442,21 @@ async function tryD1Route(
 
   const pathname = url.pathname.replace(/\.json$/, "")
   const routeParams = getD1RouteParams(pathname)
+
+  if (pathname === "/api/search" || pathname === "/components/list") {
+    const isApi = pathname === "/api/search"
+    try {
+      // Validate before cache lookup and exact-part demand recording as well.
+      validateSearchQuery({
+        q: url.searchParams.get(isApi ? "q" : "search") ?? undefined,
+        limit: isApi ? (url.searchParams.get("limit") ?? undefined) : undefined,
+      })
+    } catch (error) {
+      if (error instanceof InvalidSearchQueryError)
+        return buildInvalidSearchResponse(error, origin, isApi || isJsonRequest)
+      throw error
+    }
+  }
 
   if (pathname.startsWith(FOOTPRINTER_STRINGS_API_PREFIX)) {
     return handleD1FootprinterString(pathname, env, origin)

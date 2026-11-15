@@ -132,6 +132,14 @@ describe("search API contract against seeded D1", () => {
         },
       ])
       expect((await request("q=RK3576")).components).toHaveLength(1)
+      expect((await request("q=ARM+micro")).components).toMatchObject([
+        { lcsc: 12345 },
+      ])
+      expect((await request("q=TVS+diode")).components).toMatchObject([
+        { lcsc: 54321 },
+      ])
+      expect((await fetchSearch("q=op")).status).toBe(400)
+      expect((await fetchSearch("q=RK3576&limit=-1")).status).toBe(400)
       expect((await request("q=RK3576")).components[0].lcsc).toBe(42388007)
       expect((await request("q=RK3576&package=LQFP-64")).components).toEqual([])
       expect((await request("q=missing-part")).components).toEqual([])
