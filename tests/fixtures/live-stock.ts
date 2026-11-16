@@ -8,12 +8,30 @@ export async function stockDatabase() {
       new URL("../../cf-proxy/migrations/0017_live_stock.sql", import.meta.url),
     ).text(),
   )
+  db.exec(
+    await Bun.file(
+      new URL(
+        "../../cf-proxy/migrations/0027_stock_cleanup_progress.sql",
+        import.meta.url,
+      ),
+    ).text(),
+  )
   for (const table of ["component_catalog", "search_index", "switch"]) {
     db.exec(`CREATE TABLE "${table}" (lcsc INTEGER PRIMARY KEY, stock INTEGER,
       in_stock INTEGER, category TEXT, subcategory TEXT, mfr TEXT)`)
   }
   const execute: Execute = async (sql) => {
-    if (/^\s*SELECT\b/i.test(sql)) return db.query(sql).all()
+    if (/^\s*(?:SELECT|EXPLAIN)\b/i.test(sql)) {
+      // Each simulated remote query must finish before the next request.
+      // Bun 1.4.4 retains an EXPLAIN cursor after all(), blocking later DROP
+      // TABLE statements in the crawl unless the statement is finalized.
+      const statement = db.prepare(sql)
+      try {
+        return statement.all()
+      } finally {
+        statement.finalize()
+      }
+    }
     db.exec(sql)
     return []
   }
