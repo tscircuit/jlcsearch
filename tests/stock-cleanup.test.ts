@@ -11,6 +11,22 @@ import {
 
 const noPause = async () => {}
 
+test("zero cleanup pages do not issue even a policy query", async () => {
+  let queries = 0
+  expect(
+    await expireUnverifiedStock(
+      async () => {
+        queries++
+        throw new Error("database unavailable")
+      },
+      [],
+      0,
+      noPause,
+    ),
+  ).toBe(0)
+  expect(queries).toBe(0)
+})
+
 test("verified pages checkpoint periodically instead of writing on every page", async () => {
   const { db, execute } = await stockDatabase()
   try {

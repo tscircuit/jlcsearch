@@ -8,6 +8,7 @@ import {
 type Execute = (sql: string) => Promise<any[]>
 const PAGE_ROWS = 1000
 const CHECKPOINT_PAGES = 10
+export const DEFAULT_STOCK_CLEANUP_MAX_PAGES = 5
 
 // LIMIT applies to catalog candidates, not the number of missing observations.
 // Even a page with no matches advances the cursor and consumes the page budget.
@@ -20,16 +21,17 @@ export const unverifiedStockPageSql = (table: string, after: number) => {
 export async function expireUnverifiedStock(
   execute: Execute,
   targets: StockSyncTarget[],
-  maxPages = 100,
+  maxPages = DEFAULT_STOCK_CLEANUP_MAX_PAGES,
   pause: () => Promise<unknown> = () => Bun.sleep(1000),
 ) {
   if (!Number.isSafeInteger(maxPages) || maxPages < 0 || maxPages > 1000)
     throw new Error("Invalid stock cleanup page budget")
+  if (!maxPages) return 0
   for (const target of targets) unverifiedStockPageSql(target.name, 0)
   const [{ enforce }] = await execute(
     "SELECT unixepoch() >= grace_until AS enforce FROM _jlcsearch_stock_policy WHERE id=1;",
   )
-  if (!enforce || !maxPages) return 0
+  if (!enforce) return 0
   // The same verified target set is used for candidate reads AND stock writes.
   const eligible = await indexedStockCleanupTargets(execute, targets)
   if (!eligible.length) return 0

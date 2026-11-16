@@ -13,12 +13,18 @@ on:
         description: Maximum pages per category visit before rotating
         type: number
         default: 1000
+      cleanup_max_pages:
+        description: Unverified-stock cleanup pages (1000 parts each, 0 disables; 0-1000)
+        type: number
+        default: 5
   pull_request:
     paths:
       - "scripts/crawl-live-stock.ts"
       - "scripts/expire-unverified-stock.ts"
       - "scripts/stock-cleanup-query.ts"
       - "scripts/stock-cleanup-targets.ts"
+      - "tests/live-stock-run.test.ts"
+      - "tests/live-stock-workflow.test.ts"
       - "scripts/refresh-requested-stock.ts"
       - "cf-proxy/src/requested-stock.ts"
       - "cf-proxy/src/cache-entry.ts"
@@ -39,7 +45,7 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - run: bun scripts/crawl-live-stock.ts --probe
       - run: bun test tests/requested-stock.test.ts
-      - run: bun test tests/stock-cleanup.test.ts tests/stock-cleanup-query.test.ts tests/stock-cleanup-targets.test.ts
+      - run: bun test tests/stock-cleanup.test.ts tests/stock-cleanup-query.test.ts tests/stock-cleanup-targets.test.ts tests/live-stock-run.test.ts tests/live-stock-workflow.test.ts
       - run: bun install --cwd cf-proxy --frozen-lockfile
       - name: Verify inventory cache expiration
         working-directory: cf-proxy
@@ -60,6 +66,8 @@ jobs:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       LIVE_STOCK_MAX_PAGES: ${{ inputs.max_pages || '1000' }}
       LIVE_STOCK_PAGES_PER_CATEGORY: ${{ inputs.pages_per_category || '1000' }}
+      # Convert the numeric input to text before the fallback, preserving 0.
+      LIVE_STOCK_CLEANUP_MAX_PAGES: ${{ github.event_name == 'workflow_dispatch' && format('{0}', inputs.cleanup_max_pages) || '5' }}
       LIVE_STOCK_REPORT_PATH: ${{ github.workspace }}/live-stock-report.json
     steps:
       - uses: actions/checkout@v4
