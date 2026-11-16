@@ -21,7 +21,17 @@ export async function stockDatabase() {
       in_stock INTEGER, category TEXT, subcategory TEXT, mfr TEXT)`)
   }
   const execute: Execute = async (sql) => {
-    if (/^\s*(?:SELECT|EXPLAIN)\b/i.test(sql)) return db.query(sql).all()
+    if (/^\s*(?:SELECT|EXPLAIN)\b/i.test(sql)) {
+      // Each simulated remote query must finish before the next request.
+      // Bun 1.4.4 retains an EXPLAIN cursor after all(), blocking later DROP
+      // TABLE statements in the crawl unless the statement is finalized.
+      const statement = db.prepare(sql)
+      try {
+        return statement.all()
+      } finally {
+        statement.finalize()
+      }
+    }
     db.exec(sql)
     return []
   }
