@@ -10,6 +10,7 @@ import {
   isUsableStale,
 } from "./cache-entry"
 import { generateCacheKey } from "./cache-key"
+import { getD1RefreshCoordinator, type D1RefreshResult } from "./d1-refresh"
 
 export type CacheResult =
   | { type: "fresh"; entry: CacheEntry }
@@ -23,6 +24,29 @@ export type CacheResult =
  */
 export class CacheService {
   constructor(private kv: KVNamespace) {}
+
+  async refreshD1(
+    url: URL,
+    producer: () => Promise<Response>,
+  ): Promise<D1RefreshResult> {
+    const key = await generateCacheKey(url)
+    return getD1RefreshCoordinator(this.kv).run(key, async () => {
+      const response = await producer()
+      if (response.ok)
+        return { type: "success", entry: await this.put(url, response) }
+      // Share buffered data, never a Response stream belonging to another request.
+      const headers: Record<string, string> = {}
+      response.headers.forEach((value, key) => {
+        headers[key] = value
+      })
+      return {
+        type: "failure",
+        status: response.status,
+        body: await response.text(),
+        headers,
+      }
+    })
+  }
 
   /**
    * Gets a cached response, indicating whether it's fresh, stale, expired, or a miss.

@@ -385,10 +385,7 @@ async function refreshStaleD1Entry(
   cache: CacheService,
 ): Promise<void> {
   try {
-    const response = await producer()
-    if (response.ok) {
-      await cache.put(cacheUrl, response)
-    }
+    await cache.refreshD1(cacheUrl, producer)
   } catch (error) {
     logD1OperationError(diagnosticRoute(cacheUrl.pathname), error)
   }
@@ -440,8 +437,17 @@ async function handleCachedD1Response(
 
   // The cached copy is only replaced by a successful response, so a forced
   // refresh during an outage cannot discard the last good result.
-  const response = await producer()
-  if (!response.ok) {
+  const pending = cache.refreshD1(cacheUrl, producer)
+  // Keep shared work alive if the request that started it disconnects.
+  ctx.waitUntil(pending.catch(() => {}))
+  const result = await pending
+  if (result.type === "failure") {
+    const headers = new Headers(result.headers)
+    addCorsHeaders(headers, origin)
+    const response = new Response(result.body, {
+      status: result.status,
+      headers,
+    })
     const fallback = getFallbackEntry(cacheResult, response)
     if (fallback) {
       return cache.buildResponse(fallback.entry, fallback.status, origin, {
@@ -452,7 +458,7 @@ async function handleCachedD1Response(
     return options.cacheBust ? withCacheBustHeaders(response, origin) : response
   }
 
-  const entry = await cache.put(cacheUrl, response)
+  const entry = result.entry
   return options.cacheBust
     ? cache.buildResponse(entry, "BUST", origin, {
         noStore: true,

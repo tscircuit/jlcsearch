@@ -1,4 +1,4 @@
-import { expect, test } from "vitest"
+import { expect, test, vi } from "vitest"
 import {
   RESISTORS_URL,
   cachedBody,
@@ -19,8 +19,15 @@ test("a forced refresh keeps the cached copy until D1 answers", async () => {
   expect(await env.CACHE_KV.get(key)).toBe(cachedBody)
 
   state.failReads = false
-  const refreshed = await self.fetch(`${RESISTORS_URL}?cachebust=1`)
-  expect(refreshed.headers.get("x-cache")).toBe("BUST")
-  expect(await refreshed.json()).toEqual(liveBody)
-  expect(JSON.parse((await env.CACHE_KV.get(key))!)).toEqual(liveBody)
+  const duringBackoff = await self.fetch(`${RESISTORS_URL}?cachebust=1`)
+  expect(duringBackoff.headers.get("x-cache")).toBe("STALE-ERROR")
+  const clock = vi.spyOn(Date, "now").mockReturnValue(Date.now() + 31000)
+  try {
+    const refreshed = await self.fetch(`${RESISTORS_URL}?cachebust=1`)
+    expect(refreshed.headers.get("x-cache")).toBe("BUST")
+    expect(await refreshed.json()).toEqual(liveBody)
+    expect(JSON.parse((await env.CACHE_KV.get(key))!)).toEqual(liveBody)
+  } finally {
+    clock.mockRestore()
+  }
 })
