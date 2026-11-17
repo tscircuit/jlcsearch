@@ -10,10 +10,12 @@ test("expires unverified legacy rows even when they survive only in a derived ta
     db.exec(
       "INSERT INTO switch VALUES (3,20,1,'Switches','Slide Switches','old'); INSERT INTO _jlcsearch_live_stock(lcsc,observed_stock,checked_at) VALUES (2,2184,unixepoch())",
     )
-    expect(await expireUnverifiedStock(execute, targets)).toBe(0)
+    const cleanup = () =>
+      expireUnverifiedStock(execute, targets, 100, async () => {})
+    expect(await cleanup()).toBe(0)
     db.exec("UPDATE _jlcsearch_stock_policy SET grace_until=0")
-    expect(await expireUnverifiedStock(execute, targets)).toBe(2)
-    expect(await expireUnverifiedStock(execute, targets)).toBe(0)
+    expect(await cleanup()).toBe(2)
+    expect(await cleanup()).toBe(0)
     expect(
       db.query("SELECT lcsc,stock,in_stock FROM switch ORDER BY lcsc").all(),
     ).toEqual([

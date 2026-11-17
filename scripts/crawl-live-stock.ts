@@ -9,6 +9,12 @@ import {
   stockSyncTargetsFromSchema,
 } from "./generate-stock-sync-sql"
 import { type LiveStockRow, sqlString } from "./live-stock-policy"
+import {
+  DEFAULT_STOCK_CLEANUP_MAX_PAGES,
+  expireUnverifiedStock,
+} from "./expire-unverified-stock"
+import { stockCleanupQueryFromEnv } from "./stock-cleanup-query"
+export { expireUnverifiedStock } from "./expire-unverified-stock"
 
 const ENDPOINT =
   "https://jlcpcb.com/api/overseas-pcb-order/v1/shoppingCart/smtGood/selectSmtComponentList/v2"
@@ -336,41 +342,6 @@ export async function expireLiveStock(
   return expired
 }
 
-export async function expireUnverifiedStock(
-  execute: Execute,
-  targets: StockSyncTarget[],
-  maxBatches = 100,
-) {
-  const [{ enforce }] = await execute(
-    "SELECT unixepoch() >= grace_until AS enforce FROM _jlcsearch_stock_policy WHERE id=1;",
-  )
-  if (!enforce) return 0
-  let batches = 0
-  let expired = 0
-  // Include rows retained in derived tables or omitted from a new snapshot.
-  // Clearing one LCSC number corrects every table, so it cannot be selected
-  // repeatedly. The normal nightly import handles most of this work in bulk.
-  for (const target of targets) {
-    while (batches < maxBatches) {
-      const rows: Array<{ lcsc: number }> =
-        await execute(`SELECT lcsc FROM "${target.name}" AS t
-        WHERE stock IS NOT NULL AND NOT EXISTS (SELECT 1 FROM _jlcsearch_live_stock AS o WHERE o.lcsc=t.lcsc) LIMIT 1000;`)
-      if (!rows.length) break
-      await execute(
-        createStockSyncBatchSql(
-          rows.map((row) => ({ ...row, stock: null })),
-          targets,
-          true,
-        ),
-      )
-      expired += rows.length
-      batches++
-    }
-    if (batches >= maxBatches) break
-  }
-  return expired
-}
-
 export const STOCK_COVERAGE_QUERY = `SELECT
   COUNT(*) AS catalog_parts,
   COUNT(o.lcsc) AS ever_checked,
@@ -513,9 +484,26 @@ async function main() {
     )
     return
   }
-  const maxPages = Number(process.env.LIVE_STOCK_MAX_PAGES || 1000)
-  const pagesPerCategory = Number(
-    process.env.LIVE_STOCK_PAGES_PER_CATEGORY || 1000,
+  await runLiveStockCrawl()
+}
+
+export async function runLiveStockCrawl({
+  env = process.env,
+  execute = remoteExecute,
+  createCleanupExecute = () => stockCleanupQueryFromEnv(env),
+  fetcher = fetch,
+  cleanupPause = () => Bun.sleep(1000),
+}: {
+  env?: Record<string, string | undefined>
+  execute?: Execute
+  createCleanupExecute?: () => Promise<Execute>
+  fetcher?: typeof fetch
+  cleanupPause?: () => Promise<unknown>
+} = {}) {
+  const maxPages = Number(env.LIVE_STOCK_MAX_PAGES || 1000)
+  const pagesPerCategory = Number(env.LIVE_STOCK_PAGES_PER_CATEGORY || 1000)
+  const cleanupMaxPages = Number(
+    env.LIVE_STOCK_CLEANUP_MAX_PAGES || DEFAULT_STOCK_CLEANUP_MAX_PAGES,
   )
   if (
     ![maxPages, pagesPerCategory].every(
@@ -523,17 +511,49 @@ async function main() {
     )
   )
     throw new Error("Invalid live stock crawl budget")
+  if (
+    !Number.isSafeInteger(cleanupMaxPages) ||
+    cleanupMaxPages < 0 ||
+    cleanupMaxPages > 1000
+  )
+    throw new Error("Invalid stock cleanup page budget")
   const targets = stockSyncTargetsFromSchema(
-    await remoteExecute(STOCK_SYNC_TARGETS_QUERY),
+    await execute(STOCK_SYNC_TARGETS_QUERY),
   )
   if (
     !targets.some((t) => t.name === "component_catalog") ||
     !targets.some((t) => t.name === "search_index")
   )
     throw new Error("Missing required production stock tables")
-  const expired = await expireLiveStock(remoteExecute, targets)
-  const unverifiedExpired = await expireUnverifiedStock(remoteExecute, targets)
-  const categories: StockCategory[] = await remoteExecute(CATEGORY_CRAWL_QUERY)
+  const cleanupErrors: { stage: string; error: string }[] = []
+  const runCleanup = async (stage: string, action: () => Promise<number>) => {
+    try {
+      return await action()
+    } catch (error) {
+      const failure = { stage, error: String(error) }
+      cleanupErrors.push(failure)
+      console.error(
+        JSON.stringify({ event: "stock_cleanup_error", ...failure }),
+      )
+      // Partial work may have succeeded. Keep its checkpoint and do not report
+      // zero cleared parts as though cleanup finished successfully.
+      return null
+    }
+  }
+  const expired = await runCleanup("expired_stock", () =>
+    expireLiveStock(execute, targets),
+  )
+  const unverifiedExpired = cleanupMaxPages
+    ? await runCleanup("unverified_stock", async () =>
+        expireUnverifiedStock(
+          await createCleanupExecute(),
+          targets,
+          cleanupMaxPages,
+          cleanupPause,
+        ),
+      )
+    : 0
+  const categories: StockCategory[] = await execute(CATEGORY_CRAWL_QUERY)
   let pages = 0
   let checked = 0
   let failures = 0
@@ -543,10 +563,11 @@ async function main() {
     if (pages >= maxPages) break
     try {
       const result = await crawlCategory({
-        category: await resolveStockCategory(category, remoteExecute),
-        execute: remoteExecute,
+        category: await resolveStockCategory(category, execute, fetcher),
+        execute,
         targets,
         maxPages: Math.min(pagesPerCategory, maxPages - pages),
+        fetcher,
       })
       pages += result.pages
       checked += result.checked
@@ -562,17 +583,26 @@ async function main() {
       )
       // Retain its cursor but stop prioritizing a failing scan. On resuming,
       // it can update quantities but cannot infer missing parts in this pass.
-      await remoteExecute(`INSERT INTO _jlcsearch_stock_categories (category, subcategory, attempted_at)
+      await execute(`INSERT INTO _jlcsearch_stock_categories (category, subcategory, attempted_at)
         VALUES (${sqlString(category.category)},${sqlString(category.subcategory)},unixepoch())
         ON CONFLICT(category, subcategory) DO UPDATE SET attempted_at=excluded.attempted_at, cycle='', consistent=0, web_category=NULL, web_subcategory=NULL;`)
     }
   }
-  const coverage = await remoteExecute(STOCK_COVERAGE_QUERY)
+  const coverage = await execute(STOCK_COVERAGE_QUERY)
   const report = {
     pages,
     checked,
     expired,
     unverifiedExpired,
+    cleanup: {
+      maxPages: cleanupMaxPages,
+      unverifiedStatus: !cleanupMaxPages
+        ? "disabled"
+        : unverifiedExpired === null
+          ? "failed"
+          : "completed",
+      errors: cleanupErrors,
+    },
     failures,
     duplicateRows,
     rejectedRows,
@@ -580,12 +610,14 @@ async function main() {
   }
   console.log(JSON.stringify(report, null, 2))
   await Bun.write(
-    process.env.LIVE_STOCK_REPORT_PATH || "live-stock-report.json",
+    env.LIVE_STOCK_REPORT_PATH || "live-stock-report.json",
     JSON.stringify(report, null, 2),
   )
-  if (failures)
+  // Mark maintenance failures only after crawling and saving the report, so
+  // they stay visible in Actions without preventing fresh observations.
+  if (failures || cleanupErrors.length)
     throw new Error(
-      `${failures} stock categories failed; completed observations were retained`,
+      `${failures} stock categories and ${cleanupErrors.length} cleanup stages failed; completed observations and cleanup checkpoints were retained`,
     )
 }
 
