@@ -265,7 +265,7 @@ describe("search availability while the text index is unavailable", () => {
     expectNoFallbackScan(queries)
   })
 
-  it("replaces cached results on cachebust when the text index is ready", async () => {
+  it("refreshes legacy cached results under the normalized key when the text index is ready", async () => {
     const { env, self, state, queries } = createFixture()
     const path = "/api/search?q=STM32"
     const { key, body: oldBody } = await seedCache(env, path)
@@ -279,7 +279,20 @@ describe("search availability while the text index is unavailable", () => {
     expect(JSON.parse(body)).toMatchObject({
       components: [{ lcsc: 12345, mfr: "STM32F401RCT6" }],
     })
-    expect(await env.CACHE_KV.get(key)).toBe(body)
+    const normalizedKey = await generateCacheKey(
+      new URL("https://example.com/api/search?q=stm32"),
+    )
+    expect(await env.CACHE_KV.get(normalizedKey)).toBe(body)
+    expect(await env.CACHE_KV.get(key)).toBe(oldBody)
+    const queryCount = queries.length
+    for (const query of ["STM32", "stm32"]) {
+      const cached = await self.fetch(
+        `https://example.com/api/search?q=${query}`,
+      )
+      expect(cached.headers.get("x-cache")).toBe("HIT")
+      expect(await cached.text()).toBe(body)
+    }
+    expect(queries).toHaveLength(queryCount)
     expectNoFallbackScan(queries)
   })
 
