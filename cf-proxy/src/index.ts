@@ -18,6 +18,7 @@ import {
   validateSearchQuery,
 } from "./search"
 import { exactLcsc, readRequestedStock, requestStock } from "./requested-stock"
+import { normalizeSearchCacheUrl } from "./search-cache"
 
 export interface Env {
   CACHE_KV: KVNamespace
@@ -420,9 +421,19 @@ async function handleCachedD1Response(
   producer: () => Promise<Response>,
   options: {
     cacheBust?: boolean
+    legacyCacheUrl?: URL
   } = {},
 ): Promise<Response> {
-  const cacheResult = await cache.get(cacheUrl)
+  let cacheResult = await cache.get(cacheUrl)
+  // Reuse pre-normalization entries during rollout. Refreshes write the new key;
+  // reading an old entry preserves its age and the existing freshness limits.
+  if (
+    cacheResult.type === "miss" &&
+    options.legacyCacheUrl &&
+    options.legacyCacheUrl.toString() !== cacheUrl.toString()
+  ) {
+    cacheResult = await cache.get(options.legacyCacheUrl)
+  }
 
   if (!options.cacheBust) {
     if (cacheResult.type === "fresh") {
@@ -524,12 +535,12 @@ async function tryD1Route(
     }
     const routeUrl = keepRouteParams(url, routeParams ?? [])
     return handleCachedD1Response(
-      routeUrl,
+      normalizeSearchCacheUrl(routeUrl, "q"),
       origin,
       ctx,
       cache,
       async () => handleD1Search(routeUrl, env, origin),
-      { cacheBust },
+      { cacheBust, legacyCacheUrl: routeUrl },
     )
   }
 
@@ -540,13 +551,14 @@ async function tryD1Route(
       return handleD1ComponentsList(url, isJsonRequest, env, origin)
     }
     const routeUrl = keepRouteParams(url, routeParams ?? [])
+    const cacheUrl = getD1RepresentationCacheUrl(routeUrl, isJsonRequest)
     return handleCachedD1Response(
-      getD1RepresentationCacheUrl(routeUrl, isJsonRequest),
+      isJsonRequest ? normalizeSearchCacheUrl(cacheUrl, "search") : cacheUrl,
       origin,
       ctx,
       cache,
       async () => handleD1ComponentsList(routeUrl, isJsonRequest, env, origin),
-      { cacheBust },
+      { cacheBust, legacyCacheUrl: cacheUrl },
     )
   }
 
