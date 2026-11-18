@@ -106,7 +106,10 @@ test("the hourly refresh stays bounded and leaves room for first-time requests",
     )
     INSERT INTO _jlcsearch_requested_parts(lcsc, requested_at, attempted_at, demand_score)
     SELECT id, unixepoch(), CASE WHEN id <= 100 THEN 0 ELSE unixepoch()-7200 END,
-      CASE WHEN id <= 100 THEN 1 ELSE 3 END FROM parts;`)
+      CASE WHEN id <= 100 THEN 1 ELSE 3 END FROM parts;
+      INSERT INTO component_catalog(lcsc, category)
+      SELECT lcsc, CASE WHEN lcsc <= 205 THEN 'Resistors' ELSE 'Capacitors' END
+      FROM _jlcsearch_requested_parts;`)
     const report = await refreshRequestedStock({
       execute,
       targets,
@@ -114,18 +117,14 @@ test("the hourly refresh stays bounded and leaves room for first-time requests",
       pause: async () => {},
     })
     expect(report.map(({ lcsc }) => lcsc)).toEqual(
-      Array.from({ length: 100 }, (_, i) => [
-        i * 2 + 101,
-        i * 2 + 102,
-        i + 1,
-      ]).flat(),
+      Array.from({ length: 100 }, (_, i) => [i + 101, i + 206, i + 1]).flat(),
     )
   } finally {
     db.close()
   }
 })
 
-test("popular-only skips one-off, inactive, and recently attempted parts", async () => {
+test("popular-only skips one-off, inactive, recently attempted, and uncategorized parts", async () => {
   const { db, execute, targets } = await fixture()
   try {
     db.exec(`INSERT INTO _jlcsearch_requested_parts(lcsc, requested_at, attempted_at, demand_score)
@@ -133,7 +132,12 @@ test("popular-only skips one-off, inactive, and recently attempted parts", async
              (2,unixepoch(),0,3),
              (3,unixepoch()-86400,0,12),
              (4,unixepoch()-8*86400,0,40),
-             (5,unixepoch(),unixepoch()-60,24);`)
+             (5,unixepoch(),unixepoch()-60,24),
+             (6,unixepoch(),0,24),
+             (7,unixepoch(),0,24);
+      INSERT INTO component_catalog(lcsc, category)
+      SELECT lcsc, CASE WHEN lcsc = 7 THEN ' ' ELSE 'Switches' END
+      FROM _jlcsearch_requested_parts WHERE lcsc != 6;`)
     const report = await refreshRequestedStock({
       execute,
       targets,
@@ -150,6 +154,46 @@ test("popular-only skips one-off, inactive, and recently attempted parts", async
       pause: async () => {},
     })
     expect(audit.map(({ lcsc }) => lcsc)).toEqual([1])
+  } finally {
+    db.close()
+  }
+})
+
+test("successive popular-only runs cover each category's top 100 within the run limit", async () => {
+  const { db, execute, targets } = await fixture()
+  try {
+    db.exec(`WITH RECURSIVE parts(id) AS (
+      SELECT 1 UNION ALL SELECT id + 1 FROM parts WHERE id < 404
+    )
+    INSERT INTO _jlcsearch_requested_parts(lcsc, requested_at, attempted_at, demand_score)
+    SELECT id, unixepoch(), CASE WHEN id = 1 THEN unixepoch()-60 ELSE 0 END,
+      105 - ((id - 1) % 101) FROM parts;
+    INSERT INTO component_catalog(lcsc, category, subcategory)
+    SELECT lcsc, printf('Category %d', (lcsc - 1) / 101),
+      printf('Subcategory %d', lcsc % 2) FROM _jlcsearch_requested_parts;`)
+    const options = {
+      execute,
+      targets,
+      popularOnly: true,
+      fetcher: replyForRequest,
+      pause: async () => {},
+    }
+    const first = (await refreshRequestedStock(options)).map(({ lcsc }) => lcsc)
+    expect(first).toHaveLength(300)
+    const categories = new Set(first.map((id) => Math.floor((id - 1) / 101)))
+    expect(categories).toEqual(new Set([0, 1, 2, 3]))
+
+    // The first batch clears its retry cooldown before the next run. The
+    // least recently attempted parts must still get picked ahead of it.
+    db.exec(`UPDATE _jlcsearch_requested_parts SET attempted_at=unixepoch()-7200
+      WHERE attempted_at > 0 AND lcsc != 1;`)
+    const next = (await refreshRequestedStock(options)).map(({ lcsc }) => lcsc)
+    const expected = Array.from({ length: 404 }, (_, i) => i + 1).filter(
+      (id) => id !== 1 && id % 101 !== 0,
+    )
+    const remaining = expected.filter((id) => !first.includes(id))
+    expect(new Set(next.slice(0, remaining.length))).toEqual(new Set(remaining))
+    expect(new Set([...first, ...next])).toEqual(new Set(expected))
   } finally {
     db.close()
   }

@@ -18,9 +18,10 @@ import {
 
 const REQUESTED_STOCK_LIMIT = 300
 const POPULAR_PRIORITY_LIMIT = 200
+const POPULAR_PARTS_PER_CATEGORY = 100
 const RETRY_COOLDOWN = "attempted_at < unixepoch() - 3600"
 const DEMAND_SCORE =
-  "(demand_score >> MIN(31, MAX(0, unixepoch() / 86400 - requested_at / 86400)))"
+  "(r.demand_score >> MIN(31, MAX(0, unixepoch() / 86400 - r.requested_at / 86400)))"
 
 async function selectRequestedParts(execute: Execute, popularOnly: boolean) {
   // The hourly category job applies migrations independently of this job.
@@ -30,12 +31,23 @@ async function selectRequestedParts(execute: Execute, popularOnly: boolean) {
   if (popularOnly && !hasPopularity)
     throw new Error("The stock popularity migration must be applied first")
 
+  // Rank before checking the cooldown so a recently refreshed part doesn't
+  // expand its category's list. Oldest attempts go first to cover large pools.
   const popular: { lcsc: number }[] = hasPopularity
-    ? await execute(`SELECT lcsc FROM _jlcsearch_requested_parts INDEXED BY idx_requested_parts_recent
-      WHERE requested_at >= unixepoch() - 7 * 86400
-        AND ${RETRY_COOLDOWN}
-        AND ${DEMAND_SCORE} >= 2
-      ORDER BY ${DEMAND_SCORE} DESC, attempted_at, requested_at DESC, lcsc
+    ? await execute(`SELECT lcsc FROM (
+        SELECT r.lcsc, r.attempted_at,
+          ROW_NUMBER() OVER (
+            PARTITION BY TRIM(c.category)
+            ORDER BY ${DEMAND_SCORE} DESC, r.requested_at DESC, r.lcsc
+          ) AS category_rank
+        FROM _jlcsearch_requested_parts AS r INDEXED BY idx_requested_parts_recent
+        JOIN component_catalog AS c ON c.lcsc = r.lcsc
+        WHERE r.requested_at >= unixepoch() - 7 * 86400
+          AND ${DEMAND_SCORE} >= 2
+          AND TRIM(c.category) <> ''
+      )
+      WHERE category_rank <= ${POPULAR_PARTS_PER_CATEGORY} AND ${RETRY_COOLDOWN}
+      ORDER BY attempted_at, category_rank, lcsc
       LIMIT ${popularOnly ? REQUESTED_STOCK_LIMIT : POPULAR_PRIORITY_LIMIT};`)
     : []
   if (popularOnly) return popular

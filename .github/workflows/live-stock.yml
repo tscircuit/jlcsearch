@@ -18,7 +18,7 @@ on:
         type: number
         default: 5
       popular_only:
-        description: Refresh only frequently requested part numbers for this run
+        description: Refresh from the top 100 popular parts per category (up to 300 this run)
         type: boolean
         default: false
   pull_request:
