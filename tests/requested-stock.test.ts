@@ -46,7 +46,7 @@ const adapter = (db: Database) =>
     },
   }) as any
 
-async function fixture() {
+async function fixture(withPopularity = true) {
   const f = await stockDatabase()
   f.db.exec(
     await Bun.file(
@@ -56,8 +56,167 @@ async function fixture() {
       ),
     ).text(),
   )
+  if (withPopularity) {
+    f.db.exec(
+      await Bun.file(
+        new URL(
+          "../cf-proxy/migrations/0028_requested_stock_popularity.sql",
+          import.meta.url,
+        ),
+      ).text(),
+    )
+  }
   return { ...f, d1: adapter(f.db) }
 }
+
+const replyForRequest = (async (_url: unknown, init?: RequestInit) =>
+  reply(10, JSON.parse(String(init?.body)).keyword)) as typeof fetch
+
+test("repeated requests count at most hourly and older activity loses weight", async () => {
+  const { db, d1 } = await fixture()
+  try {
+    await requestStock(d1, 7519)
+    await requestStock(d1, 7519)
+    const demand = db.query(
+      "SELECT demand_score FROM _jlcsearch_requested_parts WHERE lcsc=?",
+    )
+    expect(demand.get(7519)).toEqual({ demand_score: 1 })
+
+    const midnight = 20_000 * 86400
+    db.query(
+      "INSERT INTO _jlcsearch_requested_parts (lcsc, requested_at) VALUES (11702,?)",
+    ).run(midnight)
+    const request = db.query(
+      "UPDATE _jlcsearch_requested_parts SET requested_at=? WHERE lcsc=11702",
+    )
+    for (const hours of [1, 2, 3]) request.run(midnight + hours * 3600)
+    expect(demand.get(11702)).toEqual({ demand_score: 4 })
+    request.run(midnight + 86400)
+    expect(demand.get(11702)).toEqual({ demand_score: 3 })
+  } finally {
+    db.close()
+  }
+})
+
+test("the hourly refresh stays bounded and leaves room for first-time requests", async () => {
+  const { db, execute, targets } = await fixture()
+  try {
+    db.exec(`WITH RECURSIVE parts(id) AS (
+      SELECT 1 UNION ALL SELECT id + 1 FROM parts WHERE id < 310
+    )
+    INSERT INTO _jlcsearch_requested_parts(lcsc, requested_at, attempted_at, demand_score)
+    SELECT id, unixepoch(), CASE WHEN id <= 100 THEN 0 ELSE unixepoch()-7200 END,
+      CASE WHEN id <= 100 THEN 1 ELSE 3 END FROM parts;
+      INSERT INTO component_catalog(lcsc, category)
+      SELECT lcsc, CASE WHEN lcsc <= 205 THEN 'Resistors' ELSE 'Capacitors' END
+      FROM _jlcsearch_requested_parts;`)
+    const report = await refreshRequestedStock({
+      execute,
+      targets,
+      fetcher: replyForRequest,
+      pause: async () => {},
+    })
+    expect(report.map(({ lcsc }) => lcsc)).toEqual(
+      Array.from({ length: 100 }, (_, i) => [i + 101, i + 206, i + 1]).flat(),
+    )
+  } finally {
+    db.close()
+  }
+})
+
+test("popular-only skips one-off, inactive, recently attempted, and uncategorized parts", async () => {
+  const { db, execute, targets } = await fixture()
+  try {
+    db.exec(`INSERT INTO _jlcsearch_requested_parts(lcsc, requested_at, attempted_at, demand_score)
+      VALUES (1,unixepoch(),0,1),
+             (2,unixepoch(),0,3),
+             (3,unixepoch()-86400,0,12),
+             (4,unixepoch()-8*86400,0,40),
+             (5,unixepoch(),unixepoch()-60,24),
+             (6,unixepoch(),0,24),
+             (7,unixepoch(),0,24);
+      INSERT INTO component_catalog(lcsc, category)
+      SELECT lcsc, CASE WHEN lcsc = 7 THEN ' ' ELSE 'Switches' END
+      FROM _jlcsearch_requested_parts WHERE lcsc != 6;`)
+    const report = await refreshRequestedStock({
+      execute,
+      targets,
+      popularOnly: true,
+      fetcher: replyForRequest,
+      pause: async () => {},
+    })
+    expect(report.map(({ lcsc }) => lcsc)).toEqual([3, 2])
+    const audit = await refreshRequestedStock({
+      execute,
+      targets,
+      requestedIds: [1],
+      fetcher: replyForRequest,
+      pause: async () => {},
+    })
+    expect(audit.map(({ lcsc }) => lcsc)).toEqual([1])
+  } finally {
+    db.close()
+  }
+})
+
+test("successive popular-only runs cover each category's top 100 within the run limit", async () => {
+  const { db, execute, targets } = await fixture()
+  try {
+    db.exec(`WITH RECURSIVE parts(id) AS (
+      SELECT 1 UNION ALL SELECT id + 1 FROM parts WHERE id < 404
+    )
+    INSERT INTO _jlcsearch_requested_parts(lcsc, requested_at, attempted_at, demand_score)
+    SELECT id, unixepoch(), CASE WHEN id = 1 THEN unixepoch()-60 ELSE 0 END,
+      105 - ((id - 1) % 101) FROM parts;
+    INSERT INTO component_catalog(lcsc, category, subcategory)
+    SELECT lcsc, printf('Category %d', (lcsc - 1) / 101),
+      printf('Subcategory %d', lcsc % 2) FROM _jlcsearch_requested_parts;`)
+    const options = {
+      execute,
+      targets,
+      popularOnly: true,
+      fetcher: replyForRequest,
+      pause: async () => {},
+    }
+    const first = (await refreshRequestedStock(options)).map(({ lcsc }) => lcsc)
+    expect(first).toHaveLength(300)
+    const categories = new Set(first.map((id) => Math.floor((id - 1) / 101)))
+    expect(categories).toEqual(new Set([0, 1, 2, 3]))
+
+    // The first batch clears its retry cooldown before the next run. The
+    // least recently attempted parts must still get picked ahead of it.
+    db.exec(`UPDATE _jlcsearch_requested_parts SET attempted_at=unixepoch()-7200
+      WHERE attempted_at > 0 AND lcsc != 1;`)
+    const next = (await refreshRequestedStock(options)).map(({ lcsc }) => lcsc)
+    const expected = Array.from({ length: 404 }, (_, i) => i + 1).filter(
+      (id) => id !== 1 && id % 101 !== 0,
+    )
+    const remaining = expected.filter((id) => !first.includes(id))
+    expect(new Set(next.slice(0, remaining.length))).toEqual(new Set(remaining))
+    expect(new Set([...first, ...next])).toEqual(new Set(expected))
+  } finally {
+    db.close()
+  }
+})
+
+test("the existing stock queue still works while the popularity migration is pending", async () => {
+  const { db, execute, targets, d1 } = await fixture(false)
+  try {
+    await requestStock(d1, 7519)
+    const options = {
+      execute,
+      targets,
+      fetcher: replyForRequest,
+      pause: async () => {},
+    }
+    await expect(
+      refreshRequestedStock({ ...options, popularOnly: true }),
+    ).rejects.toThrow("popularity migration")
+    expect(await refreshRequestedStock(options)).toMatchObject([{ lcsc: 7519 }])
+  } finally {
+    db.close()
+  }
+})
 
 test("only exact numeric IDs are enrolled; supplier substitutes and malformed quantities are rejected", async () => {
   expect(exactLcsc(" c7519 ")).toBe(7519)

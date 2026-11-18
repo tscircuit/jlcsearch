@@ -17,6 +17,10 @@ on:
         description: Unverified-stock cleanup pages (1000 parts each, 0 disables; 0-1000)
         type: number
         default: 5
+      popular_only:
+        description: Refresh from the top 100 popular parts per category (up to 300 this run)
+        type: boolean
+        default: false
   pull_request:
     paths:
       - "scripts/crawl-live-stock.ts"
@@ -26,6 +30,8 @@ on:
       - "tests/live-stock-run.test.ts"
       - "tests/live-stock-workflow.test.ts"
       - "scripts/refresh-requested-stock.ts"
+      - "cf-proxy/migrations/0028_requested_stock_popularity.sql"
+      - "tests/requested-stock.test.ts"
       - "cf-proxy/src/requested-stock.ts"
       - "cf-proxy/src/cache-entry.ts"
       - "cf-proxy/test/cache-service.test.ts"
@@ -53,7 +59,7 @@ jobs:
 
   refresh:
     name: Rotate through live stock categories
-    if: github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request' && !inputs.popular_only
     runs-on: ubuntu-latest
     timeout-minutes: 55
     concurrency:
@@ -109,6 +115,7 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       REQUESTED_STOCK_REPORT_PATH: ${{ github.workspace }}/requested-stock-report.json
+      REQUESTED_STOCK_POPULAR_ONLY: ${{ inputs.popular_only && 'true' || 'false' }}
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2

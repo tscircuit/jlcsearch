@@ -8,10 +8,13 @@ const workflow = Bun.YAML.parse(
 ) as {
   on: {
     workflow_dispatch: {
-      inputs: Record<string, { type: string; default: number }>
+      inputs: Record<string, { type: string; default: number | boolean }>
     }
   }
-  jobs: { refresh: { if: string; env: Record<string, string> } }
+  jobs: Record<
+    "refresh" | "requested",
+    { if: string; env: Record<string, string> }
+  >
 }
 
 // Evaluate the workflow's actual expression, including its numeric-to-string
@@ -19,7 +22,7 @@ const workflow = Bun.YAML.parse(
 const evaluate = (
   expression: string,
   event: string,
-  inputs: Record<string, number>,
+  inputs: Record<string, number | boolean>,
 ) =>
   new Function(
     "github",
@@ -56,4 +59,22 @@ test("manual and scheduled runs start with a small cleanup budget and PR checks 
   expect(evaluate(workflow.jobs.refresh.if, "pull_request", {})).toBe(false)
   expect(evaluate(workflow.jobs.refresh.if, "workflow_dispatch", {})).toBe(true)
   expect(evaluate(workflow.jobs.refresh.if, "schedule", {})).toBe(true)
+})
+
+test("popular-only dispatch skips the category crawl and only runs the requested-part refresh", () => {
+  const inputs = { popular_only: true }
+  expect(workflow.on.workflow_dispatch.inputs.popular_only).toMatchObject({
+    type: "boolean",
+    default: false,
+  })
+  expect(evaluate(workflow.jobs.refresh.if, "workflow_dispatch", inputs)).toBe(
+    false,
+  )
+  expect(
+    evaluate(workflow.jobs.requested.if, "workflow_dispatch", inputs),
+  ).toBe(true)
+  expect(evaluate(workflow.jobs.requested.if, "pull_request", {})).toBe(false)
+  const mode = workflow.jobs.requested.env.REQUESTED_STOCK_POPULAR_ONLY
+  expect(evaluate(mode, "workflow_dispatch", inputs)).toBe("true")
+  expect(evaluate(mode, "schedule", {})).toBe("false")
 })
