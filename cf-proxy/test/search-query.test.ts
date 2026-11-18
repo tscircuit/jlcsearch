@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import { validateSearchQuery } from "../src/search"
 import { buildSearchTokenGroups } from "../src/search-query"
 
 describe("buildSearchTokenGroups", () => {
@@ -27,4 +28,14 @@ describe("buildSearchTokenGroups", () => {
       ["receptacle"],
     ])
   })
+})
+
+it("includes a package code exactly once in the text index search", () => {
+  const match = validateSearchQuery({ q: "resistor 0805" }).match
+  expect(validateSearchQuery({ q: "resistor", package: "0805" }).match).toBe(
+    match,
+  )
+  expect(
+    validateSearchQuery({ q: "resistor 0805", package: "0805" }).match,
+  ).toBe(match)
 })

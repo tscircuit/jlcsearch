@@ -131,6 +131,22 @@ export const validateSearchQuery = (params: SearchQueryParams) => {
       'Add another search term, such as "dc connector", "IC amplifier", or "8MHz crystal", or use an exact LCSC part number.',
     )
   }
+  // Catalog search text includes the package. Use simple package codes to
+  // narrow an existing text search while keeping the exact SQL filter.
+  if (
+    indexedGroups.length &&
+    params.package &&
+    /^[a-z0-9-]{3,64}$/i.test(params.package)
+  ) {
+    const packageCode = params.package.toLowerCase()
+    if (
+      !indexedGroups.some(
+        (group) => group.length === 1 && group[0] === packageCode,
+      )
+    ) {
+      indexedGroups.push([packageCode])
+    }
+  }
   const match = indexedGroups
     .map(
       (group) =>

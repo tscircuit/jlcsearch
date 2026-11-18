@@ -142,6 +142,49 @@ workerTest("Unicode-only phrase spacing remains significant", async () => {
 })
 
 workerTest(
+  "package-filtered text searches keep exact matches and stock ordering",
+  async () => {
+    const { self, db } = await fixture()
+    await db
+      .prepare(`INSERT INTO search_index(lcsc, package, stock, search_text)
+      VALUES
+        (6, '0805', 120, 'resistor 0805'),
+        (7, '0603', 150, 'resistor 0603 replaces an 0805 part'),
+        (8, 'SOT-23', 90, 'resistor sot-23'),
+        (9, 'AB', 100, 'resistor ab'),
+        (10, 'SIP"4', 100, 'resistor sip"4')`)
+      .run()
+    await db
+      .prepare(`INSERT INTO search_index_fts(rowid, search_text)
+      SELECT lcsc, search_text FROM search_index WHERE lcsc >= 6`)
+      .run()
+
+    for (const [packageCode, ids] of [
+      ["0805", [6, 1]],
+      ["SOT-23", [8]],
+      ["sot-23", []],
+      ["AB", [9]],
+      ['SIP"4', [10]],
+    ] as const) {
+      const encoded = encodeURIComponent(packageCode)
+      for (const route of [
+        "/api/search?q=resistor",
+        "/components/list.json?search=resistor",
+      ]) {
+        const response = await self.fetch(
+          `https://example.com${route}&package=${encoded}`,
+        )
+        expect(await components(response)).toEqual(ids)
+      }
+    }
+    const limited = await self.fetch(
+      "https://example.com/api/search?q=resistor&package=0805&limit=1",
+    )
+    expect(await components(limited)).toEqual([6])
+  },
+)
+
+workerTest(
   "blank and omitted text reuse the same unfiltered JSON result",
   async () => {
     const { self, queries } = await fixture()
