@@ -1,7 +1,7 @@
-import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
-import type { DerivedTableSpec } from "./types"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
+import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
 import { BaseComponent } from "./component-base"
+import type { DerivedTableSpec } from "./types"
 
 export interface Diode extends BaseComponent {
   // Extra columns
@@ -19,6 +19,111 @@ export interface Diode extends BaseComponent {
   operating_temp_max: number | null
   power_dissipation_watts: number | null
   configuration: string | null
+}
+
+const parseExtraJson = (
+  rawExtra: string | null | undefined,
+): Record<string, any> => {
+  if (!rawExtra) return {}
+  try {
+    const parsed = JSON.parse(rawExtra)
+    return parsed && typeof parsed === "object" ? parsed : {}
+  } catch {
+    return {}
+  }
+}
+
+const firstAttribute = (
+  attrs: Record<string, unknown>,
+  keys: string[],
+): string | null => {
+  for (const key of keys) {
+    const raw = attrs[key]
+    if (typeof raw !== "string") continue
+    const trimmed = raw.trim()
+    if (trimmed && trimmed !== "-" && trimmed.toLowerCase() !== "null") {
+      return trimmed
+    }
+  }
+  return null
+}
+
+const safeParseSiUnit = (raw: string | null | undefined): number | null => {
+  if (!raw) return null
+  const head = raw.split("@")[0]?.trim()
+  if (!head || head === "-") return null
+  try {
+    const parsed = parseAndConvertSiUnit(head).value
+    return typeof parsed === "number" && Number.isFinite(parsed) ? parsed : null
+  } catch {
+    return null
+  }
+}
+
+const parseScaledNumber = (
+  raw: string | null | undefined,
+  unitMultipliers: Record<string, number>,
+): number | null => {
+  if (!raw) return null
+  const cleaned = raw.split("@")[0]?.trim()
+  if (!cleaned || cleaned === "-") return null
+  const match = cleaned.match(/^(-?\d+(?:\.\d+)?)\s*([a-zA-Zµμ]+)$/)
+  if (match) {
+    const value = Number.parseFloat(match[1]!)
+    const unit = match[2]!.replace("μ", "µ").replace("u", "µ")
+    const factor = unitMultipliers[unit]
+    if (Number.isFinite(value) && factor !== undefined) {
+      return Number((value * factor).toPrecision(10))
+    }
+  }
+  return safeParseSiUnit(cleaned)
+}
+
+const VOLTAGE_TO_VOLTS: Record<string, number> = {
+  nV: 1e-9,
+  µV: 1e-6,
+  mV: 1e-3,
+  V: 1,
+  kV: 1e3,
+}
+
+const CURRENT_TO_AMPS: Record<string, number> = {
+  pA: 1e-12,
+  nA: 1e-9,
+  µA: 1e-6,
+  mA: 1e-3,
+  A: 1,
+  kA: 1e3,
+}
+
+const POWER_TO_WATTS: Record<string, number> = {
+  µW: 1e-6,
+  mW: 1e-3,
+  W: 1,
+  kW: 1e3,
+}
+
+const TIME_TO_NS: Record<string, number> = {
+  ps: 1e-3,
+  ns: 1,
+  µs: 1e3,
+  ms: 1e6,
+}
+
+const parseTemperatureRange = (
+  raw: string | null,
+): { min: number | null; max: number | null } => {
+  if (!raw) return { min: null, max: null }
+  const match = raw.match(
+    /(-?\d+(?:\.\d+)?)\s*(?:℃|°C)?\s*(?:~|to)\s*\+?(-?\d+(?:\.\d+)?)\s*(?:℃|°C)?/i,
+  )
+  if (!match) return { min: null, max: null }
+  const min = Number.parseFloat(match[1]!)
+  const max = Number.parseFloat(match[2]!)
+  if (!Number.isFinite(min) || !Number.isFinite(max)) {
+    return { min: null, max: null }
+  }
+  return { min, max }
 }
 
 export const diodeTableSpec: DerivedTableSpec<Diode> = {
@@ -50,110 +155,165 @@ export const diodeTableSpec: DerivedTableSpec<Diode> = {
         eb.or([
           eb("categories.subcategory", "=", "Diodes - General Purpose"),
           eb("categories.subcategory", "=", "Schottky Barrier Diodes (SBD)"),
+          eb("categories.subcategory", "=", "Schottky Diodes"),
           eb("categories.subcategory", "=", "Zener Diodes"),
           eb("categories.subcategory", "=", "TVS"),
           eb("categories.subcategory", "=", "Switching Diode"),
+          eb("categories.subcategory", "=", "Switching Diodes"),
           eb(
             "categories.subcategory",
             "=",
             "Fast Recovery / High Efficiency Diodes",
           ),
+          eb(
+            "categories.subcategory",
+            "=",
+            "Fast Recovery/High Efficiency Diode",
+          ),
+          eb(
+            "categories.subcategory",
+            "=",
+            "Diodes - Fast Recovery Rectifiers",
+          ),
+          eb(
+            "categories.subcategory",
+            "=",
+            "Diodes - Rectifiers - Fast Recovery",
+          ),
+          eb("categories.subcategory", "=", "Diodes Rectifiers Fast Recovery"),
+          eb("categories.subcategory", "=", "Diodes - Rectifiers - Hyperfast"),
+          eb("categories.subcategory", "=", "High Effic Rectifier"),
+          eb("categories.subcategory", "=", "Super Barrier Rectifiers (SBR)"),
+          eb("categories.subcategory", "=", "Super Barrier Rectifier（SBR）"),
           eb("categories.subcategory", "=", "Bridge Rectifiers"),
         ]),
       ),
   mapToTable: (components) => {
     return components.map((c): Diode | null => {
-      if (!c.extra) return null
-      const extra = JSON.parse(c.extra ?? "{}")
-      if (!extra.attributes) return null
+      const extra = parseExtraJson(c.extra)
+      const attrs =
+        extra.attributes && typeof extra.attributes === "object"
+          ? extra.attributes
+          : {}
+      const rawDesc = c.description ?? ""
+      const desc = rawDesc.toLowerCase()
+      const subcat = String(
+        (c as { subcategory?: string }).subcategory ||
+          extra.category?.name2 ||
+          "",
+      ).toLowerCase()
+      const attrType = String(
+        firstAttribute(attrs, ["Type"]) || "",
+      ).toLowerCase()
+      const classificationText = `${desc} ${subcat} ${attrType}`
 
-      const attrs = extra.attributes
-      const desc = c.description.toLowerCase()
-
-      // Parse forward voltage
-      let forwardVoltage = null
+      // Parse forward voltage (JLCPCB uses "Voltage - Forward(Vf@If)", often in mV)
       const rawForwardV =
-        attrs["Forward Voltage (Vf@If)"] || attrs["Forward Voltage (Vf)"]
-      if (rawForwardV) {
-        const match = rawForwardV.match(/([\d.]+)V/)
-        if (match) forwardVoltage = parseFloat(match[1])
-      }
+        firstAttribute(attrs, [
+          "Voltage - Forward(Vf@If)",
+          "Voltage - Forward (Vf@If)",
+          "Forward Voltage (Vf@If)",
+          "Forward Voltage (Vf)",
+        ]) ??
+        rawDesc.match(
+          /\b(\d+(?:\.\d+)?\s*m?V)@\d+(?:\.\d+)?\s*[umµ]?A\b/i,
+        )?.[1] ??
+        null
+      const forwardVoltage = parseScaledNumber(rawForwardV, VOLTAGE_TO_VOLTS)
 
-      // Parse reverse voltage
-      let reverseVoltage = null
-      const rawReverseV = attrs["Reverse Voltage (Vr)"]
-      if (rawReverseV) {
-        const parsed = parseAndConvertSiUnit(rawReverseV).value
-        if (parsed) reverseVoltage = parsed as number
-      }
+      // Parse reverse voltage (JLCPCB uses "Voltage - DC Reverse(Vr)")
+      const reverseVoltage = parseScaledNumber(
+        firstAttribute(attrs, [
+          "Voltage - DC Reverse(Vr)",
+          "Voltage - DC Reverse (Vr) (Max)",
+          "Reverse Voltage (Vr)",
+          "Reverse Stand-Off Voltage (Vrwm)",
+        ]),
+        VOLTAGE_TO_VOLTS,
+      )
 
-      // Parse forward current
-      let forwardCurrent = null
-      const rawForwardI = attrs["Average Rectified Current (Io)"]
-      if (rawForwardI) {
-        const parsed = parseAndConvertSiUnit(rawForwardI).value
-        if (parsed) forwardCurrent = parsed as number
-      }
+      // Parse forward current (JLCPCB uses "Current - Rectified" / "Rectified Current")
+      const forwardCurrent = parseScaledNumber(
+        firstAttribute(attrs, [
+          "Current - Rectified",
+          "Rectified Current",
+          "Average Rectified Current (Io)",
+        ]),
+        CURRENT_TO_AMPS,
+      )
 
       // Parse reverse leakage current
-      let leakageCurrent = null
-      const rawLeakage =
-        attrs["Reverse Leakage Current"] ||
-        attrs["Reverse Leakage Current (Ir)"]
-      if (rawLeakage) {
-        const parsed = parseAndConvertSiUnit(rawLeakage.split("@")[0]).value
-        if (parsed) leakageCurrent = parsed as number
-      }
+      const leakageCurrent = safeParseSiUnit(
+        firstAttribute(attrs, [
+          "Reverse Leakage Current (Ir)",
+          "Reverse Leakage Current",
+        ]),
+      )
 
-      // Parse recovery time
-      let recoveryTime = null
-      const rawRecovery = attrs["Reverse Recovery Time (trr)"]
-      if (rawRecovery) {
-        const match = rawRecovery.match(/(\d+(?:\.\d+)?)ns/)
-        if (match) recoveryTime = parseFloat(match[1])
-      }
+      // Parse recovery time in nanoseconds
+      const rawRecovery =
+        firstAttribute(attrs, ["Reverse Recovery Time (trr)"]) ??
+        rawDesc.match(/\b(\d+(?:\.\d+)?\s*[nuµμ]s)\b/i)?.[1] ??
+        null
+      const recoveryTime = parseScaledNumber(rawRecovery, TIME_TO_NS)
 
-      // Parse temperature range
-      let tempMin = null
-      let tempMax = null
-      const rawTemp = attrs["Operating Temperature"]
-      if (rawTemp) {
-        const match = rawTemp.match(/([-\d]+)℃~\+([-\d]+)℃/)
-        if (match) {
-          tempMin = parseInt(match[1])
-          tempMax = parseInt(match[2])
-        }
-      }
+      // Parse temperature range (JLCPCB uses "Operating Junction Temperature Range")
+      const tempText =
+        firstAttribute(attrs, [
+          "Operating Junction Temperature Range",
+          "Operating Temperature",
+          "Operating Temperature Range",
+        ]) ??
+        rawDesc.match(
+          /-?\d+(?:\.\d+)?\s*(?:℃|°C)\s*~\s*\+?-?\d+(?:\.\d+)?\s*(?:℃|°C)/i,
+        )?.[0] ??
+        null
+      const { min: tempMin, max: tempMax } = parseTemperatureRange(tempText)
 
-      // Parse power dissipation
-      let powerDissipation = null
-      const rawPower = attrs["Power Dissipation"]
-      if (rawPower) {
-        const parsed = parseAndConvertSiUnit(rawPower).value
-        if (parsed) powerDissipation = parsed as number
-      }
+      // Parse power dissipation in watts (JLCPCB uses "Pd - Power Dissipation")
+      const powerDissipation = parseScaledNumber(
+        firstAttribute(attrs, [
+          "Pd - Power Dissipation",
+          "Power Dissipation",
+          "Peak Pulse Power Dissipation (Ppp)",
+        ]),
+        POWER_TO_WATTS,
+      )
 
       // Determine diode type and characteristics
-      const isSchottky = desc.includes("schottky")
-      const isZener = desc.includes("zener")
+      const isSchottky =
+        classificationText.includes("schottky") ||
+        classificationText.includes("super barrier")
+      const isZener =
+        classificationText.includes("zener") ||
+        Boolean(
+          firstAttribute(attrs, ["Zener Voltage(Nom)", "Zener Voltage (Nom)"]),
+        )
       const isTvs =
-        desc.includes("tvs") || desc.includes("transient voltage suppressor")
+        classificationText.includes("tvs") ||
+        classificationText.includes("transient voltage suppressor")
 
       let diodeType = "general_purpose"
       if (isSchottky) diodeType = "schottky_barrier"
       else if (isZener) diodeType = "zener"
       else if (isTvs) diodeType = "tvs"
-      else if (desc.includes("switching")) diodeType = "switching"
-      else if (desc.includes("fast recovery")) diodeType = "fast_recovery"
-      else if (desc.includes("bridge")) diodeType = "bridge_rectifier"
+      else if (classificationText.includes("switching")) diodeType = "switching"
+      else if (
+        classificationText.includes("fast recovery") ||
+        classificationText.includes("high effic") ||
+        classificationText.includes("hyperfast")
+      ) {
+        diodeType = "fast_recovery"
+      } else if (classificationText.includes("bridge")) {
+        diodeType = "bridge_rectifier"
+      }
 
-      // Get configuration
-      const configuration = attrs["Diode Configuration"] || null
+      const configuration = firstAttribute(attrs, ["Diode Configuration"])
 
       return {
         lcsc: c.lcsc,
         mfr: c.mfr,
-        description: c.description,
+        description: rawDesc,
         stock: c.stock,
         price1: extractMinQPrice(c.price),
         in_stock: c.stock > 0,
