@@ -69,6 +69,7 @@ export const resistorArrayTableSpec: DerivedTableSpec<ResistorArray> = {
     { name: "is_surface_mount", type: "boolean" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   indexes: [{ name: "idx_resistor_array_resistance", columns: ["resistance"] }],
   listCandidateComponents: (db) =>
@@ -125,6 +126,7 @@ export const resistorArrayTableSpec: DerivedTableSpec<ResistorArray> = {
         in_stock: component.stock > 0,
         is_basic: Boolean(component.basic),
         is_preferred: Boolean(component.preferred),
+        is_extended_promotional: false, // TODO: Populate from JLCPCB promotional data
         package: component.package ?? "",
         resistance,
         tolerance_fraction: tolerance,
