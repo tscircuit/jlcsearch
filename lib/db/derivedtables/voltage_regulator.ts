@@ -1,7 +1,7 @@
-import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
-import type { DerivedTableSpec } from "./types"
 import { extractMinQPrice } from "lib/util/extract-min-quantity-price"
+import { parseAndConvertSiUnit } from "lib/util/parse-and-convert-si-unit"
 import { BaseComponent } from "./component-base"
+import type { DerivedTableSpec } from "./types"
 
 export interface VoltageRegulator extends BaseComponent {
   package: string
@@ -20,6 +20,122 @@ export interface VoltageRegulator extends BaseComponent {
   is_low_dropout: boolean
   is_positive: boolean
   topology: string | null
+}
+
+const parseExtraJson = (
+  rawExtra: string | null | undefined,
+): Record<string, any> => {
+  if (!rawExtra) return {}
+  try {
+    const parsed = JSON.parse(rawExtra)
+    return parsed && typeof parsed === "object" ? parsed : {}
+  } catch {
+    return {}
+  }
+}
+
+const firstAttribute = (
+  attrs: Record<string, unknown>,
+  keys: string[],
+): string | null => {
+  for (const key of keys) {
+    const raw = attrs[key]
+    if (typeof raw !== "string") continue
+    const trimmed = raw.trim()
+    if (trimmed && trimmed !== "-" && trimmed.toLowerCase() !== "null") {
+      return trimmed
+    }
+  }
+  return null
+}
+
+const safeParseSiUnit = (raw: string | null | undefined): number | null => {
+  if (!raw) return null
+  const head = raw.split("@")[0]?.trim()
+  if (!head || head === "-") return null
+  try {
+    const parsed = parseAndConvertSiUnit(head).value
+    return typeof parsed === "number" && Number.isFinite(parsed) ? parsed : null
+  } catch {
+    return null
+  }
+}
+
+const parseScaledNumber = (
+  raw: string | null | undefined,
+  unitMultipliers: Record<string, number>,
+): number | null => {
+  if (!raw || raw.includes("%")) return null
+  const cleaned = raw.split("@")[0]?.replace(/rms/gi, "").trim()
+  if (!cleaned || cleaned === "-") return null
+  const match = cleaned.match(/^(-?\d+(?:\.\d+)?)\s*([a-zA-Zµμ]+)$/)
+  if (match) {
+    const value = Number.parseFloat(match[1]!)
+    const unit = match[2]!.replace("μ", "µ").replace("u", "µ")
+    const factor = unitMultipliers[unit]
+    if (Number.isFinite(value) && factor !== undefined) {
+      return Number((value * factor).toPrecision(10))
+    }
+  }
+  return safeParseSiUnit(cleaned)
+}
+
+const VOLTAGE_TO_VOLTS: Record<string, number> = {
+  nV: 1e-9,
+  µV: 1e-6,
+  mV: 1e-3,
+  V: 1,
+  kV: 1e3,
+}
+
+const CURRENT_TO_AMPS: Record<string, number> = {
+  pA: 1e-12,
+  nA: 1e-9,
+  µA: 1e-6,
+  mA: 1e-3,
+  A: 1,
+  kA: 1e3,
+}
+
+const NOISE_TO_UVRMS: Record<string, number> = {
+  nV: 1e-3,
+  µV: 1,
+  mV: 1e3,
+  V: 1e6,
+}
+
+const parseVoltageRange = (
+  raw: string | null,
+): { min: number | null; max: number | null } => {
+  if (!raw) return { min: null, max: null }
+  const rangeMatch = raw.match(
+    /(-?\d+(?:\.\d+)?\s*[nuµμmk]?V)\s*(?:~|to)\s*(-?\d+(?:\.\d+)?\s*[nuµμmk]?V)/i,
+  )
+  if (rangeMatch) {
+    const a = parseScaledNumber(rangeMatch[1], VOLTAGE_TO_VOLTS)
+    const b = parseScaledNumber(rangeMatch[2], VOLTAGE_TO_VOLTS)
+    if (a !== null && b !== null) {
+      return { min: Math.min(a, b), max: Math.max(a, b) }
+    }
+  }
+  const single = parseScaledNumber(raw, VOLTAGE_TO_VOLTS)
+  return { min: single, max: single }
+}
+
+const parseTemperatureRange = (
+  raw: string | null,
+): { min: number | null; max: number | null } => {
+  if (!raw) return { min: null, max: null }
+  const match = raw.match(
+    /(-?\d+(?:\.\d+)?)\s*(?:℃|°C)?\s*(?:~|to)\s*\+?(-?\d+(?:\.\d+)?)\s*(?:℃|°C)?/i,
+  )
+  if (!match) return { min: null, max: null }
+  const min = Number.parseFloat(match[1]!)
+  const max = Number.parseFloat(match[2]!)
+  if (!Number.isFinite(min) || !Number.isFinite(max)) {
+    return { min: null, max: null }
+  }
+  return { min, max }
 }
 
 export const voltageRegulatorTableSpec: DerivedTableSpec<VoltageRegulator> = {
@@ -55,130 +171,157 @@ export const voltageRegulatorTableSpec: DerivedTableSpec<VoltageRegulator> = {
           eb("categories.subcategory", "=", "Linear Voltage Regulators (LDO)"),
           eb("categories.subcategory", "=", "Low Dropout Regulators(LDO)"),
           eb("categories.subcategory", "=", "Dropout Regulators(LDO)"),
+          eb(
+            "categories.subcategory",
+            "=",
+            "Voltage Regulators - Linear, Low Drop Out (LDO) Regulators",
+          ),
         ]),
       ),
   mapToTable: (components) => {
     return components.map((c): VoltageRegulator | null => {
-      if (!c.extra) return null
-      const extra = JSON.parse(c.extra ?? "{}")
-      if (!extra.attributes) return null
-
-      const attrs = extra.attributes
-      const desc = c.description.toLowerCase()
+      const extra = parseExtraJson(c.extra)
+      const attrs =
+        extra.attributes && typeof extra.attributes === "object"
+          ? extra.attributes
+          : {}
+      const rawDesc = c.description ?? ""
+      const desc = rawDesc.toLowerCase()
+      const subcat = String(
+        (c as { subcategory?: string }).subcategory ||
+          extra.category?.name2 ||
+          "",
+      ).toLowerCase()
 
       // Parse output type
+      const rawOutputType = (
+        firstAttribute(attrs, ["Output Type"]) || ""
+      ).toLowerCase()
       let outputType: "fixed" | "adjustable" | "unknown" = "unknown"
-      if (attrs["Output Type"]?.toLowerCase().includes("fixed")) {
+      if (rawOutputType.includes("fixed")) {
         outputType = "fixed"
-      } else if (attrs["Output Type"]?.toLowerCase().includes("adjustable")) {
+      } else if (rawOutputType.includes("adjustable")) {
+        outputType = "adjustable"
+      } else if (/\bfixed\b/.test(desc)) {
+        outputType = "fixed"
+      } else if (/\badjustable\b/.test(desc)) {
         outputType = "adjustable"
       }
 
       // Parse output voltage range
-      let voltageMin = null
-      let voltageMax = null
-      const rawVoltage = attrs["Output Voltage"]
-      if (rawVoltage) {
-        const match = rawVoltage.match(/([\d.]+)V~([\d.]+)V/)
-        if (match) {
-          voltageMin = parseFloat(match[1])
-          voltageMax = parseFloat(match[2])
-        } else {
-          // Single voltage for fixed regulators
-          const singleMatch = rawVoltage.match(/([\d.]+)V/)
-          if (singleMatch) {
-            voltageMin = voltageMax = parseFloat(singleMatch[1])
-          }
-        }
-      }
+      const { min: voltageMin, max: voltageMax } = parseVoltageRange(
+        firstAttribute(attrs, ["Output Voltage"]),
+      )
 
       // Parse output current
-      let outputCurrent = null
-      const rawCurrent = attrs["Output Current"]
-      if (rawCurrent) {
-        const parsed = parseAndConvertSiUnit(rawCurrent).value
-        if (parsed) outputCurrent = parsed as number
-      }
+      const outputCurrent = parseScaledNumber(
+        firstAttribute(attrs, ["Output Current"]),
+        CURRENT_TO_AMPS,
+      )
 
-      // Parse dropout voltage
-      let dropoutVoltage = null
-      const rawDropout = attrs["Dropout Voltage"]
-      if (rawDropout) {
-        const match = rawDropout.match(/([\d.]+)V/)
-        if (match) dropoutVoltage = parseFloat(match[1])
-      }
+      // Parse dropout voltage (JLCPCB uses "Voltage Dropout", including mV@(current) values)
+      const rawDropout =
+        firstAttribute(attrs, ["Voltage Dropout", "Dropout Voltage"]) ??
+        rawDesc.match(/\b(\d+(?:\.\d+)?\s*[nuµμm]?V)@\([^)]+\)/i)?.[1] ??
+        null
+      const dropoutVoltage = parseScaledNumber(rawDropout, VOLTAGE_TO_VOLTS)
 
-      // Parse input voltage range
-      let inputVoltageMin = null
-      let inputVoltageMax = null
-      const maxInputVoltage = attrs["Maximum Input Voltage"]
-      if (maxInputVoltage) {
-        const match = maxInputVoltage.match(/([\d.]+)V/)
-        if (match) {
-          inputVoltageMax = parseFloat(match[1])
-          // Estimate min input as dropout + output for LDOs
-          if (dropoutVoltage && voltageMin) {
-            inputVoltageMin = voltageMin + dropoutVoltage
+      // Parse input voltage range (JLCPCB uses "Voltage - Supply" for max or range)
+      const rawInputVoltage = firstAttribute(attrs, [
+        "Maximum Input Voltage",
+        "Voltage - Supply",
+        "Input Voltage",
+        "Operating Voltage",
+      ])
+      let inputVoltageMin: number | null = null
+      let inputVoltageMax: number | null = null
+      if (rawInputVoltage) {
+        if (/(?:~|to)/i.test(rawInputVoltage)) {
+          const parsedRange = parseVoltageRange(rawInputVoltage)
+          inputVoltageMin = parsedRange.min
+          inputVoltageMax = parsedRange.max
+        } else {
+          inputVoltageMax = parseScaledNumber(rawInputVoltage, VOLTAGE_TO_VOLTS)
+          if (
+            inputVoltageMax !== null &&
+            dropoutVoltage !== null &&
+            voltageMin !== null &&
+            voltageMin >= 0 &&
+            inputVoltageMax > 0
+          ) {
+            inputVoltageMin = Number(
+              (voltageMin + dropoutVoltage).toPrecision(10),
+            )
           }
         }
       }
 
       // Parse temperature range
-      let tempMin = null
-      let tempMax = null
-      const rawTemp = attrs["Operating Temperature"]
-      if (rawTemp) {
-        const match = rawTemp.match(/([-\d]+)℃~\+([-\d]+)℃/)
-        if (match) {
-          tempMin = parseInt(match[1])
-          tempMax = parseInt(match[2])
-        }
-      }
+      const tempText =
+        firstAttribute(attrs, [
+          "Operating Temperature",
+          "Operating Temperature Range",
+        ]) ??
+        rawDesc.match(
+          /-?\d+(?:\.\d+)?\s*(?:℃|°C)\s*~\s*\+?-?\d+(?:\.\d+)?\s*(?:℃|°C)/i,
+        )?.[0] ??
+        null
+      const { min: tempMin, max: tempMax } = parseTemperatureRange(tempText)
 
-      // Parse quiescent current
-      let quiescentCurrent = null
-      const rawQuiescent = attrs["Quiescent Current (Ground Current)"]
-      if (rawQuiescent) {
-        const parsed = parseAndConvertSiUnit(rawQuiescent).value
-        if (parsed) quiescentCurrent = parsed as number
-      }
+      // Parse quiescent current (JLCPCB uses "standby current" / "Supply Current (Iq)")
+      const quiescentCurrent = parseScaledNumber(
+        firstAttribute(attrs, [
+          "Quiescent Current (Ground Current)",
+          "Quiescent Current (Iq)",
+          "Supply Current (Iq)",
+          "standby current",
+          "Quiescent Current",
+        ]),
+        CURRENT_TO_AMPS,
+      )
 
       // Parse power supply rejection ratio
-      let psrr = null
-      const rawPsrr = attrs["Power Supply Rejection Ratio (PSRR)"]
-      if (rawPsrr) {
-        const match = rawPsrr.match(/([\d.]+)dB/)
-        if (match) psrr = parseFloat(match[1])
-      }
+      const rawPsrr =
+        firstAttribute(attrs, ["Power Supply Rejection Ratio (PSRR)"]) ??
+        rawDesc.match(/\b(\d+(?:\.\d+)?)\s*dB/i)?.[0] ??
+        null
+      const psrrMatch = rawPsrr?.match(/([\d.]+)\s*dB/i)
+      const psrr = psrrMatch ? Number.parseFloat(psrrMatch[1]!) : null
 
-      // Parse output noise
-      let outputNoise = null
-      const rawNoise = attrs["Output Noise"]
-      if (rawNoise) {
-        const parsed = parseAndConvertSiUnit(rawNoise).value
-        if (parsed) outputNoise = (parsed as number) * 1e6 // Convert to μVrms
-      }
+      // Parse output noise (ignore percentage specs like "0.003%Vout")
+      const rawNoise =
+        firstAttribute(attrs, ["Output Noise", "Noise"]) ??
+        rawDesc.match(/\b(\d+(?:\.\d+)?\s*[nuµμm]?Vrms)\b/i)?.[1] ??
+        null
+      const outputNoise = parseScaledNumber(rawNoise, NOISE_TO_UVRMS)
 
       // Determine regulator characteristics
       const isLdo = Boolean(
         desc.includes("ldo") ||
           desc.includes("low drop") ||
           desc.includes("low-drop") ||
-          (dropoutVoltage && dropoutVoltage < 0.7),
+          subcat.includes("ldo") ||
+          subcat.includes("low drop") ||
+          subcat.includes("dropout") ||
+          (dropoutVoltage !== null && dropoutVoltage < 0.7),
       )
 
-      const isPositive = Boolean(
-        attrs["Output Polarity"]?.toLowerCase().includes("positive") ||
-          !desc.includes("negative"),
-      )
+      const polarity = (
+        firstAttribute(attrs, ["Output Configuration", "Output Polarity"]) || ""
+      ).toLowerCase()
+      const isPositive = polarity.includes("negative")
+        ? false
+        : polarity.includes("positive")
+          ? true
+          : !desc.includes("negative") &&
+            !(voltageMax !== null && voltageMax < 0)
 
-      // Get topology
-      const topology = attrs["Topology"] || null
+      const topology = firstAttribute(attrs, ["Topology"])
 
       return {
         lcsc: c.lcsc,
         mfr: c.mfr,
-        description: c.description,
+        description: rawDesc,
         stock: c.stock,
         price1: extractMinQPrice(c.price),
         in_stock: c.stock > 0,
