@@ -5,7 +5,7 @@ import { BunSqliteDialect } from "kysely-bun-sqlite"
 import { barrelJackTableSpec } from "lib/db/derivedtables/barrel-jack"
 import { setupDerivedTables } from "lib/db/derivedtables/setup-derived-tables"
 
-const EXPECTED_INDEX_COUNT = 11
+const EXPECTED_INDEX_COUNT = 12
 
 test("derived table setup creates the barrel jack table and indexes", async () => {
   const database = new Database(":memory:")

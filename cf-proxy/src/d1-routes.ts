@@ -391,6 +391,8 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
             max_resolution: resolveMaxResolution(driver),
             description: driver.description ?? "",
             is_basic: Boolean(driver.basic),
+            is_extended_promotional:
+              Boolean(driver.preferred) && !Boolean(driver.basic),
             is_preferred: Boolean(driver.preferred),
             stock: driver.stock ?? 0,
             price1: extractSmallQuantityPrice(driver.price),
@@ -479,6 +481,8 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
             max_resolution: resolveMaxResolution(driver),
             description: driver.description ?? "",
             is_basic: Boolean(driver.basic),
+            is_extended_promotional:
+              Boolean(driver.preferred) && !Boolean(driver.basic),
             is_preferred: Boolean(driver.preferred),
             stock: driver.stock ?? 0,
             price1: extractSmallQuantityPrice(driver.price),
