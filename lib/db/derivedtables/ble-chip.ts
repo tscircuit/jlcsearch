@@ -10,7 +10,9 @@ import type { DerivedTableSpec } from "./types"
 
 const BLE_CHIP_SUBCATEGORIES = [
   "RF Transceiver ICs",
+  "Wireless RF Transceivers",
   "Microcontroller Units (MCUs/MPUs/SOCs)",
+  "Microcontrollers (MCU/MPU/SOC)",
   "Bluetooth Modules",
 ] as const
 
@@ -19,6 +21,7 @@ const BLE_CHIP_MFR_PATTERNS = [
   "nRF5%",
   "CC1352%",
   "CC1354%",
+  "CC234%",
   "CC254%",
   "CC264%",
   "CC265%",
