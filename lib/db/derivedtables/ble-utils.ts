@@ -39,25 +39,30 @@ const getFirstAttribute = (
   return null
 }
 
-const parseValuesWithUnit = (value: string | null, unit: string): number[] => {
+const parsePositiveVoltages = (value: string | null): number[] => {
   if (!value) return []
 
-  const matches = value.matchAll(
-    new RegExp(`(-?\\d+(?:\\.\\d+)?)\\s*${unit}`, "gi"),
-  )
+  const matches = value.matchAll(/(?<![-\d])(\d+(?:\.\d+)?)\s*V\b/gi)
   return Array.from(matches, (match) => Number(match[1])).filter(
-    Number.isFinite,
+    (v) => Number.isFinite(v) && v > 0,
   )
 }
 
-const parseFrequencyGhz = (value: string | null): number | null => {
+const parseFrequencyGhz = (
+  value: string | null,
+  allowLowUnits = true,
+): number | null => {
   if (!value) return null
 
-  const match = value.match(/(-?\d+(?:\.\d+)?)\s*(GHz|MHz|kHz|Hz)/i)
+  const pattern = allowLowUnits
+    ? /(\d+(?:\.\d+)?)\s*(GHz|MHz|kHz|Hz)\b/i
+    : /(\d+(?:\.\d+)?)\s*(GHz|MHz)\b/i
+  const match = value.match(pattern)
   if (!match) return null
 
   const frequency = Number(match[1])
-  const unit = match[2].toLowerCase()
+  if (!Number.isFinite(frequency)) return null
+  const unit = match[2]!.toLowerCase()
   if (unit === "ghz") return frequency
   if (unit === "mhz") return frequency / 1e3
   if (unit === "khz") return frequency / 1e6
@@ -67,35 +72,70 @@ const parseFrequencyGhz = (value: string | null): number | null => {
 const parseDataRateMbps = (value: string | null): number | null => {
   if (!value) return null
 
-  const match = value.match(/(\d+(?:\.\d+)?)\s*(Gbps|Mbps|Kbps|bps)/i)
-  if (!match) return null
-
-  const dataRate = Number(match[1])
-  const unit = match[2].toLowerCase()
-  if (unit === "gbps") return dataRate * 1e3
-  if (unit === "mbps") return dataRate
-  if (unit === "kbps") return dataRate / 1e3
-  return dataRate / 1e6
+  const rates: number[] = []
+  for (const match of value.matchAll(
+    /(\d+(?:\.\d+)?)\s*(Gbps|Mbps|Kbps|bps)\b/gi,
+  )) {
+    const dataRate = Number(match[1])
+    if (!Number.isFinite(dataRate)) continue
+    const unit = match[2]!.toLowerCase()
+    if (unit === "gbps") rates.push(dataRate * 1e3)
+    else if (unit === "mbps") rates.push(dataRate)
+    else if (unit === "kbps") rates.push(dataRate / 1e3)
+    else rates.push(dataRate / 1e6)
+  }
+  return rates.length > 0 ? Math.max(...rates) : null
 }
 
-const parseBluetoothVersion = (value: string | null): string | null => {
-  if (!value) return null
+const parseBluetoothVersion = (
+  rawAttribute: string | null,
+  rawDescription: string,
+): string | null => {
+  if (rawAttribute) {
+    const candidates = Array.from(
+      rawAttribute.matchAll(
+        /(?:bluetooth|ble)?\s*(?:version|v)?\s*(\d+(?:\.\d+)?)/gi,
+      ),
+      (m) => m[1]!,
+    ).filter((v) => Number.isFinite(Number(v)))
+    if (candidates.length > 0) {
+      return candidates.reduce((best, cur) =>
+        Number(cur) > Number(best) ? cur : best,
+      )
+    }
+    return rawAttribute
+  }
 
-  const versionMatch = value.match(
-    /(?:bluetooth|ble)?\s*(?:version|v)?\s*(\d+(?:\.\d+)?)/i,
-  )
-  return versionMatch?.[1] ?? value
+  const descCandidates = Array.from(
+    rawDescription.matchAll(
+      /\b(?:bluetooth|ble)\s*(?:version\s*|v)?(\d+(?:\.\d+)?)\b/gi,
+    ),
+    (m) => m[1]!,
+  ).filter((v) => Number.isFinite(Number(v)))
+  if (descCandidates.length > 0) {
+    return descCandidates.reduce((best, cur) =>
+      Number(cur) > Number(best) ? cur : best,
+    )
+  }
+  return null
+}
+
+const normalizeCoreProcessor = (value: string | null): string | null => {
+  if (!value) return null
+  const stripped = value.replace(/\s+chips?$/i, "").trim()
+  return stripped && stripped !== "-" ? stripped : null
 }
 
 export const readComponentAttributes = (
-  extra: string | null,
+  extra: string | null | undefined,
 ): Record<string, unknown> | null => {
-  if (!extra) return null
+  if (!extra) return {}
 
   try {
     const parsed = JSON.parse(extra)
+    if (!parsed || typeof parsed !== "object") return null
     if (!parsed.attributes || typeof parsed.attributes !== "object") {
-      return null
+      return {}
     }
     return parsed.attributes
   } catch {
@@ -126,7 +166,11 @@ export const isBleChip = (
   const searchableText = `${component.mfr} ${component.description}`
   if (/\besp32-(?:s2|p4)/i.test(searchableText)) return false
 
-  return /\b(?:n?rf5\d+|cc(?:135[24]|254|264|265|267)\d*|efr32(?:bg|mg)\d+|bluenrg|stm32wba?|n32wb|ch5[789]|gr55|qn90|rsl10|da14\d+|ra4w1|tlsr\d+|esp32)/i.test(
+  if (/\bbluetooth\b|\bble\b/i.test(component.description)) {
+    return true
+  }
+
+  return /\b(?:n?rf5\d+|cc(?:135[24]|254|264|265|267|234)\d*|efr32(?:bg|mg)\d+|bluenrg|stm32wba?|n32wb|ch5[789]|gr55|qn90|rsl10|da14\d+|ra4w1|tlsr\d+|esp32)/i.test(
     searchableText,
   )
 }
@@ -134,7 +178,7 @@ export const isBleChip = (
 export const isLikelyBareBleChip = (
   component: Pick<SourceComponent, "package">,
 ): boolean => {
-  const packageName = component.package.trim()
+  const packageName = (component.package ?? "").trim()
   return /^(?:[A-Z]*QFN|[A-Z]*QFPN|[A-Z]*BGA|WLCSP|CSP|DFN|LQFP|TQFP|QFP|SOIC|SOP|SSOP|TSSOP)(?:-|\b)/i.test(
     packageName,
   )
@@ -144,16 +188,20 @@ export const mapBleFields = (
   component: SourceComponent,
   attributes: Record<string, unknown>,
 ): BleComponentFields => {
+  const rawDesc = component.description ?? ""
   const rawVoltage = getFirstAttribute(attributes, [
     "Operating Voltage",
     "Operating Voltage Range",
+    "Voltage - Supply",
     "Supply Voltage",
     "Working Voltage",
     "mains input",
   ])
-  const voltages = parseValuesWithUnit(rawVoltage, "V")
+  const attrVoltages = parsePositiveVoltages(rawVoltage)
+  const voltages =
+    attrVoltages.length > 0 ? attrVoltages : parsePositiveVoltages(rawDesc)
 
-  const interfaceText = [
+  const attrInterfaceText = [
     "Support Interface",
     "Interface",
     "Interface Type",
@@ -163,7 +211,7 @@ export const mapBleFields = (
     .map((key) => attributes[key])
     .filter((value) => value !== undefined && value !== null)
     .join(" ")
-    .toLowerCase()
+  const interfaceText = (attrInterfaceText || rawDesc).toLowerCase()
 
   const rawBluetoothVersion = getFirstAttribute(attributes, [
     "Bluetooth Version",
@@ -172,43 +220,51 @@ export const mapBleFields = (
     "Wireless Standard",
   ])
 
+  const rawFrequency = getFirstAttribute(attributes, [
+    "Frequency",
+    "Frequency Range",
+    "Typical Application Frequency",
+    "Working Frequency",
+  ])
+
+  const rawDataRate = getFirstAttribute(attributes, [
+    "Data Rate",
+    "Transmission Rate",
+    "transmission rate",
+  ])
+
   return {
     lcsc: component.lcsc,
     mfr: component.mfr,
-    description: component.description,
+    description: rawDesc,
     stock: component.stock,
     price1: null,
     in_stock: component.stock > 0,
     is_basic: Boolean(component.basic),
     is_preferred: Boolean(component.preferred),
     package: component.package || "",
-    core_processor: getFirstAttribute(attributes, [
-      "Core Processor",
-      "Core IC",
-      "CPU Core",
-      "Core",
-      "Chip Model",
-    ]),
-    bluetooth_version: parseBluetoothVersion(rawBluetoothVersion),
-    frequency_ghz: parseFrequencyGhz(
+    core_processor: normalizeCoreProcessor(
       getFirstAttribute(attributes, [
-        "Frequency",
-        "Frequency Range",
-        "Typical Application Frequency",
-        "Working Frequency",
+        "Core Processor",
+        "Core IC",
+        "Core  IC",
+        "CPU Core",
+        "Core",
+        "Chip Model",
+        "Utilized IC / Part",
+        "IC / Part",
       ]),
     ),
+    bluetooth_version: parseBluetoothVersion(rawBluetoothVersion, rawDesc),
+    frequency_ghz:
+      parseFrequencyGhz(rawFrequency, true) ??
+      parseFrequencyGhz(rawDesc, false),
     operating_voltage_min: voltages.length > 0 ? Math.min(...voltages) : null,
     operating_voltage_max: voltages.length > 0 ? Math.max(...voltages) : null,
-    data_rate_mbps: parseDataRateMbps(
-      getFirstAttribute(attributes, [
-        "Data Rate",
-        "Transmission Rate",
-        "transmission rate",
-      ]),
-    ),
-    has_uart: interfaceText.includes("uart"),
-    has_i2c: interfaceText.includes("i2c"),
+    data_rate_mbps:
+      parseDataRateMbps(rawDataRate) ?? parseDataRateMbps(rawDesc),
+    has_uart: interfaceText.includes("uart") || interfaceText.includes("usart"),
+    has_i2c: interfaceText.includes("i2c") || interfaceText.includes("i²c"),
     has_spi: interfaceText.includes("spi"),
     has_usb: interfaceText.includes("usb"),
     attributes: Object.fromEntries(

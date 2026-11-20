@@ -11,6 +11,20 @@ export interface BleModule extends BleComponentFields {
   antenna_type: string | null
 }
 
+const inferAntennaType = (
+  attributes: Record<string, unknown>,
+  description: string,
+): string | null => {
+  const rawAttr = attributes["Antenna Type"] ?? attributes["Antenna"]
+  if (typeof rawAttr === "string" && rawAttr.trim() && rawAttr.trim() !== "-") {
+    return rawAttr.trim()
+  }
+  const match = description.match(
+    /\b(On-Board PCB Antenna|PCB Antenna|Chip Antenna|Ceramic Antenna|IPEX(?:\s+interface)?|External Antenna)\b/i,
+  )
+  return match ? match[1]! : null
+}
+
 export const bleModuleTableSpec: DerivedTableSpec<BleModule> = {
   tableName: "ble_module",
   extraColumns: [
@@ -43,11 +57,7 @@ export const bleModuleTableSpec: DerivedTableSpec<BleModule> = {
       return {
         ...mapBleFields(component, attributes),
         price1: extractMinQPrice(component.price),
-        antenna_type:
-          typeof attributes["Antenna Type"] === "string" &&
-          attributes["Antenna Type"].trim() !== "-"
-            ? attributes["Antenna Type"].trim()
-            : null,
+        antenna_type: inferAntennaType(attributes, component.description ?? ""),
       }
     }),
 }
