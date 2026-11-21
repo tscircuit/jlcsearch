@@ -70,6 +70,7 @@ export const psramTableSpec: DerivedTableSpec<Psram> = {
     { name: "operating_temp_max", type: "real" },
     { name: "is_basic", type: "boolean" },
     { name: "is_preferred", type: "boolean" },
+    { name: "is_extended_promotional", type: "boolean" },
   ],
   indexes: [
     { name: "idx_psram_stock", columns: ["stock"] },
@@ -141,6 +142,7 @@ export const psramTableSpec: DerivedTableSpec<Psram> = {
           in_stock: Number(component.stock ?? 0) > 0,
           is_basic: Boolean(component.basic),
           is_preferred: Boolean(component.preferred),
+          is_extended_promotional: Boolean(component.extended_promotional),
           package: String(extra?.package ?? component.package ?? ""),
           interface_type:
             parseInterfaceType(attributes["Interface Type"] ?? "") ??

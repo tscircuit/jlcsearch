@@ -11,6 +11,7 @@ test("header table derives two rows from C492422 Pin Structure", () => {
       stock: 22829,
       basic: 0,
       preferred: 0,
+      extended_promotional: 0,
       price: '[{"qFrom":1,"qTo":null,"price":0.049142857}]',
       category_id: 0,
       manufacturer_id: 0,
