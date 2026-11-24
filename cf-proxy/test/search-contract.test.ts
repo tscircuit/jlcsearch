@@ -138,6 +138,19 @@ describe("search API contract against seeded D1", () => {
       expect((await request("q=TVS+diode")).components).toMatchObject([
         { lcsc: 54321 },
       ])
+      expect((await request("is_basic=true")).components).toMatchObject([
+        { lcsc: 54321, is_basic: true, is_preferred: false },
+      ])
+      expect(
+        (await request("is_extended_promotional=true")).components,
+      ).toMatchObject([{ lcsc: 12345, is_basic: false, is_preferred: true }])
+      expect(
+        (await request("is_basic=true&is_extended_promotional=true"))
+          .components,
+      ).toMatchObject([{ lcsc: 54321 }, { lcsc: 12345 }])
+      expect(
+        (await request("is_basic=true&is_preferred=true")).components,
+      ).toMatchObject([{ lcsc: 54321 }, { lcsc: 12345 }])
       expect((await fetchSearch("q=op")).status).toBe(400)
       expect((await fetchSearch("q=RK3576&limit=-1")).status).toBe(400)
       expect((await fetchSearch("q=RK3576&limit=100&limit=1001")).status).toBe(

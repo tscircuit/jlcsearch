@@ -663,7 +663,8 @@ async function handleD1Search(
       !params.package &&
       !params.subcategory_name &&
       !params.is_basic &&
-      !params.is_preferred
+      !params.is_preferred &&
+      !params.is_extended_promotional
     const rows = useVerified ? [] : await searchIndex(db, params)
     const components = useVerified
       ? [verified]
@@ -815,7 +816,8 @@ async function handleD1ComponentsList(
         !params.package &&
         !params.subcategory_name &&
         !params.is_basic &&
-        !params.is_preferred
+        !params.is_preferred &&
+        !params.is_extended_promotional
       ) {
         rows.push({
           ...verified,

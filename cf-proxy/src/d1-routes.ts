@@ -340,11 +340,19 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
       query = query.where("package", "=", params.package)
     }
 
-    if (params.is_basic === "true" || params.is_basic === "1") {
-      query = query.where("basic", "=", 1)
-    }
+    const wantBasic = params.is_basic === "true" || params.is_basic === "1"
+    const effectivePreferred =
+      params.is_preferred ?? params.is_extended_promotional
+    const wantPreferred =
+      effectivePreferred === "true" || effectivePreferred === "1"
 
-    if (params.is_preferred === "true" || params.is_preferred === "1") {
+    if (wantBasic && wantPreferred) {
+      query = query.where((eb) =>
+        eb.or([eb("basic", "=", 1), eb("preferred", "=", 1)]),
+      )
+    } else if (wantBasic) {
+      query = query.where("basic", "=", 1)
+    } else if (wantPreferred) {
       query = query.where("preferred", "=", 1)
     }
 
@@ -427,11 +435,19 @@ const SPECIAL_D1_HANDLERS: Record<string, D1Handler> = {
       query = query.where("package", "=", params.package)
     }
 
-    if (params.is_basic === "true" || params.is_basic === "1") {
-      query = query.where("basic", "=", 1)
-    }
+    const wantBasic = params.is_basic === "true" || params.is_basic === "1"
+    const effectivePreferred =
+      params.is_preferred ?? params.is_extended_promotional
+    const wantPreferred =
+      effectivePreferred === "true" || effectivePreferred === "1"
 
-    if (params.is_preferred === "true" || params.is_preferred === "1") {
+    if (wantBasic && wantPreferred) {
+      query = query.where((eb) =>
+        eb.or([eb("basic", "=", 1), eb("preferred", "=", 1)]),
+      )
+    } else if (wantBasic) {
+      query = query.where("basic", "=", 1)
+    } else if (wantPreferred) {
       query = query.where("preferred", "=", 1)
     }
 
@@ -575,6 +591,7 @@ const SPECIAL_D1_ROUTE_PARAMS: Record<string, string[]> = {
     "limit",
     "is_basic",
     "is_preferred",
+    "is_extended_promotional",
   ],
   "/components/list": [
     "search",
@@ -582,6 +599,7 @@ const SPECIAL_D1_ROUTE_PARAMS: Record<string, string[]> = {
     "subcategory_name",
     "is_basic",
     "is_preferred",
+    "is_extended_promotional",
   ],
   "/analog_switches/list": ["package", "channels"],
   "/arm_processors/list": ["package", "flash_min", "ram_min", "interface"],
@@ -591,6 +609,7 @@ const SPECIAL_D1_ROUTE_PARAMS: Record<string, string[]> = {
     "package",
     "is_basic",
     "is_preferred",
+    "is_extended_promotional",
     "max_resolution",
   ],
   "/tft_display_drivers/list": [
@@ -598,6 +617,7 @@ const SPECIAL_D1_ROUTE_PARAMS: Record<string, string[]> = {
     "package",
     "is_basic",
     "is_preferred",
+    "is_extended_promotional",
     "max_resolution",
   ],
   "/categories/list": ["category_name"],
@@ -616,6 +636,7 @@ export function getD1RouteParams(pathname: string): string[] | null {
   return [
     ...Object.keys(config?.filters ?? {}),
     ...Object.keys(config?.paramAliases ?? {}),
+    ...(config?.filters.is_preferred ? ["is_extended_promotional"] : []),
   ]
 }
 

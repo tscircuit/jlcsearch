@@ -91,9 +91,29 @@ export async function queryTable(
   // Build WHERE conditions using Kysely's sql template tag for safe parameterization
   const conditions: RawBuilder<unknown>[] = []
 
+  const effectivePreferredParam =
+    params.is_preferred ?? params.is_extended_promotional
+  const combineBasicAndPreferred =
+    Boolean(config.filters.is_basic && config.filters.is_preferred) &&
+    (params.is_basic === "true" || params.is_basic === "1") &&
+    (effectivePreferredParam === "true" || effectivePreferredParam === "1")
+
+  if (combineBasicAndPreferred) {
+    const basicCol = sql.id(config.filters.is_basic.field)
+    const preferredCol = sql.id(config.filters.is_preferred.field)
+    conditions.push(sql`(${basicCol} = 1 OR ${preferredCol} = 1)`)
+  }
+
   // Apply filters based on config
   for (const [paramName, fieldConfig] of Object.entries(config.filters)) {
-    const value = params[paramName]
+    if (
+      combineBasicAndPreferred &&
+      (paramName === "is_basic" || paramName === "is_preferred")
+    ) {
+      continue
+    }
+    const value =
+      paramName === "is_preferred" ? effectivePreferredParam : params[paramName]
     if (value === undefined || value === "" || value === "All") continue
 
     const {
@@ -805,15 +825,26 @@ export function normalizeTableQueryParams(
   tableName: string,
   params: QueryParams,
 ): QueryParams {
-  const aliases = TABLE_CONFIGS[tableName]?.paramAliases
-  if (!aliases) return params
-
+  const tableConfig = TABLE_CONFIGS[tableName]
+  const aliases = tableConfig?.paramAliases
   let normalizedParams = params
-  for (const [alias, canonicalParam] of Object.entries(aliases)) {
-    if (params[canonicalParam] === undefined && params[alias] !== undefined) {
-      if (normalizedParams === params) normalizedParams = { ...params }
-      normalizedParams[canonicalParam] = params[alias]
+
+  if (aliases) {
+    for (const [alias, canonicalParam] of Object.entries(aliases)) {
+      if (params[canonicalParam] === undefined && params[alias] !== undefined) {
+        if (normalizedParams === params) normalizedParams = { ...params }
+        normalizedParams[canonicalParam] = params[alias]
+      }
     }
+  }
+
+  if (
+    tableConfig?.filters.is_preferred &&
+    normalizedParams.is_preferred === undefined &&
+    params.is_extended_promotional !== undefined
+  ) {
+    if (normalizedParams === params) normalizedParams = { ...params }
+    normalizedParams.is_preferred = params.is_extended_promotional
   }
 
   return normalizedParams

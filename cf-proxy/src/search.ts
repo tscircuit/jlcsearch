@@ -10,6 +10,7 @@ export interface SearchQueryParams {
   limit?: string
   is_basic?: string
   is_preferred?: string
+  is_extended_promotional?: string
 }
 
 interface SearchRow {
@@ -187,11 +188,17 @@ export async function searchIndex(
     conditions.push(sql`search_index.subcategory = ${params.subcategory_name}`)
   }
 
-  if (params.is_basic === "true" || params.is_basic === "1") {
-    conditions.push(sql`search_index.basic = 1`)
-  }
+  const wantBasic = params.is_basic === "true" || params.is_basic === "1"
+  const effectivePreferred =
+    params.is_preferred ?? params.is_extended_promotional
+  const wantPreferred =
+    effectivePreferred === "true" || effectivePreferred === "1"
 
-  if (params.is_preferred === "true" || params.is_preferred === "1") {
+  if (wantBasic && wantPreferred) {
+    conditions.push(sql`(search_index.basic = 1 OR search_index.preferred = 1)`)
+  } else if (wantBasic) {
+    conditions.push(sql`search_index.basic = 1`)
+  } else if (wantPreferred) {
     conditions.push(sql`search_index.preferred = 1`)
   }
 
