@@ -161,8 +161,11 @@ export const BASE_COMPONENT_COLUMNS = [
   { name: "is_preferred", type: "boolean" },
 ] as const
 
-const BASE_COMPONENT_COLUMN_NAMES = new Set<string>([
-  ...BASE_COMPONENT_COLUMNS.map((col) => col.name),
+const LEADING_BASE_COMPONENT_COLUMNS = BASE_COMPONENT_COLUMNS.slice(0, 6)
+const TRAILING_BASE_COMPONENT_COLUMNS = BASE_COMPONENT_COLUMNS.slice(6)
+
+const LEADING_COLUMN_NAMES = new Set<string>([
+  ...LEADING_BASE_COMPONENT_COLUMNS.map((col) => col.name),
   "attributes",
 ])
 
@@ -197,14 +200,21 @@ const createTable = async (
     await db.schema.dropTable(spec.tableName).execute()
   }
 
-  const dedupedExtraColumns = (spec.extraColumns as any[]).filter(
-    (col) => !BASE_COMPONENT_COLUMN_NAMES.has(col.name as string),
+  const extraColumns = (spec.extraColumns as any[]).filter(
+    (col) => !LEADING_COLUMN_NAMES.has(col.name as string),
+  )
+  const extraColumnNames = new Set<string>(
+    extraColumns.map((col) => col.name as string),
+  )
+  const missingTrailingBaseColumns = TRAILING_BASE_COMPONENT_COLUMNS.filter(
+    (col) => !extraColumnNames.has(col.name),
   )
 
   let tableCreator = db.schema.createTable(spec.tableName)
   for (const col of [
-    ...BASE_COMPONENT_COLUMNS,
-    ...dedupedExtraColumns,
+    ...LEADING_BASE_COMPONENT_COLUMNS,
+    ...extraColumns,
+    ...missingTrailingBaseColumns,
     { name: "attributes", type: "text" },
   ]) {
     tableCreator = tableCreator.addColumn(
