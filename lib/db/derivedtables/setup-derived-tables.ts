@@ -150,6 +150,22 @@ const createIndexes = async (
   }
 }
 
+export const BASE_COMPONENT_COLUMNS = [
+  { name: "lcsc", type: "integer", primaryKey: true },
+  { name: "mfr", type: "text" },
+  { name: "description", type: "text" },
+  { name: "stock", type: "integer" },
+  { name: "price1", type: "real" },
+  { name: "in_stock", type: "boolean" },
+  { name: "is_basic", type: "boolean" },
+  { name: "is_preferred", type: "boolean" },
+] as const
+
+const BASE_COMPONENT_COLUMN_NAMES = new Set<string>([
+  ...BASE_COMPONENT_COLUMNS.map((col) => col.name),
+  "attributes",
+])
+
 const createTable = async (
   db: KyselyDatabaseInstance,
   spec: DerivedTableSpec<any>,
@@ -181,15 +197,16 @@ const createTable = async (
     await db.schema.dropTable(spec.tableName).execute()
   }
 
+  const dedupedExtraColumns = (spec.extraColumns as any[]).filter(
+    (col) => !BASE_COMPONENT_COLUMN_NAMES.has(col.name as string),
+  )
+
   let tableCreator = db.schema.createTable(spec.tableName)
   for (const col of [
-    { name: "lcsc", type: "integer", primaryKey: true },
-    { name: "mfr", type: "text" },
-    { name: "description", type: "text" },
-    { name: "stock", type: "integer" },
-    { name: "price1", type: "real" },
-    { name: "in_stock", type: "boolean" },
-  ].concat(spec.extraColumns as any, [{ name: "attributes", type: "text" }])) {
+    ...BASE_COMPONENT_COLUMNS,
+    ...dedupedExtraColumns,
+    { name: "attributes", type: "text" },
+  ]) {
     tableCreator = tableCreator.addColumn(
       col.name as string,
       col.type as any,
@@ -228,6 +245,8 @@ const createTable = async (
             // unknown source quantity rather than claiming it is out of stock.
             stock: components[i].stock === null ? null : c.stock,
             in_stock: components[i].stock === null ? false : c.in_stock,
+            is_basic: Boolean(c.is_basic ?? components[i].basic),
+            is_preferred: Boolean(c.is_preferred ?? components[i].preferred),
             attributes: jsonParseOrNull(components[i].extra)?.attributes,
           },
     )
