@@ -257,8 +257,13 @@ export async function queryFilterOptions(
   return options
 }
 
+export const BASE_COMPONENT_FILTERS: Record<string, FilterConfig> = {
+  is_basic: { field: "is_basic", type: "boolean" },
+  is_preferred: { field: "is_preferred", type: "boolean" },
+}
+
 // Configuration for all derived tables
-export const TABLE_CONFIGS: Record<string, TableConfig> = {
+const RAW_TABLE_CONFIGS: Record<string, TableConfig> = {
   resistor: {
     filters: {
       package: { field: "package", type: "string" },
@@ -800,6 +805,21 @@ export const TABLE_CONFIGS: Record<string, TableConfig> = {
     },
   },
 }
+
+export const TABLE_CONFIGS: Record<string, TableConfig> = Object.fromEntries(
+  Object.entries(RAW_TABLE_CONFIGS).map(([tableName, config]) => [
+    tableName,
+    {
+      ...config,
+      filters: {
+        ...config.filters,
+        is_basic: config.filters.is_basic ?? BASE_COMPONENT_FILTERS.is_basic,
+        is_preferred:
+          config.filters.is_preferred ?? BASE_COMPONENT_FILTERS.is_preferred,
+      },
+    },
+  ]),
+)
 
 export function normalizeTableQueryParams(
   tableName: string,
