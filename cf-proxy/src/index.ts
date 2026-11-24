@@ -647,6 +647,29 @@ async function handleD1FootprinterString(
   }
 }
 
+const isTruthyFilterFlag = (value: string | undefined): boolean =>
+  value === "true" || value === "1"
+
+const matchesVerifiedTierFilter = (
+  verified: { is_basic: boolean; is_preferred: boolean },
+  params: {
+    is_basic?: string
+    is_preferred?: string
+    is_extended_promotional?: string
+  },
+): boolean => {
+  const wantBasic = isTruthyFilterFlag(params.is_basic)
+  const wantPreferred = isTruthyFilterFlag(
+    params.is_preferred ?? params.is_extended_promotional,
+  )
+  if (wantBasic && wantPreferred) {
+    return verified.is_basic || verified.is_preferred
+  }
+  if (wantBasic) return verified.is_basic
+  if (wantPreferred) return verified.is_preferred
+  return true
+}
+
 async function handleD1Search(
   url: URL,
   env: Env,
@@ -659,15 +682,12 @@ async function handleD1Search(
     const verified =
       lcsc === null ? null : await readRequestedStock(env.DB, lcsc)
     const useVerified =
-      verified &&
-      !params.package &&
-      !params.subcategory_name &&
-      !params.is_basic &&
-      !params.is_preferred &&
-      !params.is_extended_promotional
+      Boolean(verified) && !params.package && !params.subcategory_name
     const rows = useVerified ? [] : await searchIndex(db, params)
     const components = useVerified
-      ? [verified]
+      ? matchesVerifiedTierFilter(verified!, params)
+        ? [verified!]
+        : []
       : rows.map((row) => ({
           lcsc: row.lcsc ?? 0,
           mfr: row.mfr ?? "",
@@ -815,9 +835,7 @@ async function handleD1ComponentsList(
         !rows.length &&
         !params.package &&
         !params.subcategory_name &&
-        !params.is_basic &&
-        !params.is_preferred &&
-        !params.is_extended_promotional
+        matchesVerifiedTierFilter(verified, params)
       ) {
         rows.push({
           ...verified,
