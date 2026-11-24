@@ -74,6 +74,21 @@ describe("exact BOM availability", () => {
         lcsc: 5981428,
         stock: null,
       })
+      expect(
+        (await request("C5981428&is_extended_promotional=false")).components,
+      ).toHaveLength(1)
+      expect(
+        (await request("C5981428&is_extended_promotional=0")).components,
+      ).toHaveLength(1)
+      expect(
+        (await request("C5981428&is_extended_promotional=true")).components,
+      ).toEqual([])
+      expect(
+        (await list("&is_extended_promotional=false")).components,
+      ).toHaveLength(1)
+      expect((await list("&is_extended_promotional=true")).components).toEqual(
+        [],
+      )
       expect((await list("&package=wrong")).components).toEqual([])
       await env.DB.prepare(
         "INSERT INTO search_index (lcsc,mfr,stock,package) VALUES (5981428,'new part',487,'BGA')",

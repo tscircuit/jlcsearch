@@ -178,6 +178,12 @@ const formatSiUnit = (value: unknown): string => {
   return `${formatted}${prefix.symbol}`
 }
 
+const isTruthyParam = (value: string | undefined): boolean =>
+  value === "true" || value === "1"
+
+const isPreferredChecked = (params: QueryParams): boolean =>
+  isTruthyParam(params.is_preferred ?? params.is_extended_promotional)
+
 const COLUMN_LABELS: Record<string, string> = {
   lcsc: "LCSC",
   mfr: "MFR",
@@ -645,10 +651,10 @@ const renderCustomFilters = (
           </select>
         </div>
         <div>
-          <label>Basic Part:<input type="checkbox" name="is_basic" value="true"${params.is_basic === "true" ? " checked" : ""} /></label>
+          <label>Basic Part:<input type="checkbox" name="is_basic" value="true"${isTruthyParam(params.is_basic) ? " checked" : ""} /></label>
         </div>
         <div>
-          <label>Preferred Part:<input type="checkbox" name="is_preferred" value="true"${params.is_preferred === "true" ? " checked" : ""} /></label>
+          <label>Preferred Part:<input type="checkbox" name="is_preferred" value="true"${isPreferredChecked(params) ? " checked" : ""} /></label>
         </div>
         <button type="submit">Filter</button>
       </form>`
@@ -690,10 +696,10 @@ const renderCustomFilters = (
           </select>
         </div>
         <div>
-          <label>Basic Part:<input type="checkbox" name="is_basic" value="true"${params.is_basic === "true" ? " checked" : ""} /></label>
+          <label>Basic Part:<input type="checkbox" name="is_basic" value="true"${isTruthyParam(params.is_basic) ? " checked" : ""} /></label>
         </div>
         <div>
-          <label>Preferred Part:<input type="checkbox" name="is_preferred" value="true"${params.is_preferred === "true" ? " checked" : ""} /></label>
+          <label>Preferred Part:<input type="checkbox" name="is_preferred" value="true"${isPreferredChecked(params) ? " checked" : ""} /></label>
         </div>
         <button type="submit">Filter</button>
       </form>`
@@ -759,10 +765,10 @@ const renderComponentsFilters = (
   <input type="hidden" name="package" value="${escapeHtml(params.package ?? "")}" />
   <input type="hidden" name="search" value="${escapeHtml(params.search ?? "")}" />
   <div>
-    <label>Basic Part:<input type="checkbox" name="is_basic" value="true"${params.is_basic === "true" ? " checked" : ""} /></label>
+    <label>Basic Part:<input type="checkbox" name="is_basic" value="true"${isTruthyParam(params.is_basic) ? " checked" : ""} /></label>
   </div>
   <div>
-    <label>Preferred Part:<input type="checkbox" name="is_preferred" value="true"${params.is_preferred === "true" ? " checked" : ""} /></label>
+    <label>Preferred Part:<input type="checkbox" name="is_preferred" value="true"${isPreferredChecked(params) ? " checked" : ""} /></label>
   </div>
   <button type="submit">Filter</button>
 </form>`
