@@ -1,0 +1,74 @@
+name: Publish jlcsearch-standalone to jscdn
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'New release version (for example: 0.1.0)'
+        required: true
+        type: string
+      refresh_catalog:
+        description: Refresh common entries from JLC search before packaging
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: publish-jlcsearch-standalone
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      RELEASE_VERSION: ${{ inputs.version }}
+      REFRESH_CATALOG: ${{ inputs.refresh_catalog }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://npm.pkg.github.com
+          scope: '@tscircuit'
+
+      - name: Test standalone API
+        run: bun test standalone-jlcsearch
+
+      - name: Build release package
+        run: bun standalone-jlcsearch/package.ts "$RELEASE_VERSION"
+
+      - name: Pack and smoke test the exact release tarball
+        run: |
+          mkdir -p release smoke
+          npm pack ./standalone-jlcsearch/dist --ignore-scripts --pack-destination ./release
+          tar -xzf "release/tscircuit-jlcsearch-standalone-${RELEASE_VERSION}.tgz" -C smoke
+          bun standalone-jlcsearch/smoke-package.ts smoke/package
+
+      - name: Save release tarball
+        uses: actions/upload-artifact@v4
+        with:
+          name: jlcsearch-standalone-${{ inputs.version }}
+          path: release/*.tgz
+          if-no-files-found: error
+
+      # jscdn proxies GitHub Packages; it does not accept direct uploads.
+      - name: Publish to GitHub Packages
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm publish "release/tscircuit-jlcsearch-standalone-${RELEASE_VERSION}.tgz" --ignore-scripts --registry https://npm.pkg.github.com
+
+      - name: Verify and warm the versioned jscdn tarball
+        run: |
+          url="https://jscdn.tscircuit.com/@tscircuit/jlcsearch-standalone/${RELEASE_VERSION}.tgz"
+          printf 'Published package: `%s`\n' "@tscircuit/jlcsearch-standalone@${RELEASE_VERSION}" >> "$GITHUB_STEP_SUMMARY"
+          printf 'jscdn tarball: %s\n' "$url" >> "$GITHUB_STEP_SUMMARY"
+          curl --fail --location --retry 8 --retry-all-errors --retry-delay 10 --max-time 30 "$url" --output release/from-jscdn.tgz
+          cmp "release/tscircuit-jlcsearch-standalone-${RELEASE_VERSION}.tgz" release/from-jscdn.tgz
